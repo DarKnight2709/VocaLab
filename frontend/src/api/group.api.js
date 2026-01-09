@@ -1,4 +1,4 @@
-import api from './http.js';
+import api from './api.js';
 
 export const groupAPI = {
   // Tạo nhóm mới
