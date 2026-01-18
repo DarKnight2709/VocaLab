@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "frontend-react: debug (Edge)",
+      "type": "pwa-msedge",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend-react",
+      "preLaunchTask": "frontend-react: dev",
+      "sourceMaps": true
+    },
+    {
+      "name": "frontend-react: debug (Chrome)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend-react",
+      "preLaunchTask": "frontend-react: dev",
+      "sourceMaps": true
+    },
+    {
+      "name": "frontend-react: attach (Edge)",
+      "type": "pwa-msedge",
+      "request": "attach",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend-react",
+      "sourceMaps": true
+    }
+  ]
+}

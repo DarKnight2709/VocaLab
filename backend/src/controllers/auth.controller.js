@@ -190,7 +190,7 @@ module.exports.googleOAuthCallback = (req, res, next) => {
       const token = generateTokenService.generateToken(user);
       const frontendBaseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
-      const redirectUrl = new URL("/chat.html", frontendBaseUrl);
+      const redirectUrl = new URL("/chat", frontendBaseUrl);
       redirectUrl.searchParams.set("token", token);
       return res.redirect(redirectUrl.toString());
     }
