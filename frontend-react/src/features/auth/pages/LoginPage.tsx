@@ -26,10 +26,6 @@ type SignupForm = z.infer<typeof SignUpSchema>;
 
 export default function LoginPage() {
   const { isAuth } = useAuthStore();
-
-  if (isAuth) {
-    return <Navigate to={ROUTES.BLOG.url} replace />;
-  }
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
 
@@ -50,6 +46,10 @@ export default function LoginPage() {
     () => `${envConfig.VITE_API_URL}/auth/google`,
     [],
   );
+
+  if (isAuth) {
+    return <Navigate to={ROUTES.BLOG.url} replace />;
+  }
 
   async function handleLogin(data: LoginForm) {
     try {

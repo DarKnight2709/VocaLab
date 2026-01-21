@@ -87,7 +87,7 @@ module.exports.getUsers = async (req, res) => {
       // 5. Project các field cần thiết
       {
         $project: {
-          _id: '$userInfo._id',
+          id: '$userInfo._id',
           username: '$userInfo.username',
           fullName: '$userInfo.fullName',
           email: '$userInfo.email',

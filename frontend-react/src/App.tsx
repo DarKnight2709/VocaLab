@@ -9,7 +9,8 @@ import NotFoundPage from './shared/pages/NotFoundPage'
 import GlobalLoadingProvider from './shared/components/GlobalLoading'
 import { authLoader } from './features/auth/AuthLoader'
 import ROUTES from './shared/lib/routes'
-import BlogPage from './shared/pages/BlogPage'
+import BlogPage from './features/blog/pages/BlogPage'
+import ProfilePage from './features/user/pages/ProfilePage'
 
 
 const router = createBrowserRouter([
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
           {
             path: ROUTES.BLOG.url,
             element: <BlogPage />,
+          },
+          {
+            path: ROUTES.PROFILE.url,
+            element: <ProfilePage />,
           },
         ]
       }
@@ -48,13 +53,22 @@ const router = createBrowserRouter([
   }
 ])
 
+import { ThemeProvider, useTheme } from './shared/components/ThemeProvider'
+
+function ThemedToaster() {
+  const { theme } = useTheme();
+  return <Toaster position='top-right' richColors theme={theme === 'system' ? 'light' : theme} />;
+}
+
 export default function App() {
   return (
     <ReactQueryProvider>
       <GlobalLoadingProvider>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
           <RouterProvider router={router} />
+          <ThemedToaster />
+        </ThemeProvider>
       </GlobalLoadingProvider>
-      <Toaster position='top-right' richColors theme='light' />
     </ReactQueryProvider>
   )
 }

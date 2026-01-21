@@ -2,16 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
-import { userAPI } from '@/api/user.api'
-import { groupAPI } from '@/api/group.api'
+import { useSearchUsersQuery } from '@/features/chat/api/chatService'
+import { useCreateGroupMutation } from '@/features/chat/api/groupService'
 import { toast } from 'sonner'
-
-type UserSearchItem = {
-  _id: string
-  username?: string
-  fullName?: string
-  avatar?: string
-}
+import type { UserItem } from '@/shared/validations/ChatSchema'
 
 type Props = {
   open: boolean
@@ -36,9 +30,10 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
   const [description, setDescription] = useState('')
   const [keyword, setKeyword] = useState('')
   const [searching, setSearching] = useState(false)
-  const [results, setResults] = useState<UserSearchItem[]>([])
-  const [selected, setSelected] = useState<UserSearchItem[]>([])
+  const [results, setResults] = useState<UserItem[]>([])
+  const [selected, setSelected] = useState<UserItem[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const createGroupMutation = useCreateGroupMutation()
 
   useEffect(() => {
     if (!open) return
@@ -60,34 +55,23 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
       return
     }
 
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const res = await userAPI.searchs(q)
-        const users = (res.data as any)?.users || []
-        setResults(users)
-      } catch (e: any) {
-        setResults([])
-        toast.error(e?.response?.data?.message || 'Lỗi tìm kiếm người dùng')
-      } finally {
-        setSearching(false)
-      }
-    }, 450)
 
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
+    // Sử dụng hook useSearchUsersQuery thay cho userAPI.searchs
+    const { data: searchResults, isLoading } = useSearchUsersQuery(q);
+    setSearching(isLoading);
+    setResults(searchResults || []);
+  // Không cần debounce nữa, hook đã tự động quản lý
   }, [keyword, open])
 
-  const selectedIds = useMemo(() => new Set(selected.map((u) => u._id)), [selected])
+  const selectedIds = useMemo(() => new Set(selected.map((u) => u.id)), [selected])
 
-  function addMember(u: UserSearchItem) {
-    if (selectedIds.has(u._id)) return
+  function addMember(u: UserItem) {
+    if (selectedIds.has(u.id)) return
     setSelected((prev) => [...prev, u])
   }
 
   function removeMember(userId: string) {
-    setSelected((prev) => prev.filter((u) => u._id !== userId))
+    setSelected((prev) => prev.filter((u) => u.id !== userId))
   }
 
   async function handleCreate() {
@@ -103,15 +87,15 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
     }
 
     try {
-      const memberIds = selected.map((u) => u._id)
-      const res = await groupAPI.createGroup({
+      const memberIds = selected.map((u) => u.id)
+      const data = await createGroupMutation.mutateAsync({
         name: trimmed,
         description: description.trim(),
         members: memberIds,
       })
 
-      const groupId = (res.data as any)?.group?._id as string | undefined
-      toast.success((res.data as any)?.message || 'Tạo nhóm thành công')
+      const groupId = (data as any)?.group?.id as string | undefined
+      toast.success((data as any)?.message || 'Tạo nhóm thành công')
       onOpenChange(false)
       if (groupId) onCreated?.({ groupId, memberIds })
     } catch (e: any) {
@@ -153,9 +137,9 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
               <div className="flex flex-wrap gap-2">
                 {selected.map((u) => (
                   <button
-                    key={u._id}
+                    key={u.id}
                     type="button"
-                    onClick={() => removeMember(u._id)}
+                    onClick={() => removeMember(u.id)}
                     className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm hover:bg-muted"
                     title="Bấm để xoá"
                   >
@@ -183,9 +167,9 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
               ) : (
                 <div className="space-y-2">
                   {results.map((u) => {
-                    const disabled = selectedIds.has(u._id)
+                    const disabled = selectedIds.has(u.id)
                     return (
-                      <div key={u._id} className="flex items-center justify-between gap-3 rounded-md px-2 py-2 hover:bg-muted">
+                      <div key={u.id} className="flex items-center justify-between gap-3 rounded-md px-2 py-2 hover:bg-muted">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                             {u.avatar ? (

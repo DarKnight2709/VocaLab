@@ -1,32 +1,31 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { groupAPI } from '@/api/group.api'
-import { userAPI } from '@/api/user.api'
+import { useSearchUsersQuery } from '@/features/chat/api/chatService'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { GroupEditDialog } from '@/features/chat/components/GroupEditDialog'
 import { toast } from 'sonner'
-
-type AnyUser = {
-  _id: string
-  username?: string
-  fullName?: string
-  avatar?: string
-}
+import { useGroupInfoQuery } from '@/features/chat/api/groupService'
+import { useGroupMembersQuery } from '@/features/chat/api/groupService'
+import {
+  useAddGroupMembersMutation,
+  useChangeGroupRoleMutation,
+  useDeleteGroupMemberMutation,
+  useDeleteGroupMutation,
+} from '@/features/chat/api/groupService'
+import type { UserItem } from '@/shared/validations/ChatSchema'
+import type { GroupItem } from '@/shared/validations/GroupSchema'
 
 type GroupMember = {
-  userId: AnyUser
+  userId: UserItem
   role?: 'admin' | 'member'
   joinedAt?: string
 }
 
-type GroupInfo = {
-  _id: string
-  name?: string
-  description?: string
-  avatar?: string
-  owner?: AnyUser
+type GroupInfo = Partial<GroupItem> & {
+  id: string
+  owner?: UserItem
 }
 
 type Props = {
@@ -36,7 +35,7 @@ type Props = {
   myId: string
   onAddedMembers?: (memberIds: string[]) => void
   onLeftGroup?: (data: { groupId: string; memberIds: string[] }) => void
-  onUpdatedGroup?: (group: { _id: string; name?: string; description?: string; avatar?: string }) => void
+  onUpdatedGroup?: (group: { id: string; name?: string; description?: string; avatar?: string }) => void
 }
 
 function initials(name?: string) {
@@ -60,7 +59,6 @@ export function GroupInfoDialog({
   onLeftGroup,
   onUpdatedGroup,
 }: Props) {
-  const [loading, setLoading] = useState(false)
   const [group, setGroup] = useState<GroupInfo | null>(null)
   const [members, setMembers] = useState<GroupMember[]>([])
 
@@ -68,12 +66,20 @@ export function GroupInfoDialog({
 
   const [keyword, setKeyword] = useState('')
   const [searching, setSearching] = useState(false)
-  const [results, setResults] = useState<AnyUser[]>([])
-  const [selectedToAdd, setSelectedToAdd] = useState<AnyUser[]>([])
+  const [results, setResults] = useState<UserItem[]>([])
+  const [selectedToAdd, setSelectedToAdd] = useState<UserItem[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const memberIds = useMemo(() => new Set(members.map((m) => m.userId?._id).filter(Boolean)), [members])
-  const selectedIds = useMemo(() => new Set(selectedToAdd.map((u) => u._id)), [selectedToAdd])
+  const memberIds = useMemo(() => new Set(members.map((m) => m.userId?.id).filter(Boolean)), [members])
+  const selectedIds = useMemo(() => new Set(selectedToAdd.map((u) => u.id)), [selectedToAdd])
+  const infoQuery = useGroupInfoQuery(open && groupId ? groupId : null)
+  const membersQuery = useGroupMembersQuery(open && groupId ? groupId : null)
+  const addMembersMutation = useAddGroupMembersMutation()
+  const deleteGroupMutation = useDeleteGroupMutation()
+  const deleteMemberMutation = useDeleteGroupMemberMutation()
+  const changeRoleMutation = useChangeGroupRoleMutation()
+
+  const loading = infoQuery.isLoading || membersQuery.isLoading
 
   useEffect(() => {
     if (!open) return
@@ -84,28 +90,10 @@ export function GroupInfoDialog({
 
   useEffect(() => {
     if (!open || !groupId) return
-
-    let cancelled = false
-    setLoading(true)
-
-    Promise.all([groupAPI.getInfoGroup(groupId), groupAPI.getMembers(groupId)])
-      .then(([infoRes, membersRes]) => {
-        if (cancelled) return
-        const g = (infoRes.data as any)?.group as GroupInfo | undefined
-        const ms = ((membersRes.data as any)?.members as GroupMember[] | undefined) || []
-        setGroup(g || null)
-        setMembers(ms)
-      })
-      .catch((e: any) => {
-        toast.error(e?.response?.data?.message || 'Không thể tải thông tin nhóm')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
+    const g = (infoQuery.data as any) as GroupInfo | null | undefined
+    const ms = (membersQuery.data as any) as GroupMember[] | undefined
+    setGroup(g || null)
+    setMembers(ms || [])
   }, [open, groupId])
 
   useEffect(() => {
@@ -118,47 +106,22 @@ export function GroupInfoDialog({
       return
     }
 
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const res = await userAPI.searchs(q)
-        const users = ((res.data as any)?.users as AnyUser[] | undefined) || []
-        setResults(users)
-      } catch (e: any) {
-        setResults([])
-        toast.error(e?.response?.data?.message || 'Lỗi tìm kiếm người dùng')
-      } finally {
-        setSearching(false)
-      }
-    }, 450)
 
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
+    // Sử dụng hook useSearchUsersQuery thay cho userAPI.searchs
+    const { data: searchResults, isLoading } = useSearchUsersQuery(q);
+    setSearching(isLoading);
+    setResults(searchResults || []);
+  // Không cần debounce nữa, hook đã tự động quản lý
   }, [keyword, open])
 
-  function addPick(u: AnyUser) {
-    if (memberIds.has(u._id)) return
-    if (selectedIds.has(u._id)) return
+  function addPick(u: UserItem) {
+    if (memberIds.has(u.id)) return
+    if (selectedIds.has(u.id)) return
     setSelectedToAdd((prev) => [...prev, u])
   }
 
   function removePick(userId: string) {
-    setSelectedToAdd((prev) => prev.filter((u) => u._id !== userId))
-  }
-
-  async function refreshMembers() {
-    if (!groupId) return
-    const membersRes = await groupAPI.getMembers(groupId)
-    const ms = ((membersRes.data as any)?.members as GroupMember[] | undefined) || []
-    setMembers(ms)
-  }
-
-  async function refreshGroup() {
-    if (!groupId) return
-    const infoRes = await groupAPI.getInfoGroup(groupId)
-    const g = (infoRes.data as any)?.group as GroupInfo | undefined
-    setGroup(g || null)
+    setSelectedToAdd((prev) => prev.filter((u) => u.id !== userId))
   }
 
   async function handleAddMembers() {
@@ -168,15 +131,14 @@ export function GroupInfoDialog({
       return
     }
 
-    const ids = selectedToAdd.map((u) => u._id)
+    const ids = selectedToAdd.map((u) => u.id)
 
     try {
-      await groupAPI.addMembers(groupId, ids)
+      await addMembersMutation.mutateAsync({ groupId, memberIds: ids })
       toast.success('Thêm thành viên thành công')
       setSelectedToAdd([])
       setKeyword('')
       setResults([])
-      await Promise.all([refreshGroup(), refreshMembers()])
       onAddedMembers?.(ids)
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Thêm thành viên thất bại')
@@ -187,8 +149,8 @@ export function GroupInfoDialog({
     if (!groupId) return
 
     try {
-      const allMemberIds = members.map((m) => m.userId?._id).filter(Boolean) as string[]
-      const isOwner = (group?.owner as any)?._id === myId
+      const allMemberIds = members.map((m) => m.userId?.id).filter(Boolean) as string[]
+      const isOwner = (group?.owner as any)?.id === myId
       const message = isOwner
         ? 'Bạn chắc chắn muốn xóa nhóm này? Hành động này không thể hoàn tác.'
         : 'Bạn chắc chắn muốn rời nhóm này?'
@@ -196,7 +158,7 @@ export function GroupInfoDialog({
       // eslint-disable-next-line no-alert
       if (!confirm(message)) return
 
-      await groupAPI.deleteGroup(groupId)
+      await deleteGroupMutation.mutateAsync(groupId)
       toast.success(isOwner ? 'Xóa nhóm thành công' : 'Rời nhóm thành công')
       onOpenChange(false)
       onLeftGroup?.({ groupId, memberIds: allMemberIds })
@@ -211,9 +173,8 @@ export function GroupInfoDialog({
     if (!confirm('Bạn chắc chắn muốn xóa thành viên này?')) return
 
     try {
-      await groupAPI.deleteMember(groupId, memberId)
+      await deleteMemberMutation.mutateAsync({ groupId, memberId })
       toast.success('Đã xóa thành viên')
-      await Promise.all([refreshGroup(), refreshMembers()])
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Xóa thành viên thất bại')
     }
@@ -222,27 +183,25 @@ export function GroupInfoDialog({
   async function handleChangeRole(memberId: string, nextRole: 'admin' | 'member') {
     if (!groupId) return
 
-    const target = members.find((m) => m.userId?._id === memberId)
+    const target = members.find((m) => m.userId?.id === memberId)
     const memberName = target?.userId?.fullName || target?.userId?.username || 'Thành viên'
     // eslint-disable-next-line no-alert
     const ok = confirm(`Bạn muốn đổi ${memberName} thành ${nextRole === 'admin' ? 'Admin' : 'Thành viên'}?`)
     if (!ok) return
 
     try {
-      await groupAPI.changeRole(groupId, memberId, nextRole)
+      await changeRoleMutation.mutateAsync({ groupId, memberId, role: nextRole })
       toast.success('Đã cập nhật quyền thành công')
-      await Promise.all([refreshGroup(), refreshMembers()])
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Đổi quyền thất bại')
-      await Promise.all([refreshGroup(), refreshMembers()])
     }
   }
 
   const groupName = group?.name || 'Nhóm'
   const groupDesc = group?.description?.trim() ? group?.description : 'Chưa có mô tả'
-  const ownerId = (group?.owner as any)?._id as string | undefined
+  const ownerId = (group?.owner as any)?.id as string | undefined
 
-  const myMember = members.find((m) => m.userId?._id === myId)
+  const myMember = members.find((m) => m.userId?.id === myId)
   const isOwner = !!ownerId && ownerId === myId
   const isAdmin = myMember?.role === 'admin'
   const hasAllPermissions = isOwner && isAdmin
@@ -262,7 +221,7 @@ export function GroupInfoDialog({
           open={editOpen}
           onOpenChange={setEditOpen}
           groupId={groupId}
-          initial={group ? { _id: group._id, name: group.name, description: group.description, avatar: group.avatar } : null}
+          initial={group ? { id: group.id, name: group.name, description: group.description, avatar: group.avatar } : null}
           onUpdated={(g) => {
             setGroup((prev) => (prev ? { ...prev, ...g } : (g as any)))
             onUpdatedGroup?.(g)
@@ -313,9 +272,9 @@ export function GroupInfoDialog({
                 <div className="flex flex-wrap gap-2">
                   {selectedToAdd.map((u) => (
                     <button
-                      key={u._id}
+                      key={u.id}
                       type="button"
-                      onClick={() => removePick(u._id)}
+                      onClick={() => removePick(u.id)}
                       className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm hover:bg-muted"
                       title="Bấm để xoá"
                     >
@@ -350,9 +309,9 @@ export function GroupInfoDialog({
                 ) : (
                   <div className="space-y-2">
                     {results.map((u) => {
-                      const disabled = memberIds.has(u._id) || selectedIds.has(u._id)
+                      const disabled = memberIds.has(u.id) || selectedIds.has(u.id)
                       return (
-                        <div key={u._id} className="flex items-center justify-between gap-3 rounded-md px-2 py-2 hover:bg-muted">
+                        <div key={u.id} className="flex items-center justify-between gap-3 rounded-md px-2 py-2 hover:bg-muted">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                               {u.avatar ? (
@@ -388,17 +347,17 @@ export function GroupInfoDialog({
                   members.map((m) => {
                     const u = m.userId
                     const name = u?.fullName || u?.username || 'User'
-                    const isOwner = ownerId && u?._id === ownerId
+                    const isOwner = ownerId && u?.id === ownerId
                     const isAdmin = m.role === 'admin'
                     const canKick =
                       canKickMembers &&
-                      u?._id !== myId &&
-                      (!ownerId || u?._id !== ownerId)
+                      u?.id !== myId &&
+                      (!ownerId || u?.id !== ownerId)
 
-                    const canRoleChange = canChangeRole && u?._id !== myId
+                    const canRoleChange = canChangeRole && u?.id !== myId
 
                     return (
-                      <div key={u?._id || Math.random()} className="flex items-center justify-between p-3 gap-3">
+                      <div key={u?.id || Math.random()} className="flex items-center justify-between p-3 gap-3">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <Avatar className="h-9 w-9">
                             <AvatarImage src={u?.avatar} />
@@ -414,8 +373,8 @@ export function GroupInfoDialog({
                             <select
                               className="h-9 rounded-md border bg-background px-2 text-sm"
                               value={m.role || 'member'}
-                              onChange={(e) => void handleChangeRole(u._id, e.target.value as 'admin' | 'member')}
-                              disabled={u._id === myId}
+                              onChange={(e) => void handleChangeRole(u.id, e.target.value as 'admin' | 'member')}
+                              disabled={u.id === myId}
                             >
                               <option value="member">Thành viên</option>
                               <option value="admin">Admin</option>
@@ -427,7 +386,7 @@ export function GroupInfoDialog({
                           )}
 
                           {canKick && (
-                            <Button type="button" variant="destructive" size="sm" onClick={() => void handleKick(u._id)}>
+                            <Button type="button" variant="destructive" size="sm" onClick={() => void handleKick(u.id)}>
                               Kick
                             </Button>
                           )}

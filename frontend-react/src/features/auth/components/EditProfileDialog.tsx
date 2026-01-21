@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -34,7 +33,7 @@ import { getInitials } from "@/shared/lib/utils";
 export function EditProfileDialog(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  me: MeResponse | undefined;
+  me: MeResponse | undefined | null;
   onLogout: () => void | Promise<void>;
 }) {
   const { open, onOpenChange, me, onLogout } = props;

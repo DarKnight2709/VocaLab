@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const toJSON = require("./plugins/toJSON.plugin");
 
 const blacklistedTokenSchema = new mongoose.Schema(
   {
@@ -15,6 +16,9 @@ const blacklistedTokenSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// add plugin that converts mongoose to json
+blacklistedTokenSchema.plugin(toJSON);
 
 const BlacklistedToken = mongoose.model("BlacklistedToken", blacklistedTokenSchema);
 
