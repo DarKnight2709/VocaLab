@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const toJSON = require("./plugins/toJSON.plugin");
 
 const userSchema = new mongoose.Schema(
   {
@@ -11,6 +12,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 6,
+      private: true, // password should not be returned in JSON
     },
     fullName: {
       type: String,
@@ -28,6 +30,9 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// add plugin that converts mongoose to json
+userSchema.plugin(toJSON);
 
 const User = mongoose.model("User", userSchema);
 

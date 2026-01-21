@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { groupAPI } from '@/api/group.api'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { toast } from 'sonner'
+import { useUpdateGroupMutation } from '@/features/chat/api/groupService'
+import type { GroupItem } from '@/shared/validations/GroupSchema'
 
-type GroupInfo = {
-  _id: string
-  name?: string
-  description?: string
-  avatar?: string
-}
+type GroupInfo = Partial<GroupItem> & { id: string }
 
 type Props = {
   open: boolean
@@ -44,6 +40,7 @@ export function GroupEditDialog({ open, onOpenChange, groupId, initial, onUpdate
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const groupName = useMemo(() => group?.name || 'Nhóm', [group])
+  const updateGroupMutation = useUpdateGroupMutation()
 
   useEffect(() => {
     if (!open) return
@@ -56,30 +53,10 @@ export function GroupEditDialog({ open, onOpenChange, groupId, initial, onUpdate
       return
     }
 
+    // If we don't have initial data, just show loading=false; fetching is handled by GroupInfoDialog and passed via `initial`.
+    // This keeps UI simple and avoids duplicating group info fetch here.
     if (!groupId) return
-
-    let cancelled = false
-    setLoading(true)
-
-    groupAPI
-      .getInfoGroup(groupId)
-      .then((res) => {
-        if (cancelled) return
-        const g = (res.data as any)?.group as GroupInfo | undefined
-        setGroup(g || null)
-        setName(g?.name || '')
-        setDescription(g?.description || '')
-      })
-      .catch((e: any) => {
-        toast.error(e?.response?.data?.message || 'Không thể tải thông tin nhóm')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
+    setLoading(false)
   }, [open, groupId, initial])
 
   async function handlePickFile(file: File) {
@@ -108,14 +85,14 @@ export function GroupEditDialog({ open, onOpenChange, groupId, initial, onUpdate
 
     try {
       setSaving(true)
-      const res = await groupAPI.updateGroup(groupId, payload)
-      const updated = ((res.data as any)?.group as GroupInfo | undefined) || {
-        _id: groupId,
+      const data = await updateGroupMutation.mutateAsync({ groupId, payload })
+      const updated = ((data as any)?.group as GroupInfo | undefined) || {
+        id: groupId,
         name: trimmed,
         description,
         avatar: avatarBase64 || group?.avatar,
       }
-      toast.success((res.data as any)?.message || 'Cập nhật thành công')
+      toast.success((data as any)?.message || 'Cập nhật thành công')
       setGroup(updated)
       onUpdated?.(updated)
       onOpenChange(false)

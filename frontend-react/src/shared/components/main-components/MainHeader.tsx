@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Search } from "lucide-react";
+import { Search, Sun, Moon, Menu } from "lucide-react";
 import { getInitials } from "@/shared/lib/utils";
+import { useTheme } from "@/shared/components/ThemeProvider";
 
 import { EditProfileDialog } from "@/features/auth/components/EditProfileDialog";
 import {
@@ -19,7 +20,12 @@ import {
 } from "@/features/auth/api/authService";
 import { toast } from "sonner";
 
-export default function MainHeader({ me }: { me: MeResponse | undefined }) {
+interface MainHeaderProps {
+  me: MeResponse | undefined | null;
+  toggleLeftSidebar?: () => void;
+}
+
+export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   const [headerSearch, setHeaderSearch] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -46,57 +52,71 @@ export default function MainHeader({ me }: { me: MeResponse | undefined }) {
   }
 
   const displayName = useMemo(() => {
-    return (me as any)?.fullName || (me as any)?.username || "User";
+    return me?.fullName || me?.username || "User";
   }, [me]);
+
+  const { theme, setTheme } = useTheme();
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b bg-primary text-primary-foreground shadow-sm">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-sm shadow-xs transition-colors">
         <div className="h-18 px-6 flex items-center gap-4">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleLeftSidebar}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+              aria-label="Thu gọn/Mở rộng thanh bên"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
             <Link
               to={ROUTES.BLOG.url}
               aria-label="Mở blog"
-              className="inline-flex items-center rounded-xl p-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+              className="inline-flex items-center rounded-xl p-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <img src="/logo.png" alt="Blog app" className="h-10 w-10" />
             </Link>
           </div>
 
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-foreground/80" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={headerSearch}
               onChange={(e) => onHeaderSearchChange(e.target.value)}
               placeholder="Tìm kiếm trên Blog..."
-              className="h-9 pl-8 bg-primary-foreground/15 text-primary-foreground placeholder:text-primary-foreground/70 border-primary-foreground/25 focus-visible:ring-primary-foreground/50"
+              className="h-10 pl-9 bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
             />
           </div>
 
-          {/* <div className="hidden md:flex items-center gap-2">
-            <Button
+          <div className="ml-auto flex items-center gap-2">
+            <button
               type="button"
-              variant="ghost"
-              className="text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
-              onClick={() => navigate(ROUTES.BLOG.url)}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground"
+              aria-label="Đổi chế độ sáng/tối"
             >
-              Blogs
-            </Button>
-          </div> */}
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-indigo-600" />
+              )}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => onProfileOpenChange(true)}
-            className="ml-auto"
-            aria-label="Mở thông tin cá nhân"
-          >
-            <Avatar className="h-11 w-11 border border-primary-foreground/30">
-              <AvatarImage src={(me as any)?.avatar} />
-              <AvatarFallback className="text-primary bg-primary-foreground">
-                {getInitials(displayName)}
-              </AvatarFallback>
-            </Avatar>
-          </button>
+            <button
+              type="button"
+              onClick={() => onProfileOpenChange(true)}
+              className="shrink-0 transition-transform active:scale-95"
+              aria-label="Mở thông tin cá nhân"
+            >
+              <Avatar className="h-11 w-11 border-2 border-border/50">
+                <AvatarImage src={me?.avatar || 'image.png'} />
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                  {getInitials(displayName)}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </div>
         </div>
       </header>
 

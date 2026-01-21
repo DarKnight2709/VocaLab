@@ -26,7 +26,7 @@ export default function RightSidebar({ embedded = true, onClose }: RightSidebarP
       )}
 
       <div className="h-full min-h-0 overflow-hidden">
-        <ChatView embedded={embedded} hideHeader />
+        <ChatView embedded={embedded} />
       </div>
     </aside>
   )

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const toJSON = require('./plugins/toJSON.plugin')
 
 const groupSchema = new mongoose.Schema({
   name: {
@@ -35,6 +36,9 @@ const groupSchema = new mongoose.Schema({
     default: true 
   }
 }, { timestamps: true });
+
+// add plugin that converts mongoose to json
+groupSchema.plugin(toJSON);
 
 const Group = mongoose.model("Group", groupSchema)
 

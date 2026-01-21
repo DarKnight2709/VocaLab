@@ -12,7 +12,6 @@ const AuthGuard = () => {
   const socketConnect = useSocketStore((s) => s.connect)
   const accessToken = useAuthStore((s) => s.token?.token)
 
-  if(!auth) return;
 
   useEffect(() => {
     if(!accessToken) return;

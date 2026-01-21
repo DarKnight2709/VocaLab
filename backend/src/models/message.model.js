@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const toJSON = require("./plugins/toJSON.plugin");
 
 const messageSchema = new mongoose.Schema(
   {
@@ -32,6 +33,9 @@ const messageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// add plugin that converts mongoose to json
+messageSchema.plugin(toJSON);
 
 const Message = mongoose.model("Message", messageSchema);
 

@@ -132,7 +132,7 @@ module.exports.getGroups = async (req, res) => {
       //project các field cần thiết
       {
         $project: {
-          _id: 1,
+          id: "$_id",
           name: 1,
           avatar: 1,
           description: 1,

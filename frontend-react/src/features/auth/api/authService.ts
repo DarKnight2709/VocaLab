@@ -126,7 +126,7 @@ export const useMeQuery = () => {
         const response = await api.get<{ user: MeResponse }>(
           API_ROUTES.AUTH.ME,
         );
-        return response.data;
+        return response.data.user;
       } catch (error: any) {
         return null;
       }

@@ -12,7 +12,10 @@ const ROUTES = {
     title: 'Đăng nhập',
     url: '/login'
   },
-
+  PROFILE: {
+    title: 'Trang cá nhân',
+    url: '/profile/:fullName'
+  }
 }
 
 export default ROUTES

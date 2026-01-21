@@ -49,17 +49,39 @@ module.exports = (io, socket) => {
       const { messageId, groupId } = data;
       const userId = socket.user._id;
 
-      const message = await Message.findByIdAndUpdate(
-        messageId,
-        { $addToSet: { seenBy: userId } },
-        { new: true }
-      );
-
-      if (message) {
-        io.to(`group-${groupId}`).emit("user-seen-message", {
+      if (messageId) {
+        const message = await Message.findByIdAndUpdate(
           messageId,
+          { $addToSet: { seenBy: userId } },
+          { new: true }
+        ).populate("seenBy", "username avatar fullName");
+
+        if (message) {
+          io.to(`group-${groupId}`).emit("user-seen-message", {
+            messageId,
+            userId: userId.toString(),
+            seenBy: message.seenBy
+          });
+        }
+      } else if (groupId) {
+        // Mark all messages in this group as seen by this user
+        await Message.updateMany(
+          { groupId, seenBy: { $ne: userId }, senderId: { $ne: userId } },
+          { $addToSet: { seenBy: userId } }
+        );
+
+        // Notify others if needed, but for "all messages", it might be better 
+        // to just let them fetch next time or send a broad update.
+        // For simplicity, we can reload group messages or just send a signal.
+        io.to(`group-${groupId}`).emit("group-messages-seen", {
+          groupId,
           userId: userId.toString(),
-          seenBy: message.seenBy
+          user: {
+            id: userId.toString(),
+            fullName: socket.user.fullName,
+            username: socket.user.username,
+            avatar: socket.user.avatar
+          }
         });
       }
     } catch (error) {
