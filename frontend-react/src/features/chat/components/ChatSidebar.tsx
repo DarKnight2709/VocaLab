@@ -21,7 +21,7 @@ type ChatSidebarProps = {
   hideSidebarSearch?: boolean;
   isSidebarVisible: boolean;
   onSidebarVisibilityChange: (visible: boolean) => void;
-  effectiveSearchQuery: string;
+  searchQuery: string;
   onSearchQueryChange: (value: string) => void;
   activeTab: "users" | "groups";
   onActiveTabChange: (tab: "users" | "groups") => void;
@@ -42,7 +42,7 @@ export function ChatSidebar({
   hideSidebarSearch = false,
   isSidebarVisible,
   onSidebarVisibilityChange,
-  effectiveSearchQuery,
+  searchQuery,
   onSearchQueryChange,
   activeTab,
   onActiveTabChange,
@@ -89,7 +89,7 @@ export function ChatSidebar({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Tìm kiếm người dùng/ nhóm..."
-                  value={effectiveSearchQuery}
+                  value={searchQuery}
                   onChange={(e) => onSearchQueryChange(e.target.value)}
                   className="pl-9"
                 />
@@ -125,7 +125,7 @@ export function ChatSidebar({
                 </div>
               ) : filteredUsers.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  {effectiveSearchQuery
+                  {searchQuery
                     ? "Không tìm thấy người dùng"
                     : "Không có người dùng nào"}
                 </div>
@@ -203,7 +203,7 @@ export function ChatSidebar({
                 </div>
               ) : filteredGroups.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  {effectiveSearchQuery
+                  {searchQuery
                     ? "Không tìm thấy nhóm"
                     : "Bạn chưa có nhóm nào"}
                 </div>
@@ -214,7 +214,7 @@ export function ChatSidebar({
                   const unread = g.unreadCount || 0;
                   const last = g.lastMessage;
                   const preview = last?.content
-                    ? `${last.senderName ? `${last.isMine ? "Bạn: " : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
+                    ? `${last.senderName ? `${last.isMine ? "Bạn" : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
                     : g.description || "";
 
                   return (

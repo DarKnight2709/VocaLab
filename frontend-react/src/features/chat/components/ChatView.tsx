@@ -22,8 +22,6 @@ export default function ChatView({
   embedded = false,
   hideHeader = false,
   hideSidebarSearch = false,
-  searchQuery: externalSearchQuery,
-  onSearchQueryChange,
 }: ChatViewProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -37,11 +35,6 @@ export default function ChatView({
   const [groupTypingText, setGroupTypingText] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
   const [searchQuery, setSearchQuery] = useState("");
-  const effectiveSearchQuery = externalSearchQuery ?? searchQuery;
-  const setEffectiveSearchQuery = (value: string) => {
-    onSearchQueryChange?.(value);
-    if (externalSearchQuery === undefined) setSearchQuery(value);
-  };
 
 
   // tránh spam event typing-start
@@ -63,20 +56,20 @@ export default function ChatView({
 
   // Nếu có search query thì lấy user theo search query, nếu không thì lấy tất cả user
   const filteredUsers = useMemo(() => {
-    const q = effectiveSearchQuery.trim().toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return users;
     return users.filter((u) =>
-      `${u.fullName || ""} ${u.username || ""}`.toLowerCase().includes(q),
+      `${u.fullName || ""}`.toLowerCase().includes(q),
     );
-  }, [users, effectiveSearchQuery]);
+  }, [users, searchQuery]);
 
 
   // Nếu có search query thì lấy group theo search query, nếu không thì lấy tất cả group
   const filteredGroups = useMemo(() => {
-    const q = effectiveSearchQuery.trim().toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return groups;
     return groups.filter((g) => (g.name || "").toLowerCase().includes(q));
-  }, [groups, effectiveSearchQuery]);
+  }, [groups, searchQuery]);
 
 
   const { socketRef } = useChatSocket({
@@ -342,8 +335,8 @@ export default function ChatView({
           hideSidebarSearch={hideSidebarSearch}
           isSidebarVisible={isSidebarVisible}
           onSidebarVisibilityChange={setIsSidebarVisible}
-          effectiveSearchQuery={effectiveSearchQuery}
-          onSearchQueryChange={setEffectiveSearchQuery}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
           activeTab={activeTab}
           onActiveTabChange={setActiveTab}
           filteredUsers={filteredUsers}
