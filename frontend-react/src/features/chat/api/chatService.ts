@@ -16,7 +16,7 @@ export const useSearchUsersQuery = (keyword: string) => {
       const res = await api.get<GetUsersResponse>(
         `${API_ROUTES.USER.SEARCH}?keyword=${encodeURIComponent(keyword)}`,
       );
-      return res.data?.users || [];
+      return res.data?.users || []; 
     },
     enabled: !!keyword.trim(),
     staleTime: 1000 * 60, // 1 minute

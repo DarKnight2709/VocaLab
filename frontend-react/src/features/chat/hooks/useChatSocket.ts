@@ -28,8 +28,13 @@ export function useChatSocket({
   const socketRef = useRef<Socket | null>(null);
   const selectedUserRef = useRef<UserItem | null>(null);
   const selectedGroupRef = useRef<GroupItem | null>(null);
+  const joinedGroupsRef = useRef<Set<string>>(new Set());
+  const socketReadyRef = useRef(false);
 
-  const groupIds = useMemo(() => groups.map((g) => g.id).filter(Boolean), [groups]);
+  const groupIds = useMemo(
+    () => groups.map((g) => g.id).filter(Boolean),
+    [groups],
+  );
 
   useEffect(() => {
     selectedUserRef.current = selectedUser;
@@ -44,16 +49,27 @@ export function useChatSocket({
     if (!socket) return;
     socketRef.current = socket;
 
-    socket.on("connect", () => {
-      console.log("Connected to server");
+    // Hàm chủ động báo với server là mình đã sẵn sàng nhận dữ liệu
+    const onConnect = () => {
+      socketReadyRef.current = true;
+      joinedGroupsRef.current.clear();
       socket.emit("entering");
-    });
+    };
+
+    // Nếu socket đã kết nối rồi (trường hợp login xong mới vào component này)
+    if (socket.connected) {
+      onConnect();
+    }
+
+    socket.on("connect", onConnect);
 
     socket.on("disconnect", () => {
+      socketReadyRef.current = false;
       console.log("Disconnected from server");
     });
 
     socket.on("noti-onlineList-toMe", (ids: string[]) => {
+      console.log("Nhận danh sách online mới: ", ids);
       setOnlineIds(new Set(ids));
     });
 
@@ -78,11 +94,12 @@ export function useChatSocket({
       const senderId =
         typeof msg.senderId === "object" ? msg.senderId.id : msg.senderId;
 
+      queryClient.setQueryData<MessageItem[]>(
+        ["messages", senderId],
+        (prev) => [...(prev || []), msg],
+      );
+
       if (openUser && senderId === openUser.id) {
-        queryClient.setQueryData<MessageItem[]>(
-          ["messages", openUser.id],
-          (prev) => [...(prev || []), msg],
-        );
         // Mark as seen
         socket.emit("seen-message", { senderId: openUser.id });
       }
@@ -90,53 +107,77 @@ export function useChatSocket({
       void queryClient.invalidateQueries({ queryKey: ["users"] });
     });
 
+    
+    // chat 1-1
+    socket.on("seen-message", (data: { viewerId: string; seenAt?: string }) => {
+      const openUser = selectedUserRef.current;
+      if (!openUser) return;
+      // Update message status to seen in current 1-1 thread
+      queryClient.setQueryData<MessageItem[]>(
+        ["messages", openUser.id],
+        (prev) =>
+          (prev || []).map((m) => {
+            const senderId =
+              typeof m.senderId === "object" ? m.senderId.id : m.senderId;
+            if (senderId === myId) {
+              return { ...m, seenBy: [...(m.seenBy || []), data.viewerId] };
+            }
+            return m;
+          }),
+      );
+    });
+
     socket.on(
       "receive-group-message",
-      (msg: MessageItem & { groupId: string }) => {
+      (payload: any) => {
+        // Map _id từ backend sang id cho frontend
+        const msg: MessageItem & { groupId: string } = {
+          ...payload,
+          id: payload._id || payload.id
+        };
+
         // Refresh group list for unread/lastMessage
         void queryClient.invalidateQueries({ queryKey: ["groups"] });
-
-        const openGroup = selectedGroupRef.current;
-        if (!openGroup || msg.groupId !== openGroup.id) return;
 
         queryClient.setQueryData<MessageItem[]>(
           ["groupMessages", msg.groupId],
           (prev) => [...(prev || []), msg],
         );
 
-        const senderId =
-          typeof msg.senderId === "object"
-            ? (msg.senderId as any)?.id
-            : msg.senderId;
-        if (senderId && senderId !== myId && msg.id) {
-          socket.emit("seen-group-message", {
-            messageId: msg.id,
-            groupId: msg.groupId,
-          });
+        const openGroup = selectedGroupRef.current;
+        const senderId = typeof msg.senderId === "object" ? (msg.senderId as any)?.id : msg.senderId;
+
+        // Nếu đang mở đúng group này và người gửi không phải là mình
+        if (openGroup && openGroup.id === msg.groupId) {
+          if (senderId && senderId !== myId) {
+            socket.emit("seen-group-message", {
+              groupId: msg.groupId,
+            });
+          }
         }
       },
     );
 
-    socket.on(
-      "user-seen-message",
-      (data: { messageId: string; seenBy?: string[] }) => {
-        const openGroup = selectedGroupRef.current;
-        const groupId = openGroup?.id;
-        if (!groupId) return;
-        queryClient.setQueryData<MessageItem[]>(
-          ["groupMessages", groupId],
-          (prev) =>
-            (prev || []).map((m) =>
-              m.id === data.messageId
-                ? { ...m, seenBy: data.seenBy || m.seenBy }
-                : m,
-            ),
-        );
-      },
-    );
+    // socket.on(
+    //   "user-seen-message",
+    //   (data: { messageId: string; seenBy?: string[] }) => {
+    //     const openGroup = selectedGroupRef.current;
+    //     const groupId = openGroup?.id;
+    //     if (!groupId) return;
+    //     queryClient.setQueryData<MessageItem[]>(
+    //       ["groupMessages", groupId],
+    //       (prev) =>
+    //         (prev || []).map((m) =>
+    //           m.id === data.messageId
+    //             ? { ...m, seenBy: data.seenBy || m.seenBy }
+    //             : m,
+    //         ),
+    //     );
+    //   },
+    // );
 
     socket.on(
-      "group-messages-seen",
+      "seen-group-message",
       (data: { groupId: string; userId: string; user?: any }) => {
         const openGroup = selectedGroupRef.current;
         if (!openGroup || data.groupId !== openGroup.id) return;
@@ -145,14 +186,16 @@ export function useChatSocket({
           ["groupMessages", data.groupId],
           (prev) =>
             (prev || []).map((m) => {
-               const senderIdStr = typeof m.senderId === 'object' ? m.senderId.id : m.senderId;
-               if (senderIdStr === data.userId) return m;
-               
-               const seenBy = m.seenBy || [];
-               const alreadySeen = seenBy.some(u => (typeof u === 'string' ? u : u.id) === data.userId);
-               if (alreadySeen) return m;
-               
-               return { ...m, seenBy: [...seenBy, data.user || data.userId] };
+              const senderIdStr = typeof m.senderId === "object" ? m.senderId.id : m.senderId;
+              if (senderIdStr === data.userId) return m;
+
+              const seenBy = m.seenBy || [];
+              const alreadySeen = seenBy.some(
+                (u) => (typeof u === "string" ? u : u.id) === data.userId,
+              );
+              if (alreadySeen) return m;
+
+              return { ...m, seenBy: [...seenBy, data.user || data.userId] };
             }),
         );
       },
@@ -193,26 +236,9 @@ export function useChatSocket({
       void queryClient.invalidateQueries({ queryKey: ["groups"] });
     });
 
-    socket.on("seen-message", (data: { viewerId: string; seenAt?: string }) => {
-      const openUser = selectedUserRef.current;
-      if (!openUser) return;
-      // Update message status to seen in current 1-1 thread
-      queryClient.setQueryData<MessageItem[]>(
-        ["messages", openUser.id],
-        (prev) =>
-          (prev || []).map((m) => {
-            const senderId =
-              typeof m.senderId === "object" ? m.senderId.id : m.senderId;
-            if (senderId === myId) {
-              return { ...m, seenBy: [...(m.seenBy || []), data.viewerId] };
-            }
-            return m;
-          }),
-      );
-    });
 
     return () => {
-      socket.off("connect");
+      socket.off("connect", onConnect);
       socket.off("disconnect");
       socket.off("noti-onlineList-toMe");
       socket.off("noti-online");
@@ -229,25 +255,22 @@ export function useChatSocket({
       // do not force-disconnect here; AuthStore handles disconnect on logout
       socketRef.current = null;
     };
-  }, [
-    myId,
-    queryClient,
-    setOnlineIds,
-    setTypingUsers,
-    setGroupTypingText,
-  ]);
+  }, [myId, queryClient, setOnlineIds, setTypingUsers, setGroupTypingText]);
 
   // Join all group rooms (like `frontend/src/pages/chat/group.module.js`)
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket) return;
     if (groupIds.length === 0) return;
+    if (!socketReadyRef.current) return;
+
     groupIds.forEach((groupId) => {
-      socket.emit("join-group", { groupId });
+      if (!joinedGroupsRef.current.has(groupId)) {
+        socket.emit("join-group", { groupId });
+        joinedGroupsRef.current.add(groupId);
+      }
     });
   }, [groupIds]);
 
   return { socketRef };
 }
-
-

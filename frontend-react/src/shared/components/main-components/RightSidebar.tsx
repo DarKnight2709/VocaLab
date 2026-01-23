@@ -2,12 +2,19 @@ import ChatView from '@/features/chat/components/ChatView'
 import { Button } from '@/shared/components/ui/button'
 import { PanelRightClose } from 'lucide-react'
 
-type RightSidebarProps = {
-  embedded?: boolean
-  onClose?: () => void
-}
+import type { MeResponse } from "@/shared/validations/AuthSchema";
 
-export default function RightSidebar({ embedded = true, onClose }: RightSidebarProps) {
+type RightSidebarProps = {
+  me: MeResponse | undefined | null;
+  embedded?: boolean;
+  onClose?: () => void;
+};
+
+export default function RightSidebar({
+  me,
+  embedded = true,
+  onClose,
+}: RightSidebarProps) {
   return (
     <aside className="relative h-full min-h-0 overflow-hidden border-l bg-background overscroll-contain">
       {/* Toggle handle on the border between main and right sidebar */}
@@ -26,8 +33,8 @@ export default function RightSidebar({ embedded = true, onClose }: RightSidebarP
       )}
 
       <div className="h-full min-h-0 overflow-hidden">
-        <ChatView embedded={embedded} />
+        <ChatView me={me} embedded={embedded} />
       </div>
     </aside>
-  )
+  );
 }

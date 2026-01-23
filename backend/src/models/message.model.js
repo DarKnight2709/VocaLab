@@ -8,10 +8,12 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    // có thì là tin nhắn 1-1
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    // có thì là tin nhắn nhóm
     groupId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Group"

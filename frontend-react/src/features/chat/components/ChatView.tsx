@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { useMeQuery } from "@/features/auth/api/authService";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -19,6 +18,7 @@ import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
 import type { GroupItem } from "@/shared/validations/GroupSchema";
 
 export default function ChatView({
+  me,
   embedded = false,
   hideHeader = false,
   hideSidebarSearch = false,
@@ -26,7 +26,6 @@ export default function ChatView({
   onSearchQueryChange,
 }: ChatViewProps) {
   const navigate = useNavigate();
-  const { data: me } = useMeQuery();
   const queryClient = useQueryClient();
 
   // Local UI state (no fetching here)
@@ -44,7 +43,9 @@ export default function ChatView({
     if (externalSearchQuery === undefined) setSearchQuery(value);
   };
 
-  const currentGroupIdRef = useRef<string | null>(null);
+
+  // tránh spam event typing-start
+  // auto stop sau 1s
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   
@@ -122,9 +123,11 @@ export default function ChatView({
     };
   }, [typingUsers, typingTimeoutRef, setTypingUsers]);
 
+  // reset state group
+  // mark seen ngay
+  // Invalidate messages + users
   async function openChat(user: UserItem) {
     // Don't leave group (like frontend) - keep joined to receive notifications
-    currentGroupIdRef.current = null;
 
     setSelectedGroup(null);
     setGroupTypingText("");
@@ -140,6 +143,8 @@ export default function ChatView({
     }
   }
 
+  // Không leave group cũ → vẫn nhận notification
+  // Join idempotent → server ignore duplicate
   async function openGroup(group: GroupItem) {
     setSelectedUser(null);
     setTypingUsers(new Set());
@@ -147,10 +152,8 @@ export default function ChatView({
     setSelectedGroup(group);
     setGroupTypingText("");
 
-    currentGroupIdRef.current = group.id;
     // Join group room (no need to leave previous, like frontend)
     // All groups are joined by `useChatSocket` when groups list changes
-    socketRef.current?.emit("join-group", { groupId: group.id });
     socketRef.current?.emit("seen-group-message", { groupId: group.id });
 
     try {
@@ -269,7 +272,6 @@ export default function ChatView({
 
   function handleBackToList() {
     // Don't leave group (like frontend) - keep joined to receive notifications
-    currentGroupIdRef.current = null;
 
     setSelectedUser(null);
     setSelectedGroup(null);
@@ -328,7 +330,6 @@ export default function ChatView({
 
           // Leave room & reset UI
           socketRef.current?.emit("leave-group", groupId);
-          currentGroupIdRef.current = null;
           setSelectedGroup(null);
           setGroupTypingText("");
           void queryClient.invalidateQueries({ queryKey: ["groups"] });
