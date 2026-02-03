@@ -59,6 +59,11 @@ module.exports = (httpServer) => {
     // thông báo cho tôi những người đang trong danh sách online
     socket.emit("noti-onlineList-toMe", [...onlineUsers.keys()]);
 
+    socket.on("entering", () => {
+      // Gửi lại danh sách online khi client yêu cầu (phòng trường hợp client bị lỡ sự kiện lúc mới connect)
+      socket.emit("noti-onlineList-toMe", [...onlineUsers.keys()]);
+    });
+
 
     socket.on("disconnect", () => {
       // nếu count của userId đó = 0 -> offline -> loại

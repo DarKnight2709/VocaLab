@@ -21,7 +21,7 @@ type ChatSidebarProps = {
   hideSidebarSearch?: boolean;
   isSidebarVisible: boolean;
   onSidebarVisibilityChange: (visible: boolean) => void;
-  effectiveSearchQuery: string;
+  searchQuery: string;
   onSearchQueryChange: (value: string) => void;
   activeTab: "users" | "groups";
   onActiveTabChange: (tab: "users" | "groups") => void;
@@ -32,6 +32,7 @@ type ChatSidebarProps = {
   selectedUser: UserItem | null;
   selectedGroup: GroupItem | null;
   onlineIds: Set<string>;
+  myId: string;
   onUserClick: (user: UserItem) => void;
   onGroupClick: (group: GroupItem) => void;
   onCreateGroupClick: () => void;
@@ -42,7 +43,7 @@ export function ChatSidebar({
   hideSidebarSearch = false,
   isSidebarVisible,
   onSidebarVisibilityChange,
-  effectiveSearchQuery,
+  searchQuery,
   onSearchQueryChange,
   activeTab,
   onActiveTabChange,
@@ -53,6 +54,7 @@ export function ChatSidebar({
   selectedUser,
   selectedGroup,
   onlineIds,
+  myId,
   onUserClick,
   onGroupClick,
   onCreateGroupClick,
@@ -88,8 +90,8 @@ export function ChatSidebar({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Tìm kiếm..."
-                  value={effectiveSearchQuery}
+                  placeholder="Tìm kiếm người dùng/ nhóm..."
+                  value={searchQuery}
                   onChange={(e) => onSearchQueryChange(e.target.value)}
                   className="pl-9"
                 />
@@ -125,7 +127,7 @@ export function ChatSidebar({
                 </div>
               ) : filteredUsers.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  {effectiveSearchQuery
+                  {searchQuery
                     ? "Không tìm thấy người dùng"
                     : "Không có người dùng nào"}
                 </div>
@@ -160,7 +162,7 @@ export function ChatSidebar({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <div className="font-medium truncate">{name}</div>
+                            <div className={`truncate ${unread > 0 ? "font-bold" : "font-medium"}`}>{name}</div>
                             {unread > 0 && !active && (
                               <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 text-center">
                                 {unread}
@@ -168,7 +170,7 @@ export function ChatSidebar({
                             )}
                           </div>
                           <div
-                            className={`text-xs truncate ${active ? "opacity-90" : "text-muted-foreground"}`}
+                            className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
                           >
                             {u.lastMessage
                               ? `${u.lastMessage.isMine ? "Bạn: " : ""}${u.lastMessage.content?.slice(0, 30)}${u.lastMessage.content && u.lastMessage.content.length > 30 ? "..." : ""}`
@@ -203,7 +205,7 @@ export function ChatSidebar({
                 </div>
               ) : filteredGroups.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  {effectiveSearchQuery
+                  {searchQuery
                     ? "Không tìm thấy nhóm"
                     : "Bạn chưa có nhóm nào"}
                 </div>
@@ -214,8 +216,12 @@ export function ChatSidebar({
                   const unread = g.unreadCount || 0;
                   const last = g.lastMessage;
                   const preview = last?.content
-                    ? `${last.senderName ? `${last.isMine ? "Bạn: " : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
+                    ? `${last.senderName ? `${last.isMine ? "Bạn" : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
                     : g.description || "";
+
+                  const isGroupActive = g.members?.some(
+                    (memberId) => memberId !== myId && onlineIds.has(memberId),
+                  );
 
                   return (
                     <button
@@ -228,13 +234,22 @@ export function ChatSidebar({
                       onClick={() => onGroupClick(g)}
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={g.avatar} />
-                          <AvatarFallback>{getInitials(name)}</AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={g.avatar} />
+                            <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                          </Avatar>
+                          {isGroupActive && (
+                            <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <div className="font-medium truncate">{name}</div>
+                            <div className="flex items-center gap-2 truncate">
+                              <span className={`${unread > 0 ? "font-bold" : "font-medium"} truncate`}>
+                                {name}
+                              </span>
+                            </div>
                             {unread > 0 && !active && (
                               <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 text-center">
                                 {unread}
@@ -242,9 +257,13 @@ export function ChatSidebar({
                             )}
                           </div>
                           <div
-                            className={`text-xs truncate ${active ? "opacity-90" : "text-muted-foreground"}`}
+                            className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
                           >
-                            {preview}
+                            {isGroupActive && !last?.content ? (
+                              <span className={active ? "text-primary-foreground/80" : "text-green-600 font-medium"}>
+                                • Đang hoạt động
+                              </span>
+                            ) : preview}
                           </div>
                         </div>
                       </div>

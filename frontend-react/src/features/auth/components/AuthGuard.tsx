@@ -10,7 +10,7 @@ const AuthGuard = () => {
   const { auth } = useLoaderData<typeof authLoader>()
   const location = useLocation()
   const socketConnect = useSocketStore((s) => s.connect)
-  const accessToken = useAuthStore((s) => s.token?.token)
+  const accessToken = useAuthStore((s) => s.token?.accessToken)
 
 
   useEffect(() => {

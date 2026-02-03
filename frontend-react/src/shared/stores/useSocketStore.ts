@@ -45,7 +45,7 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
   isConnecting: false,
   error: null,
 
-  connect: (token?: string) => {
+  connect: (accessToken?: string) => {
     const { socket, isConnected } = get()
 
     // nếu đã kết nối rồi -> không làm gì
@@ -62,9 +62,9 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
     set({ isConnecting: true, error: null })
 
     try {
-      const accessToken = token ?? getAccessTokenFromAuthStorage()
+      const token = accessToken ?? getAccessTokenFromAuthStorage()
 
-      if (!accessToken) {
+      if (!token) {
         toast.error('Thiếu token để kết nối socket!', {
           description: 'Vui lòng đăng nhập lại để tiếp tục sử dụng realtime.'
         })
@@ -74,8 +74,7 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
 
       // tạo socket instance
       const newSocket = io(`${envConfig.VITE_SOCKET_URL}`, {
-        auth: { token: accessToken }, // Gửi accessToken để server xác thực
-        path: '', // Đường dẫn socket (thường dùng khi có reverse proxy)
+        auth: { token: token }, // Gửi accessToken để server xác thực
         transports: ['websocket'], // chỉ dùng websocket (không fallback polling)
         autoConnect: true,
         reconnection: true,
@@ -83,7 +82,6 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
         reconnectionDelay: 1000
       })
 
-      // Event listeners
 
       // connect: khi kết nối thành công
       newSocket.on('connect', () => {

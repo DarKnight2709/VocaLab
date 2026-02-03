@@ -57,8 +57,18 @@ export function ChatHeader({
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <div className="font-semibold">
-                {selectedGroup.name || "Nhóm"}
+              <div className="flex items-center gap-2">
+                <div className="font-semibold">
+                  {selectedGroup.name || "Nhóm"}
+                </div>
+                {isSelectedUserOnline && (
+                  <div className="h-2 w-2 bg-green-500 rounded-full" />
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {isSelectedUserOnline
+                  ? "Đang hoạt động"
+                  : "Không hoạt động"}
               </div>
             </div>
             <Button

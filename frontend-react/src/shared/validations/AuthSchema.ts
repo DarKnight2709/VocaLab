@@ -28,30 +28,29 @@ export type SignUpBodyType = z.infer<typeof SignUpSchema>;
 
 // Phần này thêm sau (thêm refresh token).
 
-// export const LogoutSchema = z
-//   .object({
-//     refreshToken: z.string(),
-//   })
-//   .strict()
-//   .strip();
+export const LogoutSchema = z
+  .object({
+    refreshToken: z.string(),
+  })
+  .strict()
+  .strip();
 
-// export type LogoutBodyType = z.infer<typeof LogoutSchema>;
+export type LogoutBodyType = z.infer<typeof LogoutSchema>;
 
-// export const RefreshTokenSchema = z
-//   .object({
-//     refreshToken: z.string(),
-//   })
-//   .strict()
-//   .strip();
+export const RefreshTokenSchema = z
+  .object({
+    refreshToken: z.string(),
+  })
+  .strict()
+  .strip();
 
-// export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
+export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
 
 
 export const LoginResponseSchema = z
   .object({
-    message: z.string(),
-    token: z.string(),
-    // refreshToken: z.string(),
+    accessToken: z.string(),
+    refreshToken: z.string(),
   })
   .strip();
 
@@ -65,14 +64,14 @@ export const SignUpResponseSchema = z
 
 export type SignUpResponse = z.infer<typeof SignUpResponseSchema>;
 
-// export const RefreshTokenResponseSchema = z
-//   .object({
-//     accessToken: z.string(),
-//     refreshToken: z.string(),
-//   })
-//   .strip();
+export const RefreshTokenResponseSchema = z
+  .object({
+    accessToken: z.string(),
+    refreshToken: z.string(),
+  })
+  .strip();
 
-// export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
+export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
 
 export const MeResponseSchema = BaseEntityDTO.extend({
   username: z.string(),

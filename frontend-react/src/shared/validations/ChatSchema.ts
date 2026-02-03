@@ -30,6 +30,7 @@ const PopulatedSenderSchema = z.object({
 export const MessageItemSchema = z.object({
   id: z.string(),
   senderId: z.union([z.string(), PopulatedSenderSchema]),
+  sender: PopulatedSenderSchema.optional(), // ✅ Separate sender object from backend
   content: z.string(),
   createdAt: z.string(),
   seenBy: z.array(z.union([z.string(), PopulatedSenderSchema])).optional(),

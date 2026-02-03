@@ -1,24 +1,40 @@
+import envConfig from '@/shared/config/envConfig'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useState } from 'react'
+import type { ReactNode } from 'react'
 
-export function ReactQueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: 1,
-            refetchOnWindowFocus: false,
-          },
-        },
-      }),
-  )
+// instance chính của react query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 phút: dữ liệu được coi là tươi 
+      gcTime: 10 * 60 * 1000,   //10 phút: dữ liệu bị xóa khởi cache
+      retry: false,             // không tự động retry khi query lỗi
+      refetchOnMount: false,  // không refetch khi component mount lại
+      refetchOnWindowFocus: false,  // không refetch khi quay lại tab
+      refetchOnReconnect: true  //refetch khi mạng kết nối lại
+    },
+    mutations: {  
+      retry: false        // không retry khi mutation lỗi
+    }
+  }
+})
 
+interface ReactQueryProviderProps {
+  children: ReactNode
+}
+
+// provider toàn cục cho React query
+// đặc ở cấp cao nhất
+// tất cả component trong app đều có thể sử dụng các hook (useQuery, useMutation, useQueryClient).
+
+export function ReactQueryProvider({ children }: ReactQueryProviderProps) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={false} />
+      {envConfig.VITE_ENV !== 'production' && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   )
 }
+
+export { queryClient }

@@ -1,72 +1,4 @@
-// import { useAuthStore } from '@/features/auth/stores/authStore.ts';
-// import { authAPI } from '@/api/auth.api'
-// import { authStorage } from '../stores/authStorage'
 
-// export type LoginResult =
-//   | { success: true; user: unknown }
-//   | { success: false; message: string }
-
-// export const authService = {
-//   async login(username: string, password: string): Promise<LoginResult> {
-//     try {
-//       const response = await authAPI.login(username, password)
-//       const token = (response.data as { token?: string })?.token
-//       if (!token) return { success: false, message: 'Thiếu token từ server' }
-
-//       authStorage.setToken(token)
-
-//       const meResponse = await authAPI.getMe()
-//       const user = (meResponse.data as { user?: unknown })?.user ?? meResponse.data
-//       authStorage.setUser(user)
-
-//       return { success: true, user }
-//     } catch (error: any) {
-//       authStorage.clear()
-//       const message =
-//         error?.response?.data?.message || error?.response?.data?.error || 'Đăng nhập thất bại'
-//       return { success: false, message }
-//     }
-//   },
-
-//   async signup(username: string, password: string, fullName: string, email: string) {
-//     try {
-//       await authAPI.signup(username, password, fullName, email)
-//       return { success: true as const, message: 'Đăng ký thành công' }
-//     } catch (error: any) {
-//       const message =
-//         error?.response?.data?.message || error?.response?.data?.error || 'Đăng ký thất bại'
-//       return { success: false as const, message }
-//     }
-//   },
-
-//   async logout() {
-//     try {
-//       await authAPI.logout()
-//     } catch {
-//       // ignore
-//     } finally {
-//       authStorage.clear()
-//     }
-//   },
-
-//   isAuthenticated(): boolean {
-//     return !!authStorage.getToken()
-//   },
-
-//   async checkAuth(): Promise<unknown | null> {
-//     if (!this.isAuthenticated()) return null
-
-//     try {
-//       const response = await authAPI.getMe()
-//       const user = (response.data as { user?: unknown })?.user ?? response.data
-//       authStorage.setUser(user)
-//       return user
-//     } catch {
-//       authStorage.clear()
-//       return null
-//     }
-//   },
-// }
 
 import useAuthStore from "../stores/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -123,10 +55,10 @@ export const useMeQuery = () => {
     queryKey: ["me"],
     queryFn: async () => {
       try {
-        const response = await api.get<{ user: MeResponse }>(
+        const response = await api.get<MeResponse>(
           API_ROUTES.AUTH.ME,
         );
-        return response.data.user;
+        return response.data;
       } catch (error: any) {
         return null;
       }
@@ -138,9 +70,7 @@ export const useLogoutMutation = () => {
   const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
   return useMutation({
-    // mutationFn: (refreshToken: string) => api.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }),
-    // mutationFn: () => api.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }),
-    mutationFn: () => api.post(API_ROUTES.AUTH.LOGOUT),
+    mutationFn: (refreshToken: string) => api.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }),
     onSuccess: () => {
       logout();
       queryClient.clear();
@@ -163,7 +93,7 @@ export const useUpdatePersonalInfoMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdatePersonalInfoBodyType) =>
-      api.patch<UpdateProfileResponse>(API_ROUTES.AUTH.UPDATE_PROFILE, body),
+      api.patch<UpdateProfileResponse>(API_ROUTES.USER.PROFILE, body),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       toast.success(
@@ -187,7 +117,7 @@ export const useUploadAvatarMutation = () => {
       const formData = new FormData();
       formData.append("avatar", file);
       return api.patch<{ avatarUrl: string }>(
-        "/users/upload-avatar",
+        API_ROUTES.USER.UPLOAD_AVATAR,
         formData,
         {
           headers: {

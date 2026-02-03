@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { useMeQuery } from "@/features/auth/api/authService";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -16,17 +15,16 @@ import { useMessagesQuery } from "@/features/chat/api/chatService";
 
 import type { ChatViewProps } from "../types";
 import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
+import { MessageType } from "@/shared/enums/MessageType.enum";
 import type { GroupItem } from "@/shared/validations/GroupSchema";
 
 export default function ChatView({
+  me,
   embedded = false,
   hideHeader = false,
   hideSidebarSearch = false,
-  searchQuery: externalSearchQuery,
-  onSearchQueryChange,
 }: ChatViewProps) {
   const navigate = useNavigate();
-  const { data: me } = useMeQuery();
   const queryClient = useQueryClient();
 
   // Local UI state (no fetching here)
@@ -38,13 +36,10 @@ export default function ChatView({
   const [groupTypingText, setGroupTypingText] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
   const [searchQuery, setSearchQuery] = useState("");
-  const effectiveSearchQuery = externalSearchQuery ?? searchQuery;
-  const setEffectiveSearchQuery = (value: string) => {
-    onSearchQueryChange?.(value);
-    if (externalSearchQuery === undefined) setSearchQuery(value);
-  };
 
-  const currentGroupIdRef = useRef<string | null>(null);
+
+  // tránh spam event typing-start
+  // auto stop sau 1s
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   
@@ -62,20 +57,20 @@ export default function ChatView({
 
   // Nếu có search query thì lấy user theo search query, nếu không thì lấy tất cả user
   const filteredUsers = useMemo(() => {
-    const q = effectiveSearchQuery.trim().toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return users;
     return users.filter((u) =>
-      `${u.fullName || ""} ${u.username || ""}`.toLowerCase().includes(q),
+      `${u.fullName || ""}`.toLowerCase().includes(q),
     );
-  }, [users, effectiveSearchQuery]);
+  }, [users, searchQuery]);
 
 
   // Nếu có search query thì lấy group theo search query, nếu không thì lấy tất cả group
   const filteredGroups = useMemo(() => {
-    const q = effectiveSearchQuery.trim().toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return groups;
     return groups.filter((g) => (g.name || "").toLowerCase().includes(q));
-  }, [groups, effectiveSearchQuery]);
+  }, [groups, searchQuery]);
 
 
   const { socketRef } = useChatSocket({
@@ -122,9 +117,11 @@ export default function ChatView({
     };
   }, [typingUsers, typingTimeoutRef, setTypingUsers]);
 
+  // reset state group
+  // mark seen ngay
+  // Invalidate messages + users
   async function openChat(user: UserItem) {
     // Don't leave group (like frontend) - keep joined to receive notifications
-    currentGroupIdRef.current = null;
 
     setSelectedGroup(null);
     setGroupTypingText("");
@@ -133,13 +130,15 @@ export default function ChatView({
     try {
       // Mark seen for 1-1 messages
       socketRef.current?.emit("seen-message", { senderId: user.id });
-      void queryClient.invalidateQueries({ queryKey: ["messages", user.id] });
-      void queryClient.invalidateQueries({ queryKey: ["users"] });
+        void queryClient.invalidateQueries({ queryKey: ["messages", user.id] });
+        void queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (e: any) {
       toast.error("Không thể tải tin nhắn");
     }
   }
 
+  // Không leave group cũ → vẫn nhận notification
+  // Join idempotent → server ignore duplicate
   async function openGroup(group: GroupItem) {
     setSelectedUser(null);
     setTypingUsers(new Set());
@@ -147,17 +146,15 @@ export default function ChatView({
     setSelectedGroup(group);
     setGroupTypingText("");
 
-    currentGroupIdRef.current = group.id;
-    // Join group room (no need to leave previous, like frontend)
-    // All groups are joined by `useChatSocket` when groups list changes
-    socketRef.current?.emit("join-group", { groupId: group.id });
-    socketRef.current?.emit("seen-group-message", { groupId: group.id });
-
     try {
-      void queryClient.invalidateQueries({
-        queryKey: ["groupMessages", group.id],
+      // Join group room (no need to leave previous, like frontend)
+      // All groups are joined by `useChatSocket` when groups list changes
+      socketRef.current?.emit("seen-group-message", { groupId: group.id }, () => {
+         void queryClient.invalidateQueries({
+          queryKey: ["groupMessages", group.id],
+        });
+        void queryClient.invalidateQueries({ queryKey: ["groups"] });
       });
-      void queryClient.invalidateQueries({ queryKey: ["groups"] });
     } catch (e: any) {
       toast.error(e?.response?.data?.message || "Không thể tải tin nhắn nhóm");
     }
@@ -179,7 +176,7 @@ export default function ChatView({
 
       socket.emit(
         "send-group-message",
-        { groupId, content, replyTo: null, fileUrl: null },
+        { groupId, content, type: MessageType.GROUP, replyTo: null, fileUrl: null },
         (status: { success: boolean; message?: string }) => {
           if (!status?.success) {
             toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
@@ -207,7 +204,7 @@ export default function ChatView({
 
     socket.emit(
       "send-message",
-      { receiverId, content },
+      { receiverId, content, type: MessageType.DIRECT },
       (status: { success: boolean; message?: string }) => {
         if (!status?.success) {
           toast.error(status?.message || "Gửi tin nhắn thất bại");
@@ -263,13 +260,20 @@ export default function ChatView({
     }, 1000);
   }
 
-  const isSelectedUserOnline = selectedUser
-    ? onlineIds.has(selectedUser.id)
-    : false;
+  const isSelectedUserOnline = useMemo(() => {
+    if (selectedUser) {
+      return onlineIds.has(selectedUser.id);
+    }
+    if (selectedGroup) {
+      return (selectedGroup.members || []).some(
+        (memberId) => memberId !== me!.id && onlineIds.has(memberId),
+      );
+    }
+    return false;
+  }, [selectedUser, selectedGroup, onlineIds, me]);
 
   function handleBackToList() {
     // Don't leave group (like frontend) - keep joined to receive notifications
-    currentGroupIdRef.current = null;
 
     setSelectedUser(null);
     setSelectedGroup(null);
@@ -328,7 +332,6 @@ export default function ChatView({
 
           // Leave room & reset UI
           socketRef.current?.emit("leave-group", groupId);
-          currentGroupIdRef.current = null;
           setSelectedGroup(null);
           setGroupTypingText("");
           void queryClient.invalidateQueries({ queryKey: ["groups"] });
@@ -341,8 +344,8 @@ export default function ChatView({
           hideSidebarSearch={hideSidebarSearch}
           isSidebarVisible={isSidebarVisible}
           onSidebarVisibilityChange={setIsSidebarVisible}
-          effectiveSearchQuery={effectiveSearchQuery}
-          onSearchQueryChange={setEffectiveSearchQuery}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
           activeTab={activeTab}
           onActiveTabChange={setActiveTab}
           filteredUsers={filteredUsers}
@@ -352,6 +355,7 @@ export default function ChatView({
           selectedUser={selectedUser}
           selectedGroup={selectedGroup}
           onlineIds={onlineIds}
+          myId={me!.id}
           onUserClick={openChat}
           onGroupClick={openGroup}
           onCreateGroupClick={() => setCreateGroupOpen(true)}

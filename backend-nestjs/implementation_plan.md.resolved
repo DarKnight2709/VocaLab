@@ -1,0 +1,119 @@
+## 1. Goal: Migrate Express (MongoDB) to NestJS (PostgreSQL + Prisma)
+
+Chúng ta sẽ xây dựng lại hệ thống sử dụng các công nghệ hiện đại nhất hiện nay: NestJS cho logic, PostgreSQL làm database chính, và Prisma làm ORM.
+
+### Proposed Changes
+
+#### [NEW] [backend-nestjs](file:///d:/VscodeProjects/realtime-chat/backend-nestjs)
+- `src/modules/auth`: Login, JWT.
+- `src/modules/users`: PostgreSQL Table via Prisma.
+- `src/modules/groups`: Relational data handling.
+- `src/prisma`: Prisma Client & Schema.
+
+## 2. Migration Execution Plan (Relational Database)
+
+### Step 1: Database Setup
+- [ ] Initialize Prisma in `backend-nestjs`.
+- [ ] Design PostgreSQL Schema (Users, Groups, Messages, Members).
+- [ ] Setup Docker Compose for PostgreSQL.
+
+### Step 2: Auth & Identity
+- [ ] Implement Auth with Prisma.
+- [ ] Setup Passports and JWT Strategies.
+
+### Step 3: Chat Logic (Relational)
+- [ ] Port MongoDB logic to Prisma queries.
+- [ ] Handle many-to-many relationships for Groups & Users.
+
+### Step 4: Socket.io Gateways
+- [ ] Integration with Prisma for real-time state.
+- **Message Broker**: Use Redis Pub/Sub to scale Socket.io across multiple server instances.
+- **Caching**: Store session data or frequently accessed user profiles in Redis to reduce MongoDB load.
+- **Rate Limiting**: Use Redis to implement distributed rate limiting.
+
+---
+
+## 2. Testing: The Mark of a Professional
+
+Professional projects *must* have tests. You currently have none in your [package.json](file:///d:/VscodeProjects/realtime-chat/backend/package.json).
+
+### [ ] Unit & Integration Testing
+- **Tools**: `Vitest` or `Jest`, `Supertest` (for API testing).
+- **Focus**: Test your services, controllers, and utility functions.
+
+### [ ] End-to-End (E2E) Testing
+- **Tools**: `Playwright` or `Cypress`.
+- **Focus**: Test the critical user flows (Login -> Chat -> Group Creation) as a real user would.
+
+---
+
+## 3. DevOps & Reliability
+
+Production apps need consistency and monitoring.
+
+### [ ] Containerization (Docker)
+- **Goal**: "It works on my machine" should mean "It works everywhere."
+- **Action**: Create `Dockerfile` and `docker-compose.yml` for Node, MongoDB, and Redis.
+
+### [ ] CI/CD Pipelines
+- **Tool**: GitHub Actions.
+- **Action**: Automate linting, testing, and building on every push.
+
+### [ ] Error Tracking & Monitoring
+- **Error Tracking**: Integrate **Sentry**.
+- **Logging**: Use **Winston** or **Pino** instead of `console.log`.
+- **Monitoring**: Learn **Prometheus** & **Grafana** (advanced).
+
+---
+
+## 4. Advanced Frontend & UI/UX
+
+Your frontend stack is already very modern. Here's how to push it further.
+
+### [ ] Performance Optimization
+- **Virtual Lists**: Use `@tanstack/react-virtual` for long message lists to keep the UI smooth.
+- **Web Workers**: Move heavy processing (like encryption or large data parsing) off the main thread.
+
+### [ ] WebRTC (Real-time Audio/Video)
+- **Feature**: Add voice or video calls.
+- **Tool**: `Simple-Peer` or `PeerJS` for P2P communication.
+
+### [ ] Progressive Web App (PWA)
+- **Goal**: Make the chat app installable on phones/desktops with offline support.
+- **Tool**: `vite-plugin-pwa`.
+
+---
+
+## 5. Security & Best Practices
+
+### [ ] Security Headers
+- Use **Helmet.js** to set secure HTTP headers.
+- Implement **CORS** properly (don't use `*`).
+
+### [ ] Authentication Depth
+- **Refresh Tokens**: Implement a secure refresh token rotation strategy.
+- **2FA**: Two-factor authentication (optional but professional).
+
+## 4. Tài liệu học tập (Resources)
+
+### Nếu bạn chọn NestJS:
+- **NestJS Official Docs (Websockets)**: [docs.nestjs.com/websockets/gateways](https://docs.nestjs.com/websockets/gateways)
+- **Course**: "NestJS Zero to Hero" trên Udemy hoặc các series Youtube của **Marius Espejo**.
+- **Github Example**: [nestjs-socket-io-chat-example](https://github.com/search?q=nestjs+socket.io+chat)
+
+### Nếu bạn chọn Express + TypeScript:
+- **TypeScript for Backend**: [Course: "TypeScript: The Complete Developer's Guide" (Stephen Grider)](https://www.udemy.com/course/typescript-the-complete-developers-guide/)
+- **Structure**: Tìm hiểu về "Feature-based Folder Structure" trong Node.js.
+
+### Về Scaling (Redis):
+- **Socket.io Redis Adapter**: [v4.socket.io/docs/redis-adapter/](https://v4.socket.io/docs/redis-adapter/)
+
+---
+
+## 5. Summary: Lời khuyên cuối cùng
+
+Nếu bạn thực sự muốn trở thành "Professional Backend Engineer" và làm việc tại các công ty lớn, **NestJS là con đường tốt nhất**. Nó sẽ dạy bạn cách tư duy về kiến trúc (Architecture) mà Express không bắt buộc.
+
+Nếu mục tiêu là hoàn thiện sản phẩm cá nhân này nhanh nhất để portfolio đẹp, hãy **giữ Express nhưng chuyển sang TypeScript**.
+
+Bạn muốn tôi hướng dẫn bước đầu tiên cho lựa chọn nào?

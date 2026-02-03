@@ -28,7 +28,7 @@ module.exports = (io, socket) => {
 
       // Gửi tới tất cả người trong group
       io.to(`group-${groupId}`).emit("receive-group-message", {
-        _id: message._id,
+        id: message._id,
         senderId: message.senderId,
         groupId: groupId,
         content: message.content,
@@ -44,26 +44,28 @@ module.exports = (io, socket) => {
   });
 
   // Xem tin nhắn trong group
+  // tạm thời khi seen thì sẽ seen hết tin nhắn trong nhóm
   socket.on("seen-group-message", async (data) => {
     try {
-      const { messageId, groupId } = data;
+      const { groupId } = data;
       const userId = socket.user._id;
 
-      if (messageId) {
-        const message = await Message.findByIdAndUpdate(
-          messageId,
-          { $addToSet: { seenBy: userId } },
-          { new: true }
-        ).populate("seenBy", "username avatar fullName");
+      // if (messageId) {
+      //   const message = await Message.findByIdAndUpdate(
+      //     messageId,
+      //     { $addToSet: { seenBy: userId } },
+      //     { new: true }
+      //   ).populate("seenBy", "username avatar fullName");
 
-        if (message) {
-          io.to(`group-${groupId}`).emit("user-seen-message", {
-            messageId,
-            userId: userId.toString(),
-            seenBy: message.seenBy
-          });
-        }
-      } else if (groupId) {
+      //   if (message) {
+      //     io.to(`group-${groupId}`).emit("user-seen-message", {
+      //       messageId,
+      //       userId: userId.toString(),
+      //       seenBy: message.seenBy
+      //     });
+      //   }
+      // } 
+      if (groupId) {
         // Mark all messages in this group as seen by this user
         await Message.updateMany(
           { groupId, seenBy: { $ne: userId }, senderId: { $ne: userId } },
@@ -73,7 +75,7 @@ module.exports = (io, socket) => {
         // Notify others if needed, but for "all messages", it might be better 
         // to just let them fetch next time or send a broad update.
         // For simplicity, we can reload group messages or just send a signal.
-        io.to(`group-${groupId}`).emit("group-messages-seen", {
+        io.to(`group-${groupId}`).emit("seen-group-message", {
           groupId,
           userId: userId.toString(),
           user: {

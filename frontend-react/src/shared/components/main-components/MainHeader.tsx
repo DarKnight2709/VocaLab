@@ -18,7 +18,7 @@ import type {
 import {
   useLogoutMutation,
 } from "@/features/auth/api/authService";
-import { toast } from "sonner";
+import useAuthStore from "@/features/auth/stores/authStore";
 
 interface MainHeaderProps {
   me: MeResponse | undefined | null;
@@ -33,13 +33,21 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
 
   const navigate = useNavigate();
 
+  const refreshToken = useAuthStore((state) => state.token?.refreshToken);
+
   async function handleLogout() {
+    if (!refreshToken) {
+      // Nếu không có refresh token thì cứ logout ở client
+      useAuthStore.getState().logout();
+      navigate(ROUTES.LOGIN.url);
+      return;
+    }
+
     try {
-      await logoutMutation.mutateAsync();
+      await logoutMutation.mutateAsync(refreshToken);
       navigate(ROUTES.LOGIN.url);
     } catch (error) {
-      // toast
-      toast.error("Đăng xuất thất bại.");
+      console.error("Logout error:", error);
     }
   }
 
