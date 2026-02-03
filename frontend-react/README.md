@@ -104,8 +104,8 @@ src/
 Tạo file `.env` trong thư mục `frontend-react`:
 
 ```env
-VITE_API_URL=http://localhost:3000
-VITE_SOCKET_URL=http://localhost:3000
+VITE_API_URL=http://localhost:4001
+VITE_SOCKET_URL=http://localhost:4001
 VITE_ENV=development
 ```
 

@@ -100,11 +100,15 @@ export function useChatSocket({
       );
 
       if (openUser && senderId === openUser.id) {
-        // Mark as seen
-        socket.emit("seen-message", { senderId: openUser.id });
+        // Mark as seen with acknowledgment to avoid race condition on sidebar refresh
+        socket.emit("seen-message", { senderId: openUser.id }, (response: {success: boolean}) => {
+          void queryClient.invalidateQueries({ queryKey: ["users"] });
+          console.log("response " + response.success)
+        });
+      } else {
+        // Refresh user list if not in open chat (to show unread count)
+        void queryClient.invalidateQueries({ queryKey: ["users"] });
       }
-      // Refresh user list to update unread/lastMessage
-      void queryClient.invalidateQueries({ queryKey: ["users"] });
     });
 
     
@@ -152,8 +156,13 @@ export function useChatSocket({
           if (senderId && senderId !== myId) {
             socket.emit("seen-group-message", {
               groupId: msg.groupId,
+            }, () => {
+              void queryClient.invalidateQueries({ queryKey: ["groups"] });
             });
           }
+        } else {
+           // Nếu không trong group đang mở thì refresh để hiện unread
+           void queryClient.invalidateQueries({ queryKey: ["groups"] });
         }
       },
     );

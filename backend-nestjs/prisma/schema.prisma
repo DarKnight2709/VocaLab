@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// sau khi chạy npx prisma generate
+// sẽ có PrismaClient ở file output
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+// khai báo để biết 
+//  - Dùng adapter PostgreSQL 
+//  - Dùng driver pg
+//  - Sinh đúng chuẩn Postgre
+datasource db {
+  provider = "postgresql"
+}
+
+enum MemberRole {
+  admin
+  member
+}
+
+enum MessageType {
+  DIRECT
+  GROUP
+}
+
+
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  hashedPassword  String
+  fullName  String
+  email     String   @unique
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sentMessages     Message[]     @relation("Sender")
+  receivedMessages Message[]     @relation("Receiver")
+  ownedGroups      Group[]       @relation("Owner")
+  groupMemberships GroupMember[]
+  seenMessages     MessageSeen[]
+  refreshTokens    RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  ipAddress String?
+  userAgent String?
+  isRevoked Boolean  @default(false)
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+
+model Message {
+  id          String   @id @default(uuid())
+  type        MessageType @default(DIRECT)
+  senderId    String
+  receiverId  String?
+  groupId     String?
+  content     String?
+  replyToId   String?
+  attachments Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  sender   User   @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User?  @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  group    Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  reply    Message?  @relation("Reply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies  Message[] @relation("Reply")
+
+  seenBy   MessageSeen[]
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([groupId])
+  @@index([replyToId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+
+model MessageSeen {
+  userId    String
+  messageId String
+  seenAt    DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@id([userId, messageId])
+  @@index([messageId])
+  @@index([userId, seenAt])
+  @@map("message_seen")
+}
+
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  avatar      String?
+  description String?
+  ownerId     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  owner   User          @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members GroupMember[]
+  messages Message[]
+
+  @@index([ownerId])
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String     @id @default(uuid())
+  groupId   String
+  userId    String
+  role      MemberRole @default(member)
+  joinedAt  DateTime   @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@map("group_members")
+}
+

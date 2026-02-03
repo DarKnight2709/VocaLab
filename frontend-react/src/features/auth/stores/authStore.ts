@@ -1,32 +1,3 @@
-// type StoredUser = Record<string, unknown>
-
-// const TOKEN_KEY = 'token'
-// const USER_KEY = 'user'
-
-// export const authStorage = {
-//   getToken(): string | null {
-//     return localStorage.getItem(TOKEN_KEY)
-//   },
-//   setToken(token: string) {
-//     localStorage.setItem(TOKEN_KEY, token)
-//   },
-//   getUser<T extends StoredUser = StoredUser>(): T | null {
-//     const raw = localStorage.getItem(USER_KEY)
-//     if (!raw) return null
-//     try {
-//       return JSON.parse(raw) as T
-//     } catch {
-//       return null
-//     }
-//   },
-//   setUser(user: unknown) {
-//     localStorage.setItem(USER_KEY, JSON.stringify(user))
-//   },
-//   clear() {
-//     localStorage.removeItem(TOKEN_KEY)
-//     localStorage.removeItem(USER_KEY)
-//   },
-// }
 
 // Đây là Auth State Store được tạo bằng Zustand
 // Lưu token + user info
@@ -68,7 +39,7 @@ const useAuthStore = create<AuthState>()(
         // logic quan trọng nhất
         // decode access token để lấy thông tin user
         login: async (token: LoginResponse) => {
-          const decodedToken = decodeToken(token.token);
+          const decodedToken = decodeToken(token.accessToken);
           // decode lỗi -> token rác -> logout
           if (!decodedToken) {
             const { disconnect } = useSocketStore.getState();
@@ -87,9 +58,9 @@ const useAuthStore = create<AuthState>()(
 
           // Kết nối socket ngay sau khi login
           // truyền accessToken vào socket để xác thực
-          // const { connect } = useSocketStore.getState();
+          const { connect } = useSocketStore.getState();
           // const { connect: connectSmartHome } = useSmartHomeSocketStore.getState() // Tạm thời tắt
-          // connect(token.token);
+          connect(token.accessToken);
           // connectSmartHome(token.accessToken) // Tạm thời tắt Socket.IO
         },
         logout: () => {

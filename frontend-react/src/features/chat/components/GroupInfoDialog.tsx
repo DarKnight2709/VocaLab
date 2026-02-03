@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchUsersQuery } from '@/features/chat/api/chatService'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
@@ -68,7 +68,6 @@ export function GroupInfoDialog({
   const [searching, setSearching] = useState(false)
   const [results, setResults] = useState<UserItem[]>([])
   const [selectedToAdd, setSelectedToAdd] = useState<UserItem[]>([])
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const memberIds = useMemo(() => new Set(members.map((m) => m.userId?.id).filter(Boolean)), [members])
   const selectedIds = useMemo(() => new Set(selectedToAdd.map((u) => u.id)), [selectedToAdd])
@@ -94,25 +93,17 @@ export function GroupInfoDialog({
     const ms = (membersQuery.data as any) as GroupMember[] | undefined
     setGroup(g || null)
     setMembers(ms || [])
-  }, [open, groupId])
+  }, [open, groupId, infoQuery.data, membersQuery.data])
 
+  // Move Hook to top level (React Rule)
+  // Logic: Only runs when open is true and keyword is not empty
+  const searchQuery = useSearchUsersQuery(keyword.trim());
+  
   useEffect(() => {
-    if (!open) return
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-
-    const q = keyword.trim()
-    if (!q) {
-      setResults([])
-      return
-    }
-
-
-    // Sử dụng hook useSearchUsersQuery thay cho userAPI.searchs
-    const { data: searchResults, isLoading } = useSearchUsersQuery(q);
-    setSearching(isLoading);
-    setResults(searchResults || []);
-  // Không cần debounce nữa, hook đã tự động quản lý
-  }, [keyword, open])
+    if (!open) return;
+    setSearching(searchQuery.isLoading);
+    setResults(searchQuery.data || []);
+  }, [searchQuery.data, searchQuery.isLoading, open]);
 
   function addPick(u: UserItem) {
     if (memberIds.has(u.id)) return

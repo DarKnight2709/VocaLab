@@ -111,10 +111,10 @@ export function MessageList({
         ) : (
           groupMessages.map((m, index) => {
             const senderId = normalizeId(m.senderId);
-            const senderName =
-              typeof m.senderId === "object"
-                ? (m.senderId as any)?.fullName || (m.senderId as any)?.username
-                : "";
+            // ✅ Use sender object if available, fallback to senderId object
+            const sender = (m as any).sender || (typeof m.senderId === "object" ? m.senderId : null);
+            const senderName = sender?.fullName || sender?.username || "Người dùng";
+            const senderAvatar = sender?.avatar;
             const isMine = senderId === normalizeId(myId);
             const currentDate = m.createdAt || new Date();
 
@@ -151,26 +151,25 @@ export function MessageList({
                         <Link
                           to={ROUTES.PROFILE.url.replace(
                             ":fullName",
-                            senderName || "user",
+                            senderName,
                           )}
                           className="block rounded-full group/avatar relative"
                           aria-label={`Xem trang cá nhân của ${senderName}`}
                         >
                           <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex items-center justify-center text-xs font-semibold hover:opacity-80 transition-opacity">
-                            {typeof m.senderId === "object" &&
-                            (m.senderId as any)?.avatar ? (
+                            {senderAvatar ? (
                               <img
-                                src={(m.senderId as any)?.avatar}
+                                src={senderAvatar}
                                 alt=""
                                 className="h-8 w-8 object-cover"
                               />
                             ) : (
-                              getInitials(senderName || "User")
+                              getInitials(senderName)
                             )}
                           </div>
                           {/* Tooltip tên */}
                           <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded shadow-lg opacity-0 invisible group-hover/avatar:opacity-100 group-hover/avatar:visible transition-all whitespace-nowrap z-50">
-                            {senderName || "Người dùng"}
+                            {senderName}
                           </div>
                         </Link>
                       ) : (
@@ -183,7 +182,7 @@ export function MessageList({
                   >
                     {!isMine && isFirstInSequence && (
                       <span className="text-[10px] font-semibold text-primary/80 tracking-wide mb-0.5 ml-1 select-none">
-                        {senderName || "Người dùng"}
+                        {senderName}
                       </span>
                     )}
                     <div className="relative inline-flex items-center group/message">

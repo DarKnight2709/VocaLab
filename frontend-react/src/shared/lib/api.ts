@@ -6,7 +6,7 @@ import ROUTES from "./routes";
 
 export const api = axios.create({
   baseURL:
-    import.meta.env.VITE_ENV === "development" ? "" : envConfig.VITE_API_URL,
+    import.meta.env.VITE_ENV === "development" ? "/api/" : envConfig.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -19,7 +19,7 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token?.token;
+    const token = useAuthStore.getState().token?.accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,15 +30,20 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data && response.data.success === true && response.data.data !== undefined) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
   (error) => {
     const status = error?.response?.status;
     const requestUrl: string | undefined = error?.config?.url;
-    const token = useAuthStore.getState().token?.token;
+    const token = useAuthStore.getState().token?.accessToken;
 
     const isAuthRequest =
       typeof requestUrl === "string" &&
-      (requestUrl.startsWith("/auth/login") || requestUrl.startsWith("/auth/signup"));
+      (requestUrl.includes("auth/login") || requestUrl.includes("auth/signup"));
 
     // Only force-logout/redirect on 401 when we *had* a token (expired/invalid session).
     // For expected auth failures like wrong credentials, let the caller handle the error.

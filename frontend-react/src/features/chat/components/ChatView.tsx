@@ -15,6 +15,7 @@ import { useMessagesQuery } from "@/features/chat/api/chatService";
 
 import type { ChatViewProps } from "../types";
 import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
+import { MessageType } from "@/shared/enums/MessageType.enum";
 import type { GroupItem } from "@/shared/validations/GroupSchema";
 
 export default function ChatView({
@@ -129,8 +130,8 @@ export default function ChatView({
     try {
       // Mark seen for 1-1 messages
       socketRef.current?.emit("seen-message", { senderId: user.id });
-      void queryClient.invalidateQueries({ queryKey: ["messages", user.id] });
-      void queryClient.invalidateQueries({ queryKey: ["users"] });
+        void queryClient.invalidateQueries({ queryKey: ["messages", user.id] });
+        void queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (e: any) {
       toast.error("Không thể tải tin nhắn");
     }
@@ -145,15 +146,15 @@ export default function ChatView({
     setSelectedGroup(group);
     setGroupTypingText("");
 
-    // Join group room (no need to leave previous, like frontend)
-    // All groups are joined by `useChatSocket` when groups list changes
-    socketRef.current?.emit("seen-group-message", { groupId: group.id });
-
     try {
-      void queryClient.invalidateQueries({
-        queryKey: ["groupMessages", group.id],
+      // Join group room (no need to leave previous, like frontend)
+      // All groups are joined by `useChatSocket` when groups list changes
+      socketRef.current?.emit("seen-group-message", { groupId: group.id }, () => {
+         void queryClient.invalidateQueries({
+          queryKey: ["groupMessages", group.id],
+        });
+        void queryClient.invalidateQueries({ queryKey: ["groups"] });
       });
-      void queryClient.invalidateQueries({ queryKey: ["groups"] });
     } catch (e: any) {
       toast.error(e?.response?.data?.message || "Không thể tải tin nhắn nhóm");
     }
@@ -175,7 +176,7 @@ export default function ChatView({
 
       socket.emit(
         "send-group-message",
-        { groupId, content, replyTo: null, fileUrl: null },
+        { groupId, content, type: MessageType.GROUP, replyTo: null, fileUrl: null },
         (status: { success: boolean; message?: string }) => {
           if (!status?.success) {
             toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
@@ -203,7 +204,7 @@ export default function ChatView({
 
     socket.emit(
       "send-message",
-      { receiverId, content },
+      { receiverId, content, type: MessageType.DIRECT },
       (status: { success: boolean; message?: string }) => {
         if (!status?.success) {
           toast.error(status?.message || "Gửi tin nhắn thất bại");
@@ -259,9 +260,17 @@ export default function ChatView({
     }, 1000);
   }
 
-  const isSelectedUserOnline = selectedUser
-    ? onlineIds.has(selectedUser.id)
-    : false;
+  const isSelectedUserOnline = useMemo(() => {
+    if (selectedUser) {
+      return onlineIds.has(selectedUser.id);
+    }
+    if (selectedGroup) {
+      return (selectedGroup.members || []).some(
+        (memberId) => memberId !== me!.id && onlineIds.has(memberId),
+      );
+    }
+    return false;
+  }, [selectedUser, selectedGroup, onlineIds, me]);
 
   function handleBackToList() {
     // Don't leave group (like frontend) - keep joined to receive notifications
@@ -346,6 +355,7 @@ export default function ChatView({
           selectedUser={selectedUser}
           selectedGroup={selectedGroup}
           onlineIds={onlineIds}
+          myId={me!.id}
           onUserClick={openChat}
           onGroupClick={openGroup}
           onCreateGroupClick={() => setCreateGroupOpen(true)}

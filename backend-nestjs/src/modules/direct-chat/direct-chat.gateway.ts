@@ -1,0 +1,195 @@
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  ConnectedSocket,
+  MessageBody,
+} from '@nestjs/websockets';
+import { UseGuards, UsePipes, UseFilters } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
+import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
+import { SocketUser } from '../../common/decorators/socket-user.decorator';
+import { MessagesService } from '../messages/services/messages.service';
+import { MessageType } from '@prisma/client';
+import { WsValidationPipe } from 'src/common/pipes/ws-validation.pipe';
+import { SendMessageDto } from '../messages/dto/send-message.dto';
+import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
+
+@WebSocketGateway({
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
+    credentials: true,
+  },
+  namespace: '/',
+})
+@UseGuards(SocketAuthGuard)
+@UseFilters(new WsExceptionFilter())
+export class DirectChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+
+  // Track unique socket IDs per userId to avoid duplicate counting
+  private onlineUsers = new Map<string, Set<string>>();
+
+  constructor(
+    private messagesService: MessagesService,
+  ) {}
+
+  handleConnection(client: Socket) {
+    // Note: We can't use Guard here, and client.user might not be set yet.
+    // If the client refreshes, this is called for the new socket.
+    console.log(`[Socket] New connection: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket) {
+    const user = (client as any).user;
+    const socketId = client.id;
+    
+    console.log(`[Socket] Disconnected: ${socketId}`, { 
+      userId: user?.id || 'undefined' 
+    });
+    
+    if (!user) return;
+
+    const userId = user.id;
+    const socketSet = this.onlineUsers.get(userId);
+    
+    if (socketSet) {
+      socketSet.delete(socketId);
+      console.log(`[Socket] User ${userId} removed socket ${socketId}. Remaining: ${socketSet.size}`);
+      
+      if (socketSet.size === 0) {
+        this.onlineUsers.delete(userId);
+        console.log(`[Socket] User ${userId} completely offline. Broadcasting noti-offline.`);
+        this.server.emit('noti-offline', { id: userId });
+      }
+    }
+  }
+
+  @SubscribeMessage('entering')
+  handleEntering(@SocketUser() user: any, @ConnectedSocket() client: Socket) {
+    if (!user) return;
+
+    const userId = user.id;
+    const socketId = client.id;
+    client.join(userId);
+
+    let socketSet = this.onlineUsers.get(userId);
+    if (!socketSet) {
+      socketSet = new Set<string>();
+      this.onlineUsers.set(userId, socketSet);
+    }
+
+    const isAlreadyConnected = socketSet.has(socketId);
+    const isFirstOverallConnection = socketSet.size === 0;
+
+    if (!isAlreadyConnected) {
+      socketSet.add(socketId);
+      console.log(`[Socket] User ${userId} added connection ${socketId}. Total: ${socketSet.size}`);
+      
+      if (isFirstOverallConnection) {
+        console.log(`[Socket] User ${userId} first connection. Broadcasting noti-online.`);
+        this.server.emit('noti-online', { id: userId });
+      }
+    } else {
+      console.log(`[Socket] User ${userId} re-emitted entering on existing socket ${socketId}`);
+    }
+
+    client.emit('noti-onlineList-toMe', Array.from(this.onlineUsers.keys()));
+  }
+ 
+  @SubscribeMessage('send-message')
+  @UsePipes(WsValidationPipe)
+  async handleSendMessage(
+    @SocketUser() user: any,
+    @MessageBody() payload: SendMessageDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('Send message:', payload);
+    try {
+      // payload đã được validate bởi WsValidationPipe
+      const { content, receiverId, replyTo, attachments } = payload;
+
+      if (!content && !attachments) {
+        return { success: false, message: 'Thiếu nội dung hoặc file đính kèm' };
+      }
+
+      if (!receiverId) {
+        return { success: false, message: 'Thiếu người nhận' };
+      }
+
+      const message = await this.messagesService.sendMessage({
+        senderId: user.id,
+        receiverId,
+        type: MessageType.DIRECT,
+        content,
+        replyTo,
+        attachments,
+      });
+
+      // Emit to receiver
+      this.server.to(receiverId).emit('receive-message', {
+        id: message.id,
+        senderId: user.id,
+        content: message.content,
+        createdAt: message.createdAt,
+        replyTo: message.replyTo,
+        attachments: message.attachments,  // MessageAttachment[]
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Send message error:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  @SubscribeMessage('seen-message')
+  async handleSeenMessage(@SocketUser() user: any, @MessageBody() payload: any) {
+    try {
+      const { senderId } = payload;
+      const viewerId = user.id;
+
+      if (!senderId) return;
+
+      const result = await this.messagesService.markAsSeen(senderId, viewerId);
+
+      if (result.count > 0) {
+        this.server.to(senderId).emit('seen-message', {
+          viewerId,
+          seenAt: new Date(),
+        });
+      }
+      // khi trả về true tự động callback lúc emit sẽ được gọi với giá trị trả về response là {success: true}
+      return { success: true };
+    } catch (error) {
+      console.error('Error marking seen:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  @SubscribeMessage('typing-start')
+  handleTypingStart(@SocketUser() user: any, @MessageBody() payload: any) {
+    console.log('Typing start:', payload);
+    const { receiverId } = payload;
+    if (!receiverId) return;
+
+    this.server.to(receiverId).emit('typing-start', {
+      senderId: user.id,
+      senderName: user.fullName || user.username,
+    });
+  }
+
+  @SubscribeMessage('typing-stop')
+  handleTypingStop(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { receiverId } = payload;
+    if (!receiverId) return;
+
+    this.server.to(receiverId).emit('typing-stop', {
+      senderId: user.id,
+    });
+  }
+}
+

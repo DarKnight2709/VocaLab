@@ -40,7 +40,7 @@ export default function MainLayout() {
     [isResizing]
   );
 
-  useEffect(() => {
+  useEffect(() => { 
     if (isResizing) {
       window.addEventListener("mousemove", resize);
       window.addEventListener("mouseup", stopResizing);
