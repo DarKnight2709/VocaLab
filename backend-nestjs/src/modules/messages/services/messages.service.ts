@@ -2,8 +2,8 @@ import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { MessagesRepository } from '../repositories/messages.repository';
 import { CloudinaryService } from 'src/common/services/cloudinary.service';
 import { MessageEntity } from '../domain/message.entity';
-import { IMESSAGES_REPOSITORY, MessagesRepositoryInterface } from '../domain/interfaces/messages-repository.interface';
-import { MessageType } from '@prisma/client';
+import { IMESSAGES_REPOSITORY, MessagesRepositoryInterface, MessageWithDetails, ConversationListItem } from '../domain/interfaces/messages-repository.interface';
+import { MessageStatus, MessageType } from '@prisma/client';
 import { AttachmentType, MessageAttachment } from '../domain/types/message-attachment.type';
 
 export interface SendMessageInput {
@@ -24,12 +24,12 @@ export class MessagesService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async getConversations(userId: string) {
+  async getConversations(userId: string): Promise<{ users: ConversationListItem[] }> {
     const users = await this.messageRepository.getConversations(userId);
     return { users };
   }
 
-  async getMessages(userId: string, friendId: string) {
+  async getMessages(userId: string, friendId: string): Promise<{ messages: MessageWithDetails[] }> {
     const messages = await this.messageRepository.findDirectMessages(userId, friendId);
     return { messages };
   }
@@ -66,6 +66,10 @@ export class MessagesService {
       replyTo: input.replyTo,
       attachments: input.attachments,
     });
+  }
+
+  async updateMessageStatus(messageId: string, status: MessageStatus) {
+    return this.messageRepository.updateMessageStatus(messageId, status);
   }
 
   async markAsSeen(senderId: string, receiverId: string) {

@@ -1,7 +1,20 @@
-
-import { MessageType } from '@prisma/client';
-import { MessageEntity } from '../message.entity';
+import { MessageStatus, MessageType } from '@prisma/client';
+import { MessageEntity, UserBasicInfo } from '../message.entity';
 import { MessageAttachment } from '../types/message-attachment.type';
+
+export interface MessageWithDetails extends MessageEntity {
+  sender: UserBasicInfo;
+  receiver?: UserBasicInfo;
+}
+
+export interface ConversationListItem extends UserBasicInfo {
+  lastMessage: {
+    content?: string;
+    createdAt: Date;
+    isMine: boolean;
+  } | null;
+  unreadCount: number;
+}
 
 export const IMESSAGES_REPOSITORY = 'IMESSAGES_REPOSITORY';
 
@@ -19,16 +32,21 @@ export interface MessagesRepositoryInterface {
   findDirectMessages(
     userId1: string,
     userId2: string,
-  ): Promise<any[]>;
+  ): Promise<MessageWithDetails[]>;
 
-  findGroupMessages(groupId: string): Promise<any[]>;
+  findGroupMessages(groupId: string): Promise<MessageWithDetails[]>;
 
-  findLastGroupMessage(groupId: string): Promise<any | null>;
+  findLastGroupMessage(groupId: string): Promise<MessageWithDetails | null>;
 
   countUnreadGroupMessages(
     groupId: string,
     userId: string,
   ): Promise<number>;
+
+  updateMessageStatus(
+    messageId: string,
+    status: MessageStatus,
+  ): Promise<{ message: string}>;
 
   markDirectMessagesAsSeen(
     senderId: string,
@@ -40,5 +58,5 @@ export interface MessagesRepositoryInterface {
     userId: string,
   ): Promise<{ count: number }>;
 
-  getConversations(userId: string): Promise<any[]>;
+  getConversations(userId: string): Promise<ConversationListItem[]>;
 }

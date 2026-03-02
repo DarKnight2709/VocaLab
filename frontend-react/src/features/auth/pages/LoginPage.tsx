@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import envConfig from "@/shared/config/envConfig";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -17,12 +16,9 @@ import {
   useLoginMutation,
   useSignUpMutation,
 } from "@/features/auth/api/authService";
-import { LoginSchema, SignUpSchema } from "@/shared/validations/AuthSchema";
+import { LoginSchema, SignUpSchema, type LoginBodyType, type SignUpBodyType } from "@/shared/validations/AuthSchema";
 import useAuthStore from "../stores/authStore";
 import ROUTES from "@/shared/lib/routes";
-
-type LoginForm = z.infer<typeof LoginSchema>;
-type SignupForm = z.infer<typeof SignUpSchema>;
 
 export default function LoginPage() {
   const { isAuth } = useAuthStore();
@@ -32,12 +28,12 @@ export default function LoginPage() {
   const loginMutation = useLoginMutation();
   const signUpMutation = useSignUpMutation();
 
-  const loginForm = useForm<LoginForm>({
+  const loginForm = useForm<LoginBodyType>({
     resolver: zodResolver(LoginSchema),
     defaultValues: { username: "", password: "" },
   });
 
-  const signupForm = useForm<SignupForm>({
+  const signupForm = useForm<SignUpBodyType>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: { username: "", password: "", fullName: "", email: "" },
   });
@@ -51,7 +47,7 @@ export default function LoginPage() {
     return <Navigate to={ROUTES.BLOG.url} replace />;
   }
 
-  async function handleLogin(data: LoginForm) {
+  async function handleLogin(data: LoginBodyType) {
     try {
       await loginMutation.mutateAsync({
         username: data.username,
@@ -65,7 +61,7 @@ export default function LoginPage() {
     }
   }
 
-  async function handleSignup(data: SignupForm) {
+  async function handleSignup(data: SignUpBodyType) {
     try {
       await signUpMutation.mutateAsync({
         username: data.username,

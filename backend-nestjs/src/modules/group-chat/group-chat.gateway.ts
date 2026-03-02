@@ -58,14 +58,10 @@ export class GroupChatGateway {
       this.server.to(`group-${groupId}`).emit('receive-group-message', {
         id: message.id,
         senderId: message.senderId,
-        sender: {
-          id: user.id,
-          username: user.username,
-          fullName: user.fullName,
-          avatar: user.avatar,
-        },
+        sender: message.sender,
         groupId,
         content: message.content,
+        status: message.status,
         replyTo,
         attachments: message.attachments,
         seenBy: [],
@@ -91,8 +87,8 @@ export class GroupChatGateway {
 
       this.server.to(`group-${groupId}`).emit('seen-group-message', {
         groupId,
-        userId,
-        user: {
+        viewerId: userId,
+        viewer: {
           id: userId,
           fullName: user.fullName,
           username: user.username,
@@ -102,6 +98,33 @@ export class GroupChatGateway {
       return { success: true };
     } catch (error) {
       console.error('Error marking seen:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  @SubscribeMessage('update-message-status')
+  async handleUpdateMessageStatus(@SocketUser() user: any, @MessageBody() payload: any) {
+    try {
+      const { messageId, status } = payload;
+      const userId = user.id;
+
+      if (!messageId) return;
+
+      await this.messagesService.updateMessageStatus(messageId, status);
+
+      this.server.to(`group-${messageId}`).emit('update-message-status', {
+        messageId,
+        status,
+        user: {
+          id: userId,
+          fullName: user.fullName,
+          username: user.username,
+          avatar: user.avatar,
+        },
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating message status:', error);
       return { success: false, message: error.message };
     }
   }
@@ -153,22 +176,8 @@ export class GroupChatGateway {
     }
   }
 
-  @SubscribeMessage('group-created')
-  handleGroupCreated(@MessageBody() payload: any) {
-    const { groupId, members } = payload;
-    if (!groupId || !members) return;
-
-    members.forEach((memberId: string) => {
-      this.server.to(memberId).emit('reload-groups');
-    });
-  }
-
-  @SubscribeMessage('group-deleted')
-  handleGroupDeleted(@MessageBody() payload: any) {
-    const { groupId, members } = payload;
-    if (!groupId || !members) return;
-
-    members.forEach((memberId: string) => {
+  notifyReloadGroups(memberIds: string[]) {
+    memberIds.forEach((memberId) => {
       this.server.to(memberId).emit('reload-groups');
     });
   }

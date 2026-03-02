@@ -2,21 +2,25 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { getErrorMessage } from "@/shared/lib/api";
 
 import { GroupCreateDialog } from "@/features/chat/components/GroupCreateDialog";
 import { GroupInfoDialog } from "@/features/chat/components/GroupInfoDialog";
 import { ChatSidebar } from "@/features/chat/components/ChatSidebar";
 import { ChatArea } from "@/features/chat/components/ChatArea";
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
-import { useGroupsQuery } from "@/features/chat/api/groupService";
+import { useGroupsQuery, groupKeys } from "@/features/chat/api/groupService";
 import { useGroupMessagesQuery } from "@/features/chat/api/groupService";
-import { useUsersQuery } from "@/features/chat/api/chatService";
+import { useUsersQuery, chatKeys } from "@/features/chat/api/chatService";
 import { useMessagesQuery } from "@/features/chat/api/chatService";
 
 import type { ChatViewProps } from "../types";
-import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
+import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
 import { MessageType } from "@/shared/enums/MessageType.enum";
-import type { GroupItem } from "@/shared/validations/GroupSchema";
+import type {
+  GroupItem,
+  GroupMessageItem,
+} from "@/shared/validations/GroupSchema";
 
 export default function ChatView({
   me,
@@ -37,13 +41,9 @@ export default function ChatView({
   const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
   const [searchQuery, setSearchQuery] = useState("");
 
-
   // tránh spam event typing-start
   // auto stop sau 1s
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  
-
 
   // Queries
   const { data: users = [], isLoading: loadingUsers } = useUsersQuery();
@@ -54,16 +54,12 @@ export default function ChatView({
   const { data: groupMessages = [], isLoading: loadingGroupMessages } =
     useGroupMessagesQuery(selectedGroup?.id || "");
 
-
   // Nếu có search query thì lấy user theo search query, nếu không thì lấy tất cả user
   const filteredUsers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return users;
-    return users.filter((u) =>
-      `${u.fullName || ""}`.toLowerCase().includes(q),
-    );
+    return users.filter((u) => `${u.fullName || ""}`.toLowerCase().includes(q));
   }, [users, searchQuery]);
-
 
   // Nếu có search query thì lấy group theo search query, nếu không thì lấy tất cả group
   const filteredGroups = useMemo(() => {
@@ -71,7 +67,6 @@ export default function ChatView({
     if (!q) return groups;
     return groups.filter((g) => (g.name || "").toLowerCase().includes(q));
   }, [groups, searchQuery]);
-
 
   const { socketRef } = useChatSocket({
     myId: me!.id,
@@ -97,7 +92,7 @@ export default function ChatView({
   // Khi chuyển sang tab groups thì invalid các query liên quan đến groups
   useEffect(() => {
     if (activeTab === "groups") {
-      void queryClient.invalidateQueries({ queryKey: ["groups"] });
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
     }
   }, [activeTab, queryClient]);
 
@@ -130,10 +125,12 @@ export default function ChatView({
     try {
       // Mark seen for 1-1 messages
       socketRef.current?.emit("seen-message", { senderId: user.id });
-        void queryClient.invalidateQueries({ queryKey: ["messages", user.id] });
-        void queryClient.invalidateQueries({ queryKey: ["users"] });
+      void queryClient.invalidateQueries({
+        queryKey: chatKeys.messages(user.id),
+      });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
     } catch (e: any) {
-      toast.error("Không thể tải tin nhắn");
+      toast.error(getErrorMessage(e, "Không thể tải tin nhắn"));
     }
   }
 
@@ -149,14 +146,18 @@ export default function ChatView({
     try {
       // Join group room (no need to leave previous, like frontend)
       // All groups are joined by `useChatSocket` when groups list changes
-      socketRef.current?.emit("seen-group-message", { groupId: group.id }, () => {
-         void queryClient.invalidateQueries({
-          queryKey: ["groupMessages", group.id],
-        });
-        void queryClient.invalidateQueries({ queryKey: ["groups"] });
-      });
+      socketRef.current?.emit(
+        "seen-group-message",
+        { groupId: group.id },
+        () => {
+          void queryClient.invalidateQueries({
+            queryKey: groupKeys.messages(group.id),
+          });
+          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+        },
+      );
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Không thể tải tin nhắn nhóm");
+      toast.error(getErrorMessage(e, "Không thể tải tin nhắn nhóm"));
     }
   }
 
@@ -176,17 +177,41 @@ export default function ChatView({
 
       socket.emit(
         "send-group-message",
-        { groupId, content, type: MessageType.GROUP, replyTo: null, fileUrl: null },
+        {
+          groupId,
+          content,
+          type: MessageType.GROUP,
+          replyTo: null,
+          fileUrl: null,
+        },
         (status: { success: boolean; message?: string }) => {
           if (!status?.success) {
             toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
             return;
           }
           setMessageText("");
-          void queryClient.invalidateQueries({ queryKey: ["groups"] });
-          void queryClient.invalidateQueries({
-            queryKey: ["groupMessages", groupId],
-          });
+          queryClient.setQueryData<GroupMessageItem[]>(
+            groupKeys.messages(groupId),
+            (prev) => [
+              ...(prev || []),
+              {
+                id: `local-${Date.now()}`,
+                senderId: me!.id,
+                sender: {
+                  id: me!.id,
+                  username: me!.username,
+                  fullName: me!.fullName,
+                  avatar: me!.avatar,
+                },
+                groupId,
+                content,
+                createdAt: new Date().toISOString(),
+                type: MessageType.GROUP,
+                seenBy: [],
+              },
+            ],
+          );
+          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
         },
       );
       return;
@@ -211,8 +236,9 @@ export default function ChatView({
           return;
         }
         // Optimistic update
-        queryClient.setQueryData<MessageItem[]>(
-          ["messages", receiverId],
+        setMessageText("");
+        queryClient.setQueryData<ChatMessageItem[]>(
+          chatKeys.messages(receiverId),
           (prev) => [
             ...(prev || []),
             {
@@ -221,11 +247,15 @@ export default function ChatView({
               receiverId,
               content,
               createdAt: new Date().toISOString(),
+              type: MessageType.DIRECT,
+              isSeen: false,
             },
           ],
         );
-        setMessageText("");
-        void queryClient.invalidateQueries({ queryKey: ["users"] });
+        void queryClient.invalidateQueries({
+          queryKey: chatKeys.messages(receiverId),
+        });
+        void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
       },
     );
   }
@@ -272,6 +302,56 @@ export default function ChatView({
     return false;
   }, [selectedUser, selectedGroup, onlineIds, me]);
 
+  function recallMessage(messageId: string) {
+    const socket = socketRef.current;
+    const content = messageText.trim();
+    if (!socket || !content) return;
+
+    if (selectedGroup?.id) {
+      const groupId = selectedGroup.id;
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      socket.emit("group-typing-stop", { groupId });
+
+      socket.emit(
+        "send-group-message",
+        {
+          groupId,
+          content,
+          type: MessageType.GROUP,
+          replyTo: null,
+          fileUrl: null,
+        },
+        (status: { success: boolean; message?: string }) => {
+          if (!status?.success) {
+            toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
+            return;
+          }
+          setMessageText("");
+          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+          void queryClient.invalidateQueries({
+            queryKey: groupKeys.messages(groupId),
+          });
+        },
+      );
+      return;
+    }
+
+    socket.emit(
+      "recall-message",
+      { messageId },
+      (status: { success: boolean; message?: string }) => {
+        if (!status?.success) {
+          toast.error(status?.message || "Thu hồi tin nhắn thất bại");
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: chatKeys.list() });
+      },
+    );
+  }
+
   function handleBackToList() {
     // Don't leave group (like frontend) - keep joined to receive notifications
 
@@ -292,13 +372,9 @@ export default function ChatView({
       <GroupCreateDialog
         open={createGroupOpen}
         onOpenChange={setCreateGroupOpen}
-        onCreated={({ groupId, memberIds }) => {
-          socketRef.current?.emit("group-created", {
-            groupId,
-            members: memberIds,
-          });
+        onCreated={() => {
           setActiveTab("groups");
-          void queryClient.invalidateQueries({ queryKey: ["groups"] });
+          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
         }}
       />
 
@@ -307,34 +383,21 @@ export default function ChatView({
         onOpenChange={setGroupInfoOpen}
         groupId={selectedGroup?.id || null}
         myId={me!.id}
-        onAddedMembers={(memberIds) => {
+        onAddedMembers={() => {
           const groupId = selectedGroup?.id;
           if (!groupId) return;
-          // Notify newly added members to refresh groups
-          socketRef.current?.emit("group-created", {
-            groupId,
-            members: memberIds,
-          });
-          void queryClient.invalidateQueries({ queryKey: ["groups"] });
+          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
         }}
         onUpdatedGroup={(updated) => {
           setSelectedGroup((prev) =>
             prev && prev.id === updated.id ? { ...prev, ...updated } : prev,
           );
-          void queryClient.invalidateQueries({ queryKey: ["groups"] });
+          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
         }}
-        onLeftGroup={({ groupId, memberIds }) => {
-          // Notify all members to refresh groups
-          socketRef.current?.emit("group-deleted", {
-            groupId,
-            members: memberIds,
-          });
-
-          // Leave room & reset UI
-          socketRef.current?.emit("leave-group", groupId);
+        onLeftGroup={() => {
           setSelectedGroup(null);
           setGroupTypingText("");
-          void queryClient.invalidateQueries({ queryKey: ["groups"] });
+          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
         }}
       />
 

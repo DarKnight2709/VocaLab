@@ -83,6 +83,22 @@ export class EnvironmentValidation {
   @Transform(({ value }) => (value ? parseInt(value, 10) : 3600))
   REFRESH_TOKEN_EXPIRES_IN: number;
 
+  // Redis
+  @IsString()
+  @Transform(({ value }) => value || 'localhost')
+  REDIS_HOST: string = 'localhost';
+
+  @IsNumber()
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 6379))
+  REDIS_PORT: number = 6379;
+
+  @IsString()
+  @Transform(({ value }) => value || '')
+  REDIS_PASSWORD: string = '';
+
+  @IsNumber()
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 0))
+  REDIS_DB: number = 0;
 }
 
 export function validateConfig(config: Record<string, unknown>) {

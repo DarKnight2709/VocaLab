@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { GroupEntity } from '../domain/group.entity';
 import { MemberRole } from '@prisma/client';
-import { IGroupRepository } from '../domain/interfaces/group-repository.interface';
+import { IGroupRepository, GroupWithDetails, MemberWithUser } from '../domain/interfaces/group-repository.interface';
 
 @Injectable()
 export class GroupRepository implements IGroupRepository {
@@ -13,7 +13,8 @@ export class GroupRepository implements IGroupRepository {
     description?: string;
     avatar?: string;
     ownerId: string;
-    members: Array<{ userId: string; role: string }>;
+    members: Array<{ userId: string; role: MemberRole }>;
+    rolePermissions?: Array<{ role: MemberRole; permissionId: string }>;
   }): Promise<GroupEntity> {
     const group = await this.prisma.group.create({
       data: {
@@ -27,6 +28,14 @@ export class GroupRepository implements IGroupRepository {
             role: m.role as MemberRole,
           })),
         },
+        rolePermissions: data.rolePermissions
+          ? {
+              create: data.rolePermissions.map((rp) => ({
+                role: rp.role,
+                permissionId: rp.permissionId,
+              })),
+            }
+          : undefined,
       },
       include: {
         owner: {
@@ -52,14 +61,16 @@ export class GroupRepository implements IGroupRepository {
       },
     });
 
+    const { owner, members, ...rest } = group;
     return new GroupEntity({
-      ...group,
+      ...rest,
       avatar: group.avatar ?? undefined,
       description: group.description ?? undefined,
+      members: members.map((m) => m.userId),
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<GroupWithDetails | null> {
     return this.prisma.group.findUnique({
       where: { id },
       include: {
@@ -82,12 +93,21 @@ export class GroupRepository implements IGroupRepository {
               },
             },
           },
+          orderBy: { joinedAt: 'asc' },
+        },
+        rolePermissions: {
+          where: { isEnabled: true },
+          include: {
+            permission: {
+              select: { name: true },
+            },
+          },
         },
       },
     });
   }
 
-  async findByUserId(userId: string) {
+  async findByUserId(userId: string): Promise<any[]> {
     return this.prisma.group.findMany({
       where: {
         members: {
@@ -115,6 +135,7 @@ export class GroupRepository implements IGroupRepository {
               },
             },
           },
+          orderBy: { joinedAt: 'asc' },
         },
         messages: {
           orderBy: { createdAt: 'desc' },
@@ -131,13 +152,13 @@ export class GroupRepository implements IGroupRepository {
           },
         },
       },
-    });
+    }) as unknown as GroupWithDetails[];
   }
 
-  async update(id: string, data: Partial<GroupEntity>) {
+  async update(id: string, data: Partial<GroupEntity>): Promise<GroupWithDetails> {
     return this.prisma.group.update({
       where: { id },
-      data,
+      data: data as any,
       include: {
         owner: {
           select: {
@@ -163,19 +184,19 @@ export class GroupRepository implements IGroupRepository {
     });
   }
 
-  async delete(id: string) {
-    return this.prisma.group.update({
+  async delete(id: string): Promise<void> {
+    await this.prisma.group.update({
       where: { id },
       data: { isActive: false },
     });
   }
 
-  async addMember(groupId: string, userId: string, role: string = 'member') {
+  async addMember(groupId: string, userId: string, role: MemberRole = MemberRole.MEMBER): Promise<MemberWithUser> {
     return this.prisma.groupMember.create({
       data: {
         groupId,
         userId,
-        role: role as MemberRole,
+        role,
       },
       include: {
         user: {
@@ -190,8 +211,8 @@ export class GroupRepository implements IGroupRepository {
     });
   }
 
-  async removeMember(groupId: string, userId: string) {
-    return this.prisma.groupMember.deleteMany({
+  async removeMember(groupId: string, userId: string): Promise<void> {
+    await this.prisma.groupMember.deleteMany({
       where: {
         groupId,
         userId,
@@ -199,17 +220,17 @@ export class GroupRepository implements IGroupRepository {
     });
   }
 
-  async updateMemberRole(groupId: string, userId: string, role: string) {
-    return this.prisma.groupMember.updateMany({
+  async updateMemberRole(groupId: string, userId: string, role: MemberRole): Promise<void> {
+    await this.prisma.groupMember.updateMany({
       where: {
         groupId,
         userId,
       },
-      data: { role: role as MemberRole },
+      data: { role },
     });
   }
 
-  async getMembers(groupId: string) {
+  async getMembers(groupId: string): Promise<MemberWithUser[]> {
     return this.prisma.groupMember.findMany({
       where: { groupId },
       include: {
@@ -222,7 +243,7 @@ export class GroupRepository implements IGroupRepository {
           },
         },
       },
-      orderBy: { joinedAt: 'desc' },
+      orderBy: { joinedAt: 'asc' },
     });
   }
 
@@ -236,18 +257,6 @@ export class GroupRepository implements IGroupRepository {
       },
     });
     return !!member;
-  }
-
-  async isAdmin(groupId: string, userId: string) {
-    const member = await this.prisma.groupMember.findUnique({
-      where: {
-        groupId_userId: {
-          groupId,
-          userId,
-        },
-      },
-    });
-    return member?.role === 'admin';
   }
 
   async isOwner(groupId: string, userId: string) {

@@ -10,7 +10,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 // khai báo để biết 
 //  - Dùng adapter PostgreSQL 
 //  - Dùng driver pg
@@ -20,8 +19,9 @@ datasource db {
 }
 
 enum MemberRole {
-  admin
-  member
+  OWNER
+  CO_OWNER
+  MEMBER
 }
 
 enum MessageType {
@@ -29,22 +29,27 @@ enum MessageType {
   GROUP
 }
 
+enum MessageStatus {
+  SENT
+  RECALLED
+  DELETED
+}
 
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  hashedPassword  String
-  fullName  String
-  email     String   @unique
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(uuid())
+  username       String   @unique
+  hashedPassword String
+  fullName       String
+  email          String   @unique
+  avatar         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  sentMessages     Message[]     @relation("Sender")
-  receivedMessages Message[]     @relation("Receiver")
-  ownedGroups      Group[]       @relation("Owner")
+  sentMessages     Message[]      @relation("Sender")
+  receivedMessages Message[]      @relation("Receiver")
+  ownedGroups      Group[]        @relation("Owner")
   groupMemberships GroupMember[]
   seenMessages     MessageSeen[]
   refreshTokens    RefreshToken[]
@@ -67,9 +72,8 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-
 model Message {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   type        MessageType @default(DIRECT)
   senderId    String
   receiverId  String?
@@ -77,8 +81,10 @@ model Message {
   content     String?
   replyToId   String?
   attachments Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status MessageStatus @default(SENT)
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   deletedAt   DateTime?
 
   // Relations
@@ -86,19 +92,20 @@ model Message {
   receiver User?  @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   group    Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  reply    Message?  @relation("Reply", fields: [replyToId], references: [id], onDelete: SetNull)
-  replies  Message[] @relation("Reply")
+  reply   Message?  @relation("Reply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies Message[] @relation("Reply")
 
-  seenBy   MessageSeen[]
+  seenBy MessageSeen[]
 
   @@index([senderId])
   @@index([receiverId])
   @@index([groupId])
   @@index([replyToId])
   @@index([createdAt])
+  @@index([groupId, createdAt])
+  @@index([receiverId, createdAt])
   @@map("messages")
 }
-
 
 model MessageSeen {
   userId    String
@@ -114,7 +121,6 @@ model MessageSeen {
   @@map("message_seen")
 }
 
-
 model Group {
   id          String   @id @default(uuid())
   name        String
@@ -126,20 +132,21 @@ model Group {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  owner   User          @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members GroupMember[]
-  messages Message[]
+  owner           User                  @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members         GroupMember[]
+  messages        Message[]
+  rolePermissions GroupRolePermission[]
 
   @@index([ownerId])
   @@map("groups")
 }
 
 model GroupMember {
-  id        String     @id @default(uuid())
-  groupId   String
-  userId    String
-  role      MemberRole @default(member)
-  joinedAt  DateTime   @default(now())
+  id       String     @id @default(uuid())
+  groupId  String
+  userId   String
+  role     MemberRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -150,3 +157,29 @@ model GroupMember {
   @@map("group_members")
 }
 
+// 1. Định nghĩa các hành động có thể có trong hệ thống
+model Permission {
+  id          String                @id @default(uuid())
+  name        String                @unique
+  description String?
+  roles       GroupRolePermission[]
+
+  @@map("permissions")
+}
+
+// 2. Bảng gán quyền cho từng Role trong từng Nhóm
+model GroupRolePermission {
+  id           String     @id @default(uuid())
+  groupId      String
+  role         MemberRole
+  permissionId String
+  isEnabled    Boolean    @default(true)
+
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, role, permissionId])
+  @@index([groupId])
+  @@index([permissionId])
+  @@map("group_role_permissions")
+}

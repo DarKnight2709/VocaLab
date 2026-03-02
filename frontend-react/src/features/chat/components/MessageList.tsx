@@ -2,13 +2,13 @@ import { useRef, useEffect } from "react";
 import { Link } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 import { getInitials } from "../utils";
-import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
-import type { GroupItem } from "@/shared/validations/GroupSchema";
+import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
+import type { GroupItem, GroupMessageItem } from "@/shared/validations/GroupSchema";
 
 type MessageListProps = {
   selectedGroup: GroupItem | null;
-  messages: MessageItem[];
-  groupMessages: MessageItem[];
+  messages: ChatMessageItem[];
+  groupMessages: GroupMessageItem[];
   loadingMessages: boolean;
   loadingGroupMessages: boolean;
   selectedUser: UserItem | null;

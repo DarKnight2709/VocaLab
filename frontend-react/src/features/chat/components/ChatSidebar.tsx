@@ -261,7 +261,7 @@ export function ChatSidebar({
                           >
                             {isGroupActive && !last?.content ? (
                               <span className={active ? "text-primary-foreground/80" : "text-green-600 font-medium"}>
-                                • Đang hoạt động
+                                Đang hoạt động
                               </span>
                             ) : preview}
                           </div>

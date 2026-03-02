@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/compo
 import { Input } from '@/shared/components/ui/input'
 import { toast } from 'sonner'
 import { useUpdateGroupMutation } from '@/features/chat/api/groupService'
+import { getErrorMessage } from '@/shared/lib/api'
 import type { GroupItem } from '@/shared/validations/GroupSchema'
 
 type GroupInfo = Partial<GroupItem> & { id: string }
@@ -97,7 +98,7 @@ export function GroupEditDialog({ open, onOpenChange, groupId, initial, onUpdate
       onUpdated?.(updated)
       onOpenChange(false)
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Cập nhật nhóm thất bại')
+      toast.error(getErrorMessage(e, 'Cập nhật nhóm thất bại'))
     } finally {
       setSaving(false)
     }

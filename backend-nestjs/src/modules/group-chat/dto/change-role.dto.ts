@@ -2,9 +2,9 @@ import { IsString, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ChangeRoleDto {
-  @ApiProperty({ example: 'admin', enum: ['admin', 'member'] })
+  @ApiProperty({ example: 'CO_OWNER', enum: ['CO_OWNER', 'MEMBER'] })
   @IsString()
-  @IsIn(['admin', 'member'])
-  newRole: 'admin' | 'member';
+  @IsIn(['CO_OWNER', 'MEMBER'])
+  newRole: 'CO_OWNER' | 'MEMBER';
 }
 

@@ -1,4 +1,4 @@
-import { Global, Module, Logger } from "@nestjs/common";
+import {Global, Module, Logger } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ClsModule } from "nestjs-cls";
 import envConfig from "src/core/configs/env.config";
@@ -11,6 +11,10 @@ import { RsaKeyManager } from "./utils/RsaKeyManager";
 import { PrismaService } from "src/core/database/prisma.service";
 import { CloudinaryService } from "./services/cloudinary.service";
 import { CloudinaryProvider } from "src/core/configs/cloudinary.config";
+// import { RedisService } from "src/core/cache/redis.service";
+import { CacheModule } from "@nestjs/cache-manager";
+import { redisStore } from 'cache-manager-redis-yet'
+
 
 
 const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaService, CloudinaryService]
@@ -32,6 +36,19 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
         mount: true,
       },
     }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => {
+        const store = await redisStore({
+          socket: {
+            host: 'localhost',
+            port: 6379,
+          },
+          ttl: 60 * 60 * 1000,
+        });
+        return { store };
+      },
+    })
   ],
   providers: [
     CloudinaryProvider,

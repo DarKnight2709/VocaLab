@@ -1,10 +1,9 @@
 // import { api } from '@/shared/lib/api'
 // import API_ROUTES from '@/shared/lib/api-routes'
 import { decodeToken } from "@/shared/lib/jwt";
-// import type { RefreshTokenResponse } from '@/shared/validations/AuthSchema'
 import useAuthStore from "./stores/authStore";
-import type { RefreshTokenResponse } from "@/shared/validations/AuthSchema";
-import { api } from "@/shared/lib/api";
+import { RefreshTokenResponseSchema } from "@/shared/validations/AuthSchema";
+import { api, fetchWithSchema } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 
 export const authLoader = async () => {
@@ -72,10 +71,13 @@ export const authLoader = async () => {
     try {
       if (isLoading) return { auth: false }
       setLoading(true)
-      const response = await api.post<RefreshTokenResponse>(API_ROUTES.AUTH.REFRESH_TOKEN, {
-        refreshToken
-      })
-      login(response.data)
+      const data = await fetchWithSchema(
+        api.post(API_ROUTES.AUTH.REFRESH_TOKEN, {
+          refreshToken
+        }),
+        RefreshTokenResponseSchema
+      )
+      login(data)
       setLoading(false)
       return { auth: true }
     } catch {

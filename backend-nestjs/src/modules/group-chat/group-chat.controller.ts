@@ -8,9 +8,12 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GroupChatService } from './services/group-chat.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { GroupPermissionGuard } from './guards/group-permission.guard';
+import { RequireGroupMember, RequireGroupPermission } from './decorators/group-auth.decorators';
+import { GroupPermission } from '../../common/enums/group-permission.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { AddMemberDto } from './dto/add-member.dto';
@@ -34,12 +37,16 @@ export class GroupChatController {
   }
 
   @Get(':id')
+  @RequireGroupMember()
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Xem thông tin nhóm' })
   async getInfoGroup(@CurrentUser() user: any, @Param('id') id: string) {
     return this.groupChatService.getInfoGroup(id, user.id);
   }
 
   @Patch('update/:id')
+  @RequireGroupPermission(GroupPermission.UPDATE_GROUP_INFO)
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Sửa thông tin nhóm' })
   async updateGroup(
     @CurrentUser() user: any,
@@ -50,18 +57,24 @@ export class GroupChatController {
   }
 
   @Delete('delete/:id')
+  @RequireGroupMember()
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Rời nhóm hoặc xóa nhóm' })
   async deleteGroup(@CurrentUser() user: any, @Param('id') id: string) {
     return this.groupChatService.deleteGroup(id, user.id);
   }
 
   @Get(':id/messages')
+  @RequireGroupMember()
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Lấy tin nhắn trong nhóm' })
   async getGroupMessages(@CurrentUser() user: any, @Param('id') id: string) {
     return this.groupChatService.getGroupMessages(id, user.id);
   }
 
   @Post(':id/addMembers')
+  @RequireGroupPermission(GroupPermission.ADD_MEMBER)
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Thêm thành viên nhóm' })
   async addMember(
     @CurrentUser() user: any,
@@ -72,12 +85,16 @@ export class GroupChatController {
   }
 
   @Get(':id/getMembers')
+  @RequireGroupMember()
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Lấy danh sách thành viên' })
   async getMembers(@CurrentUser() user: any, @Param('id') id: string) {
     return this.groupChatService.getMembers(id, user.id);
   }
 
   @Delete(':id/deleteMembers/:memberId')
+  @RequireGroupPermission(GroupPermission.REMOVE_MEMBER)
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Xóa thành viên nhóm' })
   async deleteMember(
     @CurrentUser() user: any,
@@ -88,6 +105,8 @@ export class GroupChatController {
   }
 
   @Patch(':id/changeRole/:memberId')
+  @RequireGroupPermission(GroupPermission.MANAGE_ROLES)
+  @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Đổi role thành viên' })
   async changeRole(
     @CurrentUser() user: any,

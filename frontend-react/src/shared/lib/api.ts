@@ -3,6 +3,7 @@ import axios from "axios";
 import envConfig from "@/shared/config/envConfig";
 import qs from "qs";
 import ROUTES from "./routes";
+import { type ZodType, ZodError } from "zod";
 
 export const api = axios.create({
   baseURL:
@@ -54,3 +55,33 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+
+export type ApiErrorBody = {
+  message?: string;
+};
+
+export function getErrorMessage(error: unknown, fallback: string) {
+  const axiosError = error as any; // Simplified cast or Use AxiosError if imported
+  return axiosError.response?.data?.message || axiosError.message || fallback;
+}
+
+export async function fetchWithSchema<T>(
+  request: Promise<any>,
+  schema: ZodType<T>
+): Promise<T> {
+  const res = await request;
+  try {
+    return schema.parse(res.data);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      console.error("❌ Schema Validation Error:", {
+        path: error.issues[0]?.path,
+        message: error.issues[0]?.message,
+        received: error.issues,
+        data: res.data
+      });
+    }
+    throw error;
+  }
+}

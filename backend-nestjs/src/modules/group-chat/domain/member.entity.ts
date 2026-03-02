@@ -1,8 +1,10 @@
+import { MemberRole } from '@prisma/client';
+
 export class MemberEntity {
   id: string;
   groupId: string;
   userId: string;
-  role: 'admin' | 'member';
+  role: MemberRole;
   joinedAt: Date;
 
   constructor(partial: Partial<MemberEntity>) {

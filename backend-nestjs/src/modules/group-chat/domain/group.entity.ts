@@ -1,11 +1,11 @@
 export class GroupEntity {
   id: string;
   name: string;
-  avatar?: string;
-  description?: string;
+  avatar?: string | null;
+  description?: string | null;
   ownerId: string;
   isActive: boolean;
-  members?: string[];
+  members?: any[]; // Keep flexible for now, will be specified in Detailed interfaces
   createdAt: Date;
   updatedAt: Date;
 

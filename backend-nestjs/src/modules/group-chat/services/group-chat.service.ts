@@ -5,7 +5,12 @@ import {
   NotFoundException,
   Inject,
 } from '@nestjs/common';
-import { IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import {
+  IGroupRepository,
+  IGROUP_REPOSITORY,
+  MemberWithUser,
+  GroupWithDetails,
+} from '../domain/interfaces/group-repository.interface';
 import { CreateGroupUseCase } from '../use-cases/create-group.usecase';
 import { JoinGroupUseCase } from '../use-cases/join-group.usecase';
 import { LeaveGroupUseCase } from '../use-cases/leave-group.usecase';
@@ -13,12 +18,15 @@ import { UpdateGroupUseCase } from '../use-cases/update-group.usecase';
 import { AddMemberUseCase } from '../use-cases/add-member.usecase';
 import { RemoveMemberUseCase } from '../use-cases/remove-member.usecase';
 import { ChangeRoleUseCase } from '../use-cases/change-role.usecase';
-import { IMESSAGES_REPOSITORY, MessagesRepositoryInterface } from '../../messages/domain/interfaces/messages-repository.interface';
+import {
+  IMESSAGES_REPOSITORY,
+  MessagesRepositoryInterface,
+} from '../../messages/domain/interfaces/messages-repository.interface';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { ChangeRoleDto } from '../dto/change-role.dto';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { GroupChatGateway } from '../group-chat.gateway';
 
 @Injectable()
 export class GroupChatService {
@@ -34,7 +42,7 @@ export class GroupChatService {
     private changeRoleUseCase: ChangeRoleUseCase,
     @Inject(IMESSAGES_REPOSITORY)
     private messageRepository: MessagesRepositoryInterface,
-    private prisma: PrismaService,
+    private groupChatGateway: GroupChatGateway,
   ) {}
 
   async createGroup(ownerId: string, createDto: CreateGroupDto) {
@@ -45,11 +53,14 @@ export class GroupChatService {
       memberIds: createDto.members,
     });
 
+    const memberIds = [ownerId, ...createDto.members];
+    this.groupChatGateway.notifyReloadGroups(memberIds);
+
     return {
       message: 'Tạo nhóm thành công',
       group: {
         ...group,
-        members: group.members?.map((m: any) => m.userId) || [],
+        members: group.members?.map((m) => m.userId) || [],
       },
     };
   }
@@ -61,8 +72,8 @@ export class GroupChatService {
     const transformedGroups = await Promise.all(
       groups.map(async (group) => {
         const [lastMessage, unreadCount] = await Promise.all([
-           this.messageRepository.findLastGroupMessage(group.id),
-           this.messageRepository.countUnreadGroupMessages(group.id, userId)
+          this.messageRepository.findLastGroupMessage(group.id),
+          this.messageRepository.countUnreadGroupMessages(group.id, userId),
         ]);
 
         return {
@@ -79,7 +90,7 @@ export class GroupChatService {
                 isMine: lastMessage.senderId === userId,
               }
             : null,
-          members: group.members?.map((m: any) => m.userId) || [],
+          members: group.members?.map((m) => m.userId) || [],
           updatedAt: group.updatedAt,
         };
       }),
@@ -96,74 +107,77 @@ export class GroupChatService {
   }
 
   async getInfoGroup(groupId: string, userId: string) {
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
-    }
+    const group = await this.getActiveGroupOrThrow(groupId);
 
     const isMember = await this.groupRepository.isMember(groupId, userId);
     if (!isMember) {
       throw new ForbiddenException('Bạn không phải thành viên của nhóm này');
     }
 
+    const permissionsByRole =
+      group.rolePermissions?.reduce(
+        (acc: any, rp) => {
+          if (!acc[rp.role]) acc[rp.role] = [];
+          acc[rp.role].push(rp.permission.name);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      ) || {};
+
     return {
       message: 'Lấy thông tin nhóm thành công',
       group: {
         ...group,
-        members: group.members?.map((m: any) => m.userId) || [],
+        members:
+          group.members?.map((m) => ({
+            ...m,
+            user: m.user,
+            permissions: permissionsByRole[m.role] || [],
+          })) || [],
       },
     };
   }
 
-  async updateGroup(groupId: string, userId: string, updateDto: UpdateGroupDto) {
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
-    }
+  async updateGroup(
+    groupId: string,
+    userId: string,
+    updateDto: UpdateGroupDto,
+  ) {
+    // gửi thông báo đến các thành viên trong nhóm để reload lại
+    const group = await this.getActiveGroupOrThrow(groupId);
+    const memberIds = group.members?.map((m) => m.userId) || [];
+    await this.updateGroupUseCase.execute({
+      groupId,
+      userId,
+      data: updateDto,
+    });
 
-    const isMember = await this.groupRepository.isMember(groupId, userId);
-    if (!isMember) {
-      throw new ForbiddenException('Bạn không phải thành viên nhóm này');
-    }
+    this.groupChatGateway.notifyReloadGroups(memberIds);
 
-    const isAdmin = await this.groupRepository.isAdmin(groupId, userId);
-    if (!isAdmin) {
-      throw new ForbiddenException('Chỉ admin được thay đổi thông tin nhóm');
-    }
+    // gửi message cho nhóm là người đã đã thay đổi những gì (như một message nhưng type khác để in nghiên lên trên phần chat)
 
-    const updateData: any = {};
-    if (updateDto.name !== undefined) {
-      if (updateDto.name.trim() === '') {
-        throw new BadRequestException('Tên nhóm không được để trống');
-      }
-      updateData.name = updateDto.name.trim();
-    }
-    if (updateDto.description !== undefined) {
-      updateData.description = updateDto.description.trim();
-    }
-    if (updateDto.avatar !== undefined) {
-      updateData.avatar = updateDto.avatar;
-    }
-
-    const updated = await this.groupRepository.update(groupId, updateData);
     return {
-      message: 'Cập nhật thành công',
-      group: {
-        ...updated,
-        members: updated.members?.map((m: any) => m.userId) || [],
-      },
+      message: 'Cập nhật thông tin nhóm thành công',
     };
   }
 
+  // thay đổi leaveGroup thành deleteGroup
+  // tách 2 case này ra riêng biệt
   async deleteGroup(groupId: string, userId: string) {
-    return this.leaveGroupUseCase.execute(groupId, userId);
+    const group = await this.getActiveGroupOrThrow(groupId);
+    const memberIds = group.members?.map((m) => m.userId) || [];
+
+    await this.leaveGroupUseCase.execute(groupId, userId);
+
+    this.groupChatGateway.notifyReloadGroups(memberIds);
+
+    return {
+      message: 'Xóa nhóm thành công',
+    };
   }
 
   async getGroupMessages(groupId: string, userId: string) {
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
-    }
+    const group = await this.getActiveGroupOrThrow(groupId);
 
     const isMember = await this.groupRepository.isMember(groupId, userId);
     if (!isMember) {
@@ -178,128 +192,108 @@ export class GroupChatService {
   }
 
   async addMember(groupId: string, userId: string, addMemberDto: AddMemberDto) {
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
-    }
-
-    const isMember = await this.groupRepository.isMember(groupId, userId);
-    if (!isMember) {
-      throw new ForbiddenException('Bạn không phải thành viên nhóm này');
-    }
-
-    // Validate member IDs
-    const existingUsers = await this.prisma.user.findMany({
-      where: { id: { in: addMemberDto.memberIds } },
-      select: { id: true },
+    const group = await this.getActiveGroupOrThrow(groupId);
+    const result = await this.addMemberUseCase.execute({
+      groupId,
+      userId,
+      data: addMemberDto,
     });
 
-    if (existingUsers.length !== addMemberDto.memberIds.length) {
-      throw new BadRequestException('Một số thành viên không tồn tại');
-    }
+    const memberIds = [...result.newMembers, ...result.existingMembers];
+    this.groupChatGateway.notifyReloadGroups(memberIds);
 
-    const newMembers: string[] = [];
-    const existingMembers: string[] = [];
-
-    for (const memberId of addMemberDto.memberIds) {
-      const alreadyMember = await this.groupRepository.isMember(groupId, memberId);
-      if (alreadyMember) {
-        existingMembers.push(memberId);
-      } else {
-        newMembers.push(memberId);
-      }
-    }
-
-    if (existingMembers.length === addMemberDto.memberIds.length) {
-      throw new BadRequestException('Tất cả thành viên đã có sẵn trong nhóm');
-    }
-
-    // Add new members
-    for (const memberId of newMembers) {
-      await this.groupRepository.addMember(groupId, memberId, 'member');
-    }
+    // gửi message cho nhóm là người đã đã thay đổi những gì (như một message nhưng type khác để in nghiên lên trên phần chat)
 
     return {
-      message: 'Thêm thành viên thành công',
-      existingMembers,
-      newMembers,
+      message: 'Thêm thành viên vào nhóm thành công',
+      ...result,
     };
   }
 
   async getMembers(groupId: string, userId: string) {
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
-    }
+    const group = await this.getActiveGroupOrThrow(groupId);
 
     const isMember = await this.groupRepository.isMember(groupId, userId);
     if (!isMember) {
       throw new ForbiddenException('Bạn không phải là thành viên của nhóm này');
     }
 
+    const permissionsByRole =
+      group.rolePermissions?.reduce(
+        (acc: any, rp) => {
+          if (!acc[rp.role]) acc[rp.role] = [];
+          acc[rp.role].push(rp.permission.name);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      ) || {};
+
     const members = await this.groupRepository.getMembers(groupId);
+    const transformedMembers = members.map((m) => {
+      return {
+        ...m,
+        user: m.user,
+        permissions: permissionsByRole[m.role] || [],
+      };
+    });
+
     return {
       message: 'Lấy danh sách thành viên thành công',
-      members,
+      members: transformedMembers,
     };
   }
 
   async deleteMember(groupId: string, userId: string, memberId: string) {
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc đã dừng hoạt động');
-    }
+    const group = await this.getActiveGroupOrThrow(groupId);
+    const memberIds = group.members?.map((m) => m.userId) || [];
 
-    const isAdmin = await this.groupRepository.isAdmin(groupId, userId);
-    if (!isAdmin) {
-      throw new ForbiddenException('Bạn không có quyền thực hiện hành động này');
-    }
+    await this.removeMemberUseCase.execute({
+      groupId,
+      userId,
+      memberId,
+    });
 
-    const isOwner = await this.groupRepository.isOwner(groupId, memberId);
-    if (isOwner) {
-      throw new BadRequestException('Bạn không thể xóa chủ nhóm');
-    }
+    this.groupChatGateway.notifyReloadGroups(memberIds);
 
-    const targetIsAdmin = await this.groupRepository.isAdmin(groupId, memberId);
-    const requesterIsOwner = await this.groupRepository.isOwner(groupId, userId);
-    if (targetIsAdmin && !requesterIsOwner) {
-      throw new ForbiddenException('Bạn không thể xóa admin khác');
-    }
+    // gửi message cho nhóm là người đã đã thay đổi những gì (như một message nhưng type khác để in nghiên lên trên phần chat)
 
-    await this.groupRepository.removeMember(groupId, memberId);
     return {
       message: 'Đã xóa thành công thành viên này khỏi nhóm',
     };
   }
 
-  async changeRole(groupId: string, userId: string, memberId: string, changeRoleDto: ChangeRoleDto) {
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
-    }
+  async changeRole(
+    groupId: string,
+    userId: string,
+    memberId: string,
+    changeRoleDto: ChangeRoleDto,
+  ) {
+    const updated = await this.changeRoleUseCase.execute({
+      groupId,
+      userId,
+      memberId,
+      data: changeRoleDto,
+    });
 
-    const isOwner = await this.groupRepository.isOwner(groupId, userId);
-    if (!isOwner) {
-      throw new ForbiddenException('Chỉ người chủ nhóm mới được đổi role');
-    }
+    const roleLabels: Record<string, string> = {
+      OWNER: 'chủ nhóm',
+      CO_OWNER: 'phó nhóm',
+      MEMBER: 'thành viên',
+    };
 
-    const targetMember = await this.groupRepository.getMembers(groupId);
-    const member = targetMember.find((m) => m.userId === memberId);
-    if (!member) {
-      throw new NotFoundException('Thành viên không tồn tại trong nhóm');
-    }
-
-    if (userId === memberId) {
-      throw new ForbiddenException('Bạn không thể hạ quyền chính mình');
-    }
-
-    await this.groupRepository.updateMemberRole(groupId, memberId, changeRoleDto.newRole);
-
-    const updatedGroup = await this.groupRepository.findById(groupId);
     return {
-      message: `Đã đổi role thành ${changeRoleDto.newRole}`,
-      group: updatedGroup,
+      message: `Đã đổi quyền thành ${roleLabels[changeRoleDto.newRole] || changeRoleDto.newRole}`,
+      group: updated,
     };
   }
-}
 
+  private async getActiveGroupOrThrow(groupId: string) {
+    const group = await this.groupRepository.findById(groupId);
+    if (!group || !group.isActive) {
+      throw new NotFoundException(
+        'Nhóm không tồn tại hoặc không còn hoạt động',
+      );
+    }
+    return group;
+  }
+}

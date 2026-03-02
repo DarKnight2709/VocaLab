@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef } from "react";
 import type { Socket } from "socket.io-client";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
-import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
-import type { GroupItem } from "@/shared/validations/GroupSchema";
+import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
+import type { GroupItem, GroupMessageItem } from "@/shared/validations/GroupSchema";
 import { useQueryClient } from "@tanstack/react-query";
+import { chatKeys } from "@/features/chat/api/chatService";
+import { groupKeys } from "@/features/chat/api/groupService";
 
 type UseChatSocketProps = {
   myId: string;
@@ -89,67 +91,70 @@ export function useChatSocket({
       });
     });
 
-    socket.on("receive-message", (msg: MessageItem) => {
+    socket.on("receive-message", (msg: ChatMessageItem) => {
       const openUser = selectedUserRef.current;
-      const senderId =
-        typeof msg.senderId === "object" ? msg.senderId.id : msg.senderId;
-
-      queryClient.setQueryData<MessageItem[]>(
-        ["messages", senderId],
+      const senderId = msg.senderId ?? msg.sender?.id;
+      if (!senderId) return;
+      queryClient.setQueryData<ChatMessageItem[]>(
+        chatKeys.messages(senderId),
         (prev) => [...(prev || []), msg],
       );
 
       if (openUser && senderId === openUser.id) {
         // Mark as seen with acknowledgment to avoid race condition on sidebar refresh
         socket.emit("seen-message", { senderId: openUser.id }, (response: {success: boolean}) => {
-          void queryClient.invalidateQueries({ queryKey: ["users"] });
+          void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
           console.log("response " + response.success)
         });
       } else {
         // Refresh user list if not in open chat (to show unread count)
-        void queryClient.invalidateQueries({ queryKey: ["users"] });
+        void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
       }
     });
 
     
     // chat 1-1
-    socket.on("seen-message", (data: { viewerId: string; seenAt?: string }) => {
+    socket.on("seen-message", (data: { viewer: any }) => {
       const openUser = selectedUserRef.current;
       if (!openUser) return;
       // Update message status to seen in current 1-1 thread
-      queryClient.setQueryData<MessageItem[]>(
-        ["messages", openUser.id],
+      queryClient.setQueryData<ChatMessageItem[]>(
+        chatKeys.messages(openUser.id),
         (prev) =>
           (prev || []).map((m) => {
-            const senderId =
-              typeof m.senderId === "object" ? m.senderId.id : m.senderId;
-            if (senderId === myId) {
-              return { ...m, seenBy: [...(m.seenBy || []), data.viewerId] };
+            const senderId = m.senderId ?? m.sender?.id;
+            if (senderId === data.viewer.id) {
+              return m;
             }
-            return m;
+            return { ...m, seenBy: [...(m.seenBy || []), data.viewer] };
           }),
       );
     });
+
+
 
     socket.on(
       "receive-group-message",
       (payload: any) => {
         // Map _id từ backend sang id cho frontend
-        const msg: MessageItem & { groupId: string } = {
+        const msg: GroupMessageItem = {
           ...payload,
-          id: payload._id || payload.id
         };
 
-        // Refresh group list for unread/lastMessage
-        void queryClient.invalidateQueries({ queryKey: ["groups"] });
+        const senderId = msg.senderId || msg.sender?.id;
 
-        queryClient.setQueryData<MessageItem[]>(
-          ["groupMessages", msg.groupId],
+        // If this message was sent by me, my UI already optimistic-updated and refetched it.
+        if (senderId === myId) return;
+
+        // Refresh group list for unread/lastMessage
+        void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+
+        queryClient.setQueryData<GroupMessageItem[]>(
+          groupKeys.messages(msg.groupId),
           (prev) => [...(prev || []), msg],
         );
 
         const openGroup = selectedGroupRef.current;
-        const senderId = typeof msg.senderId === "object" ? (msg.senderId as any)?.id : msg.senderId;
 
         // Nếu đang mở đúng group này và người gửi không phải là mình
         if (openGroup && openGroup.id === msg.groupId) {
@@ -157,12 +162,12 @@ export function useChatSocket({
             socket.emit("seen-group-message", {
               groupId: msg.groupId,
             }, () => {
-              void queryClient.invalidateQueries({ queryKey: ["groups"] });
+              void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
             });
           }
         } else {
            // Nếu không trong group đang mở thì refresh để hiện unread
-           void queryClient.invalidateQueries({ queryKey: ["groups"] });
+           void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
         }
       },
     );
@@ -187,24 +192,24 @@ export function useChatSocket({
 
     socket.on(
       "seen-group-message",
-      (data: { groupId: string; userId: string; user?: any }) => {
+      (data: { groupId: string; viewerId: string; viewer?: any }) => {
         const openGroup = selectedGroupRef.current;
         if (!openGroup || data.groupId !== openGroup.id) return;
 
-        queryClient.setQueryData<MessageItem[]>(
-          ["groupMessages", data.groupId],
+        queryClient.setQueryData<GroupMessageItem[]>(
+          groupKeys.messages(data.groupId),
           (prev) =>
             (prev || []).map((m) => {
-              const senderIdStr = typeof m.senderId === "object" ? m.senderId.id : m.senderId;
-              if (senderIdStr === data.userId) return m;
+              const senderId = m.senderId ?? m.sender?.id;
+              if (senderId === data.viewerId) return m;
 
               const seenBy = m.seenBy || [];
               const alreadySeen = seenBy.some(
-                (u) => (typeof u === "string" ? u : u.id) === data.userId,
+                (u) => u.id === data.viewerId,
               );
               if (alreadySeen) return m;
 
-              return { ...m, seenBy: [...seenBy, data.user || data.userId] };
+              return { ...m, seenBy: [...seenBy, data.viewer] };
             }),
         );
       },
@@ -242,7 +247,7 @@ export function useChatSocket({
     });
 
     socket.on("reload-groups", () => {
-      void queryClient.invalidateQueries({ queryKey: ["groups"] });
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
     });
 
 
