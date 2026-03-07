@@ -13,8 +13,8 @@ export class LeaveGroupUseCase {
     const isOwner = await this.groupRepository.isOwner(groupId, userId);
     
     if (isOwner) {
-      await this.groupRepository.delete(groupId);
-      return { message: 'Giải tán nhóm thành công' };
+      // trao quyền owner cho người khác
+      throw new ForbiddenException("Chủ nhóm không thể rời nhóm. Vui lòng chuyển quyền sở hữu cho thành viên khác hoặc xóa nhóm");
     }
 
     await this.groupRepository.removeMember(groupId, userId);

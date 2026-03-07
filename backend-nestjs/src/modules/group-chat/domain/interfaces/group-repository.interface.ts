@@ -58,4 +58,10 @@ export interface IGroupRepository {
   isMember(groupId: string, userId: string): Promise<boolean>;
 
   isOwner(groupId: string, userId: string): Promise<boolean>;
+
+  isHigherRole(groupId: string, userId: string, targetUserId: string): Promise<boolean>;
+
+  isSameRole(groupId: string, userId: string, targetUserId: string): Promise<boolean>;
+
+  transferOwnership(groupId: string, newOwnerId: string): Promise<void>;
 }

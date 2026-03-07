@@ -164,7 +164,7 @@ export class GroupChatGateway {
   }
 
   @SubscribeMessage('leave-group')
-  handleLeaveGroup(
+  handleLeavGroup(
     @SocketUser() user: any,
     @MessageBody() payload: any,
     @ConnectedSocket() client: Socket,

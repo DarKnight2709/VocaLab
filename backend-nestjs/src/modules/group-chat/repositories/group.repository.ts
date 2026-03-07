@@ -71,8 +71,8 @@ export class GroupRepository implements IGroupRepository {
   }
 
   async findById(id: string): Promise<GroupWithDetails | null> {
-    return this.prisma.group.findUnique({
-      where: { id },
+    return this.prisma.group.findFirst({
+      where: { id, isActive: true },
       include: {
         owner: {
           select: {
@@ -157,7 +157,9 @@ export class GroupRepository implements IGroupRepository {
 
   async update(id: string, data: Partial<GroupEntity>): Promise<GroupWithDetails> {
     return this.prisma.group.update({
-      where: { id },
+      where: { id,
+        isActive: true
+       },
       data: data as any,
       include: {
         owner: {
@@ -232,7 +234,10 @@ export class GroupRepository implements IGroupRepository {
 
   async getMembers(groupId: string): Promise<MemberWithUser[]> {
     return this.prisma.groupMember.findMany({
-      where: { groupId },
+      where: { 
+        groupId,
+        group: { isActive: true }
+      },
       include: {
         user: {
           select: {
@@ -255,16 +260,80 @@ export class GroupRepository implements IGroupRepository {
           userId,
         },
       },
+      include: {
+        group: {
+          select: { isActive: true },
+        },
+      },
     });
-    return !!member;
+    return !!member && member.group.isActive;
   }
 
   async isOwner(groupId: string, userId: string) {
-    const group = await this.prisma.group.findUnique({
-      where: { id: groupId },
+    const group = await this.prisma.group.findFirst({
+      where: { 
+        id: groupId,
+        isActive: true
+      },
       select: { ownerId: true },
     });
     return group?.ownerId === userId;
+  }
+
+
+  async transferOwnership(groupId: string, newOwnerId: string): Promise<void> {
+    await this.prisma.group.update({
+      where: { id: groupId },
+      data: { ownerId: newOwnerId },
+    });
+  }
+
+  async isHigherRole(
+    groupId: string,
+    userId: string,
+    targetUserId: string,
+  ): Promise<boolean> {
+    const roles = await this.prisma.groupMember.findMany({
+      where: {
+        groupId,
+        userId: { in: [userId, targetUserId] },
+      },
+      select: { userId: true, role: true },
+    });
+
+    const userRole = roles.find((r) => r.userId === userId)?.role;
+    const targetRole = roles.find((r) => r.userId === targetUserId)?.role;
+
+    if (!userRole || !targetRole) return false;
+
+    const roleValues: Record<MemberRole, number> = {
+      OWNER: 3,
+      CO_OWNER: 2,
+      MEMBER: 1,
+    };
+
+    return roleValues[targetRole] > roleValues[userRole];
+  }
+
+  async isSameRole(
+    groupId: string,
+    userId: string,
+    targetUserId: string,
+  ): Promise<boolean> {
+    const roles = await this.prisma.groupMember.findMany({
+      where: {
+        groupId,
+        userId: { in: [userId, targetUserId] },
+      },
+      select: { userId: true, role: true },
+    });
+
+    const userRole = roles.find((r) => r.userId === userId)?.role;
+    const targetRole = roles.find((r) => r.userId === targetUserId)?.role;
+
+    if (!userRole || !targetRole) return false;
+
+    return userRole === targetRole;
   }
 }
 
