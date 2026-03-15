@@ -20,16 +20,21 @@ const API_ROUTES = {
     INFO: (groupId: string) => `v1/groups/${groupId}`,
     UPDATE: (groupId: string) => `v1/groups/update/${groupId}`,
     DELETE: (groupId: string) => `v1/groups/delete/${groupId}`,
+    TRANSFER_OWNERSHIP: (groupId: string) => `v1/groups/${groupId}/transferOwnership`,
     ADD_MEMBERS: (groupId: string) => `v1/groups/${groupId}/addMembers`,
     GET_MEMBERS: (groupId: string) => `v1/groups/${groupId}/getMembers`,
     DELETE_MEMBER: (groupId: string, memberId: string) => `v1/groups/${groupId}/deleteMembers/${memberId}`,
     CHANGE_ROLE: (groupId: string, memberId: string) => `v1/groups/${groupId}/changeRole/${memberId}`,
+    UPDATE_ROLE_PERMISSION: (groupId: string) => `v1/groups/${groupId}/rolePermissions`,
     GET_MESSAGES: (groupId: string) => `v1/groups/${groupId}/messages`,
+    LEAVE: (groupId: string) => `v1/groups/leave/${groupId}`,
+    GET_AVAILABLE_PERMISSIONS: "v1/groups/permissions/all",
     UPLOAD_AVATAR: "v1/messages/upload",
   },
   MESSAGE: {
     GET_USERS: "v1/messages/users",
     GET_MESSAGES: (friendId: string) => `v1/messages/${friendId}`,
+    UPLOAD_FILES: "v1/messages/upload",
   },
 };
 

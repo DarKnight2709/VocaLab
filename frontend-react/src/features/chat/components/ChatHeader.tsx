@@ -51,7 +51,7 @@ export function ChatHeader({
         {selectedGroup ? (
           <>
             <Avatar className="h-10 w-10">
-              <AvatarImage src={selectedGroup.avatar} />
+              <AvatarImage src={selectedGroup?.avatar || undefined} />
               <AvatarFallback>
                 {getInitials(selectedGroup.name || "Nhóm")}
               </AvatarFallback>
@@ -90,7 +90,7 @@ export function ChatHeader({
               aria-label={`Xem trang cá nhân của ${selectedUserDisplayName}`}
             >
               <Avatar className="h-10 w-10">
-                <AvatarImage src={selectedUser?.avatar} />
+                <AvatarImage src={selectedUser?.avatar || undefined} />
                 <AvatarFallback>
                   {getInitials(selectedUserDisplayName)}
                 </AvatarFallback>

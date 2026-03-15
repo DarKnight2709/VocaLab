@@ -18,16 +18,12 @@ const permissions = [
     description: 'Xóa thành viên khỏi nhóm',
   },
   {
-    name: GroupPermission.MANAGE_ROLES,
-    description: 'Quản lý chức vụ và quyền hạn',
+    name: GroupPermission.UPDATE_ROLE_PERMISSION,
+    description: 'Quản lý chức vụ và phân quyền nhóm',
   },
   {
     name: GroupPermission.UPDATE_GROUP_INFO,
     description: 'Cập nhật thông tin nhóm (Tên, Ảnh, Mô tả)',
-  },
-  {
-    name: GroupPermission.DELETE_GROUP,
-    description: 'Giải tán nhóm',
   },
 ];
 

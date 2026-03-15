@@ -38,7 +38,7 @@ export class CreateGroupUseCase {
           in: [
             GroupPermission.ADD_MEMBER,
             GroupPermission.REMOVE_MEMBER,
-            GroupPermission.MANAGE_ROLES,
+            GroupPermission.UPDATE_ROLE_PERMISSION,
             GroupPermission.UPDATE_GROUP_INFO,
           ],
         },
@@ -64,7 +64,6 @@ export class CreateGroupUseCase {
     const coOwnerPermissionNames = [
       GroupPermission.ADD_MEMBER,
       GroupPermission.REMOVE_MEMBER,
-      GroupPermission.MANAGE_ROLES,
       GroupPermission.UPDATE_GROUP_INFO,
     ];
     const coOwnerRolePermissions = coOwnerPermissionNames

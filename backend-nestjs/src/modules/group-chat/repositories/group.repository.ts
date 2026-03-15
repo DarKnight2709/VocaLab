@@ -99,7 +99,7 @@ export class GroupRepository implements IGroupRepository {
           where: { isEnabled: true },
           include: {
             permission: {
-              select: { name: true },
+              select: { id: true, name: true },
             },
           },
         },
@@ -282,9 +282,80 @@ export class GroupRepository implements IGroupRepository {
 
 
   async transferOwnership(groupId: string, newOwnerId: string): Promise<void> {
-    await this.prisma.group.update({
+    const group = await this.prisma.group.findUnique({
       where: { id: groupId },
-      data: { ownerId: newOwnerId },
+      select: { ownerId: true },
+    });
+
+    if (!group) return;
+
+    const oldOwnerId = group.ownerId;
+
+    await this.prisma.$transaction([
+      // 1. Update group ownerId
+      this.prisma.group.update({
+        where: { id: groupId },
+        data: { ownerId: newOwnerId },
+      }),
+      // 2. Set new owner's role to OWNER
+      this.prisma.groupMember.update({
+        where: {
+          groupId_userId: {
+            groupId,
+            userId: newOwnerId,
+          },
+        },
+        data: { role: MemberRole.OWNER },
+      }),
+      // 3. Set old owner's role to CO_OWNER
+      this.prisma.groupMember.update({
+        where: {
+          groupId_userId: {
+            groupId,
+            userId: oldOwnerId,
+          },
+        },
+        data: { role: MemberRole.MEMBER },
+      }),
+    ]);
+  }
+
+  async updateRolePermission(
+    groupId: string,
+    role: MemberRole,
+    permissionId: string,
+    isEnabled: boolean,
+  ): Promise<void> {
+    await this.prisma.groupRolePermission.upsert({
+      where: {
+        groupId_role_permissionId: {
+          groupId,
+          role,
+          permissionId: permissionId,
+        },
+      },
+      update: { isEnabled },
+      create: {
+        groupId,
+        role,
+        permissionId: permissionId,
+        isEnabled,
+      },
+    });
+  }
+
+  async getAvailablePermissions(): Promise<any[]> {
+    return this.prisma.permission.findMany();
+  }
+
+  async getRolePermissions(groupId: string): Promise<any[]> {
+    return this.prisma.groupRolePermission.findMany({
+      where: { groupId },
+      include: {
+        permission: {
+          select: { name: true },
+        },
+      },
     });
   }
 

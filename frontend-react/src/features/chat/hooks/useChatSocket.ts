@@ -246,8 +246,13 @@ export function useChatSocket({
       setGroupTypingText("");
     });
 
-    socket.on("reload-groups", () => {
+    socket.on("reload-groups", (data?: { groupId?: string }) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+      if (data?.groupId) {
+        void queryClient.invalidateQueries({
+          queryKey: groupKeys.detail(data.groupId),
+        });
+      }
     });
 
 

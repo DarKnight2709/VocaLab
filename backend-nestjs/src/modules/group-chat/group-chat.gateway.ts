@@ -176,9 +176,9 @@ export class GroupChatGateway {
     }
   }
 
-  notifyReloadGroups(memberIds: string[]) {
+  notifyReloadGroups(memberIds: string[], groupId?: string) {
     memberIds.forEach((memberId) => {
-      this.server.to(memberId).emit('reload-groups');
+      this.server.to(memberId).emit('reload-groups', { groupId });
     });
   }
 }

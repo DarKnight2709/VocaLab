@@ -13,21 +13,17 @@ export class UsersController {
   @Patch('profile')
   @ApiOperation({
     summary: 'Cập nhật thông tin cá nhân',
-    description: 'Cập nhật thông tin cá nhân: họ tên, username, email,...',
+    description: 'Cập nhật thông tin cá nhân: họ tên, username, email và avatar (nếu có)',
   })
-  async updateProfile(@CurrentUser() user: any, @Body() updateDto: UpdatePersonalInfoDto) {
-    return this.userService.updateProfile(user.id, updateDto);
+  @UseInterceptors(FileInterceptor('avatar'))
+  async updateProfile(
+    @CurrentUser() user: any,
+    @Body() updateDto: UpdatePersonalInfoDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.userService.updateProfile(user.id, updateDto, file);
   }
 
-  @Patch('upload-avatar')
-  @ApiOperation({ summary: 'Upload avatar' })
-  @UseInterceptors(FileInterceptor('avatar'))
-  async uploadAvatar(
-    @CurrentUser() user: any,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return this.userService.uploadAvatar(user.id, file);
-  }
 
   @Get('search')
   @ApiOperation({ summary: 'Tìm kiếm người dùng và nhóm' })

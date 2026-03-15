@@ -23,12 +23,14 @@ import {
   MessagesRepositoryInterface,
 } from '../../messages/domain/interfaces/messages-repository.interface';
 import { CreateGroupDto } from '../dto/create-group.dto';
+import { UpdateRolePermissionDto } from '../dto/update-role-permission.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { ChangeRoleDto } from '../dto/change-role.dto';
 import { GroupChatGateway } from '../group-chat.gateway';
 import { DeleteGroupUseCase } from '../use-cases/delete-group.usecase';
 import { TransferOwnershipUseCase } from '../use-cases/transfer-ownership.usecase';
+import { CloudinaryService } from 'src/common/services/cloudinary.service';
 
 @Injectable()
 export class GroupChatService {
@@ -47,6 +49,7 @@ export class GroupChatService {
     @Inject(IMESSAGES_REPOSITORY)
     private messageRepository: MessagesRepositoryInterface,
     private groupChatGateway: GroupChatGateway,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async createGroup(ownerId: string, createDto: CreateGroupDto) {
@@ -62,10 +65,7 @@ export class GroupChatService {
 
     return {
       message: 'Tạo nhóm thành công',
-      group: {
-        ...group,
-        members: group.members?.map((m) => m.userId) || [],
-      },
+      ...group,
     };
   }
 
@@ -141,17 +141,22 @@ export class GroupChatService {
     groupId: string,
     userId: string,
     updateDto: UpdateGroupDto,
+    file?: Express.Multer.File,
   ) {
     // gửi thông báo đến các thành viên trong nhóm để reload lại
     const group = await this.getActiveGroupOrThrow(groupId);
     const memberIds = group.members?.map((m) => m.userId) || [];
+    if (file) {
+      const result = await this.cloudinaryService.uploadFile(file);
+      updateDto.avatar = result.secure_url;
+    }
     await this.updateGroupUseCase.execute({
       groupId,
       userId,
       data: updateDto,
     });
 
-    this.groupChatGateway.notifyReloadGroups(memberIds);
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
 
     // gửi message cho nhóm là người đã đã thay đổi những gì (như một message nhưng type khác để in nghiên lên trên phần chat)
 
@@ -166,7 +171,7 @@ export class GroupChatService {
 
     await this.deleteGroupUseCase.execute(groupId, userId);
 
-    this.groupChatGateway.notifyReloadGroups(memberIds);
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
 
     return {
       message: 'Xóa nhóm thành công',
@@ -179,7 +184,7 @@ export class GroupChatService {
 
     await this.leaveGroupUseCase.execute(groupId, userId);
 
-    this.groupChatGateway.notifyReloadGroups(memberIds); // Add notification
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId); // Add notification
 
     return {
       message: 'Rời nhóm thành công',
@@ -203,7 +208,7 @@ export class GroupChatService {
     });
 
     const memberIds = [...result.newMembers, ...result.existingMembers];
-    this.groupChatGateway.notifyReloadGroups(memberIds);
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
 
     // gửi message cho nhóm là người đã đã thay đổi những gì (như một message nhưng type khác để in nghiên lên trên phần chat)
 
@@ -257,7 +262,7 @@ export class GroupChatService {
       memberId,
     });
 
-    this.groupChatGateway.notifyReloadGroups(memberIds);
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
 
     // gửi message cho nhóm là người đã đã thay đổi những gì (như một message nhưng type khác để in nghiên lên trên phần chat)
 
@@ -284,6 +289,9 @@ export class GroupChatService {
       memberId,
       data: changeRoleDto,
     });
+
+    const memberIds = group.members?.map((m) => m.userId) || [];
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
 
     const roleLabels: Record<string, string> = {
       OWNER: 'chủ nhóm',
@@ -312,10 +320,39 @@ export class GroupChatService {
       newOwnerId,
     );
 
-    this.groupChatGateway.notifyReloadGroups(memberIds);
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
 
     return {
       message: 'Chuyển quyền sở hữu thành công',
+    };
+  }
+
+  async updateRolePermission(
+    groupId: string,
+    updateDto: UpdateRolePermissionDto,
+  ) {
+    const group = await this.getActiveGroupOrThrow(groupId);
+    const memberIds = group.members?.map((m) => m.userId) || [];
+
+    await this.groupRepository.updateRolePermission(
+      groupId,
+      updateDto.role,
+      updateDto.permissionId,
+      updateDto.isEnabled,
+    );
+
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
+
+    return {
+      message: 'Cập nhật phân quyền thành công',
+    };
+  }
+
+  async getAvailablePermissions() {
+    const permissions = await this.groupRepository.getAvailablePermissions();
+    return {
+      message: 'Lấy danh sách quyền thành công',
+      permissions,
     };
   }
 

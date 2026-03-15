@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { getErrorMessage } from "@/shared/lib/api";
+import { getErrorMessage, api } from "@/shared/lib/api";
 
 import { GroupCreateDialog } from "@/features/chat/components/GroupCreateDialog";
 import { GroupInfoDialog } from "@/features/chat/components/GroupInfoDialog";
@@ -13,6 +13,7 @@ import { useGroupsQuery, groupKeys } from "@/features/chat/api/groupService";
 import { useGroupMessagesQuery } from "@/features/chat/api/groupService";
 import { useUsersQuery, chatKeys } from "@/features/chat/api/chatService";
 import { useMessagesQuery } from "@/features/chat/api/chatService";
+import { useUploadFiles } from "@/features/chat/api/chatService";
 
 import type { ChatViewProps } from "../types";
 import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
@@ -40,6 +41,8 @@ export default function ChatView({
   const [groupTypingText, setGroupTypingText] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const uploadFilesMutation = useUploadFiles();
 
   // tránh spam event typing-start
   // auto stop sau 1s
@@ -111,7 +114,7 @@ export default function ChatView({
       }
     };
   }, [typingUsers, typingTimeoutRef, setTypingUsers]);
-
+  
   // reset state group
   // mark seen ngay
   // Invalidate messages + users
@@ -161,29 +164,53 @@ export default function ChatView({
     }
   }
 
-  function sendMessage() {
+  async function sendMessage(
+    files: File[] = [],
+    gifs: { url: string; name: string }[] = []
+  ) {
     const socket = socketRef.current;
     const content = messageText.trim();
-    if (!socket || !content) return;
+    if (!socket || (!content && files.length === 0 && gifs.length === 0)) return;
+
+    let attachments: any[] = [];
+
+    // 1. Attach GIFs directly without uploading
+    if (gifs.length > 0) {
+      attachments.push(
+        ...gifs.map((g) => ({
+          url: g.url,
+          type: "image",
+          name: g.name,
+          mimeType: "image/gif",
+          size: 0,
+        }))
+      );
+    }
+
+    // 2. Upload actual files
+    if (files.length > 0) {
+      try {
+        const uploaded = await uploadFilesMutation.mutateAsync(files);
+        attachments = [...attachments, ...uploaded];
+      } catch (e) {
+        toast.error("Upload file thất bại");
+        return;
+      }
+    }
+
+    // If no attachments, make it undefined to match original logic optionally
+    const finalAttachments = attachments.length > 0 ? attachments : undefined;
 
     // Group chat
     if (selectedGroup?.id) {
       const groupId = selectedGroup.id;
 
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       socket.emit("group-typing-stop", { groupId });
 
       socket.emit(
         "send-group-message",
-        {
-          groupId,
-          content,
-          type: MessageType.GROUP,
-          replyTo: null,
-          fileUrl: null,
-        },
+        { groupId, content, type: MessageType.GROUP, replyTo: null, attachments: finalAttachments },
         (status: { success: boolean; message?: string }) => {
           if (!status?.success) {
             toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
@@ -197,14 +224,10 @@ export default function ChatView({
               {
                 id: `local-${Date.now()}`,
                 senderId: me!.id,
-                sender: {
-                  id: me!.id,
-                  username: me!.username,
-                  fullName: me!.fullName,
-                  avatar: me!.avatar,
-                },
+                sender: { id: me!.id, username: me!.username, fullName: me!.fullName, avatar: me!.avatar },
                 groupId,
-                content,
+                content: content || "",
+                attachments: finalAttachments,
                 createdAt: new Date().toISOString(),
                 type: MessageType.GROUP,
                 seenBy: [],
@@ -221,21 +244,17 @@ export default function ChatView({
     const receiverId = selectedUser?.id;
     if (!receiverId) return;
 
-    // Clear typing indicator
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     socket.emit("typing-stop", { receiverId });
 
     socket.emit(
       "send-message",
-      { receiverId, content, type: MessageType.DIRECT },
+      { receiverId, content, type: MessageType.DIRECT, attachments: finalAttachments },
       (status: { success: boolean; message?: string }) => {
         if (!status?.success) {
           toast.error(status?.message || "Gửi tin nhắn thất bại");
-          return;
+            return;
         }
-        // Optimistic update
         setMessageText("");
         queryClient.setQueryData<ChatMessageItem[]>(
           chatKeys.messages(receiverId),
@@ -245,20 +264,24 @@ export default function ChatView({
               id: `local-${Date.now()}`,
               senderId: me!.id,
               receiverId,
-              content,
+              content: content || "",
+              attachments: finalAttachments,
               createdAt: new Date().toISOString(),
               type: MessageType.DIRECT,
               isSeen: false,
             },
           ],
         );
-        void queryClient.invalidateQueries({
-          queryKey: chatKeys.messages(receiverId),
-        });
+        void queryClient.invalidateQueries({ queryKey: chatKeys.messages(receiverId) });
         void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
       },
     );
   }
+
+  function handleEmojiClick(emoji: string) {
+    setMessageText((prev) => prev + emoji);
+  }
+
 
   function handleTyping() {
     const socket = socketRef.current;
@@ -454,6 +477,7 @@ export default function ChatView({
                 onMessageTextChange={setMessageText}
                 onTyping={handleTyping}
                 onSend={sendMessage}
+                onEmojiClick={handleEmojiClick}
                 onBackToList={handleBackToList}
                 onOpenGroupInfo={() => setGroupInfoOpen(true)}
               />

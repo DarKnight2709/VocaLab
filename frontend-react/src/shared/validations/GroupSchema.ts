@@ -29,6 +29,7 @@ export const GroupItemSchema = z.object({
     .nullable()
     .optional(),
   updatedAt: z.string().optional(),
+  message: z.string().optional(),
 });
 
 // 2. Schema cho Thành viên trong nhóm (Detail)
@@ -40,6 +41,7 @@ export const GroupMemberSchema = z.object({
   joinedAt: z.string(),
   user: MemberUserSchema,
   permissions: z.array(z.string()).optional(),
+  message: z.string().optional(),
 });
 
 // 3. Schema Riêng Biệt cho Thông tin chi tiết Nhóm (Không liên quan đến List)
@@ -50,13 +52,16 @@ export const GroupInfoSchema = z.object({
   avatar: z.string().nullable().optional(),
   owner: MemberUserSchema.nullable().optional(),
   members: z.array(GroupMemberSchema),
+  rolePermissions: z.array(z.any()).optional(),
   isActive: z.boolean().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
+  message: z.string().optional(),
 });
 
 export const GetGroupsResponseSchema = z.object({
   groups: z.array(GroupItemSchema),
+  message: z.string().optional(),
 });
 
 export const GetGroupInfoResponseSchema = z.object({
@@ -66,6 +71,7 @@ export const GetGroupInfoResponseSchema = z.object({
 
 export const GetGroupMembersResponseSchema = z.object({
   members: z.array(GroupMemberSchema),
+  message: z.string().optional(),
 });
 
 // Schema cho tin nhắn nhóm
@@ -75,6 +81,17 @@ export const GroupMessageItemSchema = z.object({
   sender: PopulatedSenderSchema.optional(),
   groupId: z.string(),
   content: z.string(),
+  attachments: z
+    .array(
+      z.object({
+        url: z.string(),
+        type: z.enum(["image", "video", "file", "audio"]),
+        name: z.string().optional(),
+        size: z.number().optional(),
+        mimeType: z.string().optional(),
+      }),
+    )
+    .optional(),
   createdAt: z.string(),
   type: z.literal(MessageType.GROUP),
   seenBy: z.array(PopulatedSenderSchema).optional(),
@@ -82,6 +99,13 @@ export const GroupMessageItemSchema = z.object({
 
 export const GetGroupMessagesResponseSchema = z.object({
   messages: z.array(GroupMessageItemSchema),
+  message: z.string().optional(),
+});
+
+export const SuccessResponseSchema = z.object({
+  message: z.string().optional(),
+  success: z.boolean().optional(),
+  data: z.any().optional(),
 });
 
 // Schema cho việc tạo nhóm
@@ -94,8 +118,13 @@ export const CreateGroupSchema = z.object({
   members: z.array(z.string()).min(2, "Chọn ít nhất 2 thành viên (ngoài bạn)"),
 });
 
-export type CreateGroupInput = z.infer<typeof CreateGroupSchema>;
+export const UpdateGroupResponseSchema = z.object({
+  message: z.string(),
+});
 
+export type CreateGroupInput = z.infer<typeof CreateGroupSchema>;
+export type GroupInfo = z.infer<typeof GroupInfoSchema>;
+export type GroupMember = z.infer<typeof GroupMemberSchema>;
 export type GroupItem = z.infer<typeof GroupItemSchema>;
 export type GetGroupsResponse = z.infer<typeof GetGroupsResponseSchema>;
 export type GetGroupInfoResponse = z.infer<typeof GetGroupInfoResponseSchema>;

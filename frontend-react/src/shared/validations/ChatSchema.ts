@@ -9,10 +9,13 @@ export const UserItemSchema = z.object({
   avatar: z.string().nullable().optional(),
   email: z.string().optional(),
   unreadCount: z.number().optional(),
-  lastMessage: z.object({
-    isMine: z.boolean().nullable().optional(),
-    content: z.string().nullable().optional(),
-  }).nullable().optional(),
+  lastMessage: z
+    .object({
+      isMine: z.boolean().nullable().optional(),
+      content: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export const GetUsersResponseSchema = z.object({
@@ -31,9 +34,20 @@ export const PopulatedSenderSchema = z.object({
 export const ChatMessageItemSchema = z.object({
   id: z.string(),
   senderId: z.string(),
-  sender: PopulatedSenderSchema.optional(), 
+  sender: PopulatedSenderSchema.optional(),
   receiverId: z.string().optional(),
   content: z.string(),
+  attachments: z
+    .array(
+      z.object({
+        url: z.string(),
+        type: z.enum(["image", "video", "file", "audio"]),
+        name: z.string().optional(),
+        size: z.number().optional(),
+        mimeType: z.string().optional(),
+      }),
+    )
+    .optional(),
   createdAt: z.string(),
   type: z.literal(MessageType.DIRECT),
   seenBy: z.array(PopulatedSenderSchema).optional(),

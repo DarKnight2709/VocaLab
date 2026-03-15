@@ -41,24 +41,24 @@ export class ChangeRoleUseCase {
     }
 
     // không cho phép thay đổi role của cấp cao hơn
-    const isTargetHigherRole = await this.groupRepository.isHigherRole(
-      groupId,
-      userId,
-      memberId,
-    );
-    if (isTargetHigherRole) {
-      throw new BadRequestException('Không thể thay đổi role của cấp cao hơn');
-    }
+    // const isTargetHigherRole = await this.groupRepository.isHigherRole(
+    //   groupId,
+    //   userId,
+    //   memberId,
+    // );
+    // if (isTargetHigherRole) {
+    //   throw new BadRequestException('Không thể thay đổi role của cấp cao hơn');
+    // }
 
     // không cho phép thay đổi role cùng cấp
-    const isTargetSameRole = await this.groupRepository.isSameRole(
-      groupId,
-      userId,
-      memberId,
-    );
-    if (isTargetSameRole) {
-      throw new BadRequestException('Không thể thay đổi role của cùng cấp');
-    }
+    // const isTargetSameRole = await this.groupRepository.isSameRole(
+    //   groupId,
+    //   userId,
+    //   memberId,
+    // );
+    // if (isTargetSameRole) {
+    //   throw new BadRequestException('Không thể thay đổi role của cùng cấp');
+    // }
 
     await this.groupRepository.updateMemberRole(
       groupId,

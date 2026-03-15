@@ -194,6 +194,20 @@ export function MessageList({
                         }`}
                       >
                         {m.content}
+                        {(m as any).attachments?.map((att: any, i: number) => (
+                          <div key={i} className="mt-1">
+                            {att.type === 'image' ? (
+                              <img src={att.url} className="max-w-[200px] rounded-lg cursor-pointer" />
+                            ) : att.type === 'video' ? (
+                              <video src={att.url} controls className="max-w-[200px] rounded-lg" />
+                            ) : (
+                              <a href={att.url} target="_blank" rel="noreferrer"
+                                 className="flex items-center gap-1 text-xs underline">
+                                 {att.name || 'Tải về'}
+                              </a>
+                            )}
+                          </div>
+                        ))}
                       </div>
                       <div
                         className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-[220px] whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-auto ${
@@ -351,6 +365,20 @@ export function MessageList({
                       }`}
                     >
                       {m.content}
+                      {(m as any).attachments?.map((att: any, i: number) => (
+                        <div key={i} className="mt-1">
+                          {att.type === 'image' ? (
+                            <img src={att.url} className="max-w-[200px] rounded-lg cursor-pointer" />
+                          ) : att.type === 'video' ? (
+                            <video src={att.url} controls className="max-w-[200px] rounded-lg" />
+                          ) : (
+                            <a href={att.url} target="_blank" rel="noreferrer"
+                               className="flex items-center gap-1 text-xs underline">
+                               {att.name || 'Tải về'}
+                            </a>
+                          )}
+                        </div>
+                      ))}
                     </div>
                     <div
                       className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-[220px] whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-auto ${

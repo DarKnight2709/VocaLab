@@ -10,7 +10,12 @@ import {
   GetGroupMessagesResponseSchema,
   GetGroupMembersResponseSchema,
   GroupItemSchema,
+  UpdateGroupResponseSchema,
+  SuccessResponseSchema,
 } from "@/shared/validations/GroupSchema";
+import { z } from "zod";
+
+
 import { toast } from "sonner";
 
 export const groupKeys = {
@@ -96,9 +101,9 @@ export function useCreateGroupMutation() {
         GroupItemSchema,
       );
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success("Tạo nhóm thành công.");
+      toast.success(data.message || "Tạo nhóm thành công.");
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "Tạo nhóm thất bại."));
@@ -112,18 +117,28 @@ export function useUpdateGroupMutation() {
     mutationFn: async (params: {
       groupId: string;
       payload: Record<string, unknown>;
+      file?: File;
     }) => {
+      const formData = new FormData();
+      Object.entries(params.payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value as string);
+        }
+      });
+      if (params.file) {
+        formData.append("avatar", params.file);
+      }
       return await fetchWithSchema(
-        api.patch(API_ROUTES.GROUP.UPDATE(params.groupId), params.payload),
-        GroupItemSchema,
+        api.patch(API_ROUTES.GROUP.UPDATE(params.groupId), formData),
+        UpdateGroupResponseSchema,
       );
     },
-    onSuccess: (_data, vars) => {
+    onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
         queryKey: groupKeys.info(vars.groupId),
       });
-      toast.success("Cập nhật nhóm thành công.");
+      toast.success(data.message || "Cập nhật nhóm thành công.");
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "Cập nhật nhóm thất bại."));
@@ -137,16 +152,57 @@ export function useDeleteGroupMutation() {
     mutationFn: async (groupId: string) => {
       return await fetchWithSchema(
         api.delete(API_ROUTES.GROUP.DELETE(groupId)),
-        GroupItemSchema,
+        SuccessResponseSchema,
       );
     },
-    onSuccess: (_data, groupId) => {
+    onSuccess: (data, groupId) => {
       queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success("Xóa nhóm thành công.");
+      toast.success(data.message || "Xóa nhóm thành công.");
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "Xóa nhóm thất bại."));
+    },
+  });
+}
+
+export function useLeaveGroupMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      return await api.post(API_ROUTES.GROUP.LEAVE(groupId));
+    },
+    onSuccess: (data, groupId) => {
+      queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+      toast.success((data as any)?.message || "Rời nhóm thành công.");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Rời nhóm thất bại."));
+    },
+  });
+}
+
+export function useTransferOwnershipMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { groupId: string; newOwnerId: string }) => {
+      return await fetchWithSchema(
+        api.patch(API_ROUTES.GROUP.TRANSFER_OWNERSHIP(params.groupId), {
+          newOwnerId: params.newOwnerId,
+        }),
+        SuccessResponseSchema,
+      );
+    },
+    onSuccess: (data, vars) => {
+      void queryClient.invalidateQueries({
+        queryKey: groupKeys.detail(vars.groupId),
+      });
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+      toast.success(data.message || "Chuyển quyền sở hữu thành công.");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Chuyển quyền sở hữu thất bại."));
     },
   });
 }
@@ -159,10 +215,10 @@ export function useAddGroupMembersMutation() {
         api.post(API_ROUTES.GROUP.ADD_MEMBERS(params.groupId), {
           memberIds: params.memberIds,
         }),
-        GetGroupMembersResponseSchema,
+        z.any(),
       );
     },
-    onSuccess: (_data, vars) => {
+    onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
@@ -170,7 +226,7 @@ export function useAddGroupMembersMutation() {
         queryKey: groupKeys.info(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success("Thêm thành viên thành công.");
+      toast.success(data.message || "Thêm thành viên thành công.");
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "Thêm thành viên thất bại."));
@@ -186,10 +242,10 @@ export function useDeleteGroupMemberMutation() {
         api.delete(
           API_ROUTES.GROUP.DELETE_MEMBER(params.groupId, params.memberId),
         ),
-        GetGroupMembersResponseSchema,
+        SuccessResponseSchema,
       );
     },
-    onSuccess: (_data, vars) => {
+    onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
@@ -197,7 +253,7 @@ export function useDeleteGroupMemberMutation() {
         queryKey: groupKeys.info(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success("Xóa thành viên thành công.");
+      toast.success(data.message || "Xóa thành viên thành công.");
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "Xóa thành viên thất bại."));
@@ -218,20 +274,73 @@ export function useChangeGroupRoleMutation() {
           API_ROUTES.GROUP.CHANGE_ROLE(params.groupId, params.memberId),
           { newRole: params.role },
         ),
-        GetGroupMembersResponseSchema,
+        z.any(),
       );
     },
-    onSuccess: (_data, vars) => {
+    onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
       void queryClient.invalidateQueries({
         queryKey: groupKeys.info(vars.groupId),
       });
-      toast.success("Thay đổi vai trò thành công.");
+      toast.success(data.message || "Thay đổi vai trò thành công.");
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "Thay đổi vai trò thất bại."));
     },
   });
 }
+
+export function useUpdateRolePermissionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      groupId: string;
+      role: MemberRole;
+      permissionId: string;
+      isEnabled: boolean;
+    }) => {
+      return await api.patch(API_ROUTES.GROUP.UPDATE_ROLE_PERMISSION(params.groupId), {
+        role: params.role,
+        permissionId: params.permissionId,
+        isEnabled: params.isEnabled,
+      });
+    },
+    onSuccess: (data, vars) => {
+      void queryClient.invalidateQueries({
+        queryKey: groupKeys.info(vars.groupId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: groupKeys.members(vars.groupId),
+      });
+      toast.success((data as any)?.message || "Cập nhật phân quyền thành công.");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Cập nhật phân quyền thất bại."));
+    },
+  });
+}
+
+export function useAvailablePermissionsQuery() {
+  return useQuery({
+    queryKey: ["available-permissions"],
+    queryFn: async () => {
+      try {
+        const response = await api.get(API_ROUTES.GROUP.GET_AVAILABLE_PERMISSIONS);
+        // The interceptor might have already nested this into response.data
+        // We look for permissions in response.data or response.data.data
+        const data = response.data as any;
+        const perms = data?.permissions || data?.data?.permissions || [];
+        
+        console.log('Fetched Available Permissions:', perms);
+        return perms;
+      } catch (e) {
+        console.error('Failed to fetch permissions:', e);
+        return [];
+      }
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+}
+

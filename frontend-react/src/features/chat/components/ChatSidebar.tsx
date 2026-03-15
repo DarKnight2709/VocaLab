@@ -151,7 +151,7 @@ export function ChatSidebar({
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={u.avatar} />
+                            <AvatarImage src={u.avatar ?? undefined} />
                             <AvatarFallback>
                               {getInitials(name)}
                             </AvatarFallback>
@@ -236,7 +236,7 @@ export function ChatSidebar({
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={g.avatar} />
+                            <AvatarImage src={g.avatar ?? undefined} />
                             <AvatarFallback>{getInitials(name)}</AvatarFallback>
                           </Avatar>
                           {isGroupActive && (

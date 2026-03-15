@@ -7,6 +7,8 @@ import {
   Param,
   Body,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GroupChatService } from './services/group-chat.service';
@@ -19,10 +21,12 @@ import {
 } from '../../common/decorators/group-auth.decorators';
 import { GroupPermission } from '../../common/enums/group-permission.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('groups')
 @Controller('groups')
@@ -56,13 +60,16 @@ export class GroupChatController {
   @RequireGroupPermission(GroupPermission.UPDATE_GROUP_INFO)
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Sửa thông tin nhóm' })
+  @UseInterceptors(FileInterceptor('avatar'))
   async updateGroup(
     @CurrentUser() user: any,
     @Param('id') id: string,
     @Body() updateDto: UpdateGroupDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.groupChatService.updateGroup(id, user.id, updateDto);
+    return this.groupChatService.updateGroup(id, user.id, updateDto, file);
   }
+
 
   @Delete('delete/:id')
   @IsOwner()
@@ -133,7 +140,7 @@ export class GroupChatController {
   }
 
   @Patch(':id/changeRole/:memberId')
-  @RequireGroupPermission(GroupPermission.MANAGE_ROLES)
+  @IsOwner()
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Đổi role thành viên' })
   async changeRole(
@@ -148,5 +155,22 @@ export class GroupChatController {
       memberId,
       changeRoleDto,
     );
+  }
+
+  @Patch(':id/rolePermissions')
+  @RequireGroupPermission(GroupPermission.UPDATE_ROLE_PERMISSION)
+  @UseGuards(GroupPermissionGuard)
+  @ApiOperation({ summary: 'Cập nhật phân quyền của một role trong nhóm' })
+  async updateRolePermission(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateRolePermissionDto,
+  ) {
+    return this.groupChatService.updateRolePermission(id, updateDto);
+  }
+
+  @Get('permissions/all')
+  @ApiOperation({ summary: 'Lấy danh sách tất cả các quyền trong hệ thống' })
+  async getAvailablePermissions() {
+    return this.groupChatService.getAvailablePermissions();
   }
 }

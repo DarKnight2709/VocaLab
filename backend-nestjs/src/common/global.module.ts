@@ -4,7 +4,8 @@ import { ClsModule } from "nestjs-cls";
 import envConfig from "src/core/configs/env.config";
 import { ConfigService } from "./services/config.service";
 import { ApiExceptionFilter } from "./filters/http-exception.filter";
-import  { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { TransformInterceptor } from "./interceptors/transform.interceptor";
+import  { APP_FILTER, APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiValidationPipe } from "./pipes/validation.pipe"
 import { HashingService } from "./services/hashing.service";
 import { RsaKeyManager } from "./utils/RsaKeyManager";
@@ -59,7 +60,10 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
       provide: APP_FILTER,
       useClass: ApiExceptionFilter
     },
-
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
     {
       provide: APP_PIPE,
       useClass: ApiValidationPipe,

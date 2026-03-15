@@ -64,4 +64,14 @@ export interface IGroupRepository {
   isSameRole(groupId: string, userId: string, targetUserId: string): Promise<boolean>;
 
   transferOwnership(groupId: string, newOwnerId: string): Promise<void>;
+
+  updateRolePermission(
+    groupId: string,
+    role: MemberRole,
+    permissionId: string,
+    isEnabled: boolean,
+  ): Promise<void>;
+
+  getRolePermissions(groupId: string): Promise<any[]>;
+  getAvailablePermissions(): Promise<any[]>;
 }

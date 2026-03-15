@@ -8,9 +8,9 @@ import { type ZodType, ZodError } from "zod";
 export const api = axios.create({
   baseURL:
     import.meta.env.VITE_ENV === "development" ? "/api/" : envConfig.VITE_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // headers: {
+  //   "Content-Type": "application/json",
+  // },
   paramsSerializer: {
     serialize: (params) => {
       return qs.stringify(params, { arrayFormat: "repeat", skipNulls: true });
@@ -33,7 +33,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     if (response.data && response.data.success === true && response.data.data !== undefined) {
-      response.data = response.data.data;
+      const { data, message } = response.data;
+      // If there's a message and data is an object, preserve the message on the data
+      if (message && typeof data === "object" && data !== null) {
+        data.message = message;
+      }
+      response.data = data;
     }
     return response;
   },
