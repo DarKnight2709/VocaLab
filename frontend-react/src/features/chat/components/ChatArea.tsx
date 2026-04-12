@@ -1,8 +1,14 @@
 import { MessageInput } from "@/features/chat/components/MessageInput";
 import { ChatHeader } from "@/features/chat/components/ChatHeader";
 import { MessageList } from "@/features/chat/components/MessageList";
-import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
-import type { GroupItem } from "@/shared/validations/GroupSchema";
+import type {
+  UserItem,
+  ChatMessageItem,
+} from "@/shared/validations/ChatSchema";
+import type {
+  GroupItem,
+  GroupMessageItem,
+} from "@/shared/validations/GroupSchema";
 
 type ChatAreaProps = {
   embedded?: boolean;
@@ -13,8 +19,8 @@ type ChatAreaProps = {
   groupTypingText: string;
   typingUsersCount: number;
 
-  messages: MessageItem[];
-  groupMessages: MessageItem[];
+  messages: ChatMessageItem[];
+  groupMessages: GroupMessageItem[];
   loadingMessages: boolean;
   loadingGroupMessages: boolean;
   myId: string;
@@ -22,9 +28,11 @@ type ChatAreaProps = {
   messageText: string;
   onMessageTextChange: (value: string) => void;
   onTyping: () => void;
-  onSend: () => void;
+  onSend: (files: File[], gifs?: { url: string; name: string }[]) => void;
+  onEmojiClick: (emoji: string) => void;
   onBackToList: () => void;
   onOpenGroupInfo: () => void;
+  onCallClick?: () => void;
 };
 
 export function ChatArea({
@@ -43,9 +51,11 @@ export function ChatArea({
   messageText,
   onMessageTextChange,
   onTyping,
+  onEmojiClick,
   onSend,
   onBackToList,
   onOpenGroupInfo,
+  onCallClick,
 }: ChatAreaProps) {
   return (
     <div className="relative flex-1 flex flex-col min-h-0">
@@ -57,6 +67,7 @@ export function ChatArea({
           isSelectedUserOnline={isSelectedUserOnline}
           onBack={onBackToList}
           onGroupInfoClick={onOpenGroupInfo}
+          onCallClick={onCallClick}
         />
       )}
 
@@ -75,7 +86,9 @@ export function ChatArea({
         (selectedGroup && !!groupTypingText)) && (
         <div className="absolute bottom-17 left-0 right-0 px-4 pointer-events-none">
           <span className="text-xs text-muted-foreground">
-            {!selectedGroup && typingUsersCount > 0 ? "Đang nhập..." : groupTypingText}
+            {!selectedGroup && typingUsersCount > 0
+              ? "Đang nhập..."
+              : groupTypingText}
           </span>
         </div>
       )}
@@ -84,6 +97,7 @@ export function ChatArea({
         messageText={messageText}
         onMessageTextChange={onMessageTextChange}
         onTyping={onTyping}
+        onEmojiClick={onEmojiClick}
         onSend={onSend}
       />
     </div>

@@ -20,7 +20,6 @@ import {
 } from "@/shared/components/ui/avatar";
 import {
   useUpdatePersonalInfoMutation,
-  useUploadAvatarMutation,
 } from "@/features/auth/api/authService";
 import {
   UpdatePersonalInfoSchema,
@@ -39,11 +38,12 @@ export function EditProfileDialog(props: {
   const { open, onOpenChange, me, onLogout } = props;
 
   const [saving, setSaving] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
   const [loggingOut, setLoggingOut] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const uploadAvatarMutation = useUploadAvatarMutation();
   const updateProfileMutation = useUpdatePersonalInfoMutation();
 
   const displayName = useMemo(() => {
@@ -66,15 +66,18 @@ export function EditProfileDialog(props: {
       username: me?.username || "",
       email: me?.email || "",
     });
+    setSelectedFile(null);
+    setAvatarPreview(null);
   }, [open, me, form]);
 
   async function onSubmit(values: UpdatePersonalInfoBodyType) {
     if (!me) return;
     setSaving(true);
     try {
-      await updateProfileMutation.mutateAsync(values);
-      // onUpdated call is removed as per previous cleanup, or should be kept if local update is needed
-      // But invalidation handles it.
+      await updateProfileMutation.mutateAsync({
+        body: values,
+        file: selectedFile || undefined,
+      });
       onOpenChange(false);
     } catch (e: any) {
       // toast handled in hook
@@ -87,17 +90,14 @@ export function EditProfileDialog(props: {
     fileInputRef.current?.click();
   }
 
-  async function handleAvatarSelected(file?: File) {
+  function handleAvatarSelected(file?: File) {
     if (!file) return;
-    setUploadingAvatar(true);
-    try {
-      await uploadAvatarMutation.mutateAsync(file);
-    } catch (e) {
-      // toast handled in hook
-    } finally {
-      setUploadingAvatar(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   }
 
   const formState = form.formState;
@@ -125,7 +125,7 @@ export function EditProfileDialog(props: {
 
         <div className="flex items-center gap-4">
           <Avatar className="h-14 w-14">
-            <AvatarImage src={me?.avatar || undefined} />
+            <AvatarImage src={avatarPreview || me?.avatar || undefined} />
             <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col gap-2">
@@ -133,9 +133,9 @@ export function EditProfileDialog(props: {
               type="button"
               variant="outline"
               onClick={handlePickAvatar}
-              disabled={uploadingAvatar}
+              disabled={saving}
             >
-              {uploadingAvatar ? "Đang tải..." : "Đổi ảnh đại diện"}
+              {selectedFile ? "Đã chọn ảnh" : "Đổi ảnh đại diện"}
             </Button>
             <input
               ref={fileInputRef}
@@ -145,7 +145,7 @@ export function EditProfileDialog(props: {
               onChange={(e) => void handleAvatarSelected(e.target.files?.[0])}
             />
             <div className="text-xs text-muted-foreground">
-              PNG/JPG, chọn 1 file.
+              {selectedFile ? selectedFile.name : "PNG/JPG, chọn 1 file."}
             </div>
           </div>
         </div>

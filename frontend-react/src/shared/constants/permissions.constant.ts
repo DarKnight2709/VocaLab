@@ -1,0 +1,13 @@
+const PERMISSION_GROUP = {
+  // Member Management
+  ADD_MEMBER: 'ADD_MEMBER',
+  REMOVE_MEMBER: 'REMOVE_MEMBER',
+  MANAGE_PERMISSIONS: 'UPDATE_ROLE_PERMISSION',
+
+  // Group Information
+  UPDATE_GROUP_INFO: 'UPDATE_GROUP_INFO',
+  // // Group Lifecycle
+  // DELETE_GROUP: 'DELETE_GROUP',
+} as const
+
+export default PERMISSION_GROUP

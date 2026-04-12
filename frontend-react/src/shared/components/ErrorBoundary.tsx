@@ -1,10 +1,7 @@
 // Bắt và xử lý lỗi js xảy ra trong bất kì component con nào bên trong nó, thay vì làm cả ứng dụng crash, 
 
-import { AlertTriangle, RefreshCw } from 'lucide-react'
 import type { ErrorInfo, ReactNode } from 'react'
 import { Component } from 'react'
-import envConfig from '../config/envConfig'
-import { Button } from './ui/button'
 // import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 
 interface Props {

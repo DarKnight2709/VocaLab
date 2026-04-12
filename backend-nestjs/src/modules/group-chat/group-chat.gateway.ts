@@ -11,9 +11,9 @@ import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
 import { MessagesService } from '../messages/services/messages.service';
 import { MessageType } from '@prisma/client';
-import { WsValidationPipe } from 'src/common/pipes/ws-validation.pipe';
+import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendMessageDto } from '../messages/dto/send-message.dto';
-import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
+import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 
 @WebSocketGateway({
   cors: {
@@ -26,7 +26,7 @@ import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
 @UseFilters(new WsExceptionFilter())
 export class GroupChatGateway {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(
     private messagesService: MessagesService,
@@ -58,14 +58,10 @@ export class GroupChatGateway {
       this.server.to(`group-${groupId}`).emit('receive-group-message', {
         id: message.id,
         senderId: message.senderId,
-        sender: {
-          id: user.id,
-          username: user.username,
-          fullName: user.fullName,
-          avatar: user.avatar,
-        },
+        sender: message.sender,
         groupId,
         content: message.content,
+        status: message.status,
         replyTo,
         attachments: message.attachments,
         seenBy: [],
@@ -73,7 +69,7 @@ export class GroupChatGateway {
       });
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending group message:', error);
       return { success: false, message: error.message };
     }
@@ -91,7 +87,34 @@ export class GroupChatGateway {
 
       this.server.to(`group-${groupId}`).emit('seen-group-message', {
         groupId,
-        userId,
+        viewerId: userId,
+        viewer: {
+          id: userId,
+          fullName: user.fullName,
+          username: user.username,
+          avatar: user.avatar,
+        },
+      });
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error marking seen:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  @SubscribeMessage('update-message-status')
+  async handleUpdateMessageStatus(@SocketUser() user: any, @MessageBody() payload: any) {
+    try {
+      const { messageId, status } = payload;
+      const userId = user.id;
+
+      if (!messageId) return;
+
+      await this.messagesService.updateMessageStatus(messageId, status);
+
+      this.server.to(`group-${messageId}`).emit('update-message-status', {
+        messageId,
+        status,
         user: {
           id: userId,
           fullName: user.fullName,
@@ -100,8 +123,8 @@ export class GroupChatGateway {
         },
       });
       return { success: true };
-    } catch (error) {
-      console.error('Error marking seen:', error);
+    } catch (error: any) {
+      console.error('Error updating message status:', error);
       return { success: false, message: error.message };
     }
   }
@@ -141,7 +164,7 @@ export class GroupChatGateway {
   }
 
   @SubscribeMessage('leave-group')
-  handleLeaveGroup(
+  handleLeavGroup(
     @SocketUser() user: any,
     @MessageBody() payload: any,
     @ConnectedSocket() client: Socket,
@@ -153,23 +176,9 @@ export class GroupChatGateway {
     }
   }
 
-  @SubscribeMessage('group-created')
-  handleGroupCreated(@MessageBody() payload: any) {
-    const { groupId, members } = payload;
-    if (!groupId || !members) return;
-
-    members.forEach((memberId: string) => {
-      this.server.to(memberId).emit('reload-groups');
-    });
-  }
-
-  @SubscribeMessage('group-deleted')
-  handleGroupDeleted(@MessageBody() payload: any) {
-    const { groupId, members } = payload;
-    if (!groupId || !members) return;
-
-    members.forEach((memberId: string) => {
-      this.server.to(memberId).emit('reload-groups');
+  notifyReloadGroups(memberIds: string[], groupId?: string) {
+    memberIds.forEach((memberId) => {
+      this.server.to(memberId).emit('reload-groups', { groupId });
     });
   }
 }

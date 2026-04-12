@@ -13,6 +13,6 @@ export type MetaPagination = z.infer<typeof MetaPagination>
 
 export const BaseEntityDTO = z.object({
   id: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date()
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date()
 })

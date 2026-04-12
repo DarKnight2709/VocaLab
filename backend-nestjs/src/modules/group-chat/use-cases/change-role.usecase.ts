@@ -1,5 +1,15 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
-import { IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  Inject,
+} from '@nestjs/common';
+import {
+  type IGroupRepository,
+  IGROUP_REPOSITORY,
+  GroupWithDetails,
+} from '../domain/interfaces/group-repository.interface';
 import { ChangeRoleDto } from '../dto/change-role.dto';
 
 export interface ChangeRoleInput {
@@ -13,33 +23,48 @@ export interface ChangeRoleInput {
 export class ChangeRoleUseCase {
   constructor(
     @Inject(IGROUP_REPOSITORY)
-    private groupRepository: IGroupRepository
+    private groupRepository: IGroupRepository,
   ) {}
 
-  async execute(input: ChangeRoleInput) {
+  async execute(input: ChangeRoleInput): Promise<GroupWithDetails | null> {
     const { groupId, userId, memberId, data } = input;
 
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
+    // không cho phép thay đổi role của owner
+    const isTargetOwner = await this.groupRepository.isOwner(groupId, memberId);
+    if (isTargetOwner) {
+      throw new BadRequestException('Không thể thay đổi role của chủ nhóm');
     }
 
-    const isOwner = await this.groupRepository.isOwner(groupId, userId);
-    if (!isOwner) {
-      throw new ForbiddenException('Chỉ người chủ nhóm mới được đổi role');
-    }
-
-    const targetMembers = await this.groupRepository.getMembers(groupId);
-    const member = targetMembers.find((m: any) => m.userId === memberId);
-    if (!member) {
-      throw new NotFoundException('Thành viên không tồn tại trong nhóm');
-    }
-
+    // không cho phép thay đổi role của chính mình
     if (userId === memberId) {
-      throw new ForbiddenException('Bạn không thể hạ quyền chính mình');
+      throw new ForbiddenException('Bạn không thể tự hạ quyền chính mình');
     }
 
-    await this.groupRepository.updateMemberRole(groupId, memberId, data.newRole);
+    // không cho phép thay đổi role của cấp cao hơn
+    // const isTargetHigherRole = await this.groupRepository.isHigherRole(
+    //   groupId,
+    //   userId,
+    //   memberId,
+    // );
+    // if (isTargetHigherRole) {
+    //   throw new BadRequestException('Không thể thay đổi role của cấp cao hơn');
+    // }
+
+    // không cho phép thay đổi role cùng cấp
+    // const isTargetSameRole = await this.groupRepository.isSameRole(
+    //   groupId,
+    //   userId,
+    //   memberId,
+    // );
+    // if (isTargetSameRole) {
+    //   throw new BadRequestException('Không thể thay đổi role của cùng cấp');
+    // }
+
+    await this.groupRepository.updateMemberRole(
+      groupId,
+      memberId,
+      data.newRole,
+    );
 
     return this.groupRepository.findById(groupId);
   }

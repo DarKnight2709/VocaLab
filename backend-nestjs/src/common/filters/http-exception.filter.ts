@@ -7,22 +7,60 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { Prisma } from '@prisma/client';
 
-// bắt tất cả lỗi
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
-  constructor() {}
-
   catch(exception: any, host: ArgumentsHost) {
     Logger.error(exception);
-    if (!exception) return;
+
+    // 🔥 Convert Prisma errors to HttpException first
+    exception = this.handlePrismaException(exception);
+
     const apiResponse = ApiExceptionFilter.handleException(exception);
-    Logger.error(apiResponse);
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+
     response
-      .status(exception?.getStatus() ?? HttpStatus.INTERNAL_SERVER_ERROR)
+      .status(exception?.getStatus?.() ?? HttpStatus.INTERNAL_SERVER_ERROR)
       .json(apiResponse);
+  }
+
+  private handlePrismaException(exception: any) {
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      switch (exception.code) {
+        case 'P2025':
+          return new HttpException('Record not found', HttpStatus.NOT_FOUND);
+
+        case 'P2002':
+          return new HttpException('Duplicate value', HttpStatus.CONFLICT);
+
+        case 'P2003':
+          return new HttpException(
+            'Foreign key constraint failed',
+            HttpStatus.BAD_REQUEST,
+          );
+
+        case 'P2021':
+          return new HttpException(
+            'Table does not exist',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+
+        default:
+          return new HttpException(
+            'Database error',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+      }
+    }
+
+    if (exception instanceof Prisma.PrismaClientValidationError) {
+      return new HttpException('Invalid query data', HttpStatus.BAD_REQUEST);
+    }
+
+    return exception;
   }
 
   static handleException(exception: HttpException) {
@@ -35,6 +73,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     const exceptionResponse =
       exception instanceof HttpException ? exception?.getResponse() : null;
+
     if (typeof exceptionResponse === 'object') {
       if (exception?.getStatus() === HttpStatus.UNPROCESSABLE_ENTITY) {
         responseDto = {

@@ -24,10 +24,10 @@ import {
   RefreshTokenResponseDto,
   SignupDto,
 } from './auth.dto';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { type Request } from 'express';
-import { IsProtected } from 'src/common/decorators/protected.decorator';
-import { Public } from 'src/common/decorators/public.decorator';
+import { IsProtected } from '@/common/decorators/protected.decorator';
+import { Public } from '@/common/decorators/public.decorator';
 
 @ApiTags('auth')
 @Controller('auth')

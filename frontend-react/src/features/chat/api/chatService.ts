@@ -1,24 +1,42 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/shared/lib/api";
+import { useMutation, useQuery} from "@tanstack/react-query";
+import { api, fetchWithSchema } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 
-import type {
-  GetUsersResponse,
-  GetMessagesResponse,
+import {
+  GetUsersResponseSchema,
+  GetMessagesResponseSchema,
 } from "@/shared/validations/ChatSchema";
 
+
+
+/**
+ * Query keys factory
+ */
+export const chatKeys = {
+  all: ["users"] as const,
+  list: () => [...chatKeys.all, "list"] as const,
+  detail: (id: string) => [...chatKeys.all, id, "detail"] as const,
+  searchUsers: (keyword: string) =>
+    [...chatKeys.all, "search", keyword] as const,
+  messages: (friendId: string) =>
+    [...chatKeys.detail(friendId), "messages"] as const,
+};
+
 export const useSearchUsersQuery = (keyword: string) => {
+  const normalized = keyword.trim();
   return useQuery({
-    queryKey: ["users", "search", keyword],
+    queryKey: chatKeys.searchUsers(keyword),
     queryFn: async () => {
-      if (!keyword.trim()) return [];
-      const res = await api.get<GetUsersResponse>(
-        `${API_ROUTES.USER.SEARCH}?keyword=${encodeURIComponent(keyword)}`,
+      if (!normalized) return [];
+      const data = await fetchWithSchema(
+        api.get(`${API_ROUTES.USER.SEARCH}?keyword=${encodeURIComponent(keyword)}`),
+        GetUsersResponseSchema
       );
-      return res.data?.users || []; 
+
+      return data.users ?? [];
     },
-    enabled: !!keyword.trim(),
+    enabled: !!normalized,
     staleTime: 1000 * 60, // 1 minute
   });
 };
@@ -26,10 +44,14 @@ export const useSearchUsersQuery = (keyword: string) => {
 
 export function useUsersQuery() {
   return useQuery({
-    queryKey: ['users'],
+    queryKey: chatKeys.list(),
     queryFn: async () => {
-      const res = await api.get<GetUsersResponse>(API_ROUTES.MESSAGE.GET_USERS);
-      return res.data?.users || [];
+      const data = await fetchWithSchema(
+        api.get(API_ROUTES.MESSAGE.GET_USERS),
+        GetUsersResponseSchema
+      );
+
+      return data.users ?? [];
     },
   });
 }
@@ -37,14 +59,33 @@ export function useUsersQuery() {
 
 export function useMessagesQuery(friendId: string) {
   return useQuery({
-    queryKey: ['messages', friendId],
+    queryKey: chatKeys.messages(friendId),
     queryFn: async () => {
-      if (!friendId) return [];
-      const res = await api.get<GetMessagesResponse>(API_ROUTES.MESSAGE.GET_MESSAGES(friendId));
-      return res.data?.messages || [];
+      const data = await fetchWithSchema(
+        api.get(API_ROUTES.MESSAGE.GET_MESSAGES(friendId)),
+        GetMessagesResponseSchema
+      );
+
+      return data.messages ?? [];
     },
     enabled: !!friendId,
   });
 }
 
+export const useUploadFiles = () => {
+  return useMutation({
+    mutationFn: async (files: File[]) => {
+      const uploaded = await Promise.all(
+        files.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
 
+          const res = await api.post(API_ROUTES.MESSAGE.UPLOAD_FILES, formData);
+          return res.data;
+        })
+      );
+
+      return uploaded;
+    },
+  });
+};

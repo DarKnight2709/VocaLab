@@ -12,6 +12,8 @@ import { RemoveMemberUseCase } from './use-cases/remove-member.usecase';
 import { ChangeRoleUseCase } from './use-cases/change-role.usecase';
 import { MessagesModule } from '../messages/messages.module';
 import { IGROUP_REPOSITORY } from './domain/interfaces/group-repository.interface';
+import { DeleteGroupUseCase } from './use-cases/delete-group.usecase';
+import { TransferOwnershipUseCase } from './use-cases/transfer-ownership.usecase';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { IGROUP_REPOSITORY } from './domain/interfaces/group-repository.interfac
     AddMemberUseCase,
     RemoveMemberUseCase,
     ChangeRoleUseCase,
+    DeleteGroupUseCase,
+    TransferOwnershipUseCase,
   ],
   exports: [GroupChatGateway, IGROUP_REPOSITORY],
 })

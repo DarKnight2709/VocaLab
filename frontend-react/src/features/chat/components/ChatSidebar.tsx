@@ -11,7 +11,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-import { MessageCircle, PanelLeftClose, Search, UserRound, UsersRound } from "lucide-react";
+import { Search, UserRound, UsersRound } from "lucide-react";
 import { getInitials } from "../utils";
 import type { UserItem } from "@/shared/validations/ChatSchema";
 import type { GroupItem } from "@/shared/validations/GroupSchema";
@@ -42,7 +42,6 @@ export function ChatSidebar({
   embedded = false,
   hideSidebarSearch = false,
   isSidebarVisible,
-  onSidebarVisibilityChange,
   searchQuery,
   onSearchQueryChange,
   activeTab,
@@ -66,25 +65,10 @@ export function ChatSidebar({
       {isSidebarVisible && (!embedded || !isEmbeddedChatView) && (
         <aside
           className={
-            (embedded ? "w-full " : "w-80 ") +
+            (embedded ? "w-full " : "w-80 shrink-0 ") +
             "border-r bg-card flex flex-col"
           }
         >
-          {!embedded && (
-            <div className="p-2 border-b flex items-center justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onSidebarVisibilityChange(false)}
-                aria-label="Ẩn thanh bên"
-                title="Ẩn thanh bên"
-              >
-                <PanelLeftClose className="h-5 w-5" />
-              </Button>
-            </div>
-          )}
-
           {!hideSidebarSearch && (
             <div className="p-4 border-b">
               <div className="relative">
@@ -151,10 +135,8 @@ export function ChatSidebar({
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={u.avatar} />
-                            <AvatarFallback>
-                              {getInitials(name)}
-                            </AvatarFallback>
+                            <AvatarImage src={u.avatar ?? undefined} />
+                            <AvatarFallback>{getInitials(name)}</AvatarFallback>
                           </Avatar>
                           {online && (
                             <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
@@ -162,7 +144,11 @@ export function ChatSidebar({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <div className={`truncate ${unread > 0 ? "font-bold" : "font-medium"}`}>{name}</div>
+                            <div
+                              className={`truncate ${unread > 0 ? "font-bold" : "font-medium"}`}
+                            >
+                              {name}
+                            </div>
                             {unread > 0 && !active && (
                               <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 text-center">
                                 {unread}
@@ -205,9 +191,7 @@ export function ChatSidebar({
                 </div>
               ) : filteredGroups.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  {searchQuery
-                    ? "Không tìm thấy nhóm"
-                    : "Bạn chưa có nhóm nào"}
+                  {searchQuery ? "Không tìm thấy nhóm" : "Bạn chưa có nhóm nào"}
                 </div>
               ) : (
                 filteredGroups.map((g) => {
@@ -236,7 +220,7 @@ export function ChatSidebar({
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={g.avatar} />
+                            <AvatarImage src={g.avatar ?? undefined} />
                             <AvatarFallback>{getInitials(name)}</AvatarFallback>
                           </Avatar>
                           {isGroupActive && (
@@ -246,7 +230,9 @@ export function ChatSidebar({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 truncate">
-                              <span className={`${unread > 0 ? "font-bold" : "font-medium"} truncate`}>
+                              <span
+                                className={`${unread > 0 ? "font-bold" : "font-medium"} truncate`}
+                              >
                                 {name}
                               </span>
                             </div>
@@ -260,10 +246,18 @@ export function ChatSidebar({
                             className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
                           >
                             {isGroupActive && !last?.content ? (
-                              <span className={active ? "text-primary-foreground/80" : "text-green-600 font-medium"}>
-                                • Đang hoạt động
+                              <span
+                                className={
+                                  active
+                                    ? "text-primary-foreground/80"
+                                    : "text-green-600 font-medium"
+                                }
+                              >
+                                Đang hoạt động
                               </span>
-                            ) : preview}
+                            ) : (
+                              preview
+                            )}
                           </div>
                         </div>
                       </div>
@@ -275,21 +269,6 @@ export function ChatSidebar({
           </Tabs>
         </aside>
       )}
-
-      {/* Floating bubble button when sidebar is hidden */}
-      {!embedded && !isSidebarVisible && (
-        <Button
-          type="button"
-          onClick={() => onSidebarVisibilityChange(true)}
-          className="fixed right-4 bottom-24 z-50 h-12 w-12 rounded-full shadow-lg"
-          aria-label="Hiện thanh bên"
-          title="Hiện thanh bên"
-        >
-          <MessageCircle className="h-5 w-5" />
-        </Button>
-      )}
     </>
   );
 }
-
-

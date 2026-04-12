@@ -1,90 +1,85 @@
-
-
-import useAuthStore from "../stores/authStore";
+import { useAppDispatch, useAppSelector } from "@/shared/stores/redux/hooks";
+import { loginAction, logoutAction } from "@/shared/stores/redux/authActions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   LoginBodyType,
-  LoginResponse,
-  MeResponse,
   SignUpBodyType,
   UpdatePersonalInfoBodyType,
-  UpdateProfileResponse,
 } from "@/shared/validations/AuthSchema";
-import { api } from "@/shared/lib/api";
+
+import {
+  MeResponseSchema,
+  LoginResponseSchema,
+  SignUpResponseSchema,
+  UpdateProfileResponseSchema,
+  LogoutResponseSchema,
+} from "@/shared/validations/AuthSchema";
+import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
-import type { AxiosError } from "axios";
-
-type ApiErrorBody = {
-  message?: string;
-};
 
 export const useLoginMutation = () => {
-  const login = useAuthStore((state) => state.login);
+  const dispatch = useAppDispatch();
   return useMutation({
     mutationFn: (body: LoginBodyType) =>
-      api.post<LoginResponse>(API_ROUTES.AUTH.LOGIN, body),
-    onSuccess: async (response) => {
-      await login(response.data);
+      fetchWithSchema(
+        api.post(API_ROUTES.AUTH.LOGIN, body),
+        LoginResponseSchema,
+      ),
+    onSuccess: (response) => {
+      dispatch(loginAction(response));
       toast.success("Đăng nhập thành công.");
     },
-    onError: (error: AxiosError<ApiErrorBody>) => {
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Đăng nhập thất bại.",
-      );
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Đăng nhập thất bại."));
     },
   });
 };
 export const useSignUpMutation = () => {
   return useMutation({
     mutationFn: (body: SignUpBodyType) =>
-      api.post(API_ROUTES.AUTH.SIGNUP, body),
+      fetchWithSchema(
+        api.post(API_ROUTES.AUTH.SIGNUP, body),
+        SignUpResponseSchema,
+      ),
     onSuccess: async () => {
       toast.success("Đăng ký thành công.");
     },
-    onError: (error: AxiosError<ApiErrorBody>) => {
-      toast.error(error.response?.data?.message || error.message || "Đăng ký thất bại.");
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Đăng ký thất bại."));
     },
   });
 };
 
 export const useMeQuery = () => {
+  const token = useAppSelector((state) => state.auth.token);
   return useQuery({
     queryKey: ["me"],
-    queryFn: async () => {
-      try {
-        const response = await api.get<MeResponse>(
-          API_ROUTES.AUTH.ME,
-        );
-        return response.data;
-      } catch (error: any) {
-        return null;
-      }
-    },
+    queryFn: () =>
+      fetchWithSchema(api.get(API_ROUTES.AUTH.ME), MeResponseSchema),
+    retry: false,
+    enabled: !!token,
   });
 };
 
 export const useLogoutMutation = () => {
-  const logout = useAuthStore((state) => state.logout);
+  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (refreshToken: string) => api.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }),
+    mutationFn: (refreshToken: string) =>
+      fetchWithSchema(
+        api.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }),
+        LogoutResponseSchema,
+      ),
     onSuccess: () => {
-      logout();
+      dispatch(logoutAction());
       queryClient.clear();
       toast.success("Đăng xuất thành công.");
     },
-    onError: (error: any) => {
-      logout();
+    onError: (error) => {
+      dispatch(logoutAction());
       queryClient.clear();
-      const axiosError = error as AxiosError<ApiErrorBody>;
-      toast.error(
-        axiosError.response?.data?.message ||
-          axiosError.message ||
-          "Đăng xuất thất bại.",
-      );
+      toast.error(getErrorMessage(error, "Đăng xuất thất bại."));
     },
   });
 };
@@ -92,50 +87,33 @@ export const useLogoutMutation = () => {
 export const useUpdatePersonalInfoMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: UpdatePersonalInfoBodyType) =>
-      api.patch<UpdateProfileResponse>(API_ROUTES.USER.PROFILE, body),
+    mutationFn: ({
+      body,
+      file,
+    }: {
+      body: UpdatePersonalInfoBodyType;
+      file?: File;
+    }) => {
+      const formData = new FormData();
+      Object.entries(body).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value as string);
+        }
+      });
+      if (file) {
+        formData.append("avatar", file);
+      }
+      return fetchWithSchema(
+        api.patch(API_ROUTES.USER.PROFILE, formData),
+        UpdateProfileResponseSchema,
+      );
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(
-        data.data.message || "Cập nhật thông tin cá nhân thành công.",
-      );
+      toast.success(data.message || "Cập nhật thông tin cá nhân thành công.");
     },
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Cập nhật thông tin thất bại.",
-      );
-    },
-  });
-};
-
-export const useUploadAvatarMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (file: File) => {
-      const formData = new FormData();
-      formData.append("avatar", file);
-      return api.patch<{ avatarUrl: string }>(
-        API_ROUTES.USER.UPLOAD_AVATAR,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Cập nhật ảnh thành công.");
-    },
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Cập nhật ảnh thất bại.",
-      );
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Cập nhật thông tin thất bại."));
     },
   });
 };

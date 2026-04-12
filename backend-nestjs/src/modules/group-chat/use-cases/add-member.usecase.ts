@@ -1,7 +1,8 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
-import { IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import { type IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { AddMemberDto } from '../dto/add-member.dto';
+import { MemberRole } from '@prisma/client';
 
 export interface AddMemberInput {
   groupId: string;
@@ -17,18 +18,11 @@ export class AddMemberUseCase {
     private prisma: PrismaService,
   ) {}
 
-  async execute(input: AddMemberInput) {
-    const { groupId, userId, data } = input;
-
-    const group = await this.groupRepository.findById(groupId);
-    if (!group || !group.isActive) {
-      throw new NotFoundException('Nhóm không tồn tại hoặc không còn hoạt động');
-    }
-
-    const isMember = await this.groupRepository.isMember(groupId, userId);
-    if (!isMember) {
-      throw new ForbiddenException('Bạn không phải thành viên nhóm này');
-    }
+  async execute(input: AddMemberInput): Promise<{
+    existingMembers: string[];
+    newMembers: string[];
+  }> {
+    const { groupId, data } = input;
 
     // Validate member IDs
     const existingUsers = await this.prisma.user.findMany({
@@ -58,7 +52,7 @@ export class AddMemberUseCase {
 
     // Add new members
     for (const memberId of newMembers) {
-      await this.groupRepository.addMember(groupId, memberId, 'member');
+      await this.groupRepository.addMember(groupId, memberId, MemberRole.MEMBER);
     }
 
     return {

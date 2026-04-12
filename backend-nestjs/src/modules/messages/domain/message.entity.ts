@@ -1,5 +1,12 @@
-import { MessageType } from "@prisma/client";
+import { MessageStatus, MessageType } from "@prisma/client";
 import { MessageAttachment } from "./types/message-attachment.type";
+
+export interface UserBasicInfo {
+  id: string;
+  username: string;
+  fullName?: string | null;
+  avatar?: string | null;
+}
 
 export class MessageEntity {
   id: string;
@@ -9,13 +16,14 @@ export class MessageEntity {
   content?: string;
   replyTo?: string;
   attachments?: MessageAttachment[];
+  status?: MessageStatus;
   sender?: {
     id: string;
     username: string;
     fullName?: string | null;
     avatar?: string | null;
   };
-  seenBy: any[]; // Changed from string[] to any[] to support populated user objects
+  seenBy: UserBasicInfo[];
   createdAt: Date;
   updatedAt: Date;
   constructor(partial: Partial<MessageEntity>) {

@@ -4,7 +4,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Phone } from "lucide-react";
 import { Link } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 import { getInitials } from "../utils";
@@ -18,6 +18,7 @@ type ChatHeaderProps = {
   isSelectedUserOnline: boolean;
   onBack?: () => void;
   onGroupInfoClick?: () => void;
+  onCallClick?: () => void;
 };
 
 export function ChatHeader({
@@ -27,6 +28,7 @@ export function ChatHeader({
   isSelectedUserOnline,
   onBack,
   onGroupInfoClick,
+  onCallClick,
 }: ChatHeaderProps) {
   const selectedUserDisplayName = selectedUser
     ? selectedUser.fullName || selectedUser.username || "User"
@@ -51,7 +53,7 @@ export function ChatHeader({
         {selectedGroup ? (
           <>
             <Avatar className="h-10 w-10">
-              <AvatarImage src={selectedGroup.avatar} />
+              <AvatarImage src={selectedGroup?.avatar || undefined} />
               <AvatarFallback>
                 {getInitials(selectedGroup.name || "Nhóm")}
               </AvatarFallback>
@@ -66,9 +68,7 @@ export function ChatHeader({
                 )}
               </div>
               <div className="text-sm text-muted-foreground">
-                {isSelectedUserOnline
-                  ? "Đang hoạt động"
-                  : "Không hoạt động"}
+                {isSelectedUserOnline ? "Đang hoạt động" : "Không hoạt động"}
               </div>
             </div>
             <Button
@@ -84,13 +84,16 @@ export function ChatHeader({
           </>
         ) : (
           <>
-            <Link 
-              to={ROUTES.PROFILE.url.replace(':fullName', selectedUser?.fullName || selectedUser?.username || 'user')}
+            <Link
+              to={ROUTES.PROFILE.url.replace(
+                ":fullName",
+                selectedUser?.fullName || selectedUser?.username || "user",
+              )}
               className="hover:opacity-80 transition-opacity"
               aria-label={`Xem trang cá nhân của ${selectedUserDisplayName}`}
             >
               <Avatar className="h-10 w-10">
-                <AvatarImage src={selectedUser?.avatar} />
+                <AvatarImage src={selectedUser?.avatar || undefined} />
                 <AvatarFallback>
                   {getInitials(selectedUserDisplayName)}
                 </AvatarFallback>
@@ -98,19 +101,27 @@ export function ChatHeader({
             </Link>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <div className="font-semibold">
-                  {selectedUserDisplayName}
-                </div>
+                <div className="font-semibold">{selectedUserDisplayName}</div>
                 {isSelectedUserOnline && (
                   <div className="h-2 w-2 bg-green-500 rounded-full" />
                 )}
               </div>
               <div className="text-sm text-muted-foreground">
-                {isSelectedUserOnline
-                  ? "Đang hoạt động"
-                  : "Không hoạt động"}
+                {isSelectedUserOnline ? "Đang hoạt động" : "Không hoạt động"}
               </div>
             </div>
+            {onCallClick && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onCallClick}
+                title="Gọi thoại"
+                className="shrink-0"
+              >
+                <Phone className="h-5 w-5" />
+              </Button>
+            )}
           </>
         )}
       </div>

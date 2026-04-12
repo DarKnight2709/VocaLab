@@ -11,6 +11,9 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { DirectChatModule } from './modules/direct-chat/direct-chat.module';
 import { GroupChatModule } from './modules/group-chat/group-chat.module';
 import { GlobalModule } from './common/global.module';
+import { BlogModule } from './modules/blog/blog.module';
+import { GrammarModule } from './modules/grammar/grammar.module';
+import { VocabularyModule } from './modules/vocabulary/vocabulary.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtGuard } from './common/guards/jwt-auth.guard';
@@ -24,6 +27,9 @@ import helmet from 'helmet';
     DirectChatModule,
     GroupChatModule,
     GlobalModule,
+    BlogModule,
+    GrammarModule,
+    VocabularyModule,
   ],
   controllers: [],
   providers: [
@@ -35,7 +41,7 @@ import helmet from 'helmet';
     {
       provide: APP_GUARD,
       useClass: JwtGuard,
-    }
+    },
     // {
     //   provide: APP_GUARD,
     //   useClass: PermissionGuard,

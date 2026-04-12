@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService as NestConfigService } from "@nestjs/config";
-import { EnvironmentVariables, NodeEnv } from "src/core/configs/env.config";
+import { EnvironmentVariables, NodeEnv } from "@/core/configs/env.config";
 
 
 

@@ -12,6 +12,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { useUsersQuery } from "@/features/chat/api/chatService";
 import { useCreateGroupMutation } from "@/features/chat/api/groupService";
+import { getErrorMessage } from "@/shared/lib/api";
 import { toast } from "sonner";
 import type { UserItem } from "@/shared/validations/ChatSchema";
 import {
@@ -23,7 +24,7 @@ import {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated?: (created: { groupId: string; memberIds: string[] }) => void;
+  onCreated?: () => void;
 };
 
 function initials(name?: string) {
@@ -106,11 +107,9 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
       const groupId = (data as GroupItem)?.id as string | undefined;
       toast.success("Tạo nhóm thành công");
       onOpenChange(false);
-      if (groupId) onCreated?.({ groupId, memberIds: values.members });
+      if (groupId) onCreated?.();
     } catch (e: any) {
-      toast.error(
-        e?.response?.data?.message || e?.message || "Tạo nhóm thất bại",
-      );
+      toast.error(getErrorMessage(e, "Tạo nhóm thất bại"));
     }
   };
 

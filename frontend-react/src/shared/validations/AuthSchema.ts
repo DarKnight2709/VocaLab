@@ -9,7 +9,6 @@ export const LoginSchema = z
   .strict()
   .strip();
 
-export type LoginBodyType = z.infer<typeof LoginSchema>;
 
 export const SignUpSchema = z
   .object({
@@ -21,12 +20,7 @@ export const SignUpSchema = z
   .strict()
   .strip();
 
-export type SignUpBodyType = z.infer<typeof SignUpSchema>;
 
-
-
-
-// Phần này thêm sau (thêm refresh token).
 
 export const LogoutSchema = z
   .object({
@@ -35,7 +29,6 @@ export const LogoutSchema = z
   .strict()
   .strip();
 
-export type LogoutBodyType = z.infer<typeof LogoutSchema>;
 
 export const RefreshTokenSchema = z
   .object({
@@ -44,7 +37,6 @@ export const RefreshTokenSchema = z
   .strict()
   .strip();
 
-export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
 
 
 export const LoginResponseSchema = z
@@ -54,7 +46,6 @@ export const LoginResponseSchema = z
   })
   .strip();
 
-export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 
 export const SignUpResponseSchema = z
   .object({
@@ -62,7 +53,6 @@ export const SignUpResponseSchema = z
   })
   .strip();
 
-export type SignUpResponse = z.infer<typeof SignUpResponseSchema>;
 
 export const RefreshTokenResponseSchema = z
   .object({
@@ -71,7 +61,6 @@ export const RefreshTokenResponseSchema = z
   })
   .strip();
 
-export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
 
 export const MeResponseSchema = BaseEntityDTO.extend({
   username: z.string(),
@@ -80,7 +69,6 @@ export const MeResponseSchema = BaseEntityDTO.extend({
   avatar: z.string().optional().nullable(),
 });
 
-export type MeResponse = z.infer<typeof MeResponseSchema>;
 
 export const UpdatePersonalInfoSchema = z
   .object({
@@ -92,7 +80,6 @@ export const UpdatePersonalInfoSchema = z
   .strict()
   .strip();
 
-export type UpdatePersonalInfoBodyType = z.infer<typeof UpdatePersonalInfoSchema>;
 
 export const ChangePasswordSchema = z
   .object({
@@ -103,10 +90,29 @@ export const ChangePasswordSchema = z
   .strict()
   .strip();
 
+export type LoginBodyType = z.infer<typeof LoginSchema>;
+export type SignUpBodyType = z.infer<typeof SignUpSchema>;
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;
+export type SignUpResponse = z.infer<typeof SignUpResponseSchema>;
 export type ChangePasswordBodyType = z.infer<typeof ChangePasswordSchema>;
-
 export const UpdateProfileResponseSchema = z.object({
   message: z.string(),
 });
 
+export const UploadAvatarResponseSchema = z.object({
+  avatarUrl: z.string(),
+});
+
+export const LogoutResponseSchema = z.object({
+  message: z.string().optional(),
+});
+
+
 export type UpdateProfileResponse = z.infer<typeof UpdateProfileResponseSchema>;
+export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
+export type MeResponse = z.infer<typeof MeResponseSchema>;
+export type UpdatePersonalInfoBodyType = z.infer<typeof UpdatePersonalInfoSchema>;
+export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
+export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
+export type LogoutBodyType = z.infer<typeof LogoutSchema>;
+

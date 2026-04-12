@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/shared/components/LoadingSpinner";
-import { useGlobalLoadingStore } from "../stores/useGlobalLoading";
+import { useAppSelector } from "@/shared/stores/redux/hooks";
 import React from "react";
 
 export default function GlobalLoadingProvider({
@@ -7,13 +7,15 @@ export default function GlobalLoadingProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading, message } = useGlobalLoadingStore();
+  const { loading, loadingMessage } = useAppSelector((s) => s.ui);
 
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex gap-20 flex-col justify-center items-center bg-background/80 backdrop-blur-sm">
         <LoadingSpinner isLoading={loading} />
-        {message && <p className="text-sm text-muted-foreground">{message}</p>}
+        {loadingMessage && (
+          <p className="text-sm text-muted-foreground">{loadingMessage}</p>
+        )}
       </div>
     );
   }

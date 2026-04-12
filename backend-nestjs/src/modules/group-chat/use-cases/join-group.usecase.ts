@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, ConflictException, Inject } from '@nestjs/common';
-import { IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import { type IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import { MemberRole } from '@prisma/client';
 
 @Injectable()
 export class JoinGroupUseCase {
@@ -19,7 +20,7 @@ export class JoinGroupUseCase {
       throw new ConflictException('Bạn đã là thành viên của nhóm này');
     }
 
-    await this.groupRepository.addMember(groupId, userId, 'member');
+    await this.groupRepository.addMember(groupId, userId, MemberRole.MEMBER);
     return { message: 'Tham gia nhóm thành công' };
   }
 }

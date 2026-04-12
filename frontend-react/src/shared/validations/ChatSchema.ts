@@ -1,17 +1,21 @@
 import { z } from "zod";
+import { MessageType } from "../enums/MessageType.enum";
 
 // User schema with UI-specific fields
 export const UserItemSchema = z.object({
   id: z.string(),
   username: z.string(),
   fullName: z.string().optional(),
-  avatar: z.string().optional(),
+  avatar: z.string().nullable().optional(),
   email: z.string().optional(),
   unreadCount: z.number().optional(),
-  lastMessage: z.object({
-    isMine: z.boolean().optional(),
-    content: z.string().optional(),
-  }).optional(),
+  lastMessage: z
+    .object({
+      isMine: z.boolean().nullable().optional(),
+      content: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export const GetUsersResponseSchema = z.object({
@@ -19,28 +23,41 @@ export const GetUsersResponseSchema = z.object({
 });
 
 // Populated sender object schema
-const PopulatedSenderSchema = z.object({
+export const PopulatedSenderSchema = z.object({
   id: z.string(),
   username: z.string().optional(),
   fullName: z.string().optional(),
-  avatar: z.string().optional(),
+  avatar: z.string().nullable().optional(),
 });
 
 // Message schema with flexible senderId (string or populated object)
-export const MessageItemSchema = z.object({
+export const ChatMessageItemSchema = z.object({
   id: z.string(),
-  senderId: z.union([z.string(), PopulatedSenderSchema]),
-  sender: PopulatedSenderSchema.optional(), // ✅ Separate sender object from backend
+  senderId: z.string(),
+  sender: PopulatedSenderSchema.optional(),
+  receiverId: z.string().optional(),
   content: z.string(),
+  attachments: z
+    .array(
+      z.object({
+        url: z.string(),
+        type: z.enum(["image", "video", "file", "audio"]),
+        name: z.string().optional(),
+        size: z.number().optional(),
+        mimeType: z.string().optional(),
+      }),
+    )
+    .optional(),
   createdAt: z.string(),
-  seenBy: z.array(z.union([z.string(), PopulatedSenderSchema])).optional(),
+  type: z.literal(MessageType.DIRECT),
+  seenBy: z.array(PopulatedSenderSchema).optional(),
 });
 
 export const GetMessagesResponseSchema = z.object({
-  messages: z.array(MessageItemSchema),
+  messages: z.array(ChatMessageItemSchema),
 });
 
 export type UserItem = z.infer<typeof UserItemSchema>;
 export type GetUsersResponse = z.infer<typeof GetUsersResponseSchema>;
-export type MessageItem = z.infer<typeof MessageItemSchema>;
+export type ChatMessageItem = z.infer<typeof ChatMessageItemSchema>;
 export type GetMessagesResponse = z.infer<typeof GetMessagesResponseSchema>;

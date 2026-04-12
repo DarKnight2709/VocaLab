@@ -1,14 +1,20 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 import { getInitials } from "../utils";
-import type { UserItem, MessageItem } from "@/shared/validations/ChatSchema";
-import type { GroupItem } from "@/shared/validations/GroupSchema";
+import type {
+  UserItem,
+  ChatMessageItem,
+} from "@/shared/validations/ChatSchema";
+import type {
+  GroupItem,
+  GroupMessageItem,
+} from "@/shared/validations/GroupSchema";
 
 type MessageListProps = {
   selectedGroup: GroupItem | null;
-  messages: MessageItem[];
-  groupMessages: MessageItem[];
+  messages: ChatMessageItem[];
+  groupMessages: GroupMessageItem[];
   loadingMessages: boolean;
   loadingGroupMessages: boolean;
   selectedUser: UserItem | null;
@@ -25,6 +31,7 @@ export function MessageList({
   myId,
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const normalizeId = (id: any): string => {
     if (!id) return "";
@@ -83,9 +90,14 @@ export function MessageList({
     return `${dateStr} ${time}`;
   };
 
+  // Scroll to bottom when messages change or when switching chats
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, groupMessages.length]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [selectedUser?.id, selectedGroup?.id]);
 
   // Chỉ áp dụng cho 1-1: tìm tin nhắn cuối cùng do tôi gửi
   const lastMyMessageIndex = (() => {
@@ -99,6 +111,21 @@ export function MessageList({
 
   return (
     <div className="flex-1 overflow-auto overscroll-contain p-4 bg-muted/30 min-h-0 flex flex-col">
+      {/* Image lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setLightboxUrl(null)}
+          onKeyDown={(e) => e.key === "Escape" && setLightboxUrl(null)}
+          tabIndex={-1}
+        >
+          <img
+            src={lightboxUrl}
+            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
       {selectedGroup ? (
         loadingGroupMessages ? (
           <div className="text-center text-muted-foreground">
@@ -112,8 +139,11 @@ export function MessageList({
           groupMessages.map((m, index) => {
             const senderId = normalizeId(m.senderId);
             // ✅ Use sender object if available, fallback to senderId object
-            const sender = (m as any).sender || (typeof m.senderId === "object" ? m.senderId : null);
-            const senderName = sender?.fullName || sender?.username || "Người dùng";
+            const sender =
+              (m as any).sender ||
+              (typeof m.senderId === "object" ? m.senderId : null);
+            const senderName =
+              sender?.fullName || sender?.username || "Người dùng";
             const senderAvatar = sender?.avatar;
             const isMine = senderId === normalizeId(myId);
             const currentDate = m.createdAt || new Date();
@@ -133,7 +163,7 @@ export function MessageList({
             return (
               <div
                 key={m.id || `${senderId}-${m.createdAt}-${Math.random()}`}
-                className={isFirstInSequence ? "mt-4" : "mt-[2px]"}
+                className={isFirstInSequence ? "mt-4" : "mt-0.5"}
               >
                 {shouldShowTimeLabel && (
                   <div className="flex justify-center mb-3">
@@ -173,7 +203,7 @@ export function MessageList({
                           </div>
                         </Link>
                       ) : (
-                        <div className="w-8" /> 
+                        <div className="w-8" />
                       )}
                     </div>
                   )}
@@ -194,9 +224,40 @@ export function MessageList({
                         }`}
                       >
                         {m.content}
+                        {(m as any).attachments?.map((att: any, i: number) => (
+                          <div key={i} className="mt-1">
+                            {att._uploading ? (
+                              <div className="flex items-center gap-2 text-xs opacity-70">
+                                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                <span>Đang tải {att.name}...</span>
+                              </div>
+                            ) : att.type === "image" ? (
+                              <img
+                                src={att.url}
+                                onClick={() => setLightboxUrl(att.url)}
+                                className="max-w-50 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                              />
+                            ) : att.type === "video" ? (
+                              <video
+                                src={att.url}
+                                controls
+                                className="max-w-50 rounded-lg"
+                              />
+                            ) : (
+                              <a
+                                href={att.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1 text-xs underline"
+                              >
+                                {att.name || "Tải về"}
+                              </a>
+                            )}
+                          </div>
+                        ))}
                       </div>
                       <div
-                        className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-[220px] whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-auto ${
+                        className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-55 whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-auto ${
                           isMine
                             ? "right-full mr-2 text-right"
                             : "left-full ml-2 text-left"
@@ -209,35 +270,60 @@ export function MessageList({
                               <div className="text-primary font-medium hover:underline cursor-pointer transition-all">
                                 Đã xem ({m.seenBy.length})
                               </div>
-                              
-                              <div className={`absolute bottom-full mb-2 ${isMine ? 'right-0' : 'left-0'} bg-card border rounded-xl shadow-xl p-3 z-50 min-w-[200px] opacity-0 invisible group-hover/seen:opacity-100 group-hover/seen:visible transition-all duration-200 pointer-events-auto`}>
+
+                              <div
+                                className={`absolute bottom-full mb-2 ${isMine ? "right-0" : "left-0"} bg-card border rounded-xl shadow-xl p-3 z-50 min-w-50 opacity-0 invisible group-hover/seen:opacity-100 group-hover/seen:visible transition-all duration-200 pointer-events-auto`}
+                              >
                                 <div className="flex justify-between items-center mb-2 px-1">
-                                  <span className="text-xs font-bold text-foreground">Đã xem bởi</span>
-                                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">{m.seenBy.length}</span>
+                                  <span className="text-xs font-bold text-foreground">
+                                    Đã xem bởi
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                                    {m.seenBy.length}
+                                  </span>
                                 </div>
-                                <div className="max-h-[150px] overflow-y-auto custom-scrollbar pr-1">
+                                <div className="max-h-37.5 overflow-y-auto custom-scrollbar pr-1">
                                   <ul className="space-y-1.5 text-left">
-                                    {(m.seenBy || []).map((user: any, idx: number) => {
-                                      const name = typeof user === 'string' ? 'Người dùng' : (user.fullName || user.username || "Người dùng");
-                                      const avatar = typeof user === 'object' ? user.avatar : null;
-                                      return (
-                                        <li key={idx}>
-                                          <Link 
-                                            to={ROUTES.PROFILE.url.replace(":fullName", name)}
-                                            className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-muted/50 transition-colors pointer-events-auto"
-                                          >
-                                            <div className="h-6 w-6 rounded-full bg-muted overflow-hidden flex items-center justify-center text-[10px] font-bold shrink-0">
-                                              {avatar ? (
-                                                <img src={avatar} alt="" className="h-full w-full object-cover" />
-                                              ) : (
-                                                getInitials(name)
+                                    {(m.seenBy || []).map(
+                                      (user: any, idx: number) => {
+                                        const name =
+                                          typeof user === "string"
+                                            ? "Người dùng"
+                                            : user.fullName ||
+                                              user.username ||
+                                              "Người dùng";
+                                        const avatar =
+                                          typeof user === "object"
+                                            ? user.avatar
+                                            : null;
+                                        return (
+                                          <li key={idx}>
+                                            <Link
+                                              to={ROUTES.PROFILE.url.replace(
+                                                ":fullName",
+                                                name,
                                               )}
-                                            </div>
-                                            <span className="text-xs font-medium truncate text-foreground/90">{name}</span>
-                                          </Link>
-                                        </li>
-                                      );
-                                    })}
+                                              className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-muted/50 transition-colors pointer-events-auto"
+                                            >
+                                              <div className="h-6 w-6 rounded-full bg-muted overflow-hidden flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                {avatar ? (
+                                                  <img
+                                                    src={avatar}
+                                                    alt=""
+                                                    className="h-full w-full object-cover"
+                                                  />
+                                                ) : (
+                                                  getInitials(name)
+                                                )}
+                                              </div>
+                                              <span className="text-xs font-medium truncate text-foreground/90">
+                                                {name}
+                                              </span>
+                                            </Link>
+                                          </li>
+                                        );
+                                      },
+                                    )}
                                   </ul>
                                 </div>
                               </div>
@@ -270,7 +356,11 @@ export function MessageList({
               : false;
           const selectedUserId = selectedUser?.id;
           const isSeen = selectedUserId
-            ? m.seenBy?.some(u => (typeof u === 'string' ? u : (u as any).id) === selectedUserId) || false
+            ? m.seenBy?.some(
+                (u) =>
+                  (typeof u === "string" ? u : (u as any).id) ===
+                  selectedUserId,
+              ) || false
             : false;
           const currentDate = m.createdAt || new Date();
 
@@ -289,7 +379,7 @@ export function MessageList({
           return (
             <div
               key={m.id || `${senderId}-${m.createdAt}-${Math.random()}`}
-              className={isFirstInSequence ? "mt-4" : "mt-[2px]"}
+              className={isFirstInSequence ? "mt-4" : "mt-0.5"}
             >
               {shouldShowTimeLabel && (
                 <div className="flex justify-center mb-3">
@@ -331,7 +421,9 @@ export function MessageList({
                         </div>
                         {/* Tooltip tên */}
                         <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded shadow-lg opacity-0 invisible group-hover/avatar:opacity-100 group-hover/avatar:visible transition-all whitespace-nowrap z-50">
-                          {selectedUser?.fullName || selectedUser?.username || "Người dùng"}
+                          {selectedUser?.fullName ||
+                            selectedUser?.username ||
+                            "Người dùng"}
                         </div>
                       </Link>
                     ) : (
@@ -351,9 +443,40 @@ export function MessageList({
                       }`}
                     >
                       {m.content}
+                      {(m as any).attachments?.map((att: any, i: number) => (
+                        <div key={i} className="mt-1">
+                          {att._uploading ? (
+                            <div className="flex items-center gap-2 text-xs opacity-70">
+                              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              <span>Đang tải {att.name}...</span>
+                            </div>
+                          ) : att.type === "image" ? (
+                            <img
+                              src={att.url}
+                              onClick={() => setLightboxUrl(att.url)}
+                              className="max-w-50 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            />
+                          ) : att.type === "video" ? (
+                            <video
+                              src={att.url}
+                              controls
+                              className="max-w-50 rounded-lg"
+                            />
+                          ) : (
+                            <a
+                              href={att.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-xs underline"
+                            >
+                              {att.name || "Tải về"}
+                            </a>
+                          )}
+                        </div>
+                      ))}
                     </div>
                     <div
-                      className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-[220px] whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-auto ${
+                      className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-55 whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-auto ${
                         isMine
                           ? "right-full mr-2 text-right"
                           : "left-full ml-2 text-left"
@@ -362,7 +485,9 @@ export function MessageList({
                       <div className="flex flex-col gap-0.5">
                         <span>{formatHoverDateTime(currentDate)}</span>
                         {isMine && isSeen && index === lastMyMessageIndex && (
-                          <span className="text-primary font-medium">Đã xem</span>
+                          <span className="text-primary font-medium">
+                            Đã xem
+                          </span>
                         )}
                       </div>
                     </div>

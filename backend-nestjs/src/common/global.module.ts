@@ -1,16 +1,21 @@
 import { Global, Module, Logger } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ClsModule } from "nestjs-cls";
-import envConfig from "src/core/configs/env.config";
+import envConfig from "@/core/configs/env.config";
 import { ConfigService } from "./services/config.service";
 import { ApiExceptionFilter } from "./filters/http-exception.filter";
-import  { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { TransformInterceptor } from "./interceptors/transform.interceptor";
+import { APP_FILTER, APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiValidationPipe } from "./pipes/validation.pipe"
 import { HashingService } from "./services/hashing.service";
 import { RsaKeyManager } from "./utils/RsaKeyManager";
-import { PrismaService } from "src/core/database/prisma.service";
+import { PrismaService } from "@/core/database/prisma.service";
 import { CloudinaryService } from "./services/cloudinary.service";
-import { CloudinaryProvider } from "src/core/configs/cloudinary.config";
+import { CloudinaryProvider } from "@/core/configs/cloudinary.config";
+// import { RedisService } from "src/core/cache/redis.service";
+import { CacheModule } from "@nestjs/cache-manager";
+import { redisStore } from 'cache-manager-redis-yet'
+
 
 
 const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaService, CloudinaryService]
@@ -32,6 +37,19 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
         mount: true,
       },
     }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => {
+        const store = await redisStore({
+          socket: {
+            host: 'localhost',
+            port: 6379,
+          },
+          ttl: 60 * 60 * 1000,
+        });
+        return { store };
+      },
+    })
   ],
   providers: [
     CloudinaryProvider,
@@ -42,7 +60,10 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
       provide: APP_FILTER,
       useClass: ApiExceptionFilter
     },
-
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
     {
       provide: APP_PIPE,
       useClass: ApiValidationPipe,

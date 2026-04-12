@@ -1,17 +1,26 @@
-import { createBrowserRouter, RouterProvider } from 'react-router'
-import { Toaster } from 'sonner'
-import { ReactQueryProvider } from '@/shared/components/ReactQueryProvider'
-import AuthGuard from '@/features/auth/components/AuthGuard'
-import LoginPage from '@/features/auth/pages/LoginPage'
-import MainLayout from './shared/layout/MainLayout'
-import ErrorBoundary from './shared/components/ErrorBoundary'
-import NotFoundPage from './shared/pages/NotFoundPage'
-import GlobalLoadingProvider from './shared/components/GlobalLoading'
-import { authLoader } from './features/auth/AuthLoader'
-import ROUTES from './shared/lib/routes'
-import BlogPage from './features/blog/pages/BlogPage'
-import ProfilePage from './features/user/pages/ProfilePage'
-
+import { createBrowserRouter, RouterProvider } from "react-router";
+import { Toaster } from "sonner";
+import { ReactQueryProvider } from "@/shared/components/ReactQueryProvider";
+import AuthGuard from "@/features/auth/components/AuthGuard";
+import LoginPage from "@/features/auth/pages/LoginPage";
+import MainLayout from "./shared/layout/MainLayout";
+import ErrorBoundary from "./shared/components/ErrorBoundary";
+import NotFoundPage from "./shared/pages/NotFoundPage";
+import GlobalLoadingProvider from "./shared/components/GlobalLoading";
+import { authLoader } from "./features/auth/AuthLoader";
+import ROUTES from "./shared/lib/routes";
+import BlogPage from "./features/blog/pages/BlogPage";
+import BlogDetailPage from "./features/blog/pages/BlogDetailPage";
+import BlogCreatePage from "./features/blog/pages/BlogCreatePage";
+import ProfilePage from "./features/user/pages/ProfilePage";
+import GrammarPage from "./features/grammar/pages/GrammarPage";
+import VocabularyPage from "./features/vocabulary/pages/VocabularyPage";
+import VocabularyCollectionPage from "./features/vocabulary/pages/VocabularyCollectionPage";
+import VocabularyAddCardPage from "./features/vocabulary/pages/VocabularyAddCardPage";
+import CardTypeManagementPage from "./features/vocabulary/pages/CardTypeManagementPage";
+import CardTypePreviewPage from "./features/vocabulary/pages/CardTypePreviewPage";
+import ChatPage from "./features/chat/pages/ChatPage";
+import SearchPage from "./features/search/pages/SearchPage";
 
 const router = createBrowserRouter([
   {
@@ -22,18 +31,33 @@ const router = createBrowserRouter([
         path: ROUTES.HOME.url,
         element: <MainLayout />,
         children: [
-
+          { path: ROUTES.BLOG.url, element: <BlogPage /> },
+          { path: ROUTES.BLOG_DETAIL.url, element: <BlogDetailPage /> },
+          { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
+          { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
+          { path: ROUTES.VOCABULARY.url, element: <VocabularyPage /> },
           {
-            path: ROUTES.BLOG.url,
-            element: <BlogPage />,
+            path: ROUTES.VOCABULARY_COLLECTION.url,
+            element: <VocabularyCollectionPage />,
           },
           {
-            path: ROUTES.PROFILE.url,
-            element: <ProfilePage />,
+            path: ROUTES.VOCABULARY_ADD_CARD.url,
+            element: <VocabularyAddCardPage />,
           },
-        ]
-      }
-    ]
+          {
+            path: ROUTES.VOCABULARY_CARD_TYPES.url,
+            element: <CardTypeManagementPage />,
+          },
+          {
+            path: ROUTES.VOCABULARY_CARD_TYPE_PREVIEW.url,
+            element: <CardTypePreviewPage />,
+          },
+          { path: ROUTES.CHAT.url, element: <ChatPage /> },
+          { path: ROUTES.SEARCH.url, element: <SearchPage /> },
+          { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
+        ],
+      },
+    ],
   },
   {
     path: ROUTES.LOGIN.url,
@@ -41,23 +65,29 @@ const router = createBrowserRouter([
       <ErrorBoundary>
         <LoginPage />
       </ErrorBoundary>
-    )
+    ),
   },
   {
-    path: '*',
+    path: "*",
     element: (
       <ErrorBoundary>
         <NotFoundPage />
       </ErrorBoundary>
-    )
-  }
-])
+    ),
+  },
+]);
 
-import { ThemeProvider, useTheme } from './shared/components/ThemeProvider'
+import { ThemeProvider, useTheme } from "./shared/components/ThemeProvider";
 
 function ThemedToaster() {
   const { theme } = useTheme();
-  return <Toaster position='top-right' richColors theme={theme === 'system' ? 'light' : theme} />;
+  return (
+    <Toaster
+      position="top-right"
+      richColors
+      theme={theme === "system" ? "light" : theme}
+    />
+  );
 }
 
 export default function App() {
@@ -70,5 +100,5 @@ export default function App() {
         </ThemeProvider>
       </GlobalLoadingProvider>
     </ReactQueryProvider>
-  )
+  );
 }

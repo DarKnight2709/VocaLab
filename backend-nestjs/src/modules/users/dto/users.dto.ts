@@ -17,7 +17,7 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @IsString()
-  username: string;
+  username!: string;
 
   // hashedPassword
   @ApiProperty({
@@ -26,7 +26,7 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @IsString()
-  hashedPassword: string;
+  hashedPassword!: string;
 
   // fullname
   @ApiProperty({
@@ -35,7 +35,7 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @IsString()
-  fullName: string;
+  fullName!: string;
 
 
   // email
@@ -46,7 +46,7 @@ export class CreateUserDto {
   })
   @IsOptional()
   @IsEmail()
-  email: string;
+  email!: string;
 }
 
 export class UpdatePersonalInfoDto {

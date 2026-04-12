@@ -48,7 +48,10 @@ export class PrismaUserRepository implements UserRepositoryInterface {
     const users = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
-        username: { contains: keyword, mode: 'insensitive' },
+        OR: [
+          { username: { contains: keyword, mode: 'insensitive' } },
+          { fullName: { contains: keyword, mode: 'insensitive' } },
+        ],
       },
       select: {
         id: true,

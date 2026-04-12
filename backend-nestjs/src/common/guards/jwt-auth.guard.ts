@@ -14,7 +14,7 @@ import * as jwt from 'jsonwebtoken';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IRequest } from '../types';
 import { RsaKeyManager } from '../utils/RsaKeyManager';
-import { PrismaService } from 'src/core/database/prisma.service';
+import { PrismaService } from '@/core/database/prisma.service';
 
 export interface JwtPayload {
   sub: string;

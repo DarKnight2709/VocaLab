@@ -21,10 +21,13 @@ import {
   RefreshTokenResponseDto,
   SignupDto,
 } from '../auth.dto';
-import { HashingService } from 'src/common/services/hashing.service';
-import { RsaKeyManager } from 'src/common/utils/RsaKeyManager';
-import { IUSER_REPOSITORY, UserRepositoryInterface } from 'src/modules/users/domain/interfaces/user-repository.interface';
-import { UserEntity } from 'src/modules/users/domain/user.entity';
+import { HashingService } from '@/common/services/hashing.service';
+import { RsaKeyManager } from '@/common/utils/RsaKeyManager';
+import {
+  IUSER_REPOSITORY,
+  type UserRepositoryInterface,
+} from '@/modules/users/domain/interfaces/user-repository.interface';
+import { UserEntity } from '@/modules/users/domain/user.entity';
 
 export interface JWTRefreshPayLoad {
   sub: string;
@@ -206,14 +209,18 @@ export class AuthService {
 
   async signup(signupDto: SignupDto) {
     // Check username exists
-    const existingUser = await this.userRepository.findByUsername(signupDto.username);
+    const existingUser = await this.userRepository.findByUsername(
+      signupDto.username,
+    );
 
     if (existingUser) {
       throw new ConflictException('Tên đăng nhập đã tồn tại');
     }
 
     // Check email exists
-    const existingEmail = await this.userRepository.findByEmail(signupDto.email);
+    const existingEmail = await this.userRepository.findByEmail(
+      signupDto.email,
+    );
 
     if (existingEmail) {
       throw new ConflictException('Email đã tồn tại');
@@ -224,11 +231,11 @@ export class AuthService {
 
     // Create user
     const newUser = await this.userRepository.create({
-        username: signupDto.username,
-        hashedPassword,
-        fullName: signupDto.fullName,
-        email: signupDto.email,
-      });
+      username: signupDto.username,
+      hashedPassword,
+      fullName: signupDto.fullName,
+      email: signupDto.email,
+    });
 
     return {
       message: 'Đăng ký thành công',
@@ -250,7 +257,8 @@ export class AuthService {
     if (!user) {
       const emailPrefix = email.split('@')[0] || 'user';
       let username = emailPrefix;
-      const existingUsername = await this.userRepository.findByUsername(username);
+      const existingUsername =
+        await this.userRepository.findByUsername(username);
 
       if (existingUsername) {
         username = `${emailPrefix}_${Date.now()}`;
@@ -279,9 +287,9 @@ export class AuthService {
 
       // thu hồi refresh
       await this.prisma.refreshToken.updateMany({
-        where: { 
+        where: {
           token: this.hashToken(refreshToken),
-          isRevoked: false 
+          isRevoked: false,
         },
         data: { isRevoked: true },
       });
@@ -337,15 +345,14 @@ export class AuthService {
     );
 
     // lưu refresh token vào database
-    const saveRepo = manager
+    const refreshExpiresIn = this.configService.get('REFRESH_TOKEN_EXPIRES_IN');
+
+    await (manager
       ? manager.refreshToken.create({
           data: {
             token: this.hashToken(refreshToken),
             userId: user.id,
-            expiresAt: new Date(
-              Date.now() +
-                this.configService.get('REFRESH_TOKEN_EXPIRES_IN') * 1000,
-            ),
+            expiresAt: new Date(Date.now() + refreshExpiresIn * 1000),
             ipAddress,
             userAgent,
           },
@@ -354,16 +361,11 @@ export class AuthService {
           data: {
             token: this.hashToken(refreshToken),
             userId: user.id,
-            expiresAt: new Date(
-              Date.now() +
-                this.configService.get('REFRESH_TOKEN_EXPIRES_IN') * 1000,
-            ),
+            expiresAt: new Date(Date.now() + refreshExpiresIn * 1000),
             ipAddress,
             userAgent,
           },
-        });
+        }));
     return refreshToken;
   }
-
-
 }

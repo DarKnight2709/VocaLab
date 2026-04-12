@@ -10,7 +10,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 // khai báo để biết 
 //  - Dùng adapter PostgreSQL 
 //  - Dùng driver pg
@@ -20,8 +19,9 @@ datasource db {
 }
 
 enum MemberRole {
-  admin
-  member
+  OWNER
+  CO_OWNER
+  MEMBER
 }
 
 enum MessageType {
@@ -29,25 +29,46 @@ enum MessageType {
   GROUP
 }
 
+enum MessageStatus {
+  SENT
+  RECALLED
+  DELETED
+}
 
+enum CardFieldType {
+  TEXT
+  TEXTAREA
+  IMAGE
+}
+
+enum CardSide {
+  FRONT
+  BACK
+}
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  hashedPassword  String
-  fullName  String
-  email     String   @unique
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(uuid())
+  username       String   @unique
+  hashedPassword String
+  fullName       String
+  email          String   @unique
+  avatar         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  sentMessages     Message[]     @relation("Sender")
-  receivedMessages Message[]     @relation("Receiver")
-  ownedGroups      Group[]       @relation("Owner")
-  groupMemberships GroupMember[]
-  seenMessages     MessageSeen[]
-  refreshTokens    RefreshToken[]
+  sentMessages      Message[]          @relation("Sender")
+  receivedMessages  Message[]          @relation("Receiver")
+  ownedGroups       Group[]            @relation("Owner")
+  groupMemberships  GroupMember[]
+  seenMessages      MessageSeen[]
+  refreshTokens     RefreshToken[]
+  blogs             Blog[]             @relation("BlogAuthor")
+  comments          Comment[]          @relation("CommentAuthor")
+  blogLikes         BlogLike[]         @relation("UserBlogLikes")
+  grammarStructures GrammarStructure[] @relation("GrammarAuthor")
+  cardCollections   CardCollection[]
+  cardTypes         CardType[]
 
   @@map("users")
 }
@@ -67,38 +88,40 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-
 model Message {
-  id          String   @id @default(uuid())
-  type        MessageType @default(DIRECT)
+  id          String        @id @default(uuid())
+  type        MessageType   @default(DIRECT)
   senderId    String
   receiverId  String?
   groupId     String?
   content     String?
   replyToId   String?
   attachments Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  status      MessageStatus @default(SENT)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Relations
   sender   User   @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
   receiver User?  @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   group    Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  reply    Message?  @relation("Reply", fields: [replyToId], references: [id], onDelete: SetNull)
-  replies  Message[] @relation("Reply")
+  reply   Message?  @relation("Reply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies Message[] @relation("Reply")
 
-  seenBy   MessageSeen[]
+  seenBy MessageSeen[]
 
   @@index([senderId])
   @@index([receiverId])
   @@index([groupId])
   @@index([replyToId])
   @@index([createdAt])
+  @@index([groupId, createdAt])
+  @@index([receiverId, createdAt])
   @@map("messages")
 }
-
 
 model MessageSeen {
   userId    String
@@ -114,7 +137,6 @@ model MessageSeen {
   @@map("message_seen")
 }
 
-
 model Group {
   id          String   @id @default(uuid())
   name        String
@@ -126,20 +148,21 @@ model Group {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  owner   User          @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members GroupMember[]
-  messages Message[]
+  owner           User                  @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members         GroupMember[]
+  messages        Message[]
+  rolePermissions GroupRolePermission[]
 
   @@index([ownerId])
   @@map("groups")
 }
 
 model GroupMember {
-  id        String     @id @default(uuid())
-  groupId   String
-  userId    String
-  role      MemberRole @default(member)
-  joinedAt  DateTime   @default(now())
+  id       String     @id @default(uuid())
+  groupId  String
+  userId   String
+  role     MemberRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -150,3 +173,201 @@ model GroupMember {
   @@map("group_members")
 }
 
+// 1. Định nghĩa các hành động có thể có trong hệ thống
+model Permission {
+  id          String                @id @default(uuid())
+  name        String                @unique
+  description String?
+  roles       GroupRolePermission[]
+
+  @@map("permissions")
+}
+
+// 2. Bảng gán quyền cho từng Role trong từng Nhóm
+model GroupRolePermission {
+  id           String     @id @default(uuid())
+  groupId      String
+  role         MemberRole
+  permissionId String
+  isEnabled    Boolean    @default(true)
+
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, role, permissionId])
+  @@index([groupId])
+  @@index([permissionId])
+  @@map("group_role_permissions")
+}
+
+// ==================== BLOG ====================
+
+model Blog {
+  id         String    @id @default(uuid())
+  title      String
+  content    String
+  excerpt    String?
+  coverImage String?
+  authorId   String
+  isPublic   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  author   User       @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  likes    BlogLike[]
+
+  @@index([authorId])
+  @@index([isPublic, createdAt])
+  @@map("blogs")
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String
+  blogId    String
+  authorId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  blog   Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  author User @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([blogId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model BlogLike {
+  userId    String
+  blogId    String
+  createdAt DateTime @default(now())
+
+  user User @relation("UserBlogLikes", fields: [userId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@id([userId, blogId])
+  @@map("blog_likes")
+}
+
+// ==================== GRAMMAR ====================
+
+model GrammarStructure {
+  id          String   @id @default(uuid())
+  title       String
+  structure   String
+  explanation String
+  examples    Json?
+  category    String?
+  level       String?
+  isDefault   Boolean  @default(false)
+  authorId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User? @relation("GrammarAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([level])
+  @@map("grammar_structures")
+}
+
+// ==================== VOCABULARY ====================
+
+model CardCollection {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@index([userId])
+  @@map("card_collections")
+}
+
+model CardType {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fields CardField[]
+  cards  Card[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("card_type")
+}
+
+model CardField {
+  id         String        @id @default(uuid())
+  cardTypeId String
+  key        String
+  label      String
+  fieldType  CardFieldType
+
+  side CardSide
+
+  order      Int
+  color      String?
+  fontSize   Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cardType CardType         @relation(fields: [cardTypeId], references: [id], onDelete: Cascade)
+  values   CardFieldValue[]
+
+  @@unique([cardTypeId, key])
+  @@index([cardTypeId])
+  @@index([cardTypeId, order])
+  @@index([cardTypeId, side, order])
+  @@map("card_field")
+}
+
+model Card {
+  id               String @id @default(uuid())
+  cardTypeId       String
+  cardCollectionId String
+  position         Int?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  cardType       CardType       @relation(fields: [cardTypeId], references: [id], onDelete: Cascade)
+  cardCollection CardCollection @relation(fields: [cardCollectionId], references: [id], onDelete: Cascade)
+
+  values CardFieldValue[]
+
+  @@index([cardTypeId])
+  @@index([cardCollectionId, createdAt])
+  @@index([cardCollectionId, position])
+  @@map("card")
+}
+
+model CardFieldValue {
+  id String @id @default(uuid())
+
+  cardId  String
+  fieldId String
+
+  value String
+
+  card  Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  field CardField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, fieldId])
+  @@index([cardId])
+  @@index([fieldId])
+  @@index([cardId, fieldId])
+  @@map("card_field_value")
+}
