@@ -5,7 +5,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import {
-  IGroupRepository,
+  type IGroupRepository,
   IGROUP_REPOSITORY,
 } from '../domain/interfaces/group-repository.interface';
 

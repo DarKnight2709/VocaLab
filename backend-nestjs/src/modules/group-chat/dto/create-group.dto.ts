@@ -5,12 +5,12 @@ export class CreateGroupDto {
   @ApiProperty({ example: 'My Group' })
   @IsString()
   @MinLength(1)
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: ['user1', 'user2'], type: [String] })
   @IsArray()
   @ArrayMinSize(2)
-  members: string[];
+  members!: string[];
 
   @ApiProperty({ example: 'Group description', required: false })
   @IsString()

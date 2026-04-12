@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Navigate, useNavigate } from "react-router";
+import { Navigate, useNavigate, useLocation } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import envConfig from "@/shared/config/envConfig";
@@ -16,14 +16,23 @@ import {
   useLoginMutation,
   useSignUpMutation,
 } from "@/features/auth/api/authService";
-import { LoginSchema, SignUpSchema, type LoginBodyType, type SignUpBodyType } from "@/shared/validations/AuthSchema";
-import useAuthStore from "../stores/authStore";
+import {
+  LoginSchema,
+  SignUpSchema,
+  type LoginBodyType,
+  type SignUpBodyType,
+} from "@/shared/validations/AuthSchema";
+import { useAppSelector } from "@/shared/stores/redux/hooks";
 import ROUTES from "@/shared/lib/routes";
 
 export default function LoginPage() {
-  const { isAuth } = useAuthStore();
+  const isAuth = useAppSelector((s) => s.auth.isAuth);
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+
+  // Lấy đường dẫn mà người dùng định truy cập trước khi bị redirect sang đây
+  const from = location.state?.from || ROUTES.HOME.url;
 
   const loginMutation = useLoginMutation();
   const signUpMutation = useSignUpMutation();
@@ -44,7 +53,7 @@ export default function LoginPage() {
   );
 
   if (isAuth) {
-    return <Navigate to={ROUTES.BLOG.url} replace />;
+    return <Navigate to={from} replace />;
   }
 
   async function handleLogin(data: LoginBodyType) {
@@ -53,9 +62,7 @@ export default function LoginPage() {
         username: data.username,
         password: data.password,
       });
-      console.log("Login successful");
-      navigate("/blogs", { replace: true });
-      console.log("Navigated to /blogs");
+      navigate(from, { replace: true });
     } catch {
       // toast is handled inside the mutation
     }

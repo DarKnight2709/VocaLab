@@ -34,7 +34,7 @@ const LoadingSpinner = ({ isLoading, className }: LoadingSpinnerProps) => {
         )}
       >
         <img
-          src="/logo.png"
+          src="/logo1.png"
           alt="Loading..."
           className="w-20 h-20 object-contain animate-pulse"
         />

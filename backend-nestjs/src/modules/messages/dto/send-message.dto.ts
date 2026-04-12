@@ -24,7 +24,7 @@ export class SendMessageDto {
   groupId?: string;
 
   @IsEnum(MessageType, { message: 'Type phải là DIRECT hoặc GROUP' })
-  type: MessageType;
+  type!: MessageType;
 
   @IsOptional()
   @IsString()

@@ -647,7 +647,7 @@ export function GroupInfoDialog({
                                   <ChevronDown className="h-3 w-3 opacity-50" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-[140px]">
+                              <DropdownMenuContent align="end" className="w-35">
                                 <DropdownMenuItem 
                                   onClick={() => void handleChangeRole(u.id, MemberRole.MEMBER)}
                                   className="gap-2 text-xs"

@@ -13,29 +13,31 @@ import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
 import { MessagesService } from '../messages/services/messages.service';
 import { MessageType } from '@prisma/client';
-import { WsValidationPipe } from 'src/common/pipes/ws-validation.pipe';
+import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendMessageDto } from '../messages/dto/send-message.dto';
-import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
+import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:5173',
+    ],
     credentials: true,
   },
   namespace: '/',
 })
 @UseGuards(SocketAuthGuard)
 @UseFilters(new WsExceptionFilter())
-export class DirectChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class DirectChatGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   // Track unique socket IDs per userId to avoid duplicate counting
   private onlineUsers = new Map<string, Set<string>>();
 
-  constructor(
-    private messagesService: MessagesService,
-  ) {}
+  constructor(private messagesService: MessagesService) {}
 
   handleConnection(client: Socket) {
     // Note: We can't use Guard here, and client.user might not be set yet.
@@ -46,23 +48,27 @@ export class DirectChatGateway implements OnGatewayConnection, OnGatewayDisconne
   handleDisconnect(client: Socket) {
     const user = (client as any).user;
     const socketId = client.id;
-    
-    console.log(`[Socket] Disconnected: ${socketId}`, { 
-      userId: user?.id || 'undefined' 
+
+    console.log(`[Socket] Disconnected: ${socketId}`, {
+      userId: user?.id || 'undefined',
     });
-    
+
     if (!user) return;
 
     const userId = user.id;
     const socketSet = this.onlineUsers.get(userId);
-    
+
     if (socketSet) {
       socketSet.delete(socketId);
-      console.log(`[Socket] User ${userId} removed socket ${socketId}. Remaining: ${socketSet.size}`);
-      
+      console.log(
+        `[Socket] User ${userId} removed socket ${socketId}. Remaining: ${socketSet.size}`,
+      );
+
       if (socketSet.size === 0) {
         this.onlineUsers.delete(userId);
-        console.log(`[Socket] User ${userId} completely offline. Broadcasting noti-offline.`);
+        console.log(
+          `[Socket] User ${userId} completely offline. Broadcasting noti-offline.`,
+        );
         this.server.emit('noti-offline', { id: userId });
       }
     }
@@ -87,19 +93,25 @@ export class DirectChatGateway implements OnGatewayConnection, OnGatewayDisconne
 
     if (!isAlreadyConnected) {
       socketSet.add(socketId);
-      console.log(`[Socket] User ${userId} added connection ${socketId}. Total: ${socketSet.size}`);
-      
+      console.log(
+        `[Socket] User ${userId} added connection ${socketId}. Total: ${socketSet.size}`,
+      );
+
       if (isFirstOverallConnection) {
-        console.log(`[Socket] User ${userId} first connection. Broadcasting noti-online.`);
+        console.log(
+          `[Socket] User ${userId} first connection. Broadcasting noti-online.`,
+        );
         this.server.emit('noti-online', { id: userId });
       }
     } else {
-      console.log(`[Socket] User ${userId} re-emitted entering on existing socket ${socketId}`);
+      console.log(
+        `[Socket] User ${userId} re-emitted entering on existing socket ${socketId}`,
+      );
     }
 
     client.emit('noti-onlineList-toMe', Array.from(this.onlineUsers.keys()));
   }
- 
+
   @SubscribeMessage('send-message')
   @UsePipes(WsValidationPipe)
   async handleSendMessage(
@@ -142,14 +154,17 @@ export class DirectChatGateway implements OnGatewayConnection, OnGatewayDisconne
       });
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Send message error:', error);
       return { success: false, message: error.message };
     }
   }
 
   @SubscribeMessage('seen-message')
-  async handleSeenMessage(@SocketUser() user: any, @MessageBody() payload: any) {
+  async handleSeenMessage(
+    @SocketUser() user: any,
+    @MessageBody() payload: any,
+  ) {
     try {
       const { senderId } = payload;
       const viewerId = user.id;
@@ -165,7 +180,7 @@ export class DirectChatGateway implements OnGatewayConnection, OnGatewayDisconne
       }
       // khi trả về true tự động callback lúc emit sẽ được gọi với giá trị trả về response là {success: true}
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking seen:', error);
       return { success: false, message: error.message };
     }
@@ -192,5 +207,89 @@ export class DirectChatGateway implements OnGatewayConnection, OnGatewayDisconne
       senderId: user.id,
     });
   }
-}
 
+  // ─── Voice Call Signaling ─────────────────────────────────────
+
+  @SubscribeMessage('call-user')
+  handleCallUser(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { receiverId } = payload;
+    if (!receiverId) return;
+
+    const isOnline = this.onlineUsers.has(receiverId);
+    if (!isOnline) {
+      return { success: false, message: 'Người dùng không trực tuyến' };
+    }
+
+    this.server.to(receiverId).emit('incoming-call', {
+      callerId: user.id,
+      callerName: user.fullName || user.username,
+      callerAvatar: user.avatar,
+    });
+
+    return { success: true };
+  }
+
+  @SubscribeMessage('call-answer')
+  handleCallAnswer(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { callerId } = payload;
+    if (!callerId) return;
+
+    this.server.to(callerId).emit('call-answered', {
+      answererId: user.id,
+      answererName: user.fullName || user.username,
+    });
+  }
+
+  @SubscribeMessage('call-reject')
+  handleCallReject(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { callerId } = payload;
+    if (!callerId) return;
+
+    this.server.to(callerId).emit('call-rejected', {
+      rejecterId: user.id,
+    });
+  }
+
+  @SubscribeMessage('call-end')
+  handleCallEnd(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { peerId } = payload;
+    if (!peerId) return;
+
+    this.server.to(peerId).emit('call-ended', {
+      enderId: user.id,
+    });
+  }
+
+  @SubscribeMessage('webrtc-offer')
+  handleWebRTCOffer(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { receiverId, offer } = payload;
+    if (!receiverId || !offer) return;
+
+    this.server.to(receiverId).emit('webrtc-offer', {
+      senderId: user.id,
+      offer,
+    });
+  }
+
+  @SubscribeMessage('webrtc-answer')
+  handleWebRTCAnswer(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { receiverId, answer } = payload;
+    if (!receiverId || !answer) return;
+
+    this.server.to(receiverId).emit('webrtc-answer', {
+      senderId: user.id,
+      answer,
+    });
+  }
+
+  @SubscribeMessage('ice-candidate')
+  handleICECandidate(@SocketUser() user: any, @MessageBody() payload: any) {
+    const { receiverId, candidate } = payload;
+    if (!receiverId || !candidate) return;
+
+    this.server.to(receiverId).emit('ice-candidate', {
+      senderId: user.id,
+      candidate,
+    });
+  }
+}

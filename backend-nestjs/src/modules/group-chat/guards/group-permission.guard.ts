@@ -9,7 +9,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import {
   IGROUP_REPOSITORY,
-  IGroupRepository,
+  type IGroupRepository,
 } from '../domain/interfaces/group-repository.interface';
 import {
   REQUIRE_MEMBER_KEY,

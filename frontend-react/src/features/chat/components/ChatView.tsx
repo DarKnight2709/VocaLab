@@ -2,13 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { getErrorMessage, api } from "@/shared/lib/api";
+import { getErrorMessage } from "@/shared/lib/api";
 
 import { GroupCreateDialog } from "@/features/chat/components/GroupCreateDialog";
 import { GroupInfoDialog } from "@/features/chat/components/GroupInfoDialog";
 import { ChatSidebar } from "@/features/chat/components/ChatSidebar";
 import { ChatArea } from "@/features/chat/components/ChatArea";
+import { CallOverlay } from "@/features/chat/components/CallOverlay";
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
+import { useVoiceCall } from "@/features/chat/hooks/useVoiceCall";
 import { useGroupsQuery, groupKeys } from "@/features/chat/api/groupService";
 import { useGroupMessagesQuery } from "@/features/chat/api/groupService";
 import { useUsersQuery, chatKeys } from "@/features/chat/api/chatService";
@@ -16,7 +18,10 @@ import { useMessagesQuery } from "@/features/chat/api/chatService";
 import { useUploadFiles } from "@/features/chat/api/chatService";
 
 import type { ChatViewProps } from "../types";
-import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
+import type {
+  UserItem,
+  ChatMessageItem,
+} from "@/shared/validations/ChatSchema";
 import { MessageType } from "@/shared/enums/MessageType.enum";
 import type {
   GroupItem,
@@ -41,7 +46,7 @@ export default function ChatView({
   const [groupTypingText, setGroupTypingText] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const uploadFilesMutation = useUploadFiles();
 
   // tránh spam event typing-start
@@ -81,6 +86,8 @@ export default function ChatView({
     setGroupTypingText,
   });
 
+  const voiceCall = useVoiceCall(socketRef, me!.id);
+
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [groupInfoOpen, setGroupInfoOpen] = useState(false);
@@ -114,7 +121,7 @@ export default function ChatView({
       }
     };
   }, [typingUsers, typingTimeoutRef, setTypingUsers]);
-  
+
   // reset state group
   // mark seen ngay
   // Invalidate messages + users
@@ -166,11 +173,12 @@ export default function ChatView({
 
   async function sendMessage(
     files: File[] = [],
-    gifs: { url: string; name: string }[] = []
+    gifs: { url: string; name: string }[] = [],
   ) {
     const socket = socketRef.current;
     const content = messageText.trim();
-    if (!socket || (!content && files.length === 0 && gifs.length === 0)) return;
+    if (!socket || (!content && files.length === 0 && gifs.length === 0))
+      return;
 
     let attachments: any[] = [];
 
@@ -183,18 +191,106 @@ export default function ChatView({
           name: g.name,
           mimeType: "image/gif",
           size: 0,
-        }))
+        })),
       );
     }
 
-    // 2. Upload actual files
+    // 2. Upload actual files — show optimistic uploading message during upload
     if (files.length > 0) {
+      const uploadingId = `uploading-${Date.now()}`;
+      const uploadingAttachments = files.map((f) => ({
+        url: "",
+        type: f.type.startsWith("image/")
+          ? "image"
+          : f.type.startsWith("video/")
+            ? "video"
+            : "file",
+        name: f.name,
+        mimeType: f.type,
+        size: f.size,
+        _uploading: true,
+      }));
+
+      // Add optimistic uploading message to cache
+      if (selectedGroup?.id) {
+        const groupId = selectedGroup.id;
+        queryClient.setQueryData<GroupMessageItem[]>(
+          groupKeys.messages(groupId),
+          (prev) => [
+            ...(prev || []),
+            {
+              id: uploadingId,
+              senderId: me!.id,
+              sender: {
+                id: me!.id,
+                username: me!.username,
+                fullName: me!.fullName,
+                avatar: me!.avatar,
+              },
+              groupId,
+              content: content || "",
+              attachments: uploadingAttachments,
+              createdAt: new Date().toISOString(),
+              type: MessageType.GROUP,
+              seenBy: [],
+              _uploading: true,
+            } as any,
+          ],
+        );
+      } else if (selectedUser?.id) {
+        queryClient.setQueryData<ChatMessageItem[]>(
+          chatKeys.messages(selectedUser.id),
+          (prev) => [
+            ...(prev || []),
+            {
+              id: uploadingId,
+              senderId: me!.id,
+              receiverId: selectedUser.id,
+              content: content || "",
+              attachments: uploadingAttachments,
+              createdAt: new Date().toISOString(),
+              type: MessageType.DIRECT,
+              isSeen: false,
+              _uploading: true,
+            } as any,
+          ],
+        );
+      }
+
+      // Clear input immediately so user sees responsiveness
+      setMessageText("");
+
       try {
         const uploaded = await uploadFilesMutation.mutateAsync(files);
         attachments = [...attachments, ...uploaded];
       } catch (e) {
+        // Remove optimistic message on failure
+        if (selectedGroup?.id) {
+          queryClient.setQueryData<GroupMessageItem[]>(
+            groupKeys.messages(selectedGroup.id),
+            (prev) => (prev || []).filter((m) => m.id !== uploadingId),
+          );
+        } else if (selectedUser?.id) {
+          queryClient.setQueryData<ChatMessageItem[]>(
+            chatKeys.messages(selectedUser.id),
+            (prev) => (prev || []).filter((m) => m.id !== uploadingId),
+          );
+        }
         toast.error("Upload file thất bại");
         return;
+      }
+
+      // Remove optimistic message (real one will be added after socket ack)
+      if (selectedGroup?.id) {
+        queryClient.setQueryData<GroupMessageItem[]>(
+          groupKeys.messages(selectedGroup.id),
+          (prev) => (prev || []).filter((m) => m.id !== uploadingId),
+        );
+      } else if (selectedUser?.id) {
+        queryClient.setQueryData<ChatMessageItem[]>(
+          chatKeys.messages(selectedUser.id),
+          (prev) => (prev || []).filter((m) => m.id !== uploadingId),
+        );
       }
     }
 
@@ -210,7 +306,13 @@ export default function ChatView({
 
       socket.emit(
         "send-group-message",
-        { groupId, content, type: MessageType.GROUP, replyTo: null, attachments: finalAttachments },
+        {
+          groupId,
+          content,
+          type: MessageType.GROUP,
+          replyTo: null,
+          attachments: finalAttachments,
+        },
         (status: { success: boolean; message?: string }) => {
           if (!status?.success) {
             toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
@@ -224,7 +326,12 @@ export default function ChatView({
               {
                 id: `local-${Date.now()}`,
                 senderId: me!.id,
-                sender: { id: me!.id, username: me!.username, fullName: me!.fullName, avatar: me!.avatar },
+                sender: {
+                  id: me!.id,
+                  username: me!.username,
+                  fullName: me!.fullName,
+                  avatar: me!.avatar,
+                },
                 groupId,
                 content: content || "",
                 attachments: finalAttachments,
@@ -249,11 +356,16 @@ export default function ChatView({
 
     socket.emit(
       "send-message",
-      { receiverId, content, type: MessageType.DIRECT, attachments: finalAttachments },
+      {
+        receiverId,
+        content,
+        type: MessageType.DIRECT,
+        attachments: finalAttachments,
+      },
       (status: { success: boolean; message?: string }) => {
         if (!status?.success) {
           toast.error(status?.message || "Gửi tin nhắn thất bại");
-            return;
+          return;
         }
         setMessageText("");
         queryClient.setQueryData<ChatMessageItem[]>(
@@ -272,7 +384,9 @@ export default function ChatView({
             },
           ],
         );
-        void queryClient.invalidateQueries({ queryKey: chatKeys.messages(receiverId) });
+        void queryClient.invalidateQueries({
+          queryKey: chatKeys.messages(receiverId),
+        });
         void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
       },
     );
@@ -281,7 +395,6 @@ export default function ChatView({
   function handleEmojiClick(emoji: string) {
     setMessageText((prev) => prev + emoji);
   }
-
 
   function handleTyping() {
     const socket = socketRef.current;
@@ -389,7 +502,7 @@ export default function ChatView({
       className={
         embedded
           ? "h-full flex flex-col bg-background"
-          : "h-dvh flex flex-col bg-background"
+          : "h-full flex flex-col bg-background"
       }
     >
       <GroupCreateDialog
@@ -453,7 +566,6 @@ export default function ChatView({
             {!selectedUser && !selectedGroup ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-4xl mb-4">💬</div>
                   <p className="text-lg text-muted-foreground">
                     Chọn một người dùng hoặc nhóm để bắt đầu chat
                   </p>
@@ -480,11 +592,39 @@ export default function ChatView({
                 onEmojiClick={handleEmojiClick}
                 onBackToList={handleBackToList}
                 onOpenGroupInfo={() => setGroupInfoOpen(true)}
+                onCallClick={
+                  selectedUser && !selectedGroup
+                    ? () =>
+                        voiceCall.startCall(
+                          selectedUser.id,
+                          selectedUser.fullName ||
+                            selectedUser.username ||
+                            "User",
+                          selectedUser.avatar || undefined,
+                        )
+                    : undefined
+                }
               />
             )}
           </main>
         )}
       </div>
+
+      {/* Voice Call Overlay */}
+      <CallOverlay
+        callState={voiceCall.callState}
+        peerName={voiceCall.peerName}
+        peerAvatar={voiceCall.peerAvatar}
+        isMuted={voiceCall.isMuted}
+        callDuration={voiceCall.callDuration}
+        onAccept={voiceCall.acceptCall}
+        onReject={voiceCall.rejectCall}
+        onEnd={voiceCall.endCall}
+        onToggleMute={voiceCall.toggleMute}
+      />
+
+      {/* Hidden audio element for remote stream */}
+      <audio ref={voiceCall.remoteAudioRef} autoPlay className="hidden" />
     </div>
   );
 }

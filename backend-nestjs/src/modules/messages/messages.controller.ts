@@ -13,7 +13,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nes
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MessagesService } from './services/messages.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { IsProtected } from 'src/common/decorators/protected.decorator';
+import { IsProtected } from '@/common/decorators/protected.decorator';
 
 @ApiTags('messages')
 @Controller('messages')

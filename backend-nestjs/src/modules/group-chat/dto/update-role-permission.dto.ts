@@ -4,11 +4,11 @@ import { GroupPermission } from '../../../common/enums/group-permission.enum';
 
 export class UpdateRolePermissionDto {
   @IsEnum(MemberRole)
-  role: MemberRole;
+  role!: MemberRole;
 
   @IsString()
-  permissionId: string;
+  permissionId!: string;
 
   @IsBoolean()
-  isEnabled: boolean;
+  isEnabled!: boolean;
 }

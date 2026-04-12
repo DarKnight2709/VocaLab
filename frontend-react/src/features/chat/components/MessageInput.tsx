@@ -156,7 +156,7 @@ export function MessageInput({
                 </div>
               ) : (
                 // Non-image: pill chip
-                <div className="flex items-center gap-1.5 bg-muted border rounded-full px-3 py-1.5 text-sm max-w-[180px]">
+                <div className="flex items-center gap-1.5 bg-muted border rounded-full px-3 py-1.5 text-sm max-w-45">
                   <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="truncate text-foreground">{entry.file.name}</span>
                   <button

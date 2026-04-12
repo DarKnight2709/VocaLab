@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import CardFieldDragDrop from "../components/CardFieldDragDrop";

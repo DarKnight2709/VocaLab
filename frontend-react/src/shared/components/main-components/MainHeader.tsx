@@ -12,13 +12,10 @@ import {
 } from "@/shared/components/ui/avatar";
 import { Input } from "@/shared/components/ui/input";
 import ROUTES from "@/shared/lib/routes";
-import type {
-  MeResponse,
-} from "@/shared/validations/AuthSchema";
-import {
-  useLogoutMutation,
-} from "@/features/auth/api/authService";
-import useAuthStore from "@/features/auth/stores/authStore";
+import type { MeResponse } from "@/shared/validations/AuthSchema";
+import { useLogoutMutation } from "@/features/auth/api/authService";
+import { useAppSelector, useAppDispatch } from "@/shared/stores/redux/hooks";
+import { logoutAction } from "@/shared/stores/redux/authActions";
 
 interface MainHeaderProps {
   me: MeResponse | undefined | null;
@@ -33,12 +30,15 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
 
   const navigate = useNavigate();
 
-  const refreshToken = useAuthStore((state) => state.token?.refreshToken);
+  const dispatch = useAppDispatch();
+  const refreshToken = useAppSelector(
+    (state) => state.auth.token?.refreshToken,
+  );
 
   async function handleLogout() {
     if (!refreshToken) {
       // Nếu không có refresh token thì cứ logout ở client
-      useAuthStore.getState().logout();
+      dispatch(logoutAction());
       navigate(ROUTES.LOGIN.url);
       return;
     }
@@ -83,7 +83,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               aria-label="Mở blog"
               className="inline-flex items-center rounded-xl p-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              <img src="/logo.png" alt="Blog app" className="h-10 w-10" />
+              <img src="/logo1.png" alt="Blog app" className="h-24 w-24" />
             </Link>
           </div>
 
@@ -118,7 +118,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               aria-label="Mở thông tin cá nhân"
             >
               <Avatar className="h-11 w-11 border-2 border-border/50">
-                <AvatarImage src={me?.avatar || 'image.png'} />
+                <AvatarImage src={me?.avatar || "image.png"} />
                 <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                   {getInitials(displayName)}
                 </AvatarFallback>

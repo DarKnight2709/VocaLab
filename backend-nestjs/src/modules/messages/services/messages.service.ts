@@ -1,8 +1,8 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
-import { MessagesRepository } from '../repositories/messages.repository';
-import { CloudinaryService } from 'src/common/services/cloudinary.service';
+
+import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { MessageEntity } from '../domain/message.entity';
-import { IMESSAGES_REPOSITORY, MessagesRepositoryInterface, MessageWithDetails, ConversationListItem } from '../domain/interfaces/messages-repository.interface';
+import { IMESSAGES_REPOSITORY, type MessagesRepositoryInterface, MessageWithDetails, ConversationListItem } from '../domain/interfaces/messages-repository.interface';
 import { MessageStatus, MessageType } from '@prisma/client';
 import { AttachmentType, MessageAttachment } from '../domain/types/message-attachment.type';
 

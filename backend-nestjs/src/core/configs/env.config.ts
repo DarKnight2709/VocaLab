@@ -28,60 +28,60 @@ export class EnvironmentValidation {
 
   @IsString()
   @Transform(({ value }) => value.trim().replace(/^\/+|\/+$/g, '') || 'api')
-  API_PREFIX: string;
+  API_PREFIX!: string;
 
   @IsNumber()
   @Transform(({ value }) => (value ? parseInt(value, 10) : 1))
-  API_DEFAULT_VERSION: number;
+  API_DEFAULT_VERSION!: number;
 
   @IsString()
-  API_URL: string;
+  API_URL!: string;
 
   @IsString()
-  CLIENT_URL: string;
+  CLIENT_URL!: string;
 
   // Database
   @IsString()
-  DATABASE_URL: string;
+  DATABASE_URL!: string;
 
   // Swagger
   @IsString()
-  SWAGGER_TITLE: string;
+  SWAGGER_TITLE!: string;
 
   @IsString()
-  SWAGGER_DESCRIPTION: string;
+  SWAGGER_DESCRIPTION!: string;
 
   @IsString()
-  SWAGGER_VERSION: string;
+  SWAGGER_VERSION!: string;
 
   @IsString()
   @Transform(({ value }) => value.trim().replace(/^\/+|\/+$/g, '') || 'docs')
-  SWAGGER_UI_PATH: string;
+  SWAGGER_UI_PATH!: string;
 
   // RSA Key
   @IsString()
-  JWT_KEY_DIRECTORY: string;
+  JWT_KEY_DIRECTORY!: string;
 
   @IsString()
-  JWT_PRIVATE_ACCESS: string;
+  JWT_PRIVATE_ACCESS!: string;
 
   @IsString()
-  JWT_PUBLIC_ACCESS: string;
+  JWT_PUBLIC_ACCESS!: string;
 
   @IsString()
-  JWT_PRIVATE_REFRESH: string;
+  JWT_PRIVATE_REFRESH!: string;
 
   @IsString()
-  JWT_PUBLIC_REFRESH: string;
+  JWT_PUBLIC_REFRESH!: string;
 
   // JWT
   @IsNumber()
   @Transform(({ value }) => (value ? parseInt(value, 10) : 300))
-  ACCESS_TOKEN_EXPIRES_IN: number;
+  ACCESS_TOKEN_EXPIRES_IN!: number;
 
   @IsNumber()
   @Transform(({ value }) => (value ? parseInt(value, 10) : 3600))
-  REFRESH_TOKEN_EXPIRES_IN: number;
+  REFRESH_TOKEN_EXPIRES_IN!: number;
 
   // Redis
   @IsString()

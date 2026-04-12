@@ -1,4 +1,6 @@
-import useAuthStore from "@/features/auth/stores/authStore.ts";
+import { store } from "@/shared/stores/redux/store";
+import { logoutSync } from "@/shared/stores/redux/slices/authSlice";
+import { useSocketStore } from "@/shared/stores/useSocketStore";
 import axios from "axios";
 import envConfig from "@/shared/config/envConfig";
 import qs from "qs";
@@ -7,7 +9,9 @@ import { type ZodType, ZodError } from "zod";
 
 export const api = axios.create({
   baseURL:
-    import.meta.env.VITE_ENV === "development" ? "/api/" : envConfig.VITE_API_URL,
+    import.meta.env.VITE_ENV === "development"
+      ? "/api/"
+      : envConfig.VITE_API_URL,
   // headers: {
   //   "Content-Type": "application/json",
   // },
@@ -20,7 +24,7 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token?.accessToken;
+    const token = store.getState().auth.token?.accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,7 +36,11 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    if (response.data && response.data.success === true && response.data.data !== undefined) {
+    if (
+      response.data &&
+      response.data.success === true &&
+      response.data.data !== undefined
+    ) {
       const { data, message } = response.data;
       // If there's a message and data is an object, preserve the message on the data
       if (message && typeof data === "object" && data !== null) {
@@ -45,7 +53,7 @@ api.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
     const requestUrl: string | undefined = error?.config?.url;
-    const token = useAuthStore.getState().token?.accessToken;
+    const token = store.getState().auth.token?.accessToken;
 
     const isAuthRequest =
       typeof requestUrl === "string" &&
@@ -54,13 +62,13 @@ api.interceptors.response.use(
     // Only force-logout/redirect on 401 when we *had* a token (expired/invalid session).
     // For expected auth failures like wrong credentials, let the caller handle the error.
     if (status === 401 && token && !isAuthRequest) {
-      useAuthStore.getState().logout();
+      useSocketStore.getState().disconnect();
+      store.dispatch(logoutSync());
       window.location.href = ROUTES.LOGIN.url;
     }
     return Promise.reject(error);
   },
 );
-
 
 export type ApiErrorBody = {
   message?: string;
@@ -73,7 +81,7 @@ export function getErrorMessage(error: unknown, fallback: string) {
 
 export async function fetchWithSchema<T>(
   request: Promise<any>,
-  schema: ZodType<T>
+  schema: ZodType<T>,
 ): Promise<T> {
   const res = await request;
   try {
@@ -84,7 +92,7 @@ export async function fetchWithSchema<T>(
         path: error.issues[0]?.path,
         message: error.issues[0]?.message,
         received: error.issues,
-        data: res.data
+        data: res.data,
       });
     }
     throw error;

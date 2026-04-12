@@ -1,4 +1,4 @@
-import { ConfigService } from 'src/common/services/config.service';
+import { ConfigService } from '@/common/services/config.service';
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder } from '@nestjs/swagger';
 import { SwaggerModule } from '@nestjs/swagger';

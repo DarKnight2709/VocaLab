@@ -4,5 +4,5 @@ import { IsNotEmpty, IsString } from
 export class TransferOwnershipDto {
   @IsNotEmpty()
   @IsString()
-  newOwnerId: string;
+  newOwnerId!: string;
 }

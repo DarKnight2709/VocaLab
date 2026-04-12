@@ -1,5 +1,5 @@
 import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface"
-import { ConfigService } from "src/common/services/config.service"
+import { ConfigService } from "@/common/services/config.service"
 import { BadRequestException } from "@nestjs/common";
 
 export const corsConfig = (

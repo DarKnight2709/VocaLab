@@ -5,10 +5,10 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { CloudinaryService } from 'src/common/services/cloudinary.service';
+import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { UpdatePersonalInfoDto } from '../dto/users.dto';
 import {
-  UserRepositoryInterface,
+  type UserRepositoryInterface,
   IUSER_REPOSITORY,
 } from '../domain/interfaces/user-repository.interface';
 

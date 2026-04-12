@@ -50,7 +50,7 @@ export function GifPicker({ onSelect }: GifPickerProps) {
   }, [query]);
 
   return (
-    <div className="w-[300px] sm:w-[350px] p-2 bg-background border rounded-lg shadow-xl flex flex-col gap-2 max-h-[400px]">
+    <div className="w-75 sm:w-87.5 p-2 bg-background border rounded-lg shadow-xl flex flex-col gap-2 max-h-100">
       <Input
         placeholder="Tìm kiếm GIF..."
         value={query}
@@ -59,7 +59,7 @@ export function GifPicker({ onSelect }: GifPickerProps) {
         autoFocus
       />
       
-      <div className="flex-1 overflow-y-auto min-h-[250px] relative">
+      <div className="flex-1 overflow-y-auto min-h-62.5 relative">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />

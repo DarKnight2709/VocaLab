@@ -1,4 +1,5 @@
-import useAuthStore from "../stores/authStore";
+import { useAppDispatch, useAppSelector } from "@/shared/stores/redux/hooks";
+import { loginAction, logoutAction } from "@/shared/stores/redux/authActions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   LoginBodyType,
@@ -18,15 +19,15 @@ import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
 
 export const useLoginMutation = () => {
-  const login = useAuthStore((state) => state.login);
+  const dispatch = useAppDispatch();
   return useMutation({
     mutationFn: (body: LoginBodyType) =>
       fetchWithSchema(
         api.post(API_ROUTES.AUTH.LOGIN, body),
         LoginResponseSchema,
       ),
-    onSuccess: async (response) => {
-      await login(response);
+    onSuccess: (response) => {
+      dispatch(loginAction(response));
       toast.success("Đăng nhập thành công.");
     },
     onError: (error) => {
@@ -51,7 +52,7 @@ export const useSignUpMutation = () => {
 };
 
 export const useMeQuery = () => {
-  const token = useAuthStore((state) => state.token);
+  const token = useAppSelector((state) => state.auth.token);
   return useQuery({
     queryKey: ["me"],
     queryFn: () =>
@@ -62,7 +63,7 @@ export const useMeQuery = () => {
 };
 
 export const useLogoutMutation = () => {
-  const logout = useAuthStore((state) => state.logout);
+  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (refreshToken: string) =>
@@ -71,12 +72,12 @@ export const useLogoutMutation = () => {
         LogoutResponseSchema,
       ),
     onSuccess: () => {
-      logout();
+      dispatch(logoutAction());
       queryClient.clear();
       toast.success("Đăng xuất thành công.");
     },
     onError: (error) => {
-      logout();
+      dispatch(logoutAction());
       queryClient.clear();
       toast.error(getErrorMessage(error, "Đăng xuất thất bại."));
     },
@@ -116,8 +117,6 @@ export const useUpdatePersonalInfoMutation = () => {
     },
   });
 };
-
-
 
 // export const useChangePasswordMutation = () => {
 //   return useMutation({

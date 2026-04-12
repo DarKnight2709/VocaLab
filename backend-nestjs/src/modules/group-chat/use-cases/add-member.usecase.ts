@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
-import { IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import { type IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { MemberRole } from '@prisma/client';

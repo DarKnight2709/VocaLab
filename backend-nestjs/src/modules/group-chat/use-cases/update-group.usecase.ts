@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
-import { IGroupRepository, IGROUP_REPOSITORY, GroupWithDetails } from '../domain/interfaces/group-repository.interface';
+import { type IGroupRepository, IGROUP_REPOSITORY, GroupWithDetails } from '../domain/interfaces/group-repository.interface';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { MemberRole } from '@prisma/client';
 

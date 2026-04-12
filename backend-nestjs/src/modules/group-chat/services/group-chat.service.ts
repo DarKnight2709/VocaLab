@@ -6,7 +6,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import {
-  IGroupRepository,
+  type IGroupRepository,
   IGROUP_REPOSITORY,
   MemberWithUser,
   GroupWithDetails,
@@ -20,7 +20,7 @@ import { RemoveMemberUseCase } from '../use-cases/remove-member.usecase';
 import { ChangeRoleUseCase } from '../use-cases/change-role.usecase';
 import {
   IMESSAGES_REPOSITORY,
-  MessagesRepositoryInterface,
+  type MessagesRepositoryInterface,
 } from '../../messages/domain/interfaces/messages-repository.interface';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateRolePermissionDto } from '../dto/update-role-permission.dto';
@@ -30,7 +30,7 @@ import { ChangeRoleDto } from '../dto/change-role.dto';
 import { GroupChatGateway } from '../group-chat.gateway';
 import { DeleteGroupUseCase } from '../use-cases/delete-group.usecase';
 import { TransferOwnershipUseCase } from '../use-cases/transfer-ownership.usecase';
-import { CloudinaryService } from 'src/common/services/cloudinary.service';
+import { CloudinaryService } from '@/common/services/cloudinary.service';
 
 @Injectable()
 export class GroupChatService {

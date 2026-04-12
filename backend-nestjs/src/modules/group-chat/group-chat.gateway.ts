@@ -11,9 +11,9 @@ import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
 import { MessagesService } from '../messages/services/messages.service';
 import { MessageType } from '@prisma/client';
-import { WsValidationPipe } from 'src/common/pipes/ws-validation.pipe';
+import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendMessageDto } from '../messages/dto/send-message.dto';
-import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
+import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 
 @WebSocketGateway({
   cors: {
@@ -26,7 +26,7 @@ import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
 @UseFilters(new WsExceptionFilter())
 export class GroupChatGateway {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(
     private messagesService: MessagesService,
@@ -69,7 +69,7 @@ export class GroupChatGateway {
       });
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending group message:', error);
       return { success: false, message: error.message };
     }
@@ -96,7 +96,7 @@ export class GroupChatGateway {
         },
       });
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking seen:', error);
       return { success: false, message: error.message };
     }
@@ -123,7 +123,7 @@ export class GroupChatGateway {
         },
       });
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating message status:', error);
       return { success: false, message: error.message };
     }

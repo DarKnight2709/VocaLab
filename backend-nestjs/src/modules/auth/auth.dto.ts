@@ -8,7 +8,7 @@ export class LoginDto {
   })
   @IsString()
   @IsNotEmpty()
-  username: string;
+  username!: string;
 
 
 
@@ -19,7 +19,7 @@ export class LoginDto {
   })
   @IsString()
   @IsNotEmpty()
-  password: string
+  password!: string
 }
 
 
@@ -29,7 +29,7 @@ export class LoginResponseDto {
     description: "Access token",
     example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
   })
-  accessToken: string;
+  accessToken!: string;
 
 
 
@@ -38,7 +38,7 @@ export class LoginResponseDto {
     description: "Refresh token",
     example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
   })
-  refreshToken: string;
+  refreshToken!: string;
 }
 
 
@@ -49,7 +49,7 @@ export class RefreshTokenResponseDto {
     description: "New access token",
     example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
   })
-  accessToken: string;
+  accessToken!: string;
 
 
   // new refresh token
@@ -57,7 +57,7 @@ export class RefreshTokenResponseDto {
     description: "New refresh token",
     example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
   })
-  refreshToken: string;
+  refreshToken!: string;
 }
 
 
@@ -69,7 +69,7 @@ export class RefreshTokenDto {
   })
   @IsString()
   @IsNotEmpty()
-  refreshToken: string;
+  refreshToken!: string;
 }
 
 
@@ -78,7 +78,7 @@ export class LogoutResponseDto {
     description: "Thông báo logout thành công",
     example: "Đăng xuất thành công",
   })
-  message: string;
+  message!: string;
 }
 
 
@@ -88,18 +88,18 @@ export class SignupDto {
   @IsString()
   @MinLength(3)
   @MaxLength(16)
-  username: string;
+  username!: string;
 
   @ApiProperty({ example: 'password123' })
   @IsString()
   @MinLength(6)
-  password: string;
+  password!: string;
 
   @ApiProperty({ example: 'John Doe' })
   @IsString()
-  fullName: string;
+  fullName!: string;
 
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail()
-  email: string;
+  email!: string;
 }

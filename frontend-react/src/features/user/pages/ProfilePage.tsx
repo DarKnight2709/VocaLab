@@ -1,19 +1,18 @@
-import { useParams, useNavigate } from "react-router";
+import { useParams } from "react-router";
 import { Button } from "@/shared/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
 import { getInitials } from "../../chat/utils";
+import Breadcrumb from "@/shared/components/Breadcrumb";
 
 export default function ProfilePage() {
   const { fullName } = useParams<{ fullName: string }>();
-  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col h-full bg-background p-6">
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+      <div className="max-w-2xl mx-auto w-full">
+        <Breadcrumb items={[{ label: "Trang cá nhân" }]} />
+      </div>
+      <div className="flex items-center gap-4 mb-8 max-w-2xl mx-auto w-full text-left">
         <h1 className="text-2xl font-bold">Trang cá nhân</h1>
       </div>
 
