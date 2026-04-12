@@ -35,6 +35,16 @@ enum MessageStatus {
   DELETED
 }
 
+enum CardFieldType {
+  TEXT
+  TEXTAREA
+  IMAGE
+}
+
+enum CardSide {
+  FRONT
+  BACK
+}
 
 model User {
   id             String   @id @default(uuid())
@@ -47,12 +57,18 @@ model User {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  sentMessages     Message[]      @relation("Sender")
-  receivedMessages Message[]      @relation("Receiver")
-  ownedGroups      Group[]        @relation("Owner")
-  groupMemberships GroupMember[]
-  seenMessages     MessageSeen[]
-  refreshTokens    RefreshToken[]
+  sentMessages      Message[]          @relation("Sender")
+  receivedMessages  Message[]          @relation("Receiver")
+  ownedGroups       Group[]            @relation("Owner")
+  groupMemberships  GroupMember[]
+  seenMessages      MessageSeen[]
+  refreshTokens     RefreshToken[]
+  blogs             Blog[]             @relation("BlogAuthor")
+  comments          Comment[]          @relation("CommentAuthor")
+  blogLikes         BlogLike[]         @relation("UserBlogLikes")
+  grammarStructures GrammarStructure[] @relation("GrammarAuthor")
+  cardCollections   CardCollection[]
+  cardTypes         CardType[]
 
   @@map("users")
 }
@@ -73,19 +89,19 @@ model RefreshToken {
 }
 
 model Message {
-  id          String      @id @default(uuid())
-  type        MessageType @default(DIRECT)
+  id          String        @id @default(uuid())
+  type        MessageType   @default(DIRECT)
   senderId    String
   receiverId  String?
   groupId     String?
   content     String?
   replyToId   String?
   attachments Json?
-  status MessageStatus @default(SENT)
+  status      MessageStatus @default(SENT)
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Relations
   sender   User   @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
@@ -182,4 +198,176 @@ model GroupRolePermission {
   @@index([groupId])
   @@index([permissionId])
   @@map("group_role_permissions")
+}
+
+// ==================== BLOG ====================
+
+model Blog {
+  id         String    @id @default(uuid())
+  title      String
+  content    String
+  excerpt    String?
+  coverImage String?
+  authorId   String
+  isPublic   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  author   User       @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  likes    BlogLike[]
+
+  @@index([authorId])
+  @@index([isPublic, createdAt])
+  @@map("blogs")
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String
+  blogId    String
+  authorId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  blog   Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  author User @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([blogId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model BlogLike {
+  userId    String
+  blogId    String
+  createdAt DateTime @default(now())
+
+  user User @relation("UserBlogLikes", fields: [userId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@id([userId, blogId])
+  @@map("blog_likes")
+}
+
+// ==================== GRAMMAR ====================
+
+model GrammarStructure {
+  id          String   @id @default(uuid())
+  title       String
+  structure   String
+  explanation String
+  examples    Json?
+  category    String?
+  level       String?
+  isDefault   Boolean  @default(false)
+  authorId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User? @relation("GrammarAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([level])
+  @@map("grammar_structures")
+}
+
+// ==================== VOCABULARY ====================
+
+model CardCollection {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@index([userId])
+  @@map("card_collections")
+}
+
+model CardType {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fields CardField[]
+  cards  Card[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("card_type")
+}
+
+model CardField {
+  id         String        @id @default(uuid())
+  cardTypeId String
+  key        String
+  label      String
+  fieldType  CardFieldType
+
+  side CardSide
+
+  order      Int
+  color      String?
+  fontSize   Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cardType CardType         @relation(fields: [cardTypeId], references: [id], onDelete: Cascade)
+  values   CardFieldValue[]
+
+  @@unique([cardTypeId, key])
+  @@index([cardTypeId])
+  @@index([cardTypeId, order])
+  @@index([cardTypeId, side, order])
+  @@map("card_field")
+}
+
+model Card {
+  id               String @id @default(uuid())
+  cardTypeId       String
+  cardCollectionId String
+  position         Int?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  cardType       CardType       @relation(fields: [cardTypeId], references: [id], onDelete: Cascade)
+  cardCollection CardCollection @relation(fields: [cardCollectionId], references: [id], onDelete: Cascade)
+
+  values CardFieldValue[]
+
+  @@index([cardTypeId])
+  @@index([cardCollectionId, createdAt])
+  @@index([cardCollectionId, position])
+  @@map("card")
+}
+
+model CardFieldValue {
+  id String @id @default(uuid())
+
+  cardId  String
+  fieldId String
+
+  value String
+
+  card  Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  field CardField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, fieldId])
+  @@index([cardId])
+  @@index([fieldId])
+  @@index([cardId, fieldId])
+  @@map("card_field_value")
 }
