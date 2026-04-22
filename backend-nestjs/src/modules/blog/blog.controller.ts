@@ -13,7 +13,6 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
 import { BlogService } from './blog.service';

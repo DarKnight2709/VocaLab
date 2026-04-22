@@ -228,25 +228,27 @@ export default function GrammarPage() {
                   <h3 className="font-semibold text-base leading-tight">
                     {item.title}
                   </h3>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    {!item.isDefault && item.authorId === userId && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(item)}
-                          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteConfirm(item)}
-                          className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </>
-                    )}
+                  <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEdit(item)}
+                      className="h-6 w-6 p-0.5"
+                      aria-label="Sửa"
+                    >
+                      <Pencil className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setDeleteConfirm(item)}
+                      className="h-6 w-6 p-0.5"
+                      aria-label="Xóa"
+                    >
+                      <Trash2 className="h-2.5 w-2.5" />
+                    </Button>
                   </div>
                 </div>
                 <div className="mb-3">
