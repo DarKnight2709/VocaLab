@@ -2,14 +2,15 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
+import { Comment, VoteType } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import {
   CreateBlogDto,
   UpdateBlogDto,
   CreateCommentDto,
   UpdateCommentDto,
+  ReplyCommentDto,
 } from './dto/blog.dto';
 
 @Injectable()
@@ -18,8 +19,9 @@ export class BlogService {
 
   // ==================== BLOG CRUD ====================
 
-  async getBlogs(page = 1, limit = 10, search?: string) {
+  async getBlogs(userId: string, page = 1, limit = 10, search?: string) {
     const skip = (page - 1) * limit;
+
     const where: any = {
       isPublic: true,
       deletedAt: null,
@@ -32,25 +34,48 @@ export class BlogService {
       ];
     }
 
-    const [blogs, total] = await Promise.all([
+    let [searchedBlogs, total] = await Promise.all([
       this.prisma.blog.findMany({
         where,
-        skip,
+        // order by createAt
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+
         include: {
           author: {
-            select: { id: true, username: true, fullName: true, avatar: true },
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
           },
-          _count: { select: { comments: true, likes: true } },
+          votes: true,
+          _count: {
+            select: { comments: true },
+          },
         },
       }),
-      this.prisma.blog.count({ where }),
+      this.prisma.blog.count({
+        where,
+      }),
     ]);
 
+    const formattedBlogs = searchedBlogs.map((blog) =>
+      this.mapVoteScore(blog, userId),
+    );
+
     return {
-      blogs,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      blogs: formattedBlogs,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -61,9 +86,9 @@ export class BlogService {
         author: {
           select: { id: true, username: true, fullName: true, avatar: true },
         },
-        _count: { select: { comments: true, likes: true } },
+        _count: { select: { comments: true } },
+        votes: { select: { type: true, userId: true } },
         comments: {
-          where: { deletedAt: null },
           orderBy: { createdAt: 'asc' },
           include: {
             author: {
@@ -72,6 +97,12 @@ export class BlogService {
                 username: true,
                 fullName: true,
                 avatar: true,
+              },
+            },
+            votes: {
+              select: {
+                type: true,
+                userId: true,
               },
             },
           },
@@ -84,13 +115,22 @@ export class BlogService {
       throw new ForbiddenException('Bạn không có quyền xem bài viết này');
     }
 
-    const isLiked = userId
-      ? !!(await this.prisma.blogLike.findUnique({
-          where: { userId_blogId: { userId, blogId: id } },
-        }))
-      : false;
+    const deletedCommentMap = blog.comments.map((c) => ({
+      ...c,
+      content: c.deletedAt ? null : c.content,
+    }));
 
-    return { blog: { ...blog, isLiked } };
+    const treeComment = this.buildCommentTree(deletedCommentMap);
+    const commentsWithVotes = this.mapCommentVotesInTree(treeComment, userId);
+
+    const { comments, ...rest } = blog;
+
+    const formattedBlog = {
+      ...rest,
+      comments: commentsWithVotes,
+    };
+
+    return { blog: this.mapVoteScore(formattedBlog, userId) };
   }
 
   async getMyBlogs(userId: string, page = 1, limit = 10) {
@@ -102,14 +142,17 @@ export class BlogService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          _count: { select: { comments: true, likes: true } },
+          _count: { select: { comments: true } },
+          votes: { select: { type: true } },
         },
       }),
       this.prisma.blog.count({ where: { authorId: userId, deletedAt: null } }),
     ]);
 
+    const formattedBlogs = blogs.map((blog) => this.mapVoteScore(blog));
+
     return {
-      blogs,
+      blogs: formattedBlogs,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -149,7 +192,7 @@ export class BlogService {
         author: {
           select: { id: true, username: true, fullName: true, avatar: true },
         },
-        _count: { select: { comments: true, likes: true } },
+        _count: { select: { comments: true } },
       },
     });
 
@@ -171,56 +214,94 @@ export class BlogService {
     return { message: 'Xóa bài viết thành công' };
   }
 
-  // ==================== LIKES ====================
+  // ==================== VOTES ====================
 
-  async toggleLike(blogId: string, userId: string) {
+  async voteBlog(blogId: string, userId: string, type: VoteType) {
     const blog = await this.prisma.blog.findFirst({
-      where: { id: blogId, deletedAt: null },
-    });
-    if (!blog) throw new NotFoundException('Bài viết không tồn tại');
-
-    const existing = await this.prisma.blogLike.findUnique({
-      where: { userId_blogId: { userId, blogId } },
+      where: {
+        id: blogId,
+        deletedAt: null,
+      },
     });
 
-    if (existing) {
-      await this.prisma.blogLike.delete({
-        where: { userId_blogId: { userId, blogId } },
-      });
-      const count = await this.prisma.blogLike.count({ where: { blogId } });
-      return { liked: false, likeCount: count };
-    } else {
-      await this.prisma.blogLike.create({ data: { userId, blogId } });
-      const count = await this.prisma.blogLike.count({ where: { blogId } });
-      return { liked: true, likeCount: count };
+    if (!blog) {
+      throw new NotFoundException('Bài viết không tồn tại!');
     }
+
+    const userVote = await this.prisma.blogVote.findUnique({
+      where: {
+        userId_blogId: {
+          userId,
+          blogId,
+        },
+      },
+    });
+
+    if (userVote) {
+      // có rồi thì thì update
+      // nếu mà trùng với type thì xóa còn khác type thì update
+      if (type === userVote.type) {
+        await this.prisma.blogVote.delete({
+          where: {
+            userId_blogId: {
+              userId,
+              blogId,
+            },
+          },
+        });
+      } else {
+        await this.prisma.blogVote.update({
+          where: {
+            userId_blogId: {
+              userId,
+              blogId,
+            },
+          },
+          data: {
+            type,
+          },
+        });
+      }
+    } else {
+      // chưa có thì tạo
+      await this.prisma.blogVote.create({
+        data: {
+          userId,
+          blogId,
+          type,
+        },
+      });
+    }
+
+    return { message: 'Vote thành công!' };
   }
 
   // ==================== COMMENTS ====================
 
   async createComment(blogId: string, userId: string, dto: CreateCommentDto) {
     const blog = await this.prisma.blog.findFirst({
-      where: { id: blogId, deletedAt: null },
-    });
-    if (!blog) throw new NotFoundException('Bài viết không tồn tại');
-
-    const comment = await this.prisma.comment.create({
-      data: { content: dto.content, blogId, authorId: userId },
-      include: {
-        author: {
-          select: { id: true, username: true, fullName: true, avatar: true },
-        },
+      where: {
+        id: blogId,
+        deletedAt: null,
       },
     });
 
-    return { message: 'Bình luận thành công', comment };
+    if (!blog) {
+      throw new NotFoundException('Bài viết không tồn tại');
+    }
+
+    await this.prisma.comment.create({
+      data: {
+        content: dto.content,
+        authorId: userId,
+        blogId,
+      },
+    });
+
+    return { message: 'Bình luận bài viết thành công!' };
   }
 
-  async updateComment(
-    commentId: string,
-    userId: string,
-    dto: UpdateCommentDto,
-  ) {
+  async editComment(commentId: string, userId: string, dto: UpdateCommentDto) {
     const comment = await this.prisma.comment.findFirst({
       where: { id: commentId, deletedAt: null },
     });
@@ -258,6 +339,90 @@ export class BlogService {
     return { message: 'Xóa bình luận thành công' };
   }
 
+  async replyComment(commentId: string, userId: string, dto: ReplyCommentDto) {
+    const comment = await this.prisma.comment.findFirst({
+      where: {
+        id: commentId,
+        deletedAt: null,
+        blog: {
+          deletedAt: null,
+        },
+      },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Bình luận này không tồn tại!');
+    }
+
+    await this.prisma.comment.create({
+      data: {
+        content: dto.reply,
+        blogId: comment.blogId,
+        authorId: userId,
+        parentCommentId: comment.id,
+      },
+    });
+
+    return { message: 'Phản hồi bình luận bài viết thành công!' };
+  }
+
+  async voteComment(commentId: string, userId: string, type: VoteType) {
+    const comment = await this.prisma.comment.findFirst({
+      where: {
+        id: commentId,
+        deletedAt: null,
+      },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Bình luận không tồn tại!');
+    }
+
+    const userVote = await this.prisma.commentVote.findUnique({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
+      },
+    });
+
+    if (userVote) {
+      if (type === userVote.type) {
+        await this.prisma.commentVote.delete({
+          where: {
+            userId_commentId: {
+              userId,
+              commentId,
+            },
+          },
+        });
+      } else {
+        await this.prisma.commentVote.update({
+          where: {
+            userId_commentId: {
+              userId,
+              commentId,
+            },
+          },
+          data: {
+            type,
+          },
+        });
+      }
+    } else {
+      await this.prisma.commentVote.create({
+        data: {
+          userId,
+          commentId,
+          type,
+        },
+      });
+    }
+
+    return { message: 'Vote bình luận thành công!' };
+  }
+
   // ==================== SEARCH ====================
 
   async searchBlogs(keyword: string, page = 1, limit = 10) {
@@ -281,15 +446,99 @@ export class BlogService {
           author: {
             select: { id: true, username: true, fullName: true, avatar: true },
           },
-          _count: { select: { comments: true, likes: true } },
+          _count: { select: { comments: true } },
+          votes: { select: { type: true } },
         },
       }),
       this.prisma.blog.count({ where }),
     ]);
 
+    const formattedBlogs = blogs.map((blog) => this.mapVoteScore(blog));
+
     return {
-      blogs,
+      blogs: formattedBlogs,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
+  }
+
+  // ==================== UTILS ====================
+
+  private mapVoteScore<
+    T extends { votes: { type: VoteType; userId?: string }[] },
+  >(blog: T, currentUserId?: string) {
+    let voteScore = 0;
+    let userVote: VoteType | null = null;
+
+    blog.votes.forEach((v) => {
+      if (v.type === VoteType.UPVOTE) voteScore++;
+      else if (v.type === VoteType.DOWNVOTE) voteScore--;
+
+      if (currentUserId && v.userId === currentUserId) {
+        userVote = v.type;
+      }
+    });
+
+    const { votes, ...rest } = blog;
+    return { ...rest, voteScore, userVote };
+  }
+
+  private mapCommentVotesInTree(
+    comments: any[],
+    currentUserId?: string,
+  ): any[] {
+    return comments.map((comment) => {
+      let voteScore = 0;
+      let userVote: VoteType | null = null;
+
+      comment.votes?.forEach((v: any) => {
+        if (v.type === VoteType.UPVOTE) voteScore++;
+        else if (v.type === VoteType.DOWNVOTE) voteScore--;
+
+        if (currentUserId && v.userId === currentUserId) {
+          userVote = v.type;
+        }
+      });
+
+      return {
+        ...comment,
+        voteScore,
+        userVote,
+        votes: undefined,
+        replies: this.mapCommentVotesInTree(
+          comment.replies || [],
+          currentUserId,
+        ),
+      };
+    });
+  }
+
+  private buildCommentTree(
+    comments: {
+      content: string | null;
+      author: {
+        id: string;
+        username: string;
+        fullName: string;
+        avatar: string | null;
+      };
+      id: string;
+      authorId: string;
+      createdAt: Date;
+      updatedAt: Date;
+      deletedAt: Date | null;
+      blogId: string;
+      parentCommentId: string | null;
+      votes?: { type: VoteType; userId: string }[];
+    }[],
+    parentId: string | null = null,
+  ) {
+    return comments
+      .filter((c) => c.parentCommentId === parentId)
+      .map((c) => {
+        return {
+          ...c,
+          replies: this.buildCommentTree(comments, c.id),
+        };
+      });
   }
 }

@@ -1,6 +1,5 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 
-import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { MessageEntity } from '../domain/message.entity';
 import { IMESSAGES_REPOSITORY, type MessagesRepositoryInterface, MessageWithDetails, ConversationListItem } from '../domain/interfaces/messages-repository.interface';
 import { MessageStatus, MessageType } from '@prisma/client';
@@ -21,7 +20,6 @@ export class MessagesService {
   constructor(
     @Inject(IMESSAGES_REPOSITORY)
     private readonly messageRepository: MessagesRepositoryInterface,
-    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async getConversations(userId: string): Promise<{ users: ConversationListItem[] }> {
@@ -78,25 +76,5 @@ export class MessagesService {
 
   async markGroupAsSeen(groupId: string, userId: string) {
     return this.messageRepository.markGroupMessagesAsSeen(groupId, userId);
-  }
-
-  async uploadFile(file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('Vui lòng cung cấp file để upload');
-    }
-    const result = await this.cloudinaryService.uploadFile(file);
-
-    let type: AttachmentType = 'file';
-    if(file.mimetype.startsWith('image/')) type = 'image';
-    else if(file.mimetype.startsWith('video/')) type = 'video';
-    else if(file.mimetype.startsWith('audio/')) type = 'audio';
-    
-    return {
-      url: result.secure_url,
-      type,
-      name: file.originalname,
-      size: file.size,
-      mimeType: file.mimetype,
-    };
   }
 }

@@ -1,37 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Heart, MessageCircle, Trash2, Send } from "lucide-react";
+import { MessageCircle, Send, ArrowBigUp, ArrowBigDown } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import LinkExt from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
+import { CustomImage } from "../components/CustomImage";
 import {
   useBlogDetailQuery,
-  useToggleLikeMutation,
+  useVoteBlogMutation,
   useAddCommentMutation,
   useDeleteCommentMutation,
   useDeleteBlogMutation,
-  type BlogComment,
+  useEditCommentMutation,
+  useReplyCommentMutation,
+  useVoteCommentMutation,
 } from "@/features/blog/api/blogService";
 import { useAppSelector } from "@/shared/stores/redux/hooks";
 import ROUTES from "@/shared/lib/routes";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import { CommentItem } from "../components/CommentItem";
+import { VoteType } from "@/shared/enums/VoteType.enum";
 
 function ReadOnlyEditor({ content }: { content: string }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
-      Image,
+      CustomImage,
       LinkExt.configure({ openOnClick: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content,
     editable: false,
     immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        class:
+          "max-w-none py-1 " +
+          "[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:leading-tight [&_h1]:my-3 " +
+          "[&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-snug [&_h2]:my-3 " +
+          "[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 " +
+          "[&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 " +
+          "[&_li]:my-1",
+      },
+    },
   });
+
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    if (editor.getHTML() !== content) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   return (
     <EditorContent
@@ -41,73 +63,22 @@ function ReadOnlyEditor({ content }: { content: string }) {
   );
 }
 
-function CommentItem({
-  comment,
-  currentUserId,
-  onDelete,
-}: {
-  comment: BlogComment;
-  currentUserId?: string;
-  onDelete: (id: string) => void;
-}) {
-  const date = new Date(comment.createdAt).toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-  return (
-    <div className="flex gap-3">
-      <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted">
-        {comment.author.avatar ? (
-          <img
-            src={comment.author.avatar}
-            alt={comment.author.fullName}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs font-bold uppercase">
-            {comment.author.fullName[0]}
-          </div>
-        )}
-      </div>
-      <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <span className="text-sm font-semibold">
-              {comment.author.fullName}
-            </span>
-            <span className="ml-2 text-xs text-muted-foreground">{date}</span>
-          </div>
-          {currentUserId === comment.author.id && (
-            <button
-              onClick={() => onDelete(comment.id)}
-              className="text-muted-foreground transition-colors hover:text-destructive"
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
-        </div>
-        <p className="mt-1 text-sm">{comment.content}</p>
-      </div>
-    </div>
-  );
-}
-
 export default function BlogDetailPage() {
   const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState("");
 
   const currentUserId = useAppSelector((s) => s.auth.userId ?? undefined);
-  const isAuth = useAppSelector((s) => s.auth.isAuth);
 
   const { data, isLoading } = useBlogDetailQuery(id);
   const blog = data?.blog;
 
-  const toggleLike = useToggleLikeMutation(id);
+  const voteBlog = useVoteBlogMutation(id);
   const addComment = useAddCommentMutation(id);
   const deleteComment = useDeleteCommentMutation(id);
+  const editComment = useEditCommentMutation(id);
+  const replyComment = useReplyCommentMutation(id);
+  const voteComment = useVoteCommentMutation(id);
   const deleteBlog = useDeleteBlogMutation();
 
   const handleSubmitComment = () => {
@@ -145,25 +116,30 @@ export default function BlogDetailPage() {
     month: "long",
     day: "numeric",
   });
+
+  const isEdited =
+    blog.updatedAt &&
+    new Date(blog.updatedAt).getTime() - new Date(blog.createdAt).getTime() >
+      1000;
+  const editDate = blog.updatedAt
+    ? new Date(blog.updatedAt).toLocaleDateString("vi-VN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
   const isOwner = currentUserId === blog.author.id;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <Breadcrumb 
+      <Breadcrumb
         items={[
           { label: "Blog", href: ROUTES.BLOG.url },
-          { label: blog.title }
-        ]} 
+          { label: blog.title },
+        ]}
       />
-
-      {/* Cover */}
-      {blog.coverImage && (
-        <img
-          src={blog.coverImage}
-          alt={blog.title}
-          className="mb-8 h-64 w-full rounded-2xl object-cover sm:h-80"
-        />
-      )}
 
       {/* Title */}
       <h1 className="mb-4 text-3xl font-bold leading-snug">{blog.title}</h1>
@@ -171,7 +147,14 @@ export default function BlogDetailPage() {
       {/* Meta */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 overflow-hidden rounded-full bg-muted">
+          <Link
+            to={ROUTES.PROFILE.url.replace(
+              ":fullName",
+              blog.author.fullName,
+            )}
+            className="h-9 w-9 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
+            aria-label={`Xem trang cá nhân của ${blog.author.fullName}`}
+          >
             {blog.author.avatar ? (
               <img
                 src={blog.author.avatar}
@@ -183,17 +166,27 @@ export default function BlogDetailPage() {
                 {blog.author.fullName[0]}
               </div>
             )}
-          </div>
+          </Link>
           <div>
             <p className="text-sm font-medium">{blog.author.fullName}</p>
-            <p className="text-xs text-muted-foreground">{date}</p>
+            <p className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              <span>{date}</span>
+              {isEdited && (
+                <span
+                  className="italic"
+                  title={`Chỉnh sửa lần cuối: ${editDate}`}
+                >
+                  (Đã chỉnh sửa {editDate})
+                </span>
+              )}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {isOwner && (
             <>
               <Link
-                to={`${ROUTES.BLOG_CREATE.url}?edit=${id}`}
+                to={ROUTES.BLOG_EDIT.url.replace(":id", id)}
                 className="rounded-lg border px-3 py-1.5 text-xs hover:bg-muted"
               >
                 Chỉnh sửa
@@ -206,21 +199,44 @@ export default function BlogDetailPage() {
               </button>
             </>
           )}
-          <button
-            onClick={() => isAuth && toggleLike.mutate()}
-            disabled={!isAuth}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors ${
-              blog.isLiked
-                ? "border-pink-300 bg-pink-50 text-pink-600 dark:bg-pink-950"
-                : "hover:bg-muted"
-            }`}
-          >
-            <Heart size={14} className={blog.isLiked ? "fill-current" : ""} />
-            {blog._count?.likes ?? 0}
-          </button>
+          <div className="flex items-center rounded-lg border bg-background">
+            <button
+              onClick={() => voteBlog.mutate(VoteType.UPVOTE)}
+              className={`flex items-center p-1.5 transition-colors rounded-l-lg ${
+                blog.userVote === VoteType.UPVOTE
+                  ? "bg-green-50 text-green-600 dark:bg-green-950"
+                  : "hover:bg-muted text-muted-foreground"
+              }`}
+            >
+              <ArrowBigUp
+                size={18}
+                className={
+                  blog.userVote === VoteType.UPVOTE ? "fill-current" : ""
+                }
+              />
+            </button>
+            <span className="min-w-6 text-center text-xs font-semibold">
+              {blog.voteScore ?? 0}
+            </span>
+            <button
+              onClick={() => voteBlog.mutate(VoteType.DOWNVOTE)}
+              className={`flex items-center p-1.5 transition-colors rounded-r-lg ${
+                blog.userVote === VoteType.DOWNVOTE
+                  ? "bg-red-50 text-red-600 dark:bg-red-950"
+                  : "hover:bg-muted text-muted-foreground"
+              }`}
+            >
+              <ArrowBigDown
+                size={18}
+                className={
+                  blog.userVote === VoteType.DOWNVOTE ? "fill-current" : ""
+                }
+              />
+            </button>
+          </div>
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <MessageCircle size={14} />
-            {blog.comments?.length ?? blog._count?.comments ?? 0}
+            {blog._count?.comments ?? 0}
           </span>
         </div>
       </div>
@@ -233,41 +249,49 @@ export default function BlogDetailPage() {
       {/* Comments */}
       <div className="border-t pt-8">
         <h2 className="mb-5 text-lg font-semibold">
-          Bình luận ({blog.comments?.length ?? 0})
+          Bình luận ({blog._count?.comments ?? 0})
         </h2>
 
-        {isAuth && (
-          <div className="mb-6 flex gap-3">
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmitComment();
-                }
-              }}
-              placeholder="Viết bình luận..."
-              rows={2}
-              className="flex-1 resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <button
-              onClick={handleSubmitComment}
-              disabled={!commentText.trim() || addComment.isPending}
-              className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl bg-primary text-primary-foreground disabled:opacity-50"
-            >
-              <Send size={16} />
-            </button>
-          </div>
-        )}
+        <div className="mb-6 flex gap-3">
+          <textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmitComment();
+              }
+            }}
+            placeholder="Viết bình luận..."
+            rows={2}
+            className="flex-1 resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          <button
+            onClick={handleSubmitComment}
+            disabled={!commentText.trim() || addComment.isPending}
+            className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl bg-primary text-primary-foreground disabled:opacity-50"
+          >
+            <Send size={16} />
+          </button>
+        </div>
 
         <div className="space-y-4">
-          {blog.comments?.map((c) => (
+          {blog.comments?.map((c: any) => (
             <CommentItem
               key={c.id}
               comment={c}
               currentUserId={currentUserId}
               onDelete={(cid) => deleteComment.mutate(cid)}
+              onEdit={(commentId: string, content: string | undefined) => {
+                void editComment.mutateAsync({ commentId, content });
+              }}
+              onReply={(commentId: string, reply: string | undefined) => {
+                void replyComment.mutateAsync({ commentId, reply });
+              }}
+              onVote={(commentId: string, type: VoteType) => {
+                voteComment.mutate({ commentId, type });
+              }}
+              level={0}
             />
           ))}
           {!blog.comments?.length && (

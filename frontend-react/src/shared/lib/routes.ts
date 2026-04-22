@@ -15,6 +15,10 @@ const ROUTES = {
     title: "Viết bài mới",
     url: "/blogs/create",
   },
+  BLOG_EDIT: {
+    title: "Chỉnh sửa bài viết",
+    url: "/blogs/:id/edit",
+  },
   GRAMMAR: {
     title: "Ngữ pháp",
     url: "/grammar",

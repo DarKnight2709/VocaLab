@@ -34,6 +34,7 @@ const router = createBrowserRouter([
           { path: ROUTES.BLOG.url, element: <BlogPage /> },
           { path: ROUTES.BLOG_DETAIL.url, element: <BlogDetailPage /> },
           { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
+          { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
           { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
           { path: ROUTES.VOCABULARY.url, element: <VocabularyPage /> },
           {

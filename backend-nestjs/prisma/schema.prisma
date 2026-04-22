@@ -46,6 +46,11 @@ enum CardSide {
   BACK
 }
 
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
+
 model User {
   id             String   @id @default(uuid())
   username       String   @unique
@@ -65,7 +70,8 @@ model User {
   refreshTokens     RefreshToken[]
   blogs             Blog[]             @relation("BlogAuthor")
   comments          Comment[]          @relation("CommentAuthor")
-  blogLikes         BlogLike[]         @relation("UserBlogLikes")
+  blogVotes         BlogVote[]         @relation("UserBlogVotes")
+  commentVotes      CommentVote[]      @relation("UserCommentVotes")
   grammarStructures GrammarStructure[] @relation("GrammarAuthor")
   cardCollections   CardCollection[]
   cardTypes         CardType[]
@@ -216,7 +222,7 @@ model Blog {
 
   author   User       @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   comments Comment[]
-  likes    BlogLike[]
+  votes    BlogVote[]
 
   @@index([authorId])
   @@index([isPublic, createdAt])
@@ -228,31 +234,51 @@ model Comment {
   content   String
   blogId    String
   authorId  String
+  parentCommentId   String?    
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  
   blog   Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
   author User @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
+  parentComment Comment? @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  votes     CommentVote[]
 
   @@index([blogId])
   @@index([authorId])
+  @@index([parentCommentId])
   @@map("comments")
 }
 
-model BlogLike {
+model BlogVote {
   userId    String
   blogId    String
+  type      VoteType
   createdAt DateTime @default(now())
 
-  user User @relation("UserBlogLikes", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserBlogVotes", fields: [userId], references: [id], onDelete: Cascade)
   blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
 
   @@id([userId, blogId])
-  @@map("blog_likes")
+  @@map("blog_votes")
 }
 
-// ==================== GRAMMAR ====================
+model CommentVote {
+  userId    String
+  commentId String
+  type      VoteType
+  createdAt DateTime @default(now())
+
+  user    User    @relation("UserCommentVotes", fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+  @@map("comment_votes")
+}
+
+// ==================== GRAMMAR ======================
 
 model GrammarStructure {
   id          String   @id @default(uuid())

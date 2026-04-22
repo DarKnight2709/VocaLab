@@ -1,5 +1,5 @@
 
-import { useMutation, useQuery} from "@tanstack/react-query";
+import { useQuery} from "@tanstack/react-query";
 import { api, fetchWithSchema } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 
@@ -72,20 +72,3 @@ export function useMessagesQuery(friendId: string) {
   });
 }
 
-export const useUploadFiles = () => {
-  return useMutation({
-    mutationFn: async (files: File[]) => {
-      const uploaded = await Promise.all(
-        files.map(async (file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const res = await api.post(API_ROUTES.MESSAGE.UPLOAD_FILES, formData);
-          return res.data;
-        })
-      );
-
-      return uploaded;
-    },
-  });
-};

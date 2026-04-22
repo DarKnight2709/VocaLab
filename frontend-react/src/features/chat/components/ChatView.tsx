@@ -15,7 +15,7 @@ import { useGroupsQuery, groupKeys } from "@/features/chat/api/groupService";
 import { useGroupMessagesQuery } from "@/features/chat/api/groupService";
 import { useUsersQuery, chatKeys } from "@/features/chat/api/chatService";
 import { useMessagesQuery } from "@/features/chat/api/chatService";
-import { useUploadFiles } from "@/features/chat/api/chatService";
+import { useUploadFilesMutation } from "@/shared/hooks/useUpload";
 
 import type { ChatViewProps } from "../types";
 import type {
@@ -47,7 +47,7 @@ export default function ChatView({
   const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const uploadFilesMutation = useUploadFiles();
+  const uploadFilesMutation = useUploadFilesMutation();
 
   // tránh spam event typing-start
   // auto stop sau 1s

@@ -5,8 +5,10 @@ import {
   IsNotEmpty,
   MinLength,
   MaxLength,
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { VoteType } from '@prisma/client';
 
 export class CreateBlogDto {
   @ApiProperty({ example: 'Cách dùng Present Perfect' })
@@ -82,4 +84,20 @@ export class UpdateCommentDto {
   @MinLength(1)
   @MaxLength(2000)
   content!: string;
+}
+
+export class ReplyCommentDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(1)
+  @MaxLength(2000)
+  reply!: string;
+}
+
+
+export class VoteBlogDto {
+  @ApiProperty({ enum: VoteType, example: 'UPVOTE' })
+  @IsEnum(VoteType)
+  type!: VoteType;
 }

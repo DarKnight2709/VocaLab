@@ -17,6 +17,7 @@ import { VocabularyModule } from './modules/vocabulary/vocabulary.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtGuard } from './common/guards/jwt-auth.guard';
+import { UploadModule } from './modules/upload/upload.module';
 import helmet from 'helmet';
 
 @Module({
@@ -30,6 +31,7 @@ import helmet from 'helmet';
     BlogModule,
     GrammarModule,
     VocabularyModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [

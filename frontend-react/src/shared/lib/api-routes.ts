@@ -32,12 +32,13 @@ const API_ROUTES = {
     GET_MESSAGES: (groupId: string) => `v1/groups/${groupId}/messages`,
     LEAVE: (groupId: string) => `v1/groups/leave/${groupId}`,
     GET_AVAILABLE_PERMISSIONS: "v1/groups/permissions/all",
-    UPLOAD_AVATAR: "v1/messages/upload",
   },
   MESSAGE: {
     GET_USERS: "v1/messages/users",
     GET_MESSAGES: (friendId: string) => `v1/messages/${friendId}`,
-    UPLOAD_FILES: "v1/messages/upload",
+  },
+  UPLOAD: {
+    FILE: "v1/upload",
   },
   BLOG: {
     LIST: "v1/blogs",
@@ -46,10 +47,14 @@ const API_ROUTES = {
     CREATE: "v1/blogs",
     UPDATE: (id: string) => `v1/blogs/${id}`,
     DELETE: (id: string) => `v1/blogs/${id}`,
-    TOGGLE_LIKE: (id: string) => `v1/blogs/${id}/like`,
+    VOTE: (id: string) => `v1/blogs/${id}/vote`,
     ADD_COMMENT: (id: string) => `v1/blogs/${id}/comments`,
     UPDATE_COMMENT: (commentId: string) => `v1/blogs/comments/${commentId}`,
     DELETE_COMMENT: (commentId: string) => `v1/blogs/comments/${commentId}`,
+    EDIT_COMMENT: (commentId: string) => `v1/blogs/comments/${commentId}`,
+    REPLY_COMMENT: (commentId: string) =>
+      `v1/blogs/comments/${commentId}/reply`,
+    VOTE_COMMENT: (commentId: string) => `v1/blogs/comments/${commentId}/vote`
   },
   GRAMMAR: {
     LIST: "v1/grammar",

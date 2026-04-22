@@ -1,182 +1,33 @@
-import { useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
-import Image from "@tiptap/extension-image";
 import LinkExt from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import {
-  Bold,
-  Italic,
-  UnderlineIcon,
-  Strikethrough,
-  Heading1,
-  Heading2,
-  List,
-  ListOrdered,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Link as LinkIcon,
-  Image as ImageIcon,
   Globe,
   Lock,
+  UploadCloud,
 } from "lucide-react";
-import { useCreateBlogMutation } from "@/features/blog/api/blogService";
+import { 
+  useCreateBlogMutation,
+  useUpdateBlogMutation,
+  useBlogDetailQuery
+} from "@/features/blog/api/blogService";
+import { useUploadImageMutation } from "@/shared/hooks/useUpload";
 import ROUTES from "@/shared/lib/routes";
 import Breadcrumb from "@/shared/components/Breadcrumb";
-
-// ──────────────────────────────────────────────
-// Toolbar button helper
-// ──────────────────────────────────────────────
-function ToolbarBtn({
-  onClick,
-  active,
-  title,
-  children,
-}: {
-  onClick: () => void;
-  active?: boolean;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
-      title={title}
-      className={`rounded p-1.5 transition-colors hover:bg-muted ${active ? "bg-muted text-primary" : "text-muted-foreground"}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-// ──────────────────────────────────────────────
-// Editor toolbar
-// ──────────────────────────────────────────────
-function EditorToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
-  if (!editor) return null;
-
-  const addLink = () => {
-    const url = prompt("Nhập URL:");
-    if (url) editor.chain().focus().setLink({ href: url }).run();
-  };
-
-  const addImage = () => {
-    const url = prompt("Nhập URL ảnh:");
-    if (url) editor.chain().focus().setImage({ src: url }).run();
-  };
-
-  return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-t-xl border border-b-0 bg-muted/30 px-2 py-1.5">
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        active={editor.isActive("bold")}
-        title="In đậm"
-      >
-        <Bold size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        active={editor.isActive("italic")}
-        title="In nghiêng"
-      >
-        <Italic size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        active={editor.isActive("underline")}
-        title="Gạch chân"
-      >
-        <UnderlineIcon size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        active={editor.isActive("strike")}
-        title="Gạch ngang"
-      >
-        <Strikethrough size={15} />
-      </ToolbarBtn>
-      <div className="mx-1 h-5 w-px bg-border" />
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        active={editor.isActive("heading", { level: 1 })}
-        title="Tiêu đề 1"
-      >
-        <Heading1 size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        active={editor.isActive("heading", { level: 2 })}
-        title="Tiêu đề 2"
-      >
-        <Heading2 size={15} />
-      </ToolbarBtn>
-      <div className="mx-1 h-5 w-px bg-border" />
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        active={editor.isActive("bulletList")}
-        title="Danh sách"
-      >
-        <List size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        active={editor.isActive("orderedList")}
-        title="Danh sách đánh số"
-      >
-        <ListOrdered size={15} />
-      </ToolbarBtn>
-      <div className="mx-1 h-5 w-px bg-border" />
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        active={editor.isActive({ textAlign: "left" })}
-        title="Căn trái"
-      >
-        <AlignLeft size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        active={editor.isActive({ textAlign: "center" })}
-        title="Căn giữa"
-      >
-        <AlignCenter size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn
-        onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        active={editor.isActive({ textAlign: "right" })}
-        title="Căn phải"
-      >
-        <AlignRight size={15} />
-      </ToolbarBtn>
-      <div className="mx-1 h-5 w-px bg-border" />
-      <ToolbarBtn
-        onClick={addLink}
-        active={editor.isActive("link")}
-        title="Chèn liên kết"
-      >
-        <LinkIcon size={15} />
-      </ToolbarBtn>
-      <ToolbarBtn onClick={addImage} title="Chèn ảnh">
-        <ImageIcon size={15} />
-      </ToolbarBtn>
-    </div>
-  );
-}
+import { EditorToolbar } from "@/features/blog/components/EditorToolbar";
+import { CustomImage } from "../components/CustomImage";
 
 // ──────────────────────────────────────────────
 // Main page
 // ──────────────────────────────────────────────
 export default function BlogCreatePage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const editId = searchParams.get("edit");
+  const { id: editId } = useParams<{ id: string }>();
 
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -184,12 +35,19 @@ export default function BlogCreatePage() {
   const [isPublic, setIsPublic] = useState(true);
 
   const createBlog = useCreateBlogMutation();
+  const updateBlog = useUpdateBlogMutation();
+  const uploadImage = useUploadImageMutation();
+  const { data: detailData, isLoading } = useBlogDetailQuery(editId || "");
+  const existingBlog = detailData?.blog;
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
-      Image,
+StarterKit.configure({
+  heading: {
+    levels: [1, 2],
+  },
+}),      Underline,
+      CustomImage,
       LinkExt.configure({ openOnClick: false }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({
@@ -199,10 +57,48 @@ export default function BlogCreatePage() {
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm dark:prose-invert max-w-none min-h-[300px] outline-none py-4 px-4",
+          "prose prose-sm dark:prose-invert max-w-none min-h-[300px] outline-none py-4 px-4 " +
+          "[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:leading-tight [&_h1]:my-3 " +
+          "[&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-snug [&_h2]:my-3 " +
+          "[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 " +
+          "[&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 " +
+          "[&_li]:my-1",
       },
     },
   });
+
+  useEffect(() => {
+    if (existingBlog && editor && !editor.isDestroyed && !title) {
+      setTitle(existingBlog.title || "");
+      setExcerpt(existingBlog.excerpt || "");
+      setCoverImage(existingBlog.coverImage || "");
+      setIsPublic(existingBlog.isPublic ?? true);
+      
+      queueMicrotask(() => {
+        editor.commands.setContent(existingBlog.content);
+      });
+    }
+  }, [existingBlog, editor]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    uploadImage.mutate(file, {
+      onSuccess: (data) => {
+        if (data && data.url) {
+          setCoverImage(data.url);
+        }
+      },
+    });
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -211,21 +107,34 @@ export default function BlogCreatePage() {
       const content = editor.getHTML();
       if (!title.trim() || !content || content === "<p></p>") return;
 
-      createBlog.mutate(
-        {
-          title: title.trim(),
-          content,
-          excerpt: excerpt.trim() || undefined,
-          coverImage: coverImage.trim() || undefined,
-          isPublic,
-        },
-        {
+      const payload = {
+        title: title.trim(),
+        content,
+        excerpt: excerpt.trim() || undefined,
+        coverImage: coverImage.trim() || undefined,
+        isPublic,
+      };
+
+      if (editId) {
+        updateBlog.mutate({ id: editId, data: payload }, {
+          onSuccess: () => navigate(ROUTES.BLOG_DETAIL.url.replace(":id", editId)),
+        });
+      } else {
+        createBlog.mutate(payload, {
           onSuccess: () => navigate(ROUTES.BLOG.url),
-        },
-      );
+        });
+      }
     },
-    [editor, title, excerpt, coverImage, isPublic, createBlog, navigate],
+    [editor, title, excerpt, coverImage, isPublic, createBlog, updateBlog, navigate, editId],
   );
+
+  if (editId && isLoading) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-8">
+        <div className="text-center text-muted-foreground">Đang tải dữ liệu bài viết...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
@@ -270,23 +179,46 @@ export default function BlogCreatePage() {
 
         {/* Cover image */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium">
-            URL ảnh bìa
-          </label>
-          <input
-            type="url"
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            placeholder="https://example.com/image.jpg (tùy chọn)"
-            className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
-          {coverImage && (
-            <img
-              src={coverImage}
-              alt="cover preview"
-              className="mt-2 h-36 w-full rounded-xl object-cover"
-            />
-          )}
+          <label className="mb-1.5 block text-sm font-medium">Ảnh bìa</label>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={coverImage}
+                onChange={(e) => setCoverImage(e.target.value)}
+                placeholder="https://example.com/image.jpg hoặc tải ảnh lên"
+                className="flex-1 rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadImage.isPending}
+                className="flex items-center gap-2 rounded-xl border bg-muted/50 px-4 py-2.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+              >
+                <UploadCloud size={16} />
+                <span className="hidden sm:inline">Tải ảnh lên</span>
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
+            {uploadImage.isPending && (
+              <p className="text-xs text-muted-foreground animate-pulse">Đang tải ảnh lên...</p>
+            )}
+            {coverImage && (
+              <div className="mt-2 flex justify-center rounded-xl border bg-muted/30 p-2">
+                <img
+                  src={coverImage}
+                  alt="cover preview"
+                  className="max-h-40 w-auto rounded-lg object-contain"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Visibility */}
@@ -342,10 +274,10 @@ export default function BlogCreatePage() {
           </button>
           <button
             type="submit"
-            disabled={createBlog.isPending || !title.trim()}
+            disabled={createBlog.isPending || updateBlog.isPending || !title.trim()}
             className="rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {createBlog.isPending ? "Đang đăng..." : "Đăng bài"}
+            {createBlog.isPending || updateBlog.isPending ? "Đang lưu..." : (editId ? "Lưu thay đổi" : "Đăng bài")}
           </button>
         </div>
       </form>

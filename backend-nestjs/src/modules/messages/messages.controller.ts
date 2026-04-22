@@ -33,22 +33,4 @@ export class MessagesController {
     return this.messagesService.getMessages(user.id, friendId);
   }
 
-  @Post('upload')
-  @ApiOperation({ summary: 'Upload file đính kèm' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.messagesService.uploadFile(file);
-  }
 }

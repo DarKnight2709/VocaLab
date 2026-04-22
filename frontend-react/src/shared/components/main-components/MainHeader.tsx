@@ -79,7 +79,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               <Menu className="h-5 w-5" />
             </button>
             <Link
-              to={ROUTES.BLOG.url}
+              to={ROUTES.HOME.url}
               aria-label="Mở blog"
               className="inline-flex items-center rounded-xl p-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
@@ -92,7 +92,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
             <Input
               value={headerSearch}
               onChange={(e) => onHeaderSearchChange(e.target.value)}
-              placeholder="Tìm kiếm trên Blog..."
+              placeholder="Tìm kiếm trên..."
               className="h-10 pl-9 bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
             />
           </div>

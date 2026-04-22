@@ -8,59 +8,8 @@ import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
 import { z } from "zod";
-
-// ──────────────────────────────────────────────
-// Schemas
-// ──────────────────────────────────────────────
-
-const AuthorSchema = z.object({
-  id: z.string(),
-  username: z.string(),
-  fullName: z.string(),
-  avatar: z.string().nullable().optional(),
-});
-
-export const BlogItemSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  content: z.string(),
-  excerpt: z.string().nullable().optional(),
-  coverImage: z.string().nullable().optional(),
-  isPublic: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  author: AuthorSchema,
-  _count: z.object({ comments: z.number(), likes: z.number() }).optional(),
-  isLiked: z.boolean().optional(),
-});
-
-const CommentSchema = z.object({
-  id: z.string(),
-  content: z.string(),
-  createdAt: z.string(),
-  author: AuthorSchema,
-});
-
-export const BlogDetailSchema = BlogItemSchema.extend({
-  comments: z.array(CommentSchema).optional(),
-});
-
-const MetaSchema = z.object({
-  page: z.number(),
-  limit: z.number(),
-  total: z.number(),
-  totalPages: z.number(),
-});
-
-const BlogListResponseSchema = z.object({
-  blogs: z.array(BlogItemSchema),
-  meta: MetaSchema,
-});
-
-export type BlogItem = z.infer<typeof BlogItemSchema>;
-export type BlogDetail = z.infer<typeof BlogDetailSchema>;
-export type BlogComment = z.infer<typeof CommentSchema>;
-export type BlogListResponse = z.infer<typeof BlogListResponseSchema>;
+import { BlogDetailSchema, BlogListResponseSchema } from "@/shared/validations/BlogSchema";
+import type { VoteType } from "@/shared/enums/VoteType.enum";
 
 // ──────────────────────────────────────────────
 // Query keys
@@ -178,10 +127,11 @@ export const useDeleteBlogMutation = () => {
   });
 };
 
-export const useToggleLikeMutation = (blogId: string) => {
+export const useVoteBlogMutation = (blogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post(API_ROUTES.BLOG.TOGGLE_LIKE(blogId)),
+    mutationFn: (type: VoteType) =>
+      api.post(API_ROUTES.BLOG.VOTE(blogId), { type }),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: blogKeys.detail(blogId) }),
     onError: (err) => toast.error(getErrorMessage(err, "Thao tác thất bại")),
@@ -211,3 +161,59 @@ export const useDeleteCommentMutation = (blogId: string) => {
       toast.error(getErrorMessage(err, "Xóa bình luận thất bại")),
   });
 };
+
+export const useEditCommentMutation = (blogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      content,
+    }: {
+      commentId: string;
+      content: string | undefined;
+    }) => api.patch(API_ROUTES.BLOG.EDIT_COMMENT(commentId), {content}),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: blogKeys.detail(blogId),
+      }),
+    onError: (err) =>
+      toast.error(getErrorMessage(err, "Cập nhật bình luận thất bại")),
+  });
+};
+export const useReplyCommentMutation = (blogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      reply,
+    }: {
+      commentId: string;
+      reply: string | undefined;
+    }) => api.post(API_ROUTES.BLOG.REPLY_COMMENT(commentId), {reply}),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: blogKeys.detail(blogId),
+      }),
+    onError: (err) =>
+      toast.error(getErrorMessage(err, "Phản hồi bình luận thất bại")),
+  });
+};
+
+export const useVoteCommentMutation = (blogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      type,
+    }: {
+      commentId: string;
+      type: VoteType;
+    }) => api.post(API_ROUTES.BLOG.VOTE_COMMENT(commentId), { type }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: blogKeys.detail(blogId) }),
+    onError: (err) => toast.error(getErrorMessage(err, "Thao tác thất bại")),
+  });
+};
+
+
+

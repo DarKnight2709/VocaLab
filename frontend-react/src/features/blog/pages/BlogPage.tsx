@@ -1,19 +1,27 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   PenSquare,
-  Heart,
+  ArrowBigUp,
   MessageCircle,
   Search,
   ChevronLeft,
   ChevronRight,
+  ArrowBigDown,
 } from "lucide-react";
-import { useBlogsQuery, type BlogItem } from "@/features/blog/api/blogService";
+import { useBlogsQuery } from "@/features/blog/api/blogService";
 import { useAppSelector } from "@/shared/stores/redux/hooks";
 import ROUTES from "@/shared/lib/routes";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import type { BlogItem } from "@/shared/validations/BlogSchema";
 
 function BlogCard({ blog }: { blog: BlogItem }) {
+  const navigate = useNavigate();
+  const profileUrl = ROUTES.PROFILE.url.replace(
+    ":fullName",
+    blog.author.fullName,
+  );
+  const detailUrl = ROUTES.BLOG_DETAIL.url.replace(":id", blog.id);
   const date = new Date(blog.createdAt).toLocaleDateString("vi-VN", {
     year: "numeric",
     month: "short",
@@ -21,16 +29,26 @@ function BlogCard({ blog }: { blog: BlogItem }) {
   });
 
   return (
-    <Link
-      to={ROUTES.BLOG_DETAIL.url.replace(":id", blog.id)}
-      className="group block rounded-2xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate(detailUrl)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigate(detailUrl);
+        }
+      }}
+      className="group block cursor-pointer rounded-2xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
     >
       {blog.coverImage && (
-        <img
-          src={blog.coverImage}
-          alt={blog.title}
-          className="mb-4 h-48 w-full rounded-xl object-cover"
-        />
+        <div className="mb-4 flex h-48 items-center justify-center rounded-xl bg-muted/30 p-2">
+          <img
+            src={blog.coverImage}
+            alt={blog.title}
+            className="h-full w-auto max-w-full rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"
+          />
+        </div>
       )}
       <h2 className="line-clamp-2 text-lg font-semibold group-hover:text-primary">
         {blog.title}
@@ -42,7 +60,12 @@ function BlogCard({ blog }: { blog: BlogItem }) {
       )}
       <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 overflow-hidden rounded-full bg-muted">
+          <Link
+            to={profileUrl}
+            onClick={(e) => e.stopPropagation()}
+            className="h-6 w-6 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
+            aria-label={`Xem trang cá nhân của ${blog.author.fullName}`}
+          >
             {blog.author.avatar ? (
               <img
                 src={blog.author.avatar}
@@ -54,23 +77,41 @@ function BlogCard({ blog }: { blog: BlogItem }) {
                 {blog.author.fullName[0]}
               </div>
             )}
-          </div>
+          </Link>
           <span>{blog.author.fullName}</span>
           <span>·</span>
           <span>{date}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <Heart size={13} />
-            {blog._count?.likes ?? 0}
+          <span className="flex items-center gap-1 font-medium text-[13px]">
+            <ArrowBigUp
+              className={
+                blog.userVote === "UPVOTE"
+                  ? "fill-current bg-green-50 text-green-600 dark:bg-green-950"
+                  : ""
+              }
+              size={15}
+            />
+            {blog.voteScore ?? 0}
           </span>
           <span className="flex items-center gap-1">
             <MessageCircle size={13} />
             {blog._count?.comments ?? 0}
           </span>
+          <span className="flex items-center gap-1 font-medium text-[13px]">
+            <ArrowBigDown
+              className={
+                blog.userVote === "DOWNVOTE"
+                  ? "fill-current bg-red-50 text-red-600 dark:bg-red-950"
+                  : ""
+              }
+              size={15}
+            />
+            {blog.voteScore ?? 0}
+          </span>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
