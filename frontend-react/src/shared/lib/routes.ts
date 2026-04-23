@@ -51,6 +51,10 @@ const ROUTES = {
     title: "Tìm kiếm",
     url: "/search",
   },
+  ME_SETTING: {
+    title: "Cài đặt",
+    url: "/me/setting",
+  },
   LOGIN: {
     title: "Đăng nhập",
     url: "/login",

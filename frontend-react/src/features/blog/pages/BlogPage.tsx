@@ -133,36 +133,42 @@ export default function BlogPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8">
-      <Breadcrumb items={[{ label: "Blog" }]} />
-      {/* Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold">Blog</h1>
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 sm:w-64">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Tìm kiếm bài viết..."
-              className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
+    <div className="h-full overflow-y-auto p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <Breadcrumb items={[{ label: "Blog" }]} />
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Blog</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Chia sẻ kinh nghiệm và học từ cộng đồng
+            </p>
           </div>
-          {isAuth && (
-            <Link
-              to={ROUTES.BLOG_CREATE.url}
-              className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <PenSquare size={15} />
-              Viết bài
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 sm:w-64">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Tìm kiếm bài viết..."
+                className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+            {isAuth && (
+              <Link
+                to={ROUTES.BLOG_CREATE.url}
+                className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                <PenSquare size={15} />
+                Viết bài
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
 
       {/* Grid */}
       {isLoading ? (
@@ -187,7 +193,7 @@ export default function BlogPage() {
 
       {/* Pagination */}
       {data && data.meta.totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
@@ -209,6 +215,7 @@ export default function BlogPage() {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

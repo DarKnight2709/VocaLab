@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { useAppSelector } from "@/shared/stores/redux/hooks";
 import {
   Search,
   Plus,
@@ -59,7 +58,6 @@ const emptyForm: CreateGrammarBody & { examples_text: string } = {
 };
 
 export default function GrammarPage() {
-  const userId = useAppSelector((s) => s.auth.userId);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");

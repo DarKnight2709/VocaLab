@@ -1,15 +1,10 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Search, Sun, Moon, Menu } from "lucide-react";
-import { getInitials } from "@/shared/lib/utils";
 import { useTheme } from "@/shared/components/ThemeProvider";
+import { toast } from "sonner";
 
-import { EditProfileDialog } from "@/features/auth/components/EditProfileDialog";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/ui/avatar";
+import { AccountMenu } from "@/features/auth/components/account-menu/AccountMenu";
 import { Input } from "@/shared/components/ui/input";
 import ROUTES from "@/shared/lib/routes";
 import type { MeResponse } from "@/shared/validations/AuthSchema";
@@ -24,7 +19,6 @@ interface MainHeaderProps {
 
 export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   const [headerSearch, setHeaderSearch] = useState("");
-  const [profileOpen, setProfileOpen] = useState(false);
 
   const logoutMutation = useLogoutMutation();
 
@@ -55,13 +49,18 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
     setHeaderSearch(value);
   }
 
-  function onProfileOpenChange(open: boolean) {
-    setProfileOpen(open);
+  function handleViewProfile() {
+    const targetName = encodeURIComponent(me?.fullName || me?.username || "user");
+    navigate(ROUTES.PROFILE.url.replace(":fullName", targetName));
   }
 
-  const displayName = useMemo(() => {
-    return me?.fullName || me?.username || "User";
-  }, [me]);
+  function handleOpenSettings() {
+    navigate(ROUTES.ME_SETTING.url);
+  }
+
+  function handleHelp() {
+    toast.info("Mục Help sẽ được cập nhật sớm");
+  }
 
   const { theme, setTheme } = useTheme();
 
@@ -111,29 +110,16 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={() => onProfileOpenChange(true)}
-              className="shrink-0 transition-transform active:scale-95"
-              aria-label="Mở thông tin cá nhân"
-            >
-              <Avatar className="h-11 w-11 border-2 border-border/50">
-                <AvatarImage src={me?.avatar || "image.png"} />
-                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                  {getInitials(displayName)}
-                </AvatarFallback>
-              </Avatar>
-            </button>
+            <AccountMenu
+              me={me}
+              onViewProfile={handleViewProfile}
+              onOpenSettings={handleOpenSettings}
+              onOpenHelp={handleHelp}
+              onSignOut={() => void handleLogout()}
+            />
           </div>
         </div>
       </header>
-
-      <EditProfileDialog
-        open={profileOpen}
-        onOpenChange={onProfileOpenChange}
-        me={me}
-        onLogout={handleLogout}
-      />
     </>
   );
 }

@@ -33,15 +33,14 @@ export function EditProfileDialog(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   me: MeResponse | undefined | null;
-  onLogout: () => void | Promise<void>;
+  onSuccess?: (values: UpdatePersonalInfoBodyType) => void;
 }) {
-  const { open, onOpenChange, me, onLogout } = props;
+  const { open, onOpenChange, me, onSuccess } = props;
 
   const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  const [loggingOut, setLoggingOut] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const updateProfileMutation = useUpdatePersonalInfoMutation();
@@ -78,6 +77,7 @@ export function EditProfileDialog(props: {
         body: values,
         file: selectedFile || undefined,
       });
+      onSuccess?.(values);
       onOpenChange(false);
     } catch (e: any) {
       // toast handled in hook
@@ -102,16 +102,6 @@ export function EditProfileDialog(props: {
 
   const formState = form.formState;
 
-  async function handleLogoutClick() {
-    if (!onLogout) return;
-    setLoggingOut(true);
-    try {
-      await onLogout();
-      onOpenChange(false);
-    } finally {
-      setLoggingOut(false);
-    }
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -194,16 +184,6 @@ export function EditProfileDialog(props: {
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="destructive"
-              className="mr-auto"
-              onClick={() => void handleLogoutClick()}
-              disabled={saving || loggingOut}
-            >
-              {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
-            </Button>
-
             <Button
               type="button"
               variant="outline"

@@ -13,6 +13,7 @@ import BlogPage from "./features/blog/pages/BlogPage";
 import BlogDetailPage from "./features/blog/pages/BlogDetailPage";
 import BlogCreatePage from "./features/blog/pages/BlogCreatePage";
 import ProfilePage from "./features/user/pages/ProfilePage";
+import SettingPage from "./features/user/pages/SettingPage";
 import GrammarPage from "./features/grammar/pages/GrammarPage";
 import VocabularyPage from "./features/vocabulary/pages/VocabularyPage";
 import VocabularyCollectionPage from "./features/vocabulary/pages/VocabularyCollectionPage";
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
           { path: ROUTES.CHAT.url, element: <ChatPage /> },
           { path: ROUTES.SEARCH.url, element: <SearchPage /> },
           { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
+          { path: ROUTES.ME_SETTING.url, element: <SettingPage /> },
         ],
       },
     ],

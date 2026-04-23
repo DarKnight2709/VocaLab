@@ -1,51 +1,98 @@
-import { useParams } from "react-router";
-import { Button } from "@/shared/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
-import { getInitials } from "../../chat/utils";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
+import { getInitials } from "@/shared/lib/utils";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import { useMeQuery } from "@/features/auth/api/authService";
+import { EditProfileDialog } from "@/features/auth/components/EditProfileDialog";
+import ROUTES from "@/shared/lib/routes";
+import ProfileActionButtons from "@/features/user/components/ProfileActionButtons";
+import ProfileStatsGrid from "@/features/user/components/ProfileStatsGrid";
+import ProfileContentSection from "@/features/user/components/ProfileContentSection";
 
 export default function ProfilePage() {
   const { fullName } = useParams<{ fullName: string }>();
+  const { data: me } = useMeQuery();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const navigate = useNavigate();
+  const displayName = useMemo(
+    () => me?.fullName || me?.username || fullName || "User",
+    [me, fullName],
+  );
+  const username = useMemo(
+    () =>
+      me?.username ||
+      (fullName ? fullName.toLowerCase().replace(/\s+/g, "_") : "user"),
+    [me, fullName],
+  );
+  const isOwnProfile = useMemo(() => {
+    const current = fullName || "";
+    return current === me?.fullName || current === me?.username;
+  }, [fullName, me]);
+  const stats = useMemo(
+    () => [
+      { label: "Followers", value: 0 },
+      { label: "Following", value: 0 },
+      { label: "Friends", value: 0 },
+      { label: "Posts", value: 0 },
+    ],
+    [],
+  );
 
   return (
-    <div className="flex flex-col h-full bg-background p-6">
-      <div className="max-w-2xl mx-auto w-full">
+    <div className="h-full overflow-y-auto p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <Breadcrumb items={[{ label: "Trang cá nhân" }]} />
-      </div>
-      <div className="flex items-center gap-4 mb-8 max-w-2xl mx-auto w-full text-left">
-        <h1 className="text-2xl font-bold">Trang cá nhân</h1>
-      </div>
 
-      <div className="flex flex-col items-center gap-4 py-12 bg-card border rounded-2xl shadow-sm max-w-2xl mx-auto w-full">
-        <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-          <AvatarImage src="" /> {/* In a real app, you'd fetch user data by slug/fullName */}
-          <AvatarFallback className="text-3xl">
-            {getInitials(fullName || "User")}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="text-center">
-          <h2 className="text-3xl font-bold">{fullName}</h2>
-          <p className="text-muted-foreground mt-1">@ {fullName?.toLowerCase().replace(/\s+/g, '_')}</p>
-        </div>
+        {/* Profile Header */}
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+          <Avatar className="h-36 w-36 min-h-36 min-w-36 flex-none border-4 border-background shadow-lg lg:h-48 lg:w-48 lg:min-h-48 lg:min-w-48">
+            <AvatarImage src={me?.avatar || undefined} />
+            <AvatarFallback className="text-3xl">
+              {getInitials(displayName)}
+            </AvatarFallback>
+          </Avatar>
 
-        <div className="grid grid-cols-2 gap-4 w-full px-8 mt-8">
-          <div className="p-4 bg-muted/30 rounded-xl text-center">
-            <div className="text-2xl font-bold">0</div>
-            <div className="text-sm text-muted-foreground">Bạn bè</div>
+          <div className="min-w-0 flex-1 lg:max-w-4xl">
+            <div>
+              <h1 className="text-3xl font-bold">{displayName}</h1>
+              <p className="mt-1 text-muted-foreground">@{username}</p>
+            </div>
+
+            <div className="mt-4">
+              <ProfileStatsGrid stats={stats} />
+            </div>
+
+            <div className="mt-5">
+              <ProfileActionButtons
+                isOwnProfile={isOwnProfile}
+                onEditProfile={() => setProfileOpen(true)}
+              />
+            </div>
           </div>
-          <div className="p-4 bg-muted/30 rounded-xl text-center">
-            <div className="text-2xl font-bold">0</div>
-            <div className="text-sm text-muted-foreground">Bài viết</div>
-          </div>
         </div>
 
-        <div className="w-full px-8 mt-6">
-            <Button className="w-full py-6 text-lg rounded-xl">
-                Nhắn tin
-            </Button>
-        </div>
+        <ProfileContentSection />
       </div>
+
+      <EditProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        me={me}
+        onSuccess={(values) => {
+          const nextName =
+            values.fullName ?? me?.fullName ?? me?.username ?? "user";
+          const nextProfileUrl = ROUTES.PROFILE.url.replace(
+            ":fullName",
+            encodeURIComponent(nextName),
+          );
+          navigate(nextProfileUrl, { replace: true });
+        }}
+      />
     </div>
   );
 }
