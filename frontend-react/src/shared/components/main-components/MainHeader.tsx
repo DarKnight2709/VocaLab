@@ -50,8 +50,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   }
 
   function handleViewProfile() {
-    const targetName = encodeURIComponent(me?.fullName || me?.username || "user");
-    navigate(ROUTES.PROFILE.url.replace(":fullName", targetName));
+    navigate(ROUTES.PROFILE.url.replace(":username", me?.username || "user"));
   }
 
   function handleOpenSettings() {

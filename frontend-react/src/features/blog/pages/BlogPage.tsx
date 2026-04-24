@@ -1,119 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  PenSquare,
-  ArrowBigUp,
-  MessageCircle,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ArrowBigDown,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { useBlogsQuery } from "@/features/blog/api/blogService";
 import { useAppSelector } from "@/shared/stores/redux/hooks";
-import ROUTES from "@/shared/lib/routes";
 import Breadcrumb from "@/shared/components/Breadcrumb";
-import type { BlogItem } from "@/shared/validations/BlogSchema";
-
-function BlogCard({ blog }: { blog: BlogItem }) {
-  const navigate = useNavigate();
-  const profileUrl = ROUTES.PROFILE.url.replace(
-    ":fullName",
-    blog.author.fullName,
-  );
-  const detailUrl = ROUTES.BLOG_DETAIL.url.replace(":id", blog.id);
-  const date = new Date(blog.createdAt).toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-  return (
-    <div
-      role="link"
-      tabIndex={0}
-      onClick={() => navigate(detailUrl)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          navigate(detailUrl);
-        }
-      }}
-      className="group block cursor-pointer rounded-2xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
-    >
-      {blog.coverImage && (
-        <div className="mb-4 flex h-48 items-center justify-center rounded-xl bg-muted/30 p-2">
-          <img
-            src={blog.coverImage}
-            alt={blog.title}
-            className="h-full w-auto max-w-full rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"
-          />
-        </div>
-      )}
-      <h2 className="line-clamp-2 text-lg font-semibold group-hover:text-primary">
-        {blog.title}
-      </h2>
-      {blog.excerpt && (
-        <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
-          {blog.excerpt}
-        </p>
-      )}
-      <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <Link
-            to={profileUrl}
-            onClick={(e) => e.stopPropagation()}
-            className="h-6 w-6 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
-            aria-label={`Xem trang cá nhân của ${blog.author.fullName}`}
-          >
-            {blog.author.avatar ? (
-              <img
-                src={blog.author.avatar}
-                alt={blog.author.fullName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-[10px] font-bold uppercase">
-                {blog.author.fullName[0]}
-              </div>
-            )}
-          </Link>
-          <span>{blog.author.fullName}</span>
-          <span>·</span>
-          <span>{date}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 font-medium text-[13px]">
-            <ArrowBigUp
-              className={
-                blog.userVote === "UPVOTE"
-                  ? "fill-current bg-green-50 text-green-600 dark:bg-green-950"
-                  : ""
-              }
-              size={15}
-            />
-            {blog.voteScore ?? 0}
-          </span>
-          <span className="flex items-center gap-1">
-            <MessageCircle size={13} />
-            {blog._count?.comments ?? 0}
-          </span>
-          <span className="flex items-center gap-1 font-medium text-[13px]">
-            <ArrowBigDown
-              className={
-                blog.userVote === "DOWNVOTE"
-                  ? "fill-current bg-red-50 text-red-600 dark:bg-red-950"
-                  : ""
-              }
-              size={15}
-            />
-            {blog.voteScore ?? 0}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+import BlogCard, { SkeletonCard } from "../components/BlogCard";
+import BlogListHeader from "../components/BlogListHeader";
 
 export default function BlogPage() {
   const [search, setSearch] = useState("");
@@ -132,89 +23,74 @@ export default function BlogPage() {
     }, 400);
   };
 
+  const blogs = data?.blogs ?? [];
+
   return (
     <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         <Breadcrumb items={[{ label: "Blog" }]} />
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Blog</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Chia sẻ kinh nghiệm và học từ cộng đồng
+
+        <BlogListHeader
+          search={search}
+          onSearch={handleSearch}
+          isAuth={isAuth}
+        />
+
+        {/* Content */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : blogs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted/60">
+              <FileText className="h-9 w-9 text-muted-foreground/50" />
+            </div>
+            <p className="text-base font-medium">
+              {debouncedSearch
+                ? `Không tìm thấy kết quả cho "${debouncedSearch}"`
+                : "Chưa có bài viết nào"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {debouncedSearch
+                ? "Hãy thử từ khóa khác."
+                : "Hãy là người đầu tiên chia sẻ!"}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1 sm:w-64">
-              <Search
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Tìm kiếm bài viết..."
-                className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-            {isAuth && (
-              <Link
-                to={ROUTES.BLOG_CREATE.url}
-                className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                <PenSquare size={15} />
-                Viết bài
-              </Link>
-            )}
+        ) : (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {blogs.map((blog) => (
+              <BlogCard key={blog.id} blog={blog} />
+            ))}
           </div>
-        </div>
+        )}
 
-      {/* Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-64 animate-pulse rounded-2xl bg-muted" />
-          ))}
-        </div>
-      ) : data?.blogs.length === 0 ? (
-        <div className="mt-20 text-center text-muted-foreground">
-          {debouncedSearch
-            ? `Không tìm thấy kết quả cho "${debouncedSearch}"`
-            : "Chưa có bài viết nào."}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {data?.blogs.map((blog) => (
-            <BlogCard key={blog.id} blog={blog} />
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border bg-background disabled:opacity-40"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="text-sm text-muted-foreground">
-            Trang {page} / {data.meta.totalPages}
-          </span>
-          <button
-            onClick={() =>
-              setPage((p) => Math.min(data.meta.totalPages, p + 1))
-            }
-            disabled={page === data.meta.totalPages}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border bg-background disabled:opacity-40"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
+        {/* Pagination */}
+        {data && data.meta.totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border bg-background transition hover:bg-muted disabled:opacity-40"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-sm text-muted-foreground">
+              Trang {page} / {data.meta.totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setPage((p) => Math.min(data.meta.totalPages, p + 1))
+              }
+              disabled={page === data.meta.totalPages}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border bg-background transition hover:bg-muted disabled:opacity-40"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

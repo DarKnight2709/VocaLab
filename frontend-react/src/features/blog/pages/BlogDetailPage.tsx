@@ -149,8 +149,8 @@ export default function BlogDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             to={ROUTES.PROFILE.url.replace(
-              ":fullName",
-              blog.author.fullName,
+              ":username",
+              blog.author.username,
             )}
             className="h-9 w-9 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
             aria-label={`Xem trang cá nhân của ${blog.author.fullName}`}

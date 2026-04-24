@@ -86,8 +86,8 @@ export function ChatHeader({
           <>
             <Link
               to={ROUTES.PROFILE.url.replace(
-                ":fullName",
-                selectedUser?.fullName || selectedUser?.username || "user",
+                ":username",
+                selectedUser?.username || "user",
               )}
               className="hover:opacity-80 transition-opacity"
               aria-label={`Xem trang cá nhân của ${selectedUserDisplayName}`}

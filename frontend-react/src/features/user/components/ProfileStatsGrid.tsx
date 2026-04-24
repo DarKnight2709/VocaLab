@@ -1,6 +1,6 @@
 type ProfileStatItem = {
   label: string;
-  value: number;
+  value: number
 };
 
 type ProfileStatsGridProps = {

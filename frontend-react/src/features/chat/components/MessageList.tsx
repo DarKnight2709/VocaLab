@@ -180,8 +180,8 @@ export function MessageList({
                       {isFirstInSequence ? (
                         <Link
                           to={ROUTES.PROFILE.url.replace(
-                            ":fullName",
-                            senderName,
+                            ":username",
+                            sender?.username || "user",
                           )}
                           className="block rounded-full group/avatar relative"
                           aria-label={`Xem trang cá nhân của ${senderName}`}
@@ -300,8 +300,8 @@ export function MessageList({
                                           <li key={idx}>
                                             <Link
                                               to={ROUTES.PROFILE.url.replace(
-                                                ":fullName",
-                                                name,
+                                                ":username",
+                                                user.username,
                                               )}
                                               className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-muted/50 transition-colors pointer-events-auto"
                                             >
@@ -396,10 +396,8 @@ export function MessageList({
                     {isFirstInSequence ? (
                       <Link
                         to={ROUTES.PROFILE.url.replace(
-                          ":fullName",
-                          selectedUser?.fullName ||
-                            selectedUser?.username ||
-                            "user",
+                          ":username",
+                          selectedUser?.username || "user",
                         )}
                         className="block rounded-full group/avatar relative"
                         aria-label={`Xem trang cá nhân của ${selectedUser?.fullName || selectedUser?.username || "User"}`}

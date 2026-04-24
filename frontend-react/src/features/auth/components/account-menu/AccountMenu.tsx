@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import {
   CircleHelp,
   Settings,
-  Sparkles,
 } from "lucide-react";
 import {
   DropdownMenu,

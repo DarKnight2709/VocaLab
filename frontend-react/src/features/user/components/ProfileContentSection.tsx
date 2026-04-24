@@ -1,90 +1,148 @@
-import { FileText, Handshake, UserPlus, Users } from "lucide-react";
-import { useMemo, useState } from "react";
-
-type ContentTab = "followers" | "following" | "friends" | "posts";
+import { Eye, EyeOff, FileText, Handshake, Search, UserPlus, Users } from "lucide-react";
+import { useState } from "react";
+import FollowersTab from "./profile-tabs/FollowersTab";
+import FollowingTab from "./profile-tabs/FollowingTab";
+import FriendsTab from "./profile-tabs/FriendsTab";
+import PostsTab from "./profile-tabs/PostsTab";
+import { ContentTab } from "../../../shared/enums/ContentTab.enum";
+import { PostVisibility } from "../../../shared/enums/PostVisibility.enum";
 
 const contentTabs: Array<{
   key: ContentTab;
   label: string;
   icon: typeof Users;
 }> = [
-  { key: "followers", label: "Followers", icon: Users },
-  { key: "following", label: "Following", icon: UserPlus },
-  { key: "friends", label: "Friends", icon: Handshake },
-  { key: "posts", label: "Posts", icon: FileText },
+  { key: ContentTab.FOLLOWERS, label: "Followers", icon: Users },
+  { key: ContentTab.FOLLOWING, label: "Following", icon: UserPlus },
+  { key: ContentTab.FRIENDS, label: "Friends", icon: Handshake },
+  { key: ContentTab.POSTS, label: "Posts", icon: FileText },
 ];
 
-export default function ProfileContentSection() {
-  const [activeTab, setActiveTab] = useState<ContentTab>("followers");
+function PostVisibilityFilter({
+  value,
+  onChange,
+}: {
+  value: PostVisibility;
+  onChange: (v: PostVisibility) => void;
+}) {
+  const options: { label: string; value: PostVisibility; icon: any }[] = [
+    { label: "Tất cả", value: PostVisibility.ALL, icon: FileText },
+    { label: "Công khai", value: PostVisibility.PUBLIC, icon: Eye },
+    { label: "Riêng tư", value: PostVisibility.PRIVATE, icon: EyeOff },
+  ];
 
-  const activeMeta = useMemo(() => {
-    if (activeTab === "following") {
-      return {
-        title: "Chưa theo dõi ai",
-        description: "Những tài khoản bạn theo dõi sẽ hiển thị ở đây.",
-        icon: UserPlus,
-      };
-    }
+  return (
+    <div className="flex items-center gap-1 overflow-hidden rounded-xl border bg-muted/30 p-1">
+      {options.map((opt) => {
+        const Icon = opt.icon;
+        const isActive = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={[
+              "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all",
+              isActive
+                ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                : "text-muted-foreground hover:bg-background/50 hover:text-foreground",
+            ].join(" ")}
+          >
+            <Icon className="h-3 w-3" />
+            <span className="hidden sm:inline">{opt.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+export default function ProfileContentSection({ userId, isOwnProfile }: { userId?: string, isOwnProfile?: boolean }) {
+  const [activeTab, setActiveTab] = useState<ContentTab>(ContentTab.FOLLOWERS);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [postVisibility, setPostVisibility] = useState<PostVisibility>(PostVisibility.ALL);
 
-    if (activeTab === "friends") {
-      return {
-        title: "Chưa có bạn bè",
-        description: "Danh sách bạn bè sẽ xuất hiện trong mục này.",
-        icon: Handshake,
-      };
-    }
-
-    if (activeTab === "posts") {
-      return {
-        title: "Chưa có bài viết nào",
-        description: "Khi có bài viết mới, nội dung sẽ hiển thị ở đây.",
-        icon: FileText,
-      };
-    }
-
-    return {
-      title: "Chưa có người theo dõi",
-      description: "Những người theo dõi bạn sẽ hiển thị ở đây.",
-      icon: Users,
-    };
-  }, [activeTab]);
+  const handleSearch = (val: string) => {
+    setSearch(val);
+    clearTimeout((handleSearch as any)._t);
+    (handleSearch as any)._t = setTimeout(() => {
+      setDebouncedSearch(val);
+    }, 400);
+  };
 
   return (
     <section className="mt-10 border-t pt-5">
-      <div className="flex items-center gap-1 overflow-x-auto border-b pb-1">
-        {contentTabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.key;
+      {/* Tab nav & Search bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-1">
+        <div className="flex items-center gap-1 overflow-x-auto">
+          {contentTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
 
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={[
-                "inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2 text-base font-medium transition-colors",
-                isActive
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
-              ].join(" ")}
-            >
-              <Icon className="h-4.5 w-4.5" />
-              {tab.label}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => {
+                  setActiveTab(tab.key);
+                }}
+                className={[
+                  "inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2 text-base font-medium transition-colors",
+                  isActive
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                ].join(" ")}
+              >
+                <Icon className="h-4.5 w-4.5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {activeTab === ContentTab.POSTS && isOwnProfile && (
+            <PostVisibilityFilter
+              value={postVisibility}
+              onChange={setPostVisibility}
+            />
+          )}
+
+          <div className="relative flex-1 sm:min-w-64">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Tìm kiếm..."
+              className="w-full rounded-xl border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="mt-6 flex min-h-80 items-center justify-center rounded-xl border bg-muted/20">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-muted/80">
-            <activeMeta.icon className="h-12 w-12 text-foreground" />
+      {/* Tab content */}
+      <div className="mt-8 min-h-80">
+        {userId ? (
+            <>
+              {activeTab === ContentTab.FOLLOWERS && <FollowersTab userId={userId} search={debouncedSearch} />}
+              {activeTab === ContentTab.FOLLOWING && <FollowingTab userId={userId} search={debouncedSearch} />}
+              {activeTab === ContentTab.FRIENDS && <FriendsTab userId={userId} search={debouncedSearch} />}
+              {activeTab === ContentTab.POSTS && (
+                <PostsTab 
+                    userId={userId} 
+                    search={debouncedSearch} 
+                    visibility={postVisibility} 
+                />
+              )}
+            </>
+        ) : (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-sm text-muted-foreground">Không tìm thấy người dùng.</p>
           </div>
-          <h3 className="text-xl font-semibold">{activeMeta.title}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {activeMeta.description}
-          </p>
-        </div>
+        )}
       </div>
     </section>
   );

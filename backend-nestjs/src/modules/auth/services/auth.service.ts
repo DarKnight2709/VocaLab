@@ -4,7 +4,6 @@ import {
   ConflictException,
   Logger,
   NotFoundException,
-  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
@@ -23,11 +22,8 @@ import {
 } from '../auth.dto';
 import { HashingService } from '@/common/services/hashing.service';
 import { RsaKeyManager } from '@/common/utils/RsaKeyManager';
-import {
-  IUSER_REPOSITORY,
-  type UserRepositoryInterface,
-} from '@/modules/users/domain/interfaces/user-repository.interface';
-import { UserEntity } from '@/modules/users/domain/user.entity';
+import { UserService } from '@/modules/users/users.service';
+import { PublicUser, TokenUser } from '@/modules/users/user.types';
 
 export interface JWTRefreshPayLoad {
   sub: string;
@@ -44,12 +40,11 @@ export class AuthService {
     private configService: ConfigService,
     private readonly hashingService: HashingService,
     private readonly keyManager: RsaKeyManager,
-    @Inject(IUSER_REPOSITORY)
-    private readonly userRepository: UserRepositoryInterface,
+    private readonly userService: UserService,
   ) {}
 
-  async getCurrentUser(userId: string) {
-    const user = await this.userRepository.findById(userId);
+  async getCurrentUser(userId: string): Promise<PublicUser> {
+    const user = await this.userService.findById(userId);
     if (!user) {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
@@ -207,9 +202,9 @@ export class AuthService {
     }
   }
 
-  async signup(signupDto: SignupDto) {
+  async signup(signupDto: SignupDto): Promise<{ message: string; user: PublicUser }> {
     // Check username exists
-    const existingUser = await this.userRepository.findByUsername(
+    const existingUser = await this.userService.findByUsername(
       signupDto.username,
     );
 
@@ -218,9 +213,7 @@ export class AuthService {
     }
 
     // Check email exists
-    const existingEmail = await this.userRepository.findByEmail(
-      signupDto.email,
-    );
+    const existingEmail = await this.userService.findByEmail(signupDto.email);
 
     if (existingEmail) {
       throw new ConflictException('Email đã tồn tại');
@@ -230,7 +223,7 @@ export class AuthService {
     const hashedPassword = bcrypt.hashSync(signupDto.password, 10);
 
     // Create user
-    const newUser = await this.userRepository.create({
+    const newUser = await this.userService.create({
       username: signupDto.username,
       hashedPassword,
       fullName: signupDto.fullName,
@@ -243,7 +236,7 @@ export class AuthService {
     };
   }
 
-  async googleAuth(profile: any) {
+  async googleAuth(profile: any): Promise<PublicUser> {
     const email = profile?.emails?.[0]?.value;
     const fullName = profile?.displayName || 'Google User';
     const avatar = profile?.photos?.[0]?.value;
@@ -252,13 +245,12 @@ export class AuthService {
       throw new Error('Google profile is missing email');
     }
 
-    let user = await this.userRepository.findByEmail(email);
+    let user = await this.userService.findByEmail(email);
 
     if (!user) {
       const emailPrefix = email.split('@')[0] || 'user';
       let username = emailPrefix;
-      const existingUsername =
-        await this.userRepository.findByUsername(username);
+      const existingUsername = await this.userService.findByUsername(username);
 
       if (existingUsername) {
         username = `${emailPrefix}_${Date.now()}`;
@@ -267,7 +259,7 @@ export class AuthService {
       const randomPassword = `${profile?.id || 'google'}_${Date.now()}`;
       const hashedPassword = bcrypt.hashSync(randomPassword, 10);
 
-      user = await this.userRepository.create({
+      user = await this.userService.create({
         username,
         hashedPassword,
         fullName,
@@ -304,7 +296,7 @@ export class AuthService {
     }
   }
 
-  private generateAccessToken(user: UserEntity): string {
+  private generateAccessToken(user: TokenUser): string {
     // mã hóa(sign) dữ liệu bằng private access key.
     const payload = {
       sub: user.id,
@@ -323,7 +315,7 @@ export class AuthService {
   }
 
   private async generateRefreshToken(
-    user: UserEntity,
+    user: TokenUser,
     ipAddress?: string,
     userAgent?: string,
     manager?: Prisma.TransactionClient,

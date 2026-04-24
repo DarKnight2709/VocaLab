@@ -12,6 +12,7 @@ import {
   UpdateCommentDto,
   ReplyCommentDto,
 } from './dto/blog.dto';
+import { mapVoteScore } from '@/common/utils/vote.utils';
 
 @Injectable()
 export class BlogService {
@@ -65,7 +66,7 @@ export class BlogService {
     ]);
 
     const formattedBlogs = searchedBlogs.map((blog) =>
-      this.mapVoteScore(blog, userId),
+      mapVoteScore(blog, userId),
     );
 
     return {
@@ -130,7 +131,7 @@ export class BlogService {
       comments: commentsWithVotes,
     };
 
-    return { blog: this.mapVoteScore(formattedBlog, userId) };
+    return { blog: mapVoteScore(formattedBlog, userId) };
   }
 
   async getMyBlogs(userId: string, page = 1, limit = 10) {
@@ -149,7 +150,7 @@ export class BlogService {
       this.prisma.blog.count({ where: { authorId: userId, deletedAt: null } }),
     ]);
 
-    const formattedBlogs = blogs.map((blog) => this.mapVoteScore(blog));
+    const formattedBlogs = blogs.map((blog) => mapVoteScore(blog));
 
     return {
       blogs: formattedBlogs,
@@ -453,7 +454,7 @@ export class BlogService {
       this.prisma.blog.count({ where }),
     ]);
 
-    const formattedBlogs = blogs.map((blog) => this.mapVoteScore(blog));
+    const formattedBlogs = blogs.map((blog) => mapVoteScore(blog));
 
     return {
       blogs: formattedBlogs,
@@ -461,26 +462,6 @@ export class BlogService {
     };
   }
 
-  // ==================== UTILS ====================
-
-  private mapVoteScore<
-    T extends { votes: { type: VoteType; userId?: string }[] },
-  >(blog: T, currentUserId?: string) {
-    let voteScore = 0;
-    let userVote: VoteType | null = null;
-
-    blog.votes.forEach((v) => {
-      if (v.type === VoteType.UPVOTE) voteScore++;
-      else if (v.type === VoteType.DOWNVOTE) voteScore--;
-
-      if (currentUserId && v.userId === currentUserId) {
-        userVote = v.type;
-      }
-    });
-
-    const { votes, ...rest } = blog;
-    return { ...rest, voteScore, userVote };
-  }
 
   private mapCommentVotesInTree(
     comments: any[],

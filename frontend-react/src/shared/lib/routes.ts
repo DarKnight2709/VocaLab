@@ -53,7 +53,7 @@ const ROUTES = {
   },
   ME_SETTING: {
     title: "Cài đặt",
-    url: "/me/setting",
+    url: "/setting/me",
   },
   LOGIN: {
     title: "Đăng nhập",
@@ -61,7 +61,7 @@ const ROUTES = {
   },
   PROFILE: {
     title: "Trang cá nhân",
-    url: "/profile/:fullName",
+    url: "/profile/:username",
   },
 };
 

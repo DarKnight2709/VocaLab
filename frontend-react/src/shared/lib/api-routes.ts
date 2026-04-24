@@ -1,3 +1,5 @@
+import type { ContentTab } from "../enums/ContentTab.enum";
+
 const API_ROUTES = {
   AUTH: {
     LOGIN: "v1/auth/login",
@@ -12,6 +14,9 @@ const API_ROUTES = {
     SEARCH: "v1/users/search",
     UPLOAD_AVATAR: "v1/users/upload-avatar",
     GET_USERS: "v1/users/all",
+    BY_USERNAME: (username: string) => `v1/users/by-username/${username}`,
+    getContentBy: (userId: string, type: ContentTab) => `v1/users/${userId}/${type}`,
+    STATS: (userId: string) => `v1/users/${userId}/stats`,
   },
   GROUP: {
     CREATE: "v1/groups/create",

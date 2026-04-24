@@ -55,8 +55,8 @@ export function CommentItem({
       >
         <Link
           to={ROUTES.PROFILE.url.replace(
-            ":fullName",
-            comment.author.fullName,
+            ":username",
+            comment.author.username,
           )}
           className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
           aria-label={`Xem trang cá nhân của ${comment.author.fullName}`}
