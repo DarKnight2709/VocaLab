@@ -29,7 +29,7 @@ export default function ProfilePage() {
   const { data: matchedUser, isLoading: resolvingProfileUser } =
     useUserByUsernameQuery(normalizedUsername);
   
-  const isOwnProfile = matchedUser?.username === me?.username;
+  const isOwnProfile = matchedUser?.id === me?.id;
 
   const profileUser = isOwnProfile ? me : matchedUser;
   const shouldShowNotFound =
@@ -97,6 +97,7 @@ export default function ProfilePage() {
               <ProfileActionButtons
                 isOwnProfile={isOwnProfile}
                 onEditProfile={() => setProfileOpen(true)}
+                profileUserId={profileUserId}
               />
             </div>
           </div>

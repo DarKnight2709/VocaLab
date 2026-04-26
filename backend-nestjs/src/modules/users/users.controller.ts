@@ -1,4 +1,17 @@
-import { Controller, Patch, Get, UseGuards, Body, Query, Param, UploadedFile, UseInterceptors, Optional } from '@nestjs/common';
+import {
+  Controller,
+  Patch,
+  Get,
+  UseGuards,
+  Body,
+  Query,
+  Param,
+  UploadedFile,
+  UseInterceptors,
+  Optional,
+  Delete,
+  Post,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './users.service';
@@ -14,7 +27,8 @@ export class UsersController {
   @Patch('profile')
   @ApiOperation({
     summary: 'Cập nhật thông tin cá nhân',
-    description: 'Cập nhật thông tin cá nhân: họ tên, username, email và avatar (nếu có)',
+    description:
+      'Cập nhật thông tin cá nhân: họ tên, username, email và avatar (nếu có)',
   })
   @UseInterceptors(FileInterceptor('avatar'))
   async updateProfile(
@@ -24,7 +38,6 @@ export class UsersController {
   ) {
     return this.userService.updateProfile(user.id, updateDto, file);
   }
-
 
   @Get('search')
   @ApiOperation({ summary: 'Tìm kiếm người dùng và nhóm' })
@@ -41,15 +54,12 @@ export class UsersController {
     return this.userService.getAllUsers();
   }
 
-
   @Get('by-username/:username')
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
   async getByUsername(@Param('username') username: string) {
     return this.userService.getByUsername(username);
   }
 
-
-  // sẽ thêm cài đặt, nếu chủ cho xem thì người khác sẽ được lấy, còn không chỉ chủ mới được lấy
   @Get(':userId/followers')
   @ApiOperation({ summary: 'Lấy danh sách người theo dõi' })
   async getFollowers(
@@ -58,7 +68,12 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ) {
-    return this.userService.getFollowers(userId, page, limit, search);
+    return this.userService.getFollowers(
+      userId,
+      Number(page),
+      Number(limit),
+      search,
+    );
   }
 
   @Get(':userId/following')
@@ -69,7 +84,12 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ) {
-    return this.userService.getFollowing(userId, page, limit, search);
+    return this.userService.getFollowing(
+      userId,
+      Number(page),
+      Number(limit),
+      search,
+    );
   }
 
   @Get(':userId/friends')
@@ -80,7 +100,12 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ) {
-    return this.userService.getFriends(userId, page, limit, search);
+    return this.userService.getFriends(
+      userId,
+      Number(page),
+      Number(limit),
+      search,
+    );
   }
 
   @Get(':userId/posts')
@@ -96,8 +121,8 @@ export class UsersController {
     return this.userService.getPosts(
       userId,
       currentUser?.id,
-      page ? Number(page) : 1,
-      limit ? Number(limit) : 12,
+      Number(page),
+      Number(limit),
       search,
       visibility,
     );
@@ -108,5 +133,31 @@ export class UsersController {
   async getUserStats(@Param('userId') userId: string) {
     return this.userService.getUserStats(userId);
   }
-}
 
+  @Get(':userId/me/following')
+  @ApiOperation({ summary: 'Kiểm tra xem mình có đang follow user này không' })
+  async checkFollowStatus(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    return this.userService.checkFollowStatus(userId, currentUser.id);
+  }
+
+  @Post(':userId/follow')
+  @ApiOperation({ summary: 'Theo dõi người dùng' })
+  async followUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    return this.userService.followUser(userId, currentUser.id);
+  }
+
+  @Delete(':userId/unfollow')
+  @ApiOperation({ summary: 'Bỏ theo dõi người dùng' })
+  async unfollowUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    return this.userService.unfollowUser(userId, currentUser.id);
+  }
+}

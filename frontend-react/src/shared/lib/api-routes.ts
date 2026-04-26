@@ -15,8 +15,13 @@ const API_ROUTES = {
     UPLOAD_AVATAR: "v1/users/upload-avatar",
     GET_USERS: "v1/users/all",
     BY_USERNAME: (username: string) => `v1/users/by-username/${username}`,
+    ME_FOLLOWING: (userId: string) => `v1/users/${userId}/me/following`,
     getContentBy: (userId: string, type: ContentTab) => `v1/users/${userId}/${type}`,
     STATS: (userId: string) => `v1/users/${userId}/stats`,
+
+    FOLLOW: (userId: string) => `v1/users/${userId}/follow`,
+    UNFOLLOW: (userId: string) => `v1/users/${userId}/unfollow`,
+    
   },
   GROUP: {
     CREATE: "v1/groups/create",

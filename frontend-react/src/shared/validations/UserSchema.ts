@@ -56,6 +56,10 @@ export const UserFollowingResponseSchema = z.object({
   }),
 });
 
+export const UserMeFollowingResponseSchema = z.object({
+  isFollowing: z.boolean(),
+});
+
 export const UserFriendsResponseSchema = z.object({
   friends: z.array(UserFriendItemSchema),
   meta: z.object({

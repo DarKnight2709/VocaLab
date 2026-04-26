@@ -42,7 +42,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with username ${username} not found`);
     }
-    const {updatedAt, createdAt, email, ...rest} = user;
+    const { updatedAt, createdAt, email, ...rest } = user;
     return {
       ...rest,
     };
@@ -201,42 +201,174 @@ export class UserService {
     return this.findAll();
   }
 
-  async getFollowers(userId: string, page?: string, limit?: string, search?: string) {
+  async getFollowers(
+    userId: string,
+    page: number = 1,
+    limit: number = 12,
+    search?: string,
+  ) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // TODO: implement follow relationship with search
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      followingId: userId,
+    };
+
+    if (search) {
+      where.follower = {
+        OR: [
+          { username: { contains: search, mode: 'insensitive' } },
+          { fullName: { contains: search, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    // thêm logic để không trả về nếu người dùng không cho phép xem
+    const [followers, total] = await Promise.all([
+      this.prisma.follow.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          follower: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
+          },
+        },
+      }),
+      this.prisma.follow.count({ where }),
+    ]);
+
     return {
-      message: 'Followers chưa được triển khai',
-      followers: [],
+      followers: followers.map((follower) => follower.follower),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
-  async getFollowing(userId: string, page?: string, limit?: string, search?: string) {
+  async getFollowing(
+    userId: string,
+    page: number = 1,
+    limit: number = 12,
+    search?: string,
+  ) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // TODO: implement follow relationship with search
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      followerId: userId,
+    };
+
+    if (search) {
+      where.following = {
+        OR: [
+          { username: { contains: search, mode: 'insensitive' } },
+          { fullName: { contains: search, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    // thêm logic để không trả về nếu người dùng không cho phép xem
+    const [following, total] = await Promise.all([
+      this.prisma.follow.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          following: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
+          },
+        },
+      }),
+      this.prisma.follow.count({ where }),
+    ]);
+
     return {
-      message: 'Following chưa được triển khai',
-      following: [],
+      following: following.map((following) => following.following),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
-  async getFriends(userId: string, page?: string, limit?: string, search?: string) {
+  async getFriends(
+    userId: string,
+    page: number = 1,
+    limit: number = 12,
+    search?: string,
+  ) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // TODO: implement friend relationship with search
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { username: { contains: search, mode: 'insensitive' } },
+        { fullName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const baseWhere: any = {
+      AND: [
+        { followers: { some: { followerId: userId } } }, // Những người mình đang follow họ
+        { following: { some: { followingId: userId } } }, // Và họ cũng đang follow lại mình
+      ],
+      ...where,
+    };
+
+    // thêm logic để không trả về nếu người dùng không cho phép xem
+    const [friends, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where: baseWhere,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          avatar: true,
+        },
+      }),
+      this.prisma.user.count({ where: baseWhere }),
+    ]);
+
     return {
-      message: 'Friends chưa được triển khai',
-      friends: [],
+      friends,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -314,27 +446,101 @@ export class UserService {
   }
 
   async getUserStats(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
+    const user = await this.findById(userId);
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const posts = await this.prisma.blog.count({
-      where: {
-        authorId: userId,
-        deletedAt: null,
-      },
-    });
+    const [posts, followersCount, followingCount, friendsCount] =
+      await Promise.all([
+        this.prisma.blog.count({
+          where: {
+            authorId: userId,
+            deletedAt: null,
+          },
+        }),
+        this.prisma.follow.count({
+          where: {
+            followingId: userId,
+          },
+        }),
+        this.prisma.follow.count({
+          where: {
+            followerId: userId,
+          },
+        }),
+        this.prisma.user.count({
+          where: {
+            AND: [
+              { followers: { some: { followerId: userId } } },
+              { following: { some: { followingId: userId } } },
+            ],
+          },
+        }),
+      ]);
 
     return {
-      followers: 0,
-      following: 0,
-      friends: 0,
+      followers: followersCount,
+      following: followingCount,
+      friends: friendsCount,
       posts,
     };
+  }
+
+  async checkFollowStatus(targetUserId: string, currentUserId: string) {
+    const follow = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: currentUserId,
+          followingId: targetUserId,
+        },
+      },
+    });
+    return { isFollowing: !!follow };
+  }
+
+  async followUser(targetUserId: string, currentUserId: string) {
+    if (targetUserId === currentUserId) {
+      throw new ConflictException('Bạn không thể tự theo dõi chính mình');
+    }
+
+    const user = await this.findById(targetUserId);
+    if (!user) throw new NotFoundException('User không tồn tại');
+
+    const follow = await this.prisma.follow.upsert({
+      where: {
+        followerId_followingId: {
+          followerId: currentUserId,
+          followingId: targetUserId,
+        },
+      },
+      create: {
+        followerId: currentUserId,
+        followingId: targetUserId,
+      },
+      update: {}, // Nếu đã follow rồi thì không làm gì cả
+    });
+    return { message: 'Theo dõi thành công', follow };
+  }
+
+  async unfollowUser(targetUserId: string, currentUserId: string) {
+    const user = await this.findById(targetUserId);
+    if (!user) throw new NotFoundException('User không tồn tại');
+
+    try {
+      const follow = await this.prisma.follow.delete({
+        where: {
+          followerId_followingId: {
+            followerId: currentUserId,
+            followingId: targetUserId,
+          },
+        },
+      });
+      return { message: 'Bỏ theo dõi thành công', follow };
+    } catch (error) {
+      // Nếu không tìm thấy bản ghi (đã unfollow rồi), vẫn trả về thành công để tránh lỗi UI
+      return { message: 'Đã bỏ theo dõi' };
+    }
   }
 }
