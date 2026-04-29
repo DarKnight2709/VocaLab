@@ -1,11 +1,12 @@
-import { store } from "@/shared/stores/redux/store";
-import { logoutSync } from "@/shared/stores/redux/slices/authSlice";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import axios from "axios";
 import envConfig from "@/shared/config/envConfig";
 import qs from "qs";
 import ROUTES from "./routes";
 import { type ZodType, ZodError } from "zod";
+import { useAuthStore } from "@/features/auth/stores/authStore";
+import API_ROUTES from "./api-routes";
+import { RefreshTokenResponseSchema } from "../validations/AuthSchema";
 
 export const api = axios.create({
   baseURL:
@@ -24,7 +25,7 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = store.getState().auth.token?.accessToken;
+    const token = useAuthStore.getState().token?.accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,37 +35,80 @@ api.interceptors.request.use(
   async (error) => Promise.reject(error),
 );
 
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (response) => {
-    if (
-      response.data &&
-      response.data.success === true &&
-      response.data.data !== undefined
-    ) {
-      const { data, message } = response.data;
-      // If there's a message and data is an object, preserve the message on the data
-      if (message && typeof data === "object" && data !== null) {
-        data.message = message;
-      }
-      response.data = data;
-    }
-    return response;
+    return response.data;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
     const status = error?.response?.status;
-    const requestUrl: string | undefined = error?.config?.url;
-    const token = store.getState().auth.token?.accessToken;
+    const token = useAuthStore.getState().token;
 
+    // Check if the request is for login, signup or if it's already a refresh request
     const isAuthRequest =
-      typeof requestUrl === "string" &&
-      (requestUrl.includes("auth/login") || requestUrl.includes("auth/signup"));
+      typeof originalRequest?.url === "string" &&
+      (originalRequest.url.includes("auth/login") ||
+        originalRequest.url.includes("auth/signup") ||
+        originalRequest.url.includes("auth/refresh-token"));
 
     // Only force-logout/redirect on 401 when we *had* a token (expired/invalid session).
-    // For expected auth failures like wrong credentials, let the caller handle the error.
-    if (status === 401 && token && !isAuthRequest) {
-      useSocketStore.getState().disconnect();
-      store.dispatch(logoutSync());
-      window.location.href = ROUTES.LOGIN.url;
+    // And don't retry if it's an auth request itself to avoid infinite loops.
+    if (
+      status === 401 &&
+      token?.refreshToken &&
+      !isAuthRequest &&
+      !originalRequest._retry
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((accessToken) => {
+            originalRequest.headers["Authorization"] = "Bearer " + accessToken;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const data = await fetchWithSchema(
+          api.post(API_ROUTES.AUTH.REFRESH_TOKEN, {
+            refreshToken: token.refreshToken,
+          }),
+          RefreshTokenResponseSchema,
+        );
+
+        useAuthStore.getState().login(data);
+        processQueue(null, data.accessToken);
+
+        originalRequest.headers["Authorization"] = "Bearer " + data.accessToken;
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        useSocketStore.getState().disconnect();
+        useAuthStore.getState().logout();
+        window.location.href = ROUTES.LOGIN.url;
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
     return Promise.reject(error);
   },
@@ -82,10 +126,14 @@ export function getErrorMessage(error: unknown, fallback: string) {
 export async function fetchWithSchema<T>(
   request: Promise<any>,
   schema: ZodType<T>,
-): Promise<T> {
+): Promise<T & { message?: string }> {
   const res = await request;
   try {
-    return schema.parse(res.data);
+    const validatedData = schema.parse(res.data);
+    return {
+      ...validatedData,
+      message: res.message,
+    };
   } catch (error) {
     if (error instanceof ZodError) {
       console.error("❌ Schema Validation Error:", {

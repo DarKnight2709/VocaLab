@@ -13,7 +13,7 @@ import BlogPage from "./features/blog/pages/BlogPage";
 import BlogDetailPage from "./features/blog/pages/BlogDetailPage";
 import BlogCreatePage from "./features/blog/pages/BlogCreatePage";
 import ProfilePage from "./features/user/pages/ProfilePage";
-import SettingPage from "./features/user/pages/SettingPage";
+import SettingPage from "./features/setting/pages/SettingPage";
 import GrammarPage from "./features/grammar/pages/GrammarPage";
 import VocabularyPage from "./features/vocabulary/pages/VocabularyPage";
 import VocabularyCollectionPage from "./features/vocabulary/pages/VocabularyCollectionPage";

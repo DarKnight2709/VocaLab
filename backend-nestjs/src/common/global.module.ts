@@ -37,19 +37,19 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
         mount: true,
       },
     }),
-    CacheModule.registerAsync({
-      isGlobal: true,
-      useFactory: async () => {
-        const store = await redisStore({
-          socket: {
-            host: 'localhost',
-            port: 6379,
-          },
-          ttl: 60 * 60 * 1000,
-        });
-        return { store };
-      },
-    })
+    // CacheModule.registerAsync({
+    //   isGlobal: true,
+    //   useFactory: async () => {
+    //     const store = await redisStore({
+    //       socket: {
+    //         host: 'localhost',
+    //         port: 6379,
+    //       },
+    //       ttl: 60 * 60 * 1000,
+    //     });
+    //     return { store };
+    //   },
+    // })
   ],
   providers: [
     CloudinaryProvider,

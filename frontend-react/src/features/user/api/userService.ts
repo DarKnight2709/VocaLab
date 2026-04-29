@@ -3,6 +3,7 @@ import API_ROUTES from "@/shared/lib/api-routes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostVisibility } from "../../../shared/enums/PostVisibility.enum";
 import {
+  UpdateProfileResponseSchema,
   UserProfileDataResponseSchema,
   UserStatsResponseSchema,
   UserPostsResponseSchema,
@@ -10,8 +11,44 @@ import {
   UserFollowingResponseSchema,
   UserFriendsResponseSchema,
   UserMeFollowingResponseSchema,
+  type UpdatePersonalInfoBodyType,
 } from "@/shared/validations/UserSchema";
 import { toast } from "sonner";
+
+
+export const useUpdatePersonalInfoMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      body,
+      file,
+    }: {
+      body: UpdatePersonalInfoBodyType;
+      file?: File;
+    }) => {
+      const formData = new FormData();
+      Object.entries(body).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value as string);
+        }
+      });
+      if (file) {
+        formData.append("avatar", file);
+      }
+      return fetchWithSchema(
+        api.patch(API_ROUTES.USER.PROFILE, formData),
+        UpdateProfileResponseSchema,
+      );
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      toast.success(data.message || "Cập nhật thông tin cá nhân thành công.");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Cập nhật thông tin thất bại."));
+    },
+  });
+};
 
 export const useStatsQuery = (userId: string | undefined) =>
   useQuery({

@@ -14,7 +14,7 @@ import envConfig from '../config/envConfig'
 
 const getAccessTokenFromAuthStorage = (): string | null => {
   try {
-    const raw = localStorage.getItem('auth-chatapp-storage')
+    const raw = localStorage.getItem('auth-vocalab-storage')
     if (!raw) return null
 
     const parsed = JSON.parse(raw) as { state?: { token?: { accessToken?: string } } }

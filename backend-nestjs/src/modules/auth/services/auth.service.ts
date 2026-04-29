@@ -113,7 +113,7 @@ export class AuthService {
     userAgent?: string,
   ): Promise<RefreshTokenResponseDto> {
     // lấy token ra
-    const rawRefreshToken = refreshToken.refreshToken;
+    const { refreshToken: rawRefreshToken } = refreshToken;
 
     // check valid
     if (!rawRefreshToken) {
@@ -132,12 +132,14 @@ export class AuthService {
         },
       ) as JWTRefreshPayLoad;
 
+      const jti = payload.jti;
+
       // Transaction để revoke + tạo refresh token mới
       return await this.prisma.$transaction(async (manager) => {
         // check trong database xem có bản ghi nào có userid/refresh token hợp lệ, expiresAt < now, ip/user-agent giống nhau, isRevoked  = false
         const tokenEntity = await manager.refreshToken.findUnique({
           where: {
-            token: this.hashToken(rawRefreshToken),
+            id: jti,
           },
           include: {
             user: true,
@@ -159,7 +161,7 @@ export class AuthService {
 
         // revoke the old refresh.
         await manager.refreshToken.update({
-          where: { token: this.hashToken(rawRefreshToken) },
+          where: { id: jti },
           data: { isRevoked: true },
         });
 
@@ -202,7 +204,9 @@ export class AuthService {
     }
   }
 
-  async signup(signupDto: SignupDto): Promise<{ message: string; user: PublicUser }> {
+  async signup(
+    signupDto: SignupDto,
+  ): Promise<{ message: string; user: PublicUser }> {
     // Check username exists
     const existingUser = await this.userService.findByUsername(
       signupDto.username,
@@ -273,14 +277,20 @@ export class AuthService {
   async logout(refreshToken: string): Promise<LogoutResponseDto> {
     try {
       // verify refresh token
-      jwt.verify(refreshToken, this.keyManager.getPublicKeyRefresh(), {
-        algorithms: ['RS256'],
-      }) as JWTRefreshPayLoad;
+      const payload = jwt.verify(
+        refreshToken,
+        this.keyManager.getPublicKeyRefresh(),
+        {
+          algorithms: ['RS256'],
+        },
+      ) as JWTRefreshPayLoad;
+
+      const jti = payload.jti;
 
       // thu hồi refresh
       await this.prisma.refreshToken.updateMany({
         where: {
-          token: this.hashToken(refreshToken),
+          id: jti,
           isRevoked: false,
         },
         data: { isRevoked: true },
@@ -301,7 +311,6 @@ export class AuthService {
     const payload = {
       sub: user.id,
       username: user.username,
-      // roles: user.roles.map((role) => role.name),
     };
 
     return jwt.sign(payload, this.keyManager.getPrivateKeyAccess(), {
@@ -327,37 +336,33 @@ export class AuthService {
     };
 
     // tạo
+    const refreshExpiresIn = this.configService.get('REFRESH_TOKEN_EXPIRES_IN');
+    // sign -> tự động thêm 2 trường là iat và exp
     const refreshToken = jwt.sign(
       payload,
       this.keyManager.getPrivateKeyRefresh(),
       {
         algorithm: 'RS256',
-        expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRES_IN'),
+        expiresIn: refreshExpiresIn,
       },
     );
 
     // lưu refresh token vào database
-    const refreshExpiresIn = this.configService.get('REFRESH_TOKEN_EXPIRES_IN');
+    const createData = {
+      id: jti,
+      token: this.hashToken(refreshToken),
+      userId: user.id,
+      expiresAt: new Date(Date.now() + refreshExpiresIn * 1000),
+      ipAddress,
+      userAgent,
+    };
 
-    await (manager
-      ? manager.refreshToken.create({
-          data: {
-            token: this.hashToken(refreshToken),
-            userId: user.id,
-            expiresAt: new Date(Date.now() + refreshExpiresIn * 1000),
-            ipAddress,
-            userAgent,
-          },
-        })
-      : this.prisma.refreshToken.create({
-          data: {
-            token: this.hashToken(refreshToken),
-            userId: user.id,
-            expiresAt: new Date(Date.now() + refreshExpiresIn * 1000),
-            ipAddress,
-            userAgent,
-          },
-        }));
+    if (manager) {
+      await manager.refreshToken.create({ data: createData });
+    } else {
+      await this.prisma.refreshToken.create({ data: createData });
+    }
+
     return refreshToken;
   }
 }

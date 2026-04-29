@@ -8,16 +8,16 @@ import {
   Param,
   UploadedFile,
   UseInterceptors,
-  Optional,
   Delete,
   Post,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { UpdatePersonalInfoDto } from './dto/users.dto';
+import { UpdatePersonalInfoDto, UpdatePersonalInfoResponseDto } from './dto/users.dto';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
+import { ApiResponse } from '@/common/interceptors/transform.interceptor';
 
 @ApiTags('users')
 @Controller('users')
@@ -35,8 +35,12 @@ export class UsersController {
     @CurrentUser() user: any,
     @Body() updateDto: UpdatePersonalInfoDto,
     @UploadedFile() file?: Express.Multer.File,
-  ) {
-    return this.userService.updateProfile(user.id, updateDto, file);
+  ): Promise<ApiResponse<UpdatePersonalInfoResponseDto>> {
+    const data = await this.userService.updateProfile(user.id, updateDto, file);
+    return {
+      data: data,
+      message: 'Cập nhật thông tin thành công!',
+    }
   }
 
   @Get('search')

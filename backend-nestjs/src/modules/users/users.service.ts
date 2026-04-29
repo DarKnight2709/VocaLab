@@ -7,10 +7,11 @@ import {
 } from '@nestjs/common';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { PrismaService } from '@/core/database/prisma.service';
-import { CreateUserDto, UpdatePersonalInfoDto } from './dto/users.dto';
+import { CreateUserDto, UpdatePersonalInfoDto, UpdatePersonalInfoResponseDto } from './dto/users.dto';
 import { PublicUser } from './user.types';
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
+import { ApiResponse } from '@/common/interceptors/transform.interceptor';
 
 @Injectable()
 export class UserService {
@@ -140,7 +141,7 @@ export class UserService {
     userId: string,
     updateDto: UpdatePersonalInfoDto,
     file?: Express.Multer.File,
-  ) {
+  ): Promise< UpdatePersonalInfoResponseDto> {
     const existingUser = await this.findById(userId);
     if (!existingUser) {
       throw new NotFoundException('User not found');
@@ -177,15 +178,10 @@ export class UserService {
         fullName: true,
         email: true,
         avatar: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
 
-    return {
-      message: 'Cập nhật tài khoản thành công',
-      user: updatedUser,
-    };
+    return updatedUser;
   }
 
   async search(keyword: string, userId: string) {
@@ -521,7 +517,7 @@ export class UserService {
       },
       update: {}, // Nếu đã follow rồi thì không làm gì cả
     });
-    return { message: 'Theo dõi thành công', follow };
+    return { message: 'Theo dõisdfsdf thành công', follow };
   }
 
   async unfollowUser(targetUserId: string, currentUserId: string) {

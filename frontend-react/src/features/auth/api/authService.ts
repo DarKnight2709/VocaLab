@@ -1,25 +1,22 @@
-import { useAppDispatch, useAppSelector } from "@/shared/stores/redux/hooks";
-import { loginAction, logoutAction } from "@/shared/stores/redux/authActions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   LoginBodyType,
   SignUpBodyType,
-  UpdatePersonalInfoBodyType,
 } from "@/shared/validations/AuthSchema";
 
 import {
   MeResponseSchema,
   LoginResponseSchema,
   SignUpResponseSchema,
-  UpdateProfileResponseSchema,
   LogoutResponseSchema,
 } from "@/shared/validations/AuthSchema";
 import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
+import { useAuthStore } from "../stores/authStore";
 
 export const useLoginMutation = () => {
-  const dispatch = useAppDispatch();
+  const { login } = useAuthStore();
   return useMutation({
     mutationFn: (body: LoginBodyType) =>
       fetchWithSchema(
@@ -27,7 +24,7 @@ export const useLoginMutation = () => {
         LoginResponseSchema,
       ),
     onSuccess: (response) => {
-      dispatch(loginAction(response));
+      login(response);
       toast.success("Đăng nhập thành công.");
     },
     onError: (error) => {
@@ -52,7 +49,7 @@ export const useSignUpMutation = () => {
 };
 
 export const useMeQuery = () => {
-  const token = useAppSelector((state) => state.auth.token);
+  const token = useAuthStore((state) => state.token);
   return useQuery({
     queryKey: ["me"],
     queryFn: () =>
@@ -63,7 +60,7 @@ export const useMeQuery = () => {
 };
 
 export const useLogoutMutation = () => {
-  const dispatch = useAppDispatch();
+  const { logout } = useAuthStore();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (refreshToken: string) =>
@@ -72,51 +69,18 @@ export const useLogoutMutation = () => {
         LogoutResponseSchema,
       ),
     onSuccess: () => {
-      dispatch(logoutAction());
+      logout();
       queryClient.clear();
       toast.success("Đăng xuất thành công.");
     },
     onError: (error) => {
-      dispatch(logoutAction());
+      logout();
       queryClient.clear();
       toast.error(getErrorMessage(error, "Đăng xuất thất bại."));
     },
   });
 };
 
-export const useUpdatePersonalInfoMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      body,
-      file,
-    }: {
-      body: UpdatePersonalInfoBodyType;
-      file?: File;
-    }) => {
-      const formData = new FormData();
-      Object.entries(body).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value as string);
-        }
-      });
-      if (file) {
-        formData.append("avatar", file);
-      }
-      return fetchWithSchema(
-        api.patch(API_ROUTES.USER.PROFILE, formData),
-        UpdateProfileResponseSchema,
-      );
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(data.message || "Cập nhật thông tin cá nhân thành công.");
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, "Cập nhật thông tin thất bại."));
-    },
-  });
-};
 
 // export const useChangePasswordMutation = () => {
 //   return useMutation({

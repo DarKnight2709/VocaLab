@@ -5,15 +5,16 @@ import {
   IsEmail,
   IsOptional,
   IsNotEmpty,
+  ValidateNested,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
   // username
   @ApiProperty({
-    description: "username",
-    example: "quyentran",
+    description: 'username',
+    example: 'quyentran',
   })
   @IsNotEmpty()
   @IsString()
@@ -21,8 +22,8 @@ export class CreateUserDto {
 
   // hashedPassword
   @ApiProperty({
-    description: "mật khẩu",
-    example: "quyentran123",
+    description: 'mật khẩu',
+    example: 'quyentran123',
   })
   @IsNotEmpty()
   @IsString()
@@ -30,13 +31,12 @@ export class CreateUserDto {
 
   // fullname
   @ApiProperty({
-    description: "Họ và tên đầy đủ",
-    example: "Trần Duy Quyến",
+    description: 'Họ và tên đầy đủ',
+    example: 'Trần Duy Quyến',
   })
   @IsNotEmpty()
   @IsString()
   fullName!: string;
-
 
   // email
   @ApiProperty({
@@ -71,4 +71,26 @@ export class UpdatePersonalInfoDto {
   @IsString()
   @IsOptional()
   avatar?: string;
+}
+
+// response dto chỉ cần đơn giản vậy.
+// nếu muốn nâng cấp có thể dùng @Expose(), @Exclude(), @Transform()
+// Lúc đó:
+// - phải dùng plainToInstance
+// - ClassSerializerInterceptor mới có ý nghĩa
+export class UpdatePersonalInfoResponseDto {
+  @ApiProperty({ example: '1' })
+  id!: string;
+
+  @ApiProperty({ example: 'quyentran' })
+  username!: string;
+
+  @ApiProperty({ example: 'Trần Duy Quyến' })
+  fullName!: string;
+
+  @ApiProperty({ example: '[EMAIL_ADDRESS]' })
+  email!: string;
+
+  @ApiProperty({ example: 'https://example.com/avatar.jpg' })
+  avatar?: string | null;
 }

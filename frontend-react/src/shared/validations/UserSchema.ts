@@ -1,7 +1,24 @@
 import { z } from "zod";
 import { VoteType } from "../enums/VoteType.enum";
 
-// Schema cho User (sử dụng chung)
+export const UpdatePersonalInfoSchema = z
+  .object({
+    fullName: z.string().trim().min(1, "Họ và tên không được để trống").optional(),
+    username: z.string().trim().min(1, "Tên đăng nhập không được để trống").optional(),
+    email: z.string().email("Email không hợp lệ").optional().nullable(),
+    avatar: z.string().optional().nullable(),
+  })
+  .strict()
+  .strip();
+
+export const UpdateProfileResponseSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  fullName: z.string(),
+  email: z.string().email("Email không hợp lệ"),
+  avatar: z.string().optional().nullable(),
+});
+
 export const UserProfileDataResponseSchema = z.object({
   id: z.string(),
   username: z.string(),
@@ -9,7 +26,7 @@ export const UserProfileDataResponseSchema = z.object({
   avatar: z.string().optional().nullable(),
 });
 
-// Các item trong tab followers/following/friends thực chất là thông tin user
+
 export const UserFollowerItemSchema = UserProfileDataResponseSchema;
 export const UserFollowingItemSchema = UserProfileDataResponseSchema;
 export const UserFriendItemSchema = UserProfileDataResponseSchema;
@@ -85,6 +102,8 @@ export const UserStatsResponseSchema = z.object({
   posts: z.number(),
 });
 
+export type UpdateProfileResponse = z.infer<typeof UpdateProfileResponseSchema>;
+export type UpdatePersonalInfoBodyType = z.infer<typeof UpdatePersonalInfoSchema>;
 export type UserProfileDataResponse = z.infer<
   typeof UserProfileDataResponseSchema
 >;

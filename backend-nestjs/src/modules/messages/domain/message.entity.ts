@@ -9,8 +9,8 @@ export interface UserBasicInfo {
 }
 
 export class MessageEntity {
-  id: string;
-  senderId: string;
+  id!: string;
+  senderId!: string;
   receiverId?: string;
   groupId?: string;
   content?: string;
@@ -23,9 +23,9 @@ export class MessageEntity {
     fullName?: string | null;
     avatar?: string | null;
   };
-  seenBy: UserBasicInfo[];
-  createdAt: Date;
-  updatedAt: Date;
+  seenBy!: UserBasicInfo[];
+  createdAt!: Date;
+  updatedAt!: Date;
   constructor(partial: Partial<MessageEntity>) {
     Object.assign(this, partial);
   }

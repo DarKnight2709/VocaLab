@@ -6,48 +6,75 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
-  catch(exception: any, host: ArgumentsHost) {
-    Logger.error(exception);
-
-    // 🔥 Convert Prisma errors to HttpException first
-    exception = this.handlePrismaException(exception);
-
-    const apiResponse = ApiExceptionFilter.handleException(exception);
-
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
 
-    response
-      .status(exception?.getStatus?.() ?? HttpStatus.INTERNAL_SERVER_ERROR)
-      .json(apiResponse);
+    const transformedException = this.handlePrismaException(exception);
+
+    const status =
+      transformedException instanceof HttpException
+        ? transformedException.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    const exceptionResponse =
+      transformedException instanceof HttpException
+        ? transformedException.getResponse()
+        : null;
+
+    let message = 'Internal server error';
+    let errors: any = null;
+
+    if (typeof exceptionResponse === 'string') {
+      message = exceptionResponse;
+    } else if (typeof exceptionResponse === 'object' && exceptionResponse) {
+      const res: any = exceptionResponse;
+
+      if (Array.isArray(res?.message)) {
+        errors = res.message;
+        message = 'Validation failed';
+      } else {
+        message = res?.message || (transformedException as any).message;
+      }
+
+      if (res?.errors) {
+        errors = res.errors;
+      }
+    }
+
+    Logger.error((transformedException as any).message, 'ApiExceptionFilter');
+
+    response.status(status).json({
+      success: false,
+      message,
+      errors,
+      path: request.url,
+    });
   }
 
-  private handlePrismaException(exception: any) {
+  private handlePrismaException(exception: unknown) {
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       switch (exception.code) {
         case 'P2025':
           return new HttpException('Record not found', HttpStatus.NOT_FOUND);
-
         case 'P2002':
           return new HttpException('Duplicate value', HttpStatus.CONFLICT);
-
         case 'P2003':
           return new HttpException(
             'Foreign key constraint failed',
             HttpStatus.BAD_REQUEST,
           );
-
         case 'P2021':
           return new HttpException(
             'Table does not exist',
             HttpStatus.INTERNAL_SERVER_ERROR,
           );
-
         default:
           return new HttpException(
             'Database error',
@@ -61,28 +88,5 @@ export class ApiExceptionFilter implements ExceptionFilter {
     }
 
     return exception;
-  }
-
-  static handleException(exception: HttpException) {
-    const message = exception?.message ?? 'Lỗi không xác định';
-
-    let responseDto = {
-      message,
-      errors: undefined,
-    };
-
-    const exceptionResponse =
-      exception instanceof HttpException ? exception?.getResponse() : null;
-
-    if (typeof exceptionResponse === 'object') {
-      if (exception?.getStatus() === HttpStatus.UNPROCESSABLE_ENTITY) {
-        responseDto = {
-          ...responseDto,
-          ...exceptionResponse,
-        };
-      }
-    }
-
-    return responseDto;
   }
 }

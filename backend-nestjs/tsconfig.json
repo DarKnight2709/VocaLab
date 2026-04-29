@@ -2,9 +2,10 @@
   "compilerOptions": {
     "module": "node16",
     "moduleResolution": "node16",
-        "paths": {
+    "paths": {
       "@/*": ["./src/*"]
     },
+    "strict": true,
     "esModuleInterop": true, // hỗ trợ import giữa ESM và CommonJS
     "isolatedModules": true,
     "declaration": true,

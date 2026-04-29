@@ -7,46 +7,42 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export interface Response<T> {
-  success: boolean;
-  message: string;
-  data: T;
+export interface ApiResponse<T> {
+  success?: boolean;
+  message?: string;
+  data?: T;
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, Response<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
-  ): Observable<Response<T>> {
+  ): Observable<ApiResponse<T>> {
     return next.handle().pipe(
-      map((response) => {
-        // Extract message if it exists in the response object
-        const message = response?.message || 'Thao tác thành công';
-        
-        let data = response;
-        // If the response is an object, we might want to extract the actual data part
-        // such as { message: "...", user: { ... } } -> we want user to be the data
-        if (response && typeof response === 'object' && !Array.isArray(response)) {
-          const { message: _, success: __, ...rest } = response;
-          // If there's nothing left but message/success, data is null
-          if (Object.keys(rest).length === 0) {
-            data = {};
-          } else {
-            // Keep the structure as defined in the controller
-            data = rest;
-          }
+      map((response) => {        
+        if (
+          response &&
+          typeof response === 'object' &&
+          ('data' in response)
+        ) {
+          return {
+            success: response.success ?? true,
+            message: response.message ?? 'Success',
+            data: response.data ?? null,
+          };
         }
 
+        // Raw data
         return {
           success: true,
-          message,
-          data,
+          message: 'Success',
+          data: response ?? null,
         };
       }),
     );
   }
 }
-

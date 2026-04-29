@@ -6,7 +6,7 @@ import {
   useUnfollowUserMutation,
 } from "../api/userService";
 
-type ProfileActionButtonsProps = {
+interface ProfileActionButtonsProps {
   isOwnProfile: boolean;
   onEditProfile: () => void;
   profileUserId: string | undefined;

@@ -18,16 +18,14 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
+
 import {
-  useUpdatePersonalInfoMutation,
-} from "@/features/auth/api/authService";
-import {
-  UpdatePersonalInfoSchema,
   type MeResponse,
-  type UpdatePersonalInfoBodyType,
 } from "@/shared/validations/AuthSchema";
 
 import { getInitials } from "@/shared/lib/utils";
+import { useUpdatePersonalInfoMutation } from "@/features/user/api/userService";
+import { UpdatePersonalInfoSchema, type UpdatePersonalInfoBodyType } from "@/shared/validations/UserSchema";
 
 export function EditProfileDialog(props: {
   open: boolean;

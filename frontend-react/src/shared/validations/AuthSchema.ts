@@ -70,16 +70,6 @@ export const MeResponseSchema = BaseEntityDTO.extend({
 });
 
 
-export const UpdatePersonalInfoSchema = z
-  .object({
-    fullName: z.string().trim().min(1, "Họ và tên không được để trống").optional(),
-    username: z.string().trim().min(1, "Tên đăng nhập không được để trống").optional(),
-    email: z.string().email("Email không hợp lệ").optional().nullable(),
-    avatar: z.string().optional().nullable(),
-  })
-  .strict()
-  .strip();
-
 
 export const ChangePasswordSchema = z
   .object({
@@ -95,9 +85,7 @@ export type SignUpBodyType = z.infer<typeof SignUpSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type SignUpResponse = z.infer<typeof SignUpResponseSchema>;
 export type ChangePasswordBodyType = z.infer<typeof ChangePasswordSchema>;
-export const UpdateProfileResponseSchema = z.object({
-  message: z.string(),
-});
+
 
 export const UploadAvatarResponseSchema = z.object({
   avatarUrl: z.string(),
@@ -108,10 +96,9 @@ export const LogoutResponseSchema = z.object({
 });
 
 
-export type UpdateProfileResponse = z.infer<typeof UpdateProfileResponseSchema>;
+
 export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
 export type MeResponse = z.infer<typeof MeResponseSchema>;
-export type UpdatePersonalInfoBodyType = z.infer<typeof UpdatePersonalInfoSchema>;
 export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
 export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
 export type LogoutBodyType = z.infer<typeof LogoutSchema>;

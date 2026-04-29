@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  Logger,
+} from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { PrismaService } from '../../core/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
@@ -12,14 +17,13 @@ export interface JwtPayload {
   exp: number;
 }
 
-
 @Injectable()
 export class SocketAuthGuard implements CanActivate {
   private readonly logger = new Logger(SocketAuthGuard.name);
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
-    private readonly keyManager: RsaKeyManager
+    private readonly keyManager: RsaKeyManager,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,8 +32,9 @@ export class SocketAuthGuard implements CanActivate {
     }
 
     const client = context.switchToWs().getClient();
-    const token = client.handshake?.auth?.token || client.handshake?.headers?.token;
-    
+    const token =
+      client.handshake?.auth?.token || client.handshake?.headers?.token;
+
     if (!token) {
       this.logger.error('No token found in handshake');
       throw new WsException('Vui lòng đăng nhập để tiếp tục socket');
@@ -37,7 +42,7 @@ export class SocketAuthGuard implements CanActivate {
 
     try {
       const payload = jwt.verify(token, this.keyManager.getPublicKeyAccess(), {
-        algorithms: ['RS256']
+        algorithms: ['RS256'],
       }) as JwtPayload;
 
       const user = await this.prisma.user.findUnique({
@@ -60,12 +65,19 @@ export class SocketAuthGuard implements CanActivate {
       };
       return true;
     } catch (error) {
-      this.logger.error(`Socket auth error: ${error.message}`);
-      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-        throw new WsException('Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại');
+      if (error instanceof Error) {
+        this.logger.error(`Socket auth error: ${error.message}`);
+        if (
+          error.name === 'JsonWebTokenError' ||
+          error.name === 'TokenExpiredError'
+        ) {
+          throw new WsException(
+            'Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại',
+          );
+        }
       }
+
       throw new WsException('Internal server error');
     }
   }
 }
-
