@@ -103,3 +103,15 @@ export class SignupDto {
   @IsEmail()
   email!: string;
 }
+
+export class ChangePasswordDto {
+  @ApiProperty({ example: 'oldpassword123' })
+  @IsString()
+  @IsNotEmpty()
+  oldPassword!: string;
+
+  @ApiProperty({ example: 'newpassword123' })
+  @IsString()
+  @MinLength(6)
+  newPassword!: string;
+}

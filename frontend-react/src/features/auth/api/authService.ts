@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   LoginBodyType,
   SignUpBodyType,
+  ChangePasswordBodyType,
 } from "@/shared/validations/AuthSchema";
 
 import {
@@ -16,7 +17,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "../stores/authStore";
 
 export const useLoginMutation = () => {
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
   return useMutation({
     mutationFn: (body: LoginBodyType) =>
       fetchWithSchema(
@@ -60,7 +61,7 @@ export const useMeQuery = () => {
 };
 
 export const useLogoutMutation = () => {
-  const { logout } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (refreshToken: string) =>
@@ -82,15 +83,17 @@ export const useLogoutMutation = () => {
 };
 
 
-// export const useChangePasswordMutation = () => {
-//   return useMutation({
-//     mutationFn: (body: ChangePasswordBodyType) =>
-//       api.patch<UpdateProfileResponse>(API_ROUTES.AUTH.CHANGE_PASSWORD, body),
-//     onSuccess: (data) => {
-//       toast.success(data.data.message || 'Đổi mật khẩu thành công.')
-//     },
-//     onError: (error: any) => {
-//       toast.error(error.response?.data?.message || error.message || 'Đổi mật khẩu thất bại.')
-//     }
-//   })
-// }
+export const useChangePasswordMutation = () => {
+  const logout = useAuthStore((state) => state.logout);
+  return useMutation({
+    mutationFn: (body: ChangePasswordBodyType) =>
+      api.patch(API_ROUTES.AUTH.CHANGE_PASSWORD, body),
+    onSuccess: (data: any) => {
+      logout();
+      toast.success(data?.data?.message || 'Đổi mật khẩu thành công.');
+    },
+    onError: (error: any) => {
+      toast.error(getErrorMessage(error, 'Đổi mật khẩu thất bại.'));
+    }
+  });
+};

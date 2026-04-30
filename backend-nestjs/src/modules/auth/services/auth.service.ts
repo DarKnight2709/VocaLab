@@ -13,6 +13,7 @@ import * as crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 
 import {
+  ChangePasswordDto,
   LoginDto,
   LoginResponseDto,
   LogoutResponseDto,
@@ -304,6 +305,64 @@ export class AuthService {
       // Vẫn trả về thành công để không leak thông tin
       return { message: 'Đăng xuất thành công' };
     }
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    const isPasswordValid = bcrypt.compareSync(
+      changePasswordDto.oldPassword,
+      user.hashedPassword,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Sai mật khẩu cũ');
+    }
+
+
+    // check new password if it's the same as old password
+    const isNewPasswordValid = bcrypt.compareSync(
+      changePasswordDto.newPassword,
+      user.hashedPassword,
+    );
+
+    if (isNewPasswordValid) {
+      throw new UnauthorizedException('Mật khẩu mới không được giống mật khẩu cũ');
+    }
+
+    const hashedNewPassword = bcrypt.hashSync(changePasswordDto.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashedPassword: hashedNewPassword,
+      },
+    });
+
+    // Thu hồi toàn bộ refresh token cũ của user để ép đăng xuất trên mọi thiết bị
+    await this.prisma.refreshToken.updateMany({
+      where: {
+        userId: userId,
+        isRevoked: false,
+      },
+      data: {
+        isRevoked: true,
+      },
+    });
+
+    return {
+      message: 'Đổi mật khẩu thành công',
+    };
   }
 
   private generateAccessToken(user: TokenUser): string {

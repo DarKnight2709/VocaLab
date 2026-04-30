@@ -1,9 +1,11 @@
 interface AccountSettingTabProps {
   onEditProfile: () => void;
+  onChangePassword: () => void;
 }
 
 export default function AccountSettingTab({
   onEditProfile,
+  onChangePassword,
 }: AccountSettingTabProps) {
   return (
     <div>
@@ -15,7 +17,10 @@ export default function AccountSettingTab({
         Profile information
       </button>
       <br />
-      <button className="inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-base font-medium transition-colors border-2 border-gray-400">
+      <button
+        onClick={onChangePassword}
+        className="inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-base font-medium transition-colors border-2 border-gray-400"
+      >
         Change password
       </button>
       <br />

@@ -9,7 +9,9 @@ import PreferencesSettingTab from "../components/setting-tabs/PreferencesSetting
 import NotificationsSettingTab from "../components/setting-tabs/NotificationsSettingTab";
 import LearningSettingTab from "../components/setting-tabs/LearningSettingTab";
 import { EditProfileDialog } from "@/features/auth/components/EditProfileDialog";
-
+import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordDialog";
+import { useNavigate } from "react-router";
+import ROUTES from "@/shared/lib/routes";
 
 const settingTab: Array<{
   key: SettingTab;
@@ -28,6 +30,9 @@ export default function SettingPage() {
 
   const { data: me } = useMeQuery();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   return (
     <div className="h-full overflow-y-auto p-6">
@@ -73,6 +78,7 @@ export default function SettingPage() {
                 {activeTab === SettingTab.ACCCOUNT && (
                   <AccountSettingTab
                     onEditProfile={() => setProfileOpen(true)}
+                    onChangePassword={() => setPasswordOpen(true)}
                   />
                 )}
                 {activeTab === SettingTab.PRIVACY && <PrivacySettingTab />}
@@ -100,13 +106,14 @@ export default function SettingPage() {
         me={me}
         onSuccess={(values) => {
           console.log(values);
-          // const nextName =
-          //   values.fullName ?? me?.fullName ?? me?.username ?? "user";
-          // const nextProfileUrl = ROUTES.PROFILE.url.replace(
-          //   ":username",
-          //   encodeURIComponent(nextName),
-          // );
-          // navigate(nextProfileUrl, { replace: true });
+        }}
+      />
+      <ChangePasswordDialog
+        open={passwordOpen}
+        onOpenChange={setPasswordOpen}
+        me={me}
+        onSuccess={() => {
+          navigate(ROUTES.LOGIN.url);
         }}
       />
     </div>

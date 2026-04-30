@@ -7,6 +7,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './services/auth.service';
 import {
+  ChangePasswordDto,
   LoginDto,
   LoginResponseDto,
   LogoutResponseDto,
@@ -98,13 +100,27 @@ export class AuthController {
 
   // lấy người dùng hiện tại
   @Get('me')
-  @IsProtected()
   @ApiOkResponse({ type: Object })
   @ApiOperation({
     summary: 'Lấy thông tin user từ access token (Protect)',
   })
   async getCurrentUser(@CurrentUser() user: any) {
     return await this.authService.getCurrentUser(user.id);
+  }
+
+  @Patch("change-password")
+  @ApiOkResponse({ type: Object })
+  @ApiOperation({
+    summary: 'Đổi mật khẩu (Protect)',
+  })
+  async changePassword(
+    @CurrentUser() user: any,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return await this.authService.changePassword(
+      user.id,
+      changePasswordDto,
+    );
   }
 
 
