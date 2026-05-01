@@ -25,7 +25,7 @@ export const useLoginMutation = () => {
         LoginResponseSchema,
       ),
     onSuccess: (response) => {
-      login(response);
+      login(response.data);
       toast.success("Đăng nhập thành công.");
     },
     onError: (error) => {
@@ -53,8 +53,14 @@ export const useMeQuery = () => {
   const token = useAuthStore((state) => state.token);
   return useQuery({
     queryKey: ["me"],
-    queryFn: () =>
-      fetchWithSchema(api.get(API_ROUTES.AUTH.ME), MeResponseSchema),
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.AUTH.ME),
+        MeResponseSchema,
+      );
+      return result.data;
+    },
+
     retry: false,
     enabled: !!token,
   });
@@ -82,7 +88,6 @@ export const useLogoutMutation = () => {
   });
 };
 
-
 export const useChangePasswordMutation = () => {
   const logout = useAuthStore((state) => state.logout);
   return useMutation({
@@ -90,10 +95,10 @@ export const useChangePasswordMutation = () => {
       api.patch(API_ROUTES.AUTH.CHANGE_PASSWORD, body),
     onSuccess: (data: any) => {
       logout();
-      toast.success(data?.data?.message || 'Đổi mật khẩu thành công.');
+      toast.success(data?.data?.message || "Đổi mật khẩu thành công.");
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, 'Đổi mật khẩu thất bại.'));
-    }
+      toast.error(getErrorMessage(error, "Đổi mật khẩu thất bại."));
+    },
   });
 };

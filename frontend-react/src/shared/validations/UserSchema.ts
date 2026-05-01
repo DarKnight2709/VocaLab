@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { VoteType } from "../enums/VoteType.enum";
+import { SocialPlatform } from "../enums/SocialPlatform";
 
 export const UpdatePersonalInfoSchema = z
   .object({
@@ -101,6 +102,43 @@ export const UserStatsResponseSchema = z.object({
   friends: z.number(),
   posts: z.number(),
 });
+
+export const UserSocialItemSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  platform: z.nativeEnum(SocialPlatform),
+  name: z.string().nullable(),
+  link: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const CreateUserSocialSchema = z.object({
+  platform: z.nativeEnum(SocialPlatform),
+  name: z.string().optional().nullable(),
+  link: z.string().url("Link không hợp lệ").min(1, "Vui lòng nhập link"),
+});
+
+export const UserSocialsResponseSchema = z.array(UserSocialItemSchema);
+export const CreateUserSocialResponseSchema = UserSocialItemSchema;
+export const UpdateUserSocialResponseSchema = UserSocialItemSchema;
+export const DeleteUserSocialResponseSchema = z.object({
+  id: z.string(),
+});
+
+export const FollowUserResponseSchema = z.object({
+  message: z.string().optional(),
+});
+
+export const UnfollowUserResponseSchema = z.object({
+  message: z.string().optional(),
+});
+
+
+
+
+export type UserSocialItem = z.infer<typeof UserSocialItemSchema>;
+export type CreateUserSocialBody = z.infer<typeof CreateUserSocialSchema>;
 
 export type UpdateProfileResponse = z.infer<typeof UpdateProfileResponseSchema>;
 export type UpdatePersonalInfoBodyType = z.infer<typeof UpdatePersonalInfoSchema>;

@@ -5,7 +5,7 @@ import API_ROUTES from "@/shared/lib/api-routes";
 import { useAuthStore } from "./stores/authStore";
 
 export const authLoader = async () => {
-  const { token, logout, login } = useAuthStore.getState(); 
+  const { token, logout, login } = useAuthStore.getState();
 
   try {
     const accessToken = token?.accessToken;
@@ -35,11 +35,11 @@ export const authLoader = async () => {
     }
 
     try {
-      const data = await fetchWithSchema(
+      const { data: token } = await fetchWithSchema(
         api.post(API_ROUTES.AUTH.REFRESH_TOKEN, { refreshToken }),
         RefreshTokenResponseSchema,
       );
-      login(data); 
+      login(token);
       return { isAuth: true };
     } catch {
       logout();

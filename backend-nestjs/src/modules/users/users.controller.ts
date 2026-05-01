@@ -16,8 +16,9 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UpdatePersonalInfoDto, UpdatePersonalInfoResponseDto } from './dto/users.dto';
+import { CreateUserSocialDto } from './dto/social-link.dto';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
-import { ApiResponse } from '@/common/interceptors/transform.interceptor';
+import { Response } from '@/common/interceptors/transform.interceptor';
 
 @ApiTags('users')
 @Controller('users')
@@ -35,7 +36,7 @@ export class UsersController {
     @CurrentUser() user: any,
     @Body() updateDto: UpdatePersonalInfoDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<ApiResponse<UpdatePersonalInfoResponseDto>> {
+  ): Promise<Response<UpdatePersonalInfoResponseDto>> {
     const data = await this.userService.updateProfile(user.id, updateDto, file);
     return {
       data: data,
@@ -163,5 +164,36 @@ export class UsersController {
     @CurrentUser() currentUser: any,
   ) {
     return this.userService.unfollowUser(userId, currentUser.id);
+  }
+
+  @Get('me/socials')
+  @ApiOperation({ summary: 'Lấy danh sách liên kết mạng xã hội của tôi' })
+  async getMySocials(@CurrentUser() user: any) {
+    return this.userService.getMySocials(user.id);
+  }
+
+  @Post('me/socials')
+  @ApiOperation({ summary: 'Thêm mới một liên kết mạng xã hội' })
+  async createSocial(
+    @CurrentUser() user: any,
+    @Body() createDto: CreateUserSocialDto,
+  ) {
+    return this.userService.createSocial(user.id, createDto);
+  }
+
+  @Patch('me/socials/:id')
+  @ApiOperation({ summary: 'Cập nhật một liên kết mạng xã hội' })
+  async updateSocial(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() updateDto: CreateUserSocialDto,
+  ) {
+    return this.userService.updateSocial(user.id, id, updateDto);
+  }
+
+  @Delete('me/socials/:id')
+  @ApiOperation({ summary: 'Xóa một liên kết mạng xã hội' })
+  async deleteSocial(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.userService.deleteSocial(user.id, id);
   }
 }

@@ -21,7 +21,10 @@ const API_ROUTES = {
 
     FOLLOW: (userId: string) => `v1/users/${userId}/follow`,
     UNFOLLOW: (userId: string) => `v1/users/${userId}/unfollow`,
-    
+    MY_SOCIALS: "v1/users/me/socials",
+    CREATE_SOCIAL: "v1/users/me/socials",
+    UPDATE_SOCIAL: (id: string) => `v1/users/me/socials/${id}`,
+    DELETE_SOCIAL: (id: string) => `v1/users/me/socials/${id}`,
   },
   GROUP: {
     CREATE: "v1/groups/create",

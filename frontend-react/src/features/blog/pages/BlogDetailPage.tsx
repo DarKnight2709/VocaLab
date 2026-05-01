@@ -70,8 +70,8 @@ export default function BlogDetailPage() {
 
   const currentUserId = useAppSelector((s) => s.auth.userId ?? undefined);
 
-  const { data, isLoading } = useBlogDetailQuery(id);
-  const blog = data?.blog;
+  const { data: blogData, isLoading } = useBlogDetailQuery(id);
+  const blog = blogData?.data?.blog;
 
   const voteBlog = useVoteBlogMutation(id);
   const addComment = useAddCommentMutation(id);

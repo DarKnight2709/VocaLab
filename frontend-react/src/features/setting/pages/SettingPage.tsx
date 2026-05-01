@@ -10,6 +10,7 @@ import NotificationsSettingTab from "../components/setting-tabs/NotificationsSet
 import LearningSettingTab from "../components/setting-tabs/LearningSettingTab";
 import { EditProfileDialog } from "@/features/auth/components/EditProfileDialog";
 import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordDialog";
+import { UserSocialDialog } from "../components/UserSocialDialog";
 import { useNavigate } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 
@@ -31,6 +32,7 @@ export default function SettingPage() {
   const { data: me } = useMeQuery();
   const [profileOpen, setProfileOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [socialOpen, setSocialOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -79,6 +81,7 @@ export default function SettingPage() {
                   <AccountSettingTab
                     onEditProfile={() => setProfileOpen(true)}
                     onChangePassword={() => setPasswordOpen(true)}
+                    onSocialLinks={() => setSocialOpen(true)}
                   />
                 )}
                 {activeTab === SettingTab.PRIVACY && <PrivacySettingTab />}
@@ -115,6 +118,10 @@ export default function SettingPage() {
         onSuccess={() => {
           navigate(ROUTES.LOGIN.url);
         }}
+      />
+      <UserSocialDialog
+        open={socialOpen}
+        onOpenChange={setSocialOpen}
       />
     </div>
   );

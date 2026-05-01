@@ -38,7 +38,7 @@ export default function BlogCreatePage() {
   const updateBlog = useUpdateBlogMutation();
   const uploadImage = useUploadImageMutation();
   const { data: detailData, isLoading } = useBlogDetailQuery(editId || "");
-  const existingBlog = detailData?.blog;
+  const existingBlog = detailData?.data?.blog;
 
   const editor = useEditor({
     extensions: [

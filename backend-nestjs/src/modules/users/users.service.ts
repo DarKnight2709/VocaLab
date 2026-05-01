@@ -8,10 +8,10 @@ import {
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CreateUserDto, UpdatePersonalInfoDto, UpdatePersonalInfoResponseDto } from './dto/users.dto';
+import { CreateUserSocialDto } from './dto/social-link.dto';
 import { PublicUser } from './user.types';
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
-import { ApiResponse } from '@/common/interceptors/transform.interceptor';
 
 @Injectable()
 export class UserService {
@@ -538,5 +538,54 @@ export class UserService {
       // Nếu không tìm thấy bản ghi (đã unfollow rồi), vẫn trả về thành công để tránh lỗi UI
       return { message: 'Đã bỏ theo dõi' };
     }
+  }
+
+  async getMySocials(userId: string) {
+    return this.prisma.userSocial.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async createSocial(userId: string, createDto: CreateUserSocialDto) {
+    return this.prisma.userSocial.create({
+      data: {
+        ...createDto,
+        userId,
+      },
+    });
+  }
+
+  async updateSocial(userId: string, id: string, updateDto: CreateUserSocialDto) {
+    // Check ownership
+    const social = await this.prisma.userSocial.findUnique({
+      where: { id },
+    });
+
+    if (!social || social.userId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền chỉnh sửa liên kết này');
+    }
+
+    return this.prisma.userSocial.update({
+      where: { id },
+      data: updateDto,
+    });
+  }
+
+  async deleteSocial(userId: string, id: string) {
+    // Check ownership
+    const social = await this.prisma.userSocial.findUnique({
+      where: { id },
+    });
+
+    if (!social || social.userId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền xóa liên kết này');
+    }
+
+    await this.prisma.userSocial.delete({
+      where: { id },
+    });
+
+    return { message: 'Xóa liên kết thành công' };
   }
 }

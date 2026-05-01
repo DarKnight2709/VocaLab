@@ -50,8 +50,8 @@ export const useBlogsInfiniteQuery = (search = "") =>
       ),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
-      lastPage.meta.page < lastPage.meta.totalPages
-        ? lastPage.meta.page + 1
+      lastPage.data.meta.page < lastPage.data.meta.totalPages
+        ? lastPage.data.meta.page + 1
         : undefined,
   });
 

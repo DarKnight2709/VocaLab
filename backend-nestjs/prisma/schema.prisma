@@ -51,6 +51,16 @@ enum VoteType {
   DOWNVOTE
 }
 
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  YOUTUBE
+  TIKTOK
+  LINKEDIN
+  CUSTOM
+}
+
 model User {
   id             String   @id @default(uuid())
   username       String   @unique
@@ -75,6 +85,7 @@ model User {
   grammarStructures GrammarStructure[] @relation("GrammarAuthor")
   cardCollections   CardCollection[]
   cardTypes         CardType[]
+  socials           UserSocial[]
 
   following Follow[] @relation("UserFollowing")
   followers Follow[] @relation("UserFollowers")
@@ -86,12 +97,30 @@ model Follow {
   followerId  String
   followingId String
   createdAt   DateTime @default(now())
-  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
   @@id([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
   @@map("follows")
+}
+
+model UserSocial {
+  id       String  @id @default(uuid())
+  userId   String
+  platform SocialPlatform
+  name     String?
+  link     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relation
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_socials")
 }
 
 model RefreshToken {
@@ -245,21 +274,20 @@ model Blog {
 }
 
 model Comment {
-  id        String    @id @default(uuid())
-  content   String
-  blogId    String
-  authorId  String
-  parentCommentId   String?    
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id              String    @id @default(uuid())
+  content         String
+  blogId          String
+  authorId        String
+  parentCommentId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
-  
-  blog   Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
-  author User @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  replies     Comment[] @relation("CommentReplies")
-  parentComment Comment? @relation("CommentReplies", fields: [parentCommentId], references: [id])
-  votes     CommentVote[]
+  blog          Blog          @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  author        User          @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  replies       Comment[]     @relation("CommentReplies")
+  parentComment Comment?      @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  votes         CommentVote[]
 
   @@index([blogId])
   @@index([authorId])
@@ -358,11 +386,11 @@ model CardField {
 
   side CardSide
 
-  order      Int
-  color      String?
-  fontSize   Int?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  order     Int
+  color     String?
+  fontSize  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   cardType CardType         @relation(fields: [cardTypeId], references: [id], onDelete: Cascade)
   values   CardFieldValue[]

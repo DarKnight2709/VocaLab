@@ -12,7 +12,7 @@ export default function BlogPage() {
   const [page, setPage] = useState(1);
   const isAuth = useAppSelector((s: any) => s.auth.isAuth);
 
-  const { data, isLoading } = useBlogsQuery(page, 12, debouncedSearch);
+  const { data: blogData, isLoading } = useBlogsQuery(page, 12, debouncedSearch);
 
   const handleSearch = (val: string) => {
     setSearch(val);
@@ -23,7 +23,7 @@ export default function BlogPage() {
     }, 400);
   };
 
-  const blogs = data?.blogs ?? [];
+  const blogs = blogData?.data?.blogs ?? [];
 
   return (
     <div className="h-full overflow-y-auto p-6">
@@ -68,7 +68,7 @@ export default function BlogPage() {
         )}
 
         {/* Pagination */}
-        {data && data.meta.totalPages > 1 && (
+        {blogData && blogData.data.meta.totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 pt-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -78,13 +78,13 @@ export default function BlogPage() {
               <ChevronLeft size={16} />
             </button>
             <span className="text-sm text-muted-foreground">
-              Trang {page} / {data.meta.totalPages}
+              Trang {page} / {blogData.data.meta.totalPages}
             </span>
             <button
               onClick={() =>
-                setPage((p) => Math.min(data.meta.totalPages, p + 1))
+                setPage((p) => Math.min(blogData.data.meta.totalPages, p + 1))
               }
-              disabled={page === data.meta.totalPages}
+              disabled={page === blogData.data.meta.totalPages}
               className="flex h-9 w-9 items-center justify-center rounded-xl border bg-background transition hover:bg-muted disabled:opacity-40"
             >
               <ChevronRight size={16} />

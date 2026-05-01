@@ -307,7 +307,7 @@ export class AuthService {
     }
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<any> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -360,9 +360,7 @@ export class AuthService {
       },
     });
 
-    return {
-      message: 'Đổi mật khẩu thành công',
-    };
+    return 1;
   }
 
   private generateAccessToken(user: TokenUser): string {

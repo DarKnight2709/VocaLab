@@ -31,12 +31,12 @@ export function useGroupsQuery() {
   return useQuery({
     queryKey: groupKeys.list(),
     queryFn: async () => {
-      const data = await fetchWithSchema(
+      const result = await fetchWithSchema(
         api.get(API_ROUTES.GROUP.GET_ALL),
         GetGroupsResponseSchema,
       );
 
-      return data.groups ?? [];
+      return result.data.groups ?? [];
     },
   });
 }
@@ -47,12 +47,12 @@ export function useGroupInfoQuery(groupId: string | null) {
     enabled: !!groupId,
     queryFn: async () => {
       if (!groupId) return null;
-      const data = await fetchWithSchema(
+      const result = await fetchWithSchema(
         api.get(API_ROUTES.GROUP.INFO(groupId)),
         GetGroupInfoResponseSchema,
       );
 
-      return data.group ?? null;
+      return result.data.group ?? null;
     },
   });
 }
@@ -63,12 +63,12 @@ export function useGroupMembersQuery(groupId: string | null) {
     enabled: !!groupId,
     queryFn: async () => {
       if (!groupId) return [];
-      const data = await fetchWithSchema(
+      const result = await fetchWithSchema(
         api.get(API_ROUTES.GROUP.GET_MEMBERS(groupId)),
         GetGroupMembersResponseSchema,
       );
 
-      return data.members ?? [];
+      return result.data.members ?? [];
     },
   });
 }
@@ -77,12 +77,12 @@ export function useGroupMessagesQuery(groupId: string) {
   return useQuery({
     queryKey: groupKeys.messages(groupId ?? ""),
     queryFn: async () => {
-      const data = await fetchWithSchema(
+      const result = await fetchWithSchema(
         api.get(API_ROUTES.GROUP.GET_MESSAGES(groupId)),
         GetGroupMessagesResponseSchema,
       );
 
-      return data.messages ?? [];
+      return result.data.messages ?? [];
     },
     enabled: !!groupId,
   });

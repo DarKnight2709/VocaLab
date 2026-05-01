@@ -95,10 +95,10 @@ api.interceptors.response.use(
           RefreshTokenResponseSchema,
         );
 
-        useAuthStore.getState().login(data);
-        processQueue(null, data.accessToken);
+        useAuthStore.getState().login(data.data);
+        processQueue(null, data.data.accessToken);
 
-        originalRequest.headers["Authorization"] = "Bearer " + data.accessToken;
+        originalRequest.headers["Authorization"] = "Bearer " + data.data.accessToken;
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
@@ -126,12 +126,12 @@ export function getErrorMessage(error: unknown, fallback: string) {
 export async function fetchWithSchema<T>(
   request: Promise<any>,
   schema: ZodType<T>,
-): Promise<T & { message?: string }> {
+): Promise<{data: T, message?: string}> {
   const res = await request;
   try {
     const validatedData = schema.parse(res.data);
     return {
-      ...validatedData,
+      data: validatedData,
       message: res.message,
     };
   } catch (error) {

@@ -3,7 +3,6 @@ import {
   Post,
   Body,
   Get,
-  UseGuards,
   Req,
   HttpCode,
   HttpStatus,
@@ -13,8 +12,8 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
-  ApiResponse,
   ApiOkResponse,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './services/auth.service';
 import {
@@ -30,6 +29,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { type Request } from 'express';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { Response } from '@/common/interceptors/transform.interceptor';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -116,11 +116,16 @@ export class AuthController {
   async changePassword(
     @CurrentUser() user: any,
     @Body() changePasswordDto: ChangePasswordDto,
-  ) {
-    return await this.authService.changePassword(
+  ): Promise<Response<any>> {
+    const result = await this.authService.changePassword(
       user.id,
       changePasswordDto,
     );
+    return {
+      data: result,
+      message: "Đổi mật khẩu thành công!",
+      success: true,
+    }
   }
 
 
