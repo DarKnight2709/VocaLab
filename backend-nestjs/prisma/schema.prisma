@@ -70,6 +70,7 @@ model User {
   avatar         String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
 
   // Relations
   sentMessages      Message[]          @relation("Sender")
@@ -336,7 +337,7 @@ model GrammarStructure {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  author User? @relation("GrammarAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  author User? @relation("GrammarAuthor", fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([category])
   @@index([level])

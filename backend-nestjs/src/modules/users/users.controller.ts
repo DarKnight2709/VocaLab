@@ -44,6 +44,20 @@ export class UsersController {
     }
   }
 
+  @Delete('profile')
+  @ApiOperation({
+    summary: 'Xóa tài khoản',
+    description: 'Xóa tài khoản cá nhân (Xóa mềm)',
+  })
+  async deleteProfile(
+    @CurrentUser() user: any,
+  ): Promise<Response<void>> {
+    await this.userService.deleteAccount(user.id);
+    return {
+      message: 'Xóa tài khoản thành công!',
+    };
+  }
+
   @Get('search')
   @ApiOperation({ summary: 'Tìm kiếm người dùng và nhóm' })
   async search(@CurrentUser() user: any, @Query('keyword') keyword: string) {

@@ -1,6 +1,15 @@
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { SettingTab } from "@/shared/enums/SettingTab.enum";
-import { Users, Bell, Lock, Edit, Goal, User } from "lucide-react";
+import {
+  Users,
+  Bell,
+  Lock,
+  Edit,
+  Goal,
+  User,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useState } from "react";
 import { useMeQuery } from "@/features/auth/api/authService";
 import AccountSettingTab from "../components/setting-tabs/AccountSettingTab";
@@ -13,115 +22,197 @@ import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordD
 import { UserSocialDialog } from "../components/UserSocialDialog";
 import { useNavigate } from "react-router";
 import ROUTES from "@/shared/lib/routes";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { useDeleteAccountMutation } from "@/features/user/api/userService";
+import { useAuthStore } from "@/features/auth/stores/authStore";
+import { useSocketStore } from "@/shared/stores/useSocketStore";
 
-const settingTab: Array<{
-  key: SettingTab;
-  label: string;
-  icon: typeof Users;
-}> = [
-  { key: SettingTab.ACCCOUNT, label: "Account", icon: User },
-  { key: SettingTab.PRIVACY, label: "Privacy", icon: Lock },
-  { key: SettingTab.PREFERENCES, label: "Preferences", icon: Edit },
-  { key: SettingTab.NOTIFICATIONS, label: "Notifications", icon: Bell },
-  { key: SettingTab.LEARNING, label: "Learning", icon: Goal },
+// Cấu trúc phân nhóm Sidebar
+const sidebarGroups = [
+  {
+    title: "General",
+    items: [
+      { key: SettingTab.ACCCOUNT, label: "Account", icon: User },
+      { key: SettingTab.PREFERENCES, label: "Preferences", icon: Edit },
+    ],
+  },
+  {
+    title: "Security & Privacy",
+    items: [
+      { key: SettingTab.PRIVACY, label: "Privacy", icon: Lock },
+      { key: SettingTab.NOTIFICATIONS, label: "Notifications", icon: Bell },
+    ],
+  },
+  {
+    title: "Learning & Activity",
+    items: [{ key: SettingTab.LEARNING, label: "Learning", icon: Goal }],
+  },
 ];
 
 export default function SettingPage() {
   const [activeTab, setActiveTab] = useState<SettingTab>(SettingTab.ACCCOUNT);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([
+    "General",
+    "Security & Privacy",
+    "Learning & Activity",
+  ]);
 
   const { data: me } = useMeQuery();
   const [profileOpen, setProfileOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const navigate = useNavigate();
+  const deleteAccountMutation = useDeleteAccountMutation();
+  const logout = useAuthStore((s) => s.logout);
+  const disconnect = useSocketStore((s) => s.disconnect);
+
+  const toggleGroup = (title: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title],
+    );
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteAccountMutation.mutateAsync();
+      disconnect();
+      logout();
+      navigate(ROUTES.LOGIN.url);
+    } catch (e) {
+      // toast handled in mutation
+    }
+  };
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="h-full overflow-y-auto p-6 bg-background">
+      <div className="max-w-7xl mx-auto space-y-6">
         <Breadcrumb items={[{ label: "Trang cài đặt" }]} />
-        <div>
-          <h1 className="text-2xl font-bold">Trang cài đặt</h1>
-        </div>
-        <section className="mt-10 border-t pt-5">
-          {/* Tab nav */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-1">
-            <div className="flex items-center gap-1 overflow-x-auto">
-              {settingTab.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.key;
 
+        <div className="pb-4 border-b">
+          <h1 className="text-3xl font-bold tracking-tight">Trang cài đặt</h1>
+          <p className="text-muted-foreground mt-1">
+            Quản lý tài khoản và tùy chỉnh trải nghiệm học tập của bạn.
+          </p>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-10">
+          {/* Sidebar Left */}
+          <aside className="w-full md:w-64 flex-shrink-0 space-y-6">
+            <nav className="space-y-1">
+              {sidebarGroups.map((group) => {
+                const isExpanded = expandedGroups.includes(group.title);
                 return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => {
-                      setActiveTab(tab.key);
-                    }}
-                    className={[
-                      "inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2 text-base font-medium transition-colors",
-                      isActive
-                        ? "border-foreground text-foreground"
-                        : "border-transparent text-muted-foreground hover:text-foreground",
-                    ].join(" ")}
-                  >
-                    <Icon className="h-4.5 w-4.5" />
-                    {tab.label}
-                  </button>
+                  <div key={group.title} className="mb-4">
+                    <button
+                      onClick={() => toggleGroup(group.title)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors group"
+                    >
+                      <span className="uppercase tracking-wider text-xs">
+                        {group.title}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 opacity-50 group-hover:opacity-100" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100" />
+                      )}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="mt-1 space-y-1">
+                        {group.items.map((tab) => {
+                          const Icon = tab.icon;
+                          const isActive = activeTab === tab.key;
+                          return (
+                            <button
+                              key={tab.key}
+                              onClick={() => setActiveTab(tab.key)}
+                              className={[
+                                "flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all",
+                                isActive
+                                  ? "bg-secondary text-secondary-foreground shadow-sm"
+                                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                              ].join(" ")}
+                            >
+                              <Icon
+                                className={[
+                                  "h-4.5 w-4.5",
+                                  isActive ? "text-primary" : "",
+                                ].join(" ")}
+                              />
+                              {tab.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-            </div>
-          </div>
+            </nav>
+          </aside>
 
-          {/* Tab content */}
-          <div className="mt-8 min-h-80">
-            {me?.id ? (
-              <>
-                {activeTab === SettingTab.ACCCOUNT && (
-                  <AccountSettingTab
-                    onEditProfile={() => setProfileOpen(true)}
-                    onChangePassword={() => setPasswordOpen(true)}
-                    onSocialLinks={() => setSocialOpen(true)}
-                  />
-                )}
-                {activeTab === SettingTab.PRIVACY && <PrivacySettingTab />}
-                {activeTab === SettingTab.PREFERENCES && (
-                  <PreferencesSettingTab />
-                )}
-                {activeTab === SettingTab.NOTIFICATIONS && (
-                  <NotificationsSettingTab />
-                )}
-                {activeTab === SettingTab.LEARNING && <LearningSettingTab />}
-              </>
-            ) : (
-              <div className="flex items-center justify-center py-16">
-                <p className="text-sm text-muted-foreground">
-                  Không tìm thấy người dùng.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
+          {/* Content Right */}
+          <main className="flex-1 min-h-[600px]">
+            <div className="bg-card rounded-xl border p-6 shadow-sm">
+              {me?.id ? (
+                <>
+                  {activeTab === SettingTab.ACCCOUNT && (
+                    <AccountSettingTab
+                      onEditProfile={() => setProfileOpen(true)}
+                      onChangePassword={() => setPasswordOpen(true)}
+                      onSocialLinks={() => setSocialOpen(true)}
+                      onDeleteAccount={() => setDeleteOpen(true)}
+                    />
+                  )}
+                  {activeTab === SettingTab.PRIVACY && <PrivacySettingTab />}
+                  {activeTab === SettingTab.PREFERENCES && (
+                    <PreferencesSettingTab />
+                  )}
+                  {activeTab === SettingTab.NOTIFICATIONS && (
+                    <NotificationsSettingTab />
+                  )}
+                  {activeTab === SettingTab.LEARNING && <LearningSettingTab />}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Users className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">
+                    Không tìm thấy thông tin người dùng.
+                  </p>
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
+
+      {/* Dialogs */}
       <EditProfileDialog
         open={profileOpen}
         onOpenChange={setProfileOpen}
         me={me}
-        onSuccess={(values) => {
-          console.log(values);
-        }}
+        onSuccess={(values) => console.log(values)}
       />
       <ChangePasswordDialog
         open={passwordOpen}
         onOpenChange={setPasswordOpen}
         me={me}
-        onSuccess={() => {
-          navigate(ROUTES.LOGIN.url);
-        }}
+        onSuccess={() => navigate(ROUTES.LOGIN.url)}
       />
-      <UserSocialDialog
-        open={socialOpen}
-        onOpenChange={setSocialOpen}
+      <UserSocialDialog open={socialOpen} onOpenChange={setSocialOpen} />
+      <ConfirmModal
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Xóa tài khoản"
+        description="Bạn có chắc chắn muốn xóa tài khoản? Hành động này sẽ vô hiệu hóa tài khoản của bạn và sau 30 ngày sẽ tự động xóa vĩnh viễn. Trong 30 ngày bạn có thể khôi phục tài khoản bằng cách đăng nhập lại."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Xóa tài khoản"
+        variant="destructive"
+        isLoading={deleteAccountMutation.isPending}
       />
     </div>
   );

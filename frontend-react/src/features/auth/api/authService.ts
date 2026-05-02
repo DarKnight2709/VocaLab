@@ -28,7 +28,9 @@ export const useLoginMutation = () => {
       login(response.data);
       toast.success("Đăng nhập thành công.");
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      // Nếu là lỗi tài khoản bị xóa mềm, ta để LoginPage xử lý hiện Dialog, không hiện Toast ở đây
+      if (error?.response?.data?.errorCode === 'ACCOUNT_SOFT_DELETED') return;
       toast.error(getErrorMessage(error, "Đăng nhập thất bại."));
     },
   });
@@ -95,10 +97,25 @@ export const useChangePasswordMutation = () => {
       api.patch(API_ROUTES.AUTH.CHANGE_PASSWORD, body),
     onSuccess: (data: any) => {
       logout();
-      toast.success(data?.data?.message || "Đổi mật khẩu thành công.");
+      toast.success(data.data.message || "Đổi mật khẩu thành công.");
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, "Đổi mật khẩu thất bại."));
+    },
+  });
+};
+
+export const useRestoreAccountMutation = () => {
+  const login = useAuthStore((state) => state.login);
+  return useMutation({
+    mutationFn: (body: LoginBodyType) =>
+      fetchWithSchema(api.post(API_ROUTES.AUTH.RESTORE, body), LoginResponseSchema),
+    onSuccess: (response) => {
+      login(response.data);
+      toast.success(response.message || "Khôi phục tài khoản thành công!");
+    },
+    onError: (error: any) => {
+      toast.error(getErrorMessage(error, "Khôi phục tài khoản thất bại."));
     },
   });
 };

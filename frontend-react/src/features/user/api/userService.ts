@@ -262,3 +262,14 @@ export const useDeleteSocialMutation = () => {
   });
 };
 
+export const useDeleteAccountMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete(API_ROUTES.USER.DELETE_ACCOUNT),
+    onSuccess: (data) => {
+      qc.clear(); // Clear all cache
+      toast.success(data.data.message || "Xóa tài khoản thành công");
+    },
+    onError: (err) => toast.error(getErrorMessage(err, "Xóa tài khoản thất bại")),
+  });
+};

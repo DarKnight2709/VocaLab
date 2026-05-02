@@ -74,7 +74,27 @@ export class AuthController {
     return this.authService.refreshToken(refreshTokenDto, ipAddress, userAgent);
   }
 
-  //logout
+  @Post('restore')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Khôi phục tài khoản đã bị xóa mềm' })
+  async restore(
+    @Body() loginDto: LoginDto,
+    @Req() request: Request,
+  ): Promise<Response<LoginResponseDto>> {
+    const ipAddress = request.ip;
+    const userAgent = request.get('user-agent');
+    const data = await this.authService.restoreAccount(
+      loginDto,
+      ipAddress,
+      userAgent,
+    );
+    return {
+      data,
+      message: 'Khôi phục tài khoản thành công!',
+    };
+  }
+
   @Post('logout')
   @IsProtected()
   @HttpCode(HttpStatus.OK)
@@ -116,15 +136,13 @@ export class AuthController {
   async changePassword(
     @CurrentUser() user: any,
     @Body() changePasswordDto: ChangePasswordDto,
-  ): Promise<Response<any>> {
-    const result = await this.authService.changePassword(
+  ): Promise<Response<void>> {
+    await this.authService.changePassword(
       user.id,
       changePasswordDto,
     );
     return {
-      data: result,
       message: "Đổi mật khẩu thành công!",
-      success: true,
     }
   }
 

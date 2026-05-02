@@ -15,7 +15,9 @@ import {
 import {
   useLoginMutation,
   useSignUpMutation,
+  useRestoreAccountMutation,
 } from "@/features/auth/api/authService";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   LoginSchema,
   SignUpSchema,
@@ -36,6 +38,10 @@ export default function LoginPage() {
 
   const loginMutation = useLoginMutation();
   const signUpMutation = useSignUpMutation();
+  const restoreMutation = useRestoreAccountMutation();
+
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [pendingCredentials, setPendingCredentials] = useState<LoginBodyType | null>(null);
 
   const loginForm = useForm<LoginBodyType>({
     resolver: zodResolver(LoginSchema),
@@ -63,8 +69,22 @@ export default function LoginPage() {
         password: data.password,
       });
       navigate(from, { replace: true });
+    } catch (err: any) {
+      if (err?.response?.data?.errorCode === "ACCOUNT_SOFT_DELETED") {
+        setPendingCredentials(data);
+        setRestoreOpen(true);
+      }
+    }
+  }
+
+  async function handleRestore() {
+    if (!pendingCredentials) return;
+    try {
+      await restoreMutation.mutateAsync(pendingCredentials);
+      navigate(from, { replace: true });
+      setRestoreOpen(false);
     } catch {
-      // toast is handled inside the mutation
+      // handled in mutation
     }
   }
 
@@ -335,6 +355,15 @@ export default function LoginPage() {
           </TabsContent>
         </Tabs>
       </div>
+      <ConfirmModal
+        open={restoreOpen}
+        onOpenChange={setRestoreOpen}
+        title="Khôi phục tài khoản"
+        description="Tài khoản của bạn đang bị vô hiệu hóa. Bạn có muốn khôi phục lại tài khoản ngay bây giờ không?"
+        onConfirm={handleRestore}
+        confirmText="Khôi phục ngay"
+        isLoading={restoreMutation.isPending}
+      />
     </div>
   );
 }

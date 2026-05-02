@@ -540,6 +540,12 @@ export class UserService {
     }
   }
 
+  async deleteAccount(userId: string): Promise<void> {
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
+  }
+
   async getMySocials(userId: string) {
     return this.prisma.userSocial.findMany({
       where: { userId },

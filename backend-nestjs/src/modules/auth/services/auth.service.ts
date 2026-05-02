@@ -4,6 +4,7 @@ import {
   ConflictException,
   Logger,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
@@ -57,55 +58,100 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ): Promise<LoginResponseDto> {
-    try {
-      const { username, password } = loginDto;
+    const { username, password } = loginDto;
 
-      // tìm user theo username
-      const user = await this.prisma.user.findUnique({
-        where: { username },
-        // include: {
-        //   roles: true,
-        // },
-      });
+    // tìm user theo username (bao gồm cả user đã bị xóa mềm)
+    const user = await (this.prisma as any).$parent.user.findUnique({
+      where: { username },
+    });
 
-      if (!user) {
-        throw new UnauthorizedException(
-          'Tên đăng nhập hoặc mặt khẩu không hợp lệ',
-        );
-      }
-
-      // Kiểm tra mật khẩu
-      const isPasswordValid = this.hashingService.compare(
-        password,
-        user.hashedPassword,
+    if (!user) {
+      throw new UnauthorizedException(
+        'Tên đăng nhập hoặc mật khẩu không hợp lệ',
       );
-      if (!isPasswordValid) {
-        throw new UnauthorizedException('Mật khẩu không hợp lệ');
-      }
-
-      // tạo access token và refresh token
-      const accessToken = this.generateAccessToken(user);
-
-      // create refresh token
-      // store the refresh token into dabase.
-      const refreshToken = await this.generateRefreshToken(
-        user,
-        ipAddress,
-        userAgent,
-      );
-
-      return {
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          console.log('Unique constraint failed on: ', error.meta?.target);
-        }
-      }
-      throw error;
     }
+
+    // Kiểm tra mật khẩu
+    const isPasswordValid = this.hashingService.compare(
+      password,
+      user.hashedPassword,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Mật khẩu không hợp lệ');
+    }
+
+    if (user.deletedAt !== null) {
+      throw new ForbiddenException({
+        errorCode: 'ACCOUNT_SOFT_DELETED',
+        message:
+          'Tài khoản của bạn đã bị vô hiệu hóa. Bạn có muốn khôi phục không?',
+      });
+    }
+
+    // tạo access token và refresh token
+    const accessToken = this.generateAccessToken(user);
+
+    // create refresh token
+    // store the refresh token into dabase.
+    const refreshToken = await this.generateRefreshToken(
+      user,
+      ipAddress,
+      userAgent,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async restoreAccount(
+    loginDto: LoginDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<LoginResponseDto> {
+    const { username, password } = loginDto;
+
+    const user = await (this.prisma as any).$parent.user.findUnique({
+      where: { username },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException(
+        'Tên đăng nhập hoặc mật khẩu không hợp lệ',
+      );
+    }
+
+    const isPasswordValid = this.hashingService.compare(
+      password,
+      user.hashedPassword,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Mật khẩu không hợp lệ');
+    }
+
+    // Khôi phục tài khoản
+    await (this.prisma as any).$parent.user.update({
+      where: { id: user.id },
+      data: { deletedAt: null },
+    });
+
+    // tạo access token và refresh token
+    const accessToken = this.generateAccessToken(user);
+
+    // create refresh token
+    // store the refresh token into dabase.
+    const refreshToken = await this.generateRefreshToken(
+      user,
+      ipAddress,
+      userAgent,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   async refreshToken(

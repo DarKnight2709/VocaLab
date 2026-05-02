@@ -8,9 +8,11 @@ const API_ROUTES = {
     ME: "v1/auth/me",
     REFRESH_TOKEN: "v1/auth/refresh-token",
     CHANGE_PASSWORD: "v1/auth/change-password",
+    RESTORE: "v1/auth/restore",
   },
   USER: {
     PROFILE: "v1/users/profile",
+    DELETE_ACCOUNT: "v1/users/profile",
     SEARCH: "v1/users/search",
     UPLOAD_AVATAR: "v1/users/upload-avatar",
     GET_USERS: "v1/users/all",
