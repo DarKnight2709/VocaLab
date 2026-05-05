@@ -2,7 +2,7 @@ import { jwtDecode } from "jwt-decode";
 
 export type DecodedJwtToken = {
   sub: string;
-  username: string;
+  email: string;
   iat: number;
   exp: number;
   // roles: string[];

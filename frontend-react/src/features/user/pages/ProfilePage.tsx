@@ -112,7 +112,7 @@ export default function ProfilePage() {
         me={me}
         onSuccess={(values) => {
           const nextName =
-            values.fullName ?? me?.fullName ?? me?.username ?? "user";
+            values.username ?? me?.username ?? "user";
           const nextProfileUrl = ROUTES.PROFILE.url.replace(
             ":username",
             encodeURIComponent(nextName),

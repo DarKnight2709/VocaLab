@@ -13,7 +13,7 @@ import {
   ImportCardsDto,
   CreateCardTypeDto,
 } from './dto/vocabulary.dto';
-import { DuplicatePolicy } from '@/common/enums/duplicate-policy';
+import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
 
 @Injectable()
 export class VocabularyService {

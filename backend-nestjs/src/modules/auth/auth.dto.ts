@@ -2,15 +2,12 @@ import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
-  // username
   @ApiProperty({
-    example: "admin",
+    example: "user@example.com",
   })
-  @IsString()
+  @IsEmail()
   @IsNotEmpty()
-  username!: string;
-
-
+  email!: string;
 
   // password
   @ApiProperty({
@@ -30,8 +27,6 @@ export class LoginResponseDto {
     example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
   })
   accessToken!: string;
-
-
 
   // refresh token
   @ApiProperty({
@@ -102,6 +97,14 @@ export class SignupDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail()
   email!: string;
+}
+
+
+export class SetPasswordDto {
+  @ApiProperty({ example: 'password123' })
+  @IsString()
+  @MinLength(6)
+  password!: string;
 }
 
 export class ChangePasswordDto {

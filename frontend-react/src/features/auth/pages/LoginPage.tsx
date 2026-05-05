@@ -1,5 +1,9 @@
-import { useMemo, useState } from "react";
-import { Navigate, useNavigate, useLocation } from "react-router";
+import {useMemo, useState } from "react";
+import {
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import envConfig from "@/shared/config/envConfig";
@@ -15,20 +19,19 @@ import {
 import {
   useLoginMutation,
   useSignUpMutation,
-  useRestoreAccountMutation,
 } from "@/features/auth/api/authService";
-import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   LoginSchema,
   SignUpSchema,
   type LoginBodyType,
   type SignUpBodyType,
 } from "@/shared/validations/AuthSchema";
-import { useAppSelector } from "@/shared/stores/redux/hooks";
 import ROUTES from "@/shared/lib/routes";
+import { useAuthStore } from "../stores/authStore";
+import { toast } from "sonner";
 
 export default function LoginPage() {
-  const isAuth = useAppSelector((s) => s.auth.isAuth);
+  const isAuth = useAuthStore((state) => state.isAuth);
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
@@ -38,23 +41,19 @@ export default function LoginPage() {
 
   const loginMutation = useLoginMutation();
   const signUpMutation = useSignUpMutation();
-  const restoreMutation = useRestoreAccountMutation();
-
-  const [restoreOpen, setRestoreOpen] = useState(false);
-  const [pendingCredentials, setPendingCredentials] = useState<LoginBodyType | null>(null);
 
   const loginForm = useForm<LoginBodyType>({
     resolver: zodResolver(LoginSchema),
-    defaultValues: { username: "", password: "" },
+    defaultValues: { email: "", password: "" },
   });
 
   const signupForm = useForm<SignUpBodyType>({
     resolver: zodResolver(SignUpSchema),
-    defaultValues: { username: "", password: "", fullName: "", email: "" },
+    defaultValues: { username: "", fullName: "", email: "", password: "" },
   });
 
   const googleAuthUrl = useMemo(
-    () => `${envConfig.VITE_API_URL}/auth/google`,
+    () => `${envConfig.VITE_API_URL}/api/v1/auth/google`,
     [],
   );
 
@@ -65,26 +64,12 @@ export default function LoginPage() {
   async function handleLogin(data: LoginBodyType) {
     try {
       await loginMutation.mutateAsync({
-        username: data.username,
+        email: data.email,
         password: data.password,
       });
       navigate(from, { replace: true });
     } catch (err: any) {
-      if (err?.response?.data?.errorCode === "ACCOUNT_SOFT_DELETED") {
-        setPendingCredentials(data);
-        setRestoreOpen(true);
-      }
-    }
-  }
-
-  async function handleRestore() {
-    if (!pendingCredentials) return;
-    try {
-      await restoreMutation.mutateAsync(pendingCredentials);
-      navigate(from, { replace: true });
-      setRestoreOpen(false);
-    } catch {
-      // handled in mutation
+      toast.error(err?.data?.message || "Đăng nhập thất bại.")
     }
   }
 
@@ -98,9 +83,9 @@ export default function LoginPage() {
       });
       signupForm.reset();
       setActiveTab("login");
-      loginForm.setValue("username", data.username);
-    } catch {
-      // toast is handled inside the mutation
+      loginForm.setValue("email", data.email);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Đăng ký thất bại.")
     }
   }
 
@@ -180,15 +165,16 @@ export default function LoginPage() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="login-username">Tên đăng nhập</Label>
+                <Label htmlFor="login-email">Email</Label>
                 <Input
-                  id="login-username"
-                  {...loginForm.register("username")}
-                  autoComplete="username"
+                  id="login-email"
+                  type="email"
+                  {...loginForm.register("email")}
+                  autoComplete="email"
                 />
-                {loginForm.formState.errors.username && (
+                {loginForm.formState.errors.email && (
                   <p className="text-sm text-destructive">
-                    {loginForm.formState.errors.username.message}
+                    {loginForm.formState.errors.email.message}
                   </p>
                 )}
               </div>
@@ -355,15 +341,6 @@ export default function LoginPage() {
           </TabsContent>
         </Tabs>
       </div>
-      <ConfirmModal
-        open={restoreOpen}
-        onOpenChange={setRestoreOpen}
-        title="Khôi phục tài khoản"
-        description="Tài khoản của bạn đang bị vô hiệu hóa. Bạn có muốn khôi phục lại tài khoản ngay bây giờ không?"
-        onConfirm={handleRestore}
-        confirmText="Khôi phục ngay"
-        isLoading={restoreMutation.isPending}
-      />
     </div>
   );
 }

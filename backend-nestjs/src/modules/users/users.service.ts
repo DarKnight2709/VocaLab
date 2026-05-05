@@ -28,6 +28,7 @@ export class UserService {
       select: {
         id: true,
         username: true,
+        hashedPassword: true,
         fullName: true,
         email: true,
         avatar: true,
@@ -35,7 +36,12 @@ export class UserService {
         updatedAt: true,
       },
     });
-    return user;
+    if(!user) return null;
+    const {hashedPassword, ...rest} = user;
+    return {
+      ...rest,
+      hasPassword: !!hashedPassword,
+    };
   }
 
   async getByUsername(username: string) {

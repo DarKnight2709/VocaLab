@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { useBlogsQuery } from "@/features/blog/api/blogService";
-import { useAppSelector } from "@/shared/stores/redux/hooks";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import BlogCard, { SkeletonCard } from "../components/BlogCard";
 import BlogListHeader from "../components/BlogListHeader";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 
 export default function BlogPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const isAuth = useAppSelector((s: any) => s.auth.isAuth);
+  const isAuth = useAuthStore((state) => state.isAuth);
 
   const { data: blogData, isLoading } = useBlogsQuery(page, 12, debouncedSearch);
 

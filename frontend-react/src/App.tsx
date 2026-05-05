@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import { ReactQueryProvider } from "@/shared/components/ReactQueryProvider";
 import AuthGuard from "@/features/auth/components/AuthGuard";
 import LoginPage from "@/features/auth/pages/LoginPage";
+import AuthCallback from "@/features/auth/pages/AuthCallback";
 import MainLayout from "./shared/layout/MainLayout";
 import ErrorBoundary from "./shared/components/ErrorBoundary";
 import NotFoundPage from "./shared/pages/NotFoundPage";
@@ -67,6 +68,14 @@ const router = createBrowserRouter([
     element: (
       <ErrorBoundary>
         <LoginPage />
+      </ErrorBoundary>
+    ),
+  },
+  {
+    path: ROUTES.AUTH_CALLBACK.url,
+    element: (
+      <ErrorBoundary>
+        <AuthCallback />
       </ErrorBoundary>
     ),
   },

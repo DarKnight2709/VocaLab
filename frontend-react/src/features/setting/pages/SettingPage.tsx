@@ -26,6 +26,7 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useDeleteAccountMutation } from "@/features/user/api/userService";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
+import { SetPasswordDialog } from "@/features/auth/components/SetPasswordDialog";
 
 // Cấu trúc phân nhóm Sidebar
 const sidebarGroups = [
@@ -59,7 +60,8 @@ export default function SettingPage() {
 
   const { data: me } = useMeQuery();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [setPasswordOpen, setSetPasswordOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -161,9 +163,11 @@ export default function SettingPage() {
                   {activeTab === SettingTab.ACCCOUNT && (
                     <AccountSettingTab
                       onEditProfile={() => setProfileOpen(true)}
-                      onChangePassword={() => setPasswordOpen(true)}
+                      onChangePassword={() => setChangePasswordOpen(true)}
                       onSocialLinks={() => setSocialOpen(true)}
                       onDeleteAccount={() => setDeleteOpen(true)}
+                      onSetPassword={() => setSetPasswordOpen(true)}
+                      me={me}
                     />
                   )}
                   {activeTab === SettingTab.PRIVACY && <PrivacySettingTab />}
@@ -198,8 +202,14 @@ export default function SettingPage() {
         onSuccess={(values) => console.log(values)}
       />
       <ChangePasswordDialog
-        open={passwordOpen}
-        onOpenChange={setPasswordOpen}
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+        me={me}
+        onSuccess={() => navigate(ROUTES.LOGIN.url)}
+      />
+      <SetPasswordDialog
+        open={setPasswordOpen}
+        onOpenChange={setSetPasswordOpen}
         me={me}
         onSuccess={() => navigate(ROUTES.LOGIN.url)}
       />

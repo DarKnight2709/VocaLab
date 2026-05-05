@@ -6,6 +6,7 @@ export type PublicUser = {
   avatar?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  hasPassword?: boolean;
 };
 
-export type TokenUser = Pick<PublicUser, 'id' | 'username'>;
+export type TokenUser = Pick<PublicUser, 'id' | 'email'>;

@@ -18,7 +18,7 @@ import { PrismaService } from '@/core/database/prisma.service';
 
 export interface JwtPayload {
   sub: string;
-  username: string;
+  email: string;
   iat: number;
   exp: number;
 }
@@ -82,7 +82,7 @@ export class JwtGuard implements CanActivate {
       // Gán thông tin user vào request để tiếp tục khâu permission guard
       request.user = {
         id: payload.sub,
-        username: payload.username,
+        email: payload.email,
         fullName: user.fullName,
       };
 

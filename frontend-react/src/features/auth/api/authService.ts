@@ -3,6 +3,7 @@ import type {
   LoginBodyType,
   SignUpBodyType,
   ChangePasswordBodyType,
+  SetPasswordBodyType,
 } from "@/shared/validations/AuthSchema";
 
 import {
@@ -29,8 +30,6 @@ export const useLoginMutation = () => {
       toast.success("Đăng nhập thành công.");
     },
     onError: (error: any) => {
-      // Nếu là lỗi tài khoản bị xóa mềm, ta để LoginPage xử lý hiện Dialog, không hiện Toast ở đây
-      if (error?.response?.data?.errorCode === 'ACCOUNT_SOFT_DELETED') return;
       toast.error(getErrorMessage(error, "Đăng nhập thất bại."));
     },
   });
@@ -105,17 +104,17 @@ export const useChangePasswordMutation = () => {
   });
 };
 
-export const useRestoreAccountMutation = () => {
-  const login = useAuthStore((state) => state.login);
+export const useSetPasswordMutation = () => {
+  const queryClient = useQueryClient(); // Dùng để làm mới cache
   return useMutation({
-    mutationFn: (body: LoginBodyType) =>
-      fetchWithSchema(api.post(API_ROUTES.AUTH.RESTORE, body), LoginResponseSchema),
-    onSuccess: (response) => {
-      login(response.data);
-      toast.success(response.message || "Khôi phục tài khoản thành công!");
+    mutationFn: (body: SetPasswordBodyType) =>
+      api.patch(API_ROUTES.AUTH.SET_PASSWORD, body),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      toast.success(data.data.message || "Thiết lập mật khẩu thành công.");
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Khôi phục tài khoản thất bại."));
+      toast.error(getErrorMessage(error, "Thiết lập mật khẩu thất bại."));
     },
   });
 };

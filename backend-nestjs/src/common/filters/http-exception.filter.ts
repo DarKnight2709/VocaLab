@@ -50,16 +50,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     Logger.error((transformedException as any).message, 'ApiExceptionFilter');
 
-    let resData: any = {};
-    if (typeof exceptionResponse === 'object' && exceptionResponse) {
-      resData = exceptionResponse;
-    }
-
     response.status(status).json({
       success: false,
       message,
       errors,
-      ...resData,
       path: request.url,
     });
   }

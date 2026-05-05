@@ -4,10 +4,12 @@ import type { LoginResponse } from "@/shared/validations/AuthSchema";
 import { decodeToken } from "@/shared/lib/jwt";
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useSocketStore } from "@/shared/stores/useSocketStore";
+import type { JwtPayload } from "jwt-decode";
 
 
 interface AuthState {
   isAuth: boolean;
+  userId: string | null;
   token: LoginResponse | null;
   error: string | null;
 
@@ -20,6 +22,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist((set) => ({
     isAuth: false,
+    userId: null,
     token: null,
     error: null,
 
@@ -33,14 +36,15 @@ export const useAuthStore = create<AuthState>()(
         return;
       }
 
+      let decoded: JwtPayload | null = null;
       try {
         // check token valid
-        const decoded = decodeToken(token.accessToken);
+        decoded = decodeToken(token.accessToken);
         if (!decoded) {
           toast.error("Token không hợp lệ!", {
             description: "Vui lòng đăng nhập lại.",
           });
-          set({ token: null, error: "Token không hợp lệ!" });
+          set({ token: null, error: "Token không hợp lệ!"});
           return;
         }
       } catch (error) {
@@ -51,12 +55,13 @@ export const useAuthStore = create<AuthState>()(
         return;
       }
 
-      set({ token, error: null, isAuth: true });
+      set({ token, error: null, isAuth: true, userId: decoded.sub });
       useSocketStore.getState().connect(token.accessToken);
     },
 
     logout: () => {
-      set({ token: null, error: null, isAuth: false });
+      set({ token: null, error: null, isAuth: false, userId: null });
+      useSocketStore.getState().disconnect();
     },
   }),
   {

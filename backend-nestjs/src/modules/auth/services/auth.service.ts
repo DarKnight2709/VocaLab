@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
@@ -20,6 +21,7 @@ import {
   LogoutResponseDto,
   RefreshTokenDto,
   RefreshTokenResponseDto,
+  SetPasswordDto,
   SignupDto,
 } from '../auth.dto';
 import { HashingService } from '@/common/services/hashing.service';
@@ -58,16 +60,20 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ): Promise<LoginResponseDto> {
-    const { username, password } = loginDto;
+    const { email, password } = loginDto;
 
-    // tìm user theo username (bao gồm cả user đã bị xóa mềm)
+    // tìm user theo email (bao gồm cả user đã bị xóa mềm)
     const user = await (this.prisma as any).$parent.user.findUnique({
-      where: { username },
+      where: { email },
     });
 
     if (!user) {
+      throw new UnauthorizedException('Tài khoản không tồn tại');
+    }
+
+    if (!user.hashedPassword && user.googleId) {
       throw new UnauthorizedException(
-        'Tên đăng nhập hoặc mật khẩu không hợp lệ',
+        'Tài khoản của bạn đã được đăng ký bằng Google, vui lòng đăng nhập bằng Google và đặt mật mẩu để tiếp tục đăng nhập',
       );
     }
 
@@ -81,11 +87,7 @@ export class AuthService {
     }
 
     if (user.deletedAt !== null) {
-      throw new ForbiddenException({
-        errorCode: 'ACCOUNT_SOFT_DELETED',
-        message:
-          'Tài khoản của bạn đã bị vô hiệu hóa. Bạn có muốn khôi phục không?',
-      });
+      await this.restoreAccount(user.id);
     }
 
     // tạo access token và refresh token
@@ -105,53 +107,12 @@ export class AuthService {
     };
   }
 
-  async restoreAccount(
-    loginDto: LoginDto,
-    ipAddress?: string,
-    userAgent?: string,
-  ): Promise<LoginResponseDto> {
-    const { username, password } = loginDto;
-
-    const user = await (this.prisma as any).$parent.user.findUnique({
-      where: { username },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException(
-        'Tên đăng nhập hoặc mật khẩu không hợp lệ',
-      );
-    }
-
-    const isPasswordValid = this.hashingService.compare(
-      password,
-      user.hashedPassword,
-    );
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Mật khẩu không hợp lệ');
-    }
-
+  private async restoreAccount(userId: string): Promise<void> {
     // Khôi phục tài khoản
     await (this.prisma as any).$parent.user.update({
-      where: { id: user.id },
+      where: { id: userId },
       data: { deletedAt: null },
     });
-
-    // tạo access token và refresh token
-    const accessToken = this.generateAccessToken(user);
-
-    // create refresh token
-    // store the refresh token into dabase.
-    const refreshToken = await this.generateRefreshToken(
-      user,
-      ipAddress,
-      userAgent,
-    );
-
-    return {
-      accessToken,
-      refreshToken,
-    };
   }
 
   async refreshToken(
@@ -251,9 +212,7 @@ export class AuthService {
     }
   }
 
-  async signup(
-    signupDto: SignupDto,
-  ): Promise<{ message: string; user: PublicUser }> {
+  async signup(signupDto: SignupDto): Promise<PublicUser> {
     // Check username exists
     const existingUser = await this.userService.findByUsername(
       signupDto.username,
@@ -281,44 +240,88 @@ export class AuthService {
       email: signupDto.email,
     });
 
-    return {
-      message: 'Đăng ký thành công',
-      user: newUser,
-    };
+    return newUser;
   }
 
-  async googleAuth(profile: any): Promise<PublicUser> {
-    const email = profile?.emails?.[0]?.value;
-    const fullName = profile?.displayName || 'Google User';
-    const avatar = profile?.photos?.[0]?.value;
+  async handleGoogleLogin(
+    profile: any,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<LoginResponseDto> {
+    const { googleId, email, fullName, avatar } = profile;
 
-    if (!email) {
-      throw new Error('Google profile is missing email');
+    if (!email || !googleId) {
+      throw new Error('Google profile is missing email or googleId');
     }
 
-    let user = await this.userService.findByEmail(email);
+    // tìm người dùng với email nếu exist mà không có googleId thì cập nhật googleId
+    let existUser = await (this.prisma as any).$parent.user.findUnique({
+      where: { email },
+    });
 
-    if (!user) {
-      const emailPrefix = email.split('@')[0] || 'user';
-      let username = emailPrefix;
-      const existingUsername = await this.userService.findByUsername(username);
-
-      if (existingUsername) {
-        username = `${emailPrefix}_${Date.now()}`;
+    // chưa có thì tạo
+    if (!existUser) {
+      let username = email.split('@')[0];
+      const isUsernameExist = await this.userService.findByUsername(username);
+      if (isUsernameExist) {
+        username = `${username}${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+      existUser = await this.prisma.user.create({
+        data: {
+          googleId,
+          username,
+          email,
+          fullName,
+          avatar,
+        },
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          email: true,
+          avatar: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+    } else {
+      if (existUser.deletedAt !== null) {
+        await this.restoreAccount(existUser.id);
       }
 
-      const randomPassword = `${profile?.id || 'google'}_${Date.now()}`;
-      const hashedPassword = bcrypt.hashSync(randomPassword, 10);
-
-      user = await this.userService.create({
-        username,
-        hashedPassword,
-        fullName,
-        email,
-      });
+      if (!existUser.googleId) {
+        await this.prisma.user.update({
+          where: {
+            id: existUser.id,
+          },
+          data: {
+            googleId,
+          },
+        });
+      } else {
+        if (existUser.googleId !== googleId) {
+          throw new UnauthorizedException(
+            'Tài khoảng này đã được liên kết với một Google account khác',
+          );
+        }
+      }
     }
 
-    return user;
+    // tạo access token và refresh token
+    const accessToken = this.generateAccessToken(existUser);
+
+    // create refresh token
+    // store the refresh token into dabase.
+    const refreshToken = await this.generateRefreshToken(
+      existUser,
+      ipAddress,
+      userAgent,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   async logout(refreshToken: string): Promise<LogoutResponseDto> {
@@ -353,7 +356,10 @@ export class AuthService {
     }
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<any> {
+  async setPassword(
+    userId: string,
+    setPasswordDto: SetPasswordDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -362,6 +368,44 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    if (user.hashedPassword) {
+      throw new BadRequestException(
+        'You already have a password. Please use change password instead.',
+      );
+    }
+
+    const hashedPassword = bcrypt.hashSync(setPasswordDto.password, 10);
+
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashedPassword,
+      },
+    });
+  }
+
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    if (!user.hashedPassword) {
+      throw new BadRequestException(
+        'You are using Google login. Please set a password before changing it.',
+      );
     }
 
     const isPasswordValid = bcrypt.compareSync(
@@ -373,7 +417,6 @@ export class AuthService {
       throw new UnauthorizedException('Sai mật khẩu cũ');
     }
 
-
     // check new password if it's the same as old password
     const isNewPasswordValid = bcrypt.compareSync(
       changePasswordDto.newPassword,
@@ -381,10 +424,15 @@ export class AuthService {
     );
 
     if (isNewPasswordValid) {
-      throw new UnauthorizedException('Mật khẩu mới không được giống mật khẩu cũ');
+      throw new UnauthorizedException(
+        'Mật khẩu mới không được giống mật khẩu cũ',
+      );
     }
 
-    const hashedNewPassword = bcrypt.hashSync(changePasswordDto.newPassword, 10);
+    const hashedNewPassword = bcrypt.hashSync(
+      changePasswordDto.newPassword,
+      10,
+    );
 
     await this.prisma.user.update({
       where: {
@@ -405,15 +453,13 @@ export class AuthService {
         isRevoked: true,
       },
     });
-
-    return 1;
   }
 
   private generateAccessToken(user: TokenUser): string {
     // mã hóa(sign) dữ liệu bằng private access key.
     const payload = {
       sub: user.id,
-      username: user.username,
+      email: user.email,
     };
 
     return jwt.sign(payload, this.keyManager.getPrivateKeyAccess(), {

@@ -17,11 +17,11 @@ import {
   useReplyCommentMutation,
   useVoteCommentMutation,
 } from "@/features/blog/api/blogService";
-import { useAppSelector } from "@/shared/stores/redux/hooks";
 import ROUTES from "@/shared/lib/routes";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { CommentItem } from "../components/CommentItem";
 import { VoteType } from "@/shared/enums/VoteType.enum";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 
 function ReadOnlyEditor({ content }: { content: string }) {
   const editor = useEditor({
@@ -68,7 +68,7 @@ export default function BlogDetailPage() {
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState("");
 
-  const currentUserId = useAppSelector((s) => s.auth.userId ?? undefined);
+  const currentUserId = useAuthStore((state) => state.userId ?? undefined);
 
   const { data: blogData, isLoading } = useBlogDetailQuery(id);
   const blog = blogData?.data?.blog;

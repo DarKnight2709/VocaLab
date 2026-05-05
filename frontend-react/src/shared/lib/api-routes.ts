@@ -5,10 +5,11 @@ const API_ROUTES = {
     LOGIN: "v1/auth/login",
     SIGNUP: "v1/auth/signup",
     LOGOUT: "v1/auth/logout",
+    GOOGLE: "v1/auth/google",
     ME: "v1/auth/me",
     REFRESH_TOKEN: "v1/auth/refresh-token",
     CHANGE_PASSWORD: "v1/auth/change-password",
-    RESTORE: "v1/auth/restore",
+    SET_PASSWORD: "v1/auth/set-password",
   },
   USER: {
     PROFILE: "v1/users/profile",

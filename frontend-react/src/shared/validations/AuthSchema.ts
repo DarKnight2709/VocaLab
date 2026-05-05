@@ -3,7 +3,7 @@ import { BaseEntityDTO } from "./CommonSchema";
 
 export const LoginSchema = z
   .object({
-    username: z.string().trim().min(1, "Tên đăng nhập không được để trống"),
+    email: z.string().email("Email không hợp lệ"),
     password: z.string().trim().min(1, "Mật khẩu không được để trống"),
   })
   .strict()
@@ -56,6 +56,7 @@ export const RefreshTokenResponseSchema = z
 export const MeResponseSchema = BaseEntityDTO.extend({
   username: z.string(),
   fullName: z.string(),
+  hasPassword: z.boolean().optional(),
   email: z.string().optional(),
   avatar: z.string().optional().nullable(),
 });
@@ -67,6 +68,13 @@ export const ChangePasswordSchema = z
       .string()
       .trim()
       .min(6, "Mật khẩu mới phải có ít nhất 6 ký tự"),
+  })
+  // dùng để đảm bảo không có trường dư thừa
+  .strict()
+  .strip();
+export const SetPasswordSchema = z
+  .object({
+    password: z.string().trim().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   })
   // dùng để đảm bảo không có trường dư thừa
   .strict()
@@ -85,6 +93,7 @@ export type SignUpBodyType = z.infer<typeof SignUpSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type SignUpResponse = z.infer<typeof SignUpResponseSchema>;
 export type ChangePasswordBodyType = z.infer<typeof ChangePasswordSchema>;
+export type SetPasswordBodyType = z.infer<typeof SetPasswordSchema>;
 export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;

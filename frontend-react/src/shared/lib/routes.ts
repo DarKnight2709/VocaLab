@@ -59,6 +59,10 @@ const ROUTES = {
     title: "Đăng nhập",
     url: "/login",
   },
+  AUTH_CALLBACK: {
+    title: "Đang xử lý đăng nhập",
+    url: "/auth/callback",
+  },
   PROFILE: {
     title: "Trang cá nhân",
     url: "/profile/:username",

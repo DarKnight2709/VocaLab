@@ -12,7 +12,7 @@ import { RsaKeyManager } from '../utils/RsaKeyManager';
 
 export interface JwtPayload {
   sub: string;
-  username: string;
+  email: string;
   iat: number;
   exp: number;
 }
@@ -49,7 +49,7 @@ export class SocketAuthGuard implements CanActivate {
         where: { id: payload.sub as string },
         select: {
           id: true,
-          username: true,
+          email: true,
           fullName: true,
         },
       });
@@ -60,7 +60,7 @@ export class SocketAuthGuard implements CanActivate {
 
       client.user = {
         id: payload.sub,
-        username: payload.username,
+        email: payload.email,
         fullName: user.fullName,
       };
       return true;

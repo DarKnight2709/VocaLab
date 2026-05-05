@@ -9,8 +9,7 @@ import { Input } from "@/shared/components/ui/input";
 import ROUTES from "@/shared/lib/routes";
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 import { useLogoutMutation } from "@/features/auth/api/authService";
-import { useAppSelector, useAppDispatch } from "@/shared/stores/redux/hooks";
-import { logoutAction } from "@/shared/stores/redux/authActions";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 
 interface MainHeaderProps {
   me: MeResponse | undefined | null;
@@ -24,15 +23,13 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
 
   const navigate = useNavigate();
 
-  const dispatch = useAppDispatch();
-  const refreshToken = useAppSelector(
-    (state) => state.auth.token?.refreshToken,
-  );
+  const logout = useAuthStore((state) => state.logout);
+  const refreshToken = useAuthStore((state) => state.token?.refreshToken);
 
   async function handleLogout() {
     if (!refreshToken) {
       // Nếu không có refresh token thì cứ logout ở client
-      dispatch(logoutAction());
+      logout();
       navigate(ROUTES.LOGIN.url);
       return;
     }

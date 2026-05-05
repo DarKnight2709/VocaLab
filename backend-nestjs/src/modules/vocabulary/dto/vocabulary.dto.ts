@@ -13,7 +13,7 @@ import {
 import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { CardFieldType, CardSide } from '@prisma/client';
-import { DuplicatePolicy } from '@/common/enums/duplicate-policy';
+import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
 
 export class CreateCollectionDto {
   @IsString()

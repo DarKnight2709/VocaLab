@@ -1,11 +1,14 @@
 import { Button } from "@/shared/components/ui/button";
-import { User, Lock, Share2, Trash2, ShieldCheck } from "lucide-react";
+import type { MeResponse } from "@/shared/validations/AuthSchema";
+import { User, Lock, Share2, Trash2, ShieldCheck, Key } from "lucide-react";
 
 interface AccountSettingTabProps {
   onEditProfile: () => void;
   onChangePassword: () => void;
   onSocialLinks: () => void;
   onDeleteAccount: () => void;
+  onSetPassword: () => void;
+  me: MeResponse | null | undefined;
 }
 
 export default function AccountSettingTab({
@@ -13,6 +16,8 @@ export default function AccountSettingTab({
   onChangePassword,
   onSocialLinks,
   onDeleteAccount,
+  onSetPassword,
+  me,
 }: AccountSettingTabProps) {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -58,10 +63,18 @@ export default function AccountSettingTab({
               <p className="font-medium">Mật khẩu</p>
               <p className="text-sm text-muted-foreground">Thay đổi mật khẩu định kỳ để bảo vệ tài khoản của bạn.</p>
             </div>
-            <Button variant="outline" size="sm" onClick={onChangePassword}>
-              <Lock className="h-4 w-4 mr-2" />
-              Đổi mật khẩu
-            </Button>
+            { me?.hasPassword ? (
+              <Button variant="outline" size="sm" onClick={onChangePassword}>
+                <Lock className="h-4 w-4 mr-2" />
+                Đổi mật khẩu
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={onSetPassword}>
+                <Key className="h-4 w-4 mr-2" />
+                Thiết lập mật khẩu
+              </Button>
+            )
+            }
           </div>
 
           <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 opacity-60">

@@ -44,6 +44,18 @@ export class EnvironmentValidation {
   @IsString()
   DATABASE_URL!: string;
 
+
+  // Auth
+  @IsString()
+  GOOGLE_CLIENT_ID!: string;
+
+  @IsString()
+  GOOGLE_CLIENT_SECRET!: string;
+
+  @IsString()
+  GOOGLE_CALLBACK_URL!: string;
+
+
   // Swagger
   @IsString()
   SWAGGER_TITLE!: string;
