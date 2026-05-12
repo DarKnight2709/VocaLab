@@ -32,6 +32,7 @@ export class UserService {
         fullName: true,
         email: true,
         avatar: true,
+        isTwoFactorEnabled: true,
         createdAt: true,
         updatedAt: true,
       },

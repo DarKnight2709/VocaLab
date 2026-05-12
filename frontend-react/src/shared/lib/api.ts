@@ -25,7 +25,7 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token?.accessToken;
+    const token = useAuthStore.getState().authToken?.accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -56,7 +56,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const status = error?.response?.status;
-    const token = useAuthStore.getState().token;
+    const token = useAuthStore.getState().authToken;
 
     // Check if the request is for login, signup or if it's already a refresh request
     const isAuthRequest =

@@ -11,7 +11,7 @@ const AuthGuard = () => {
   const location = useLocation();
   const socketConnect = useSocketStore((s) => s.connect);
 
-  const accessToken = useAuthStore((s) => s.token?.accessToken);
+  const accessToken = useAuthStore((s) => s.authToken?.accessToken);
 
   useEffect(() => {
     if (isAuth && accessToken) {

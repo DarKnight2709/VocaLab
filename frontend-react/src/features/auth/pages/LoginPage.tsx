@@ -1,9 +1,5 @@
-import {useMemo, useState } from "react";
-import {
-  Navigate,
-  useNavigate,
-  useLocation,
-} from "react-router";
+import { useMemo, useState } from "react";
+import { Navigate, useNavigate, useLocation } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import envConfig from "@/shared/config/envConfig";
@@ -67,9 +63,15 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
       });
-      navigate(from, { replace: true });
+
+      const { isFirstFactorPassed } = useAuthStore.getState();
+      if (isFirstFactorPassed) {
+        navigate(ROUTES.AUTH_2FA.url, { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err: any) {
-      toast.error(err?.data?.message || "Đăng nhập thất bại.")
+      toast.error(err?.data?.message || "Đăng nhập thất bại.");
     }
   }
 
@@ -85,7 +87,7 @@ export default function LoginPage() {
       setActiveTab("login");
       loginForm.setValue("email", data.email);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Đăng ký thất bại.")
+      toast.error(err?.data?.message || "Đăng ký thất bại.");
     }
   }
 

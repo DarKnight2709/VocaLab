@@ -22,12 +22,16 @@ import {
   ChangePasswordDto,
   LoginDto,
   LoginResponseDto,
-  LogoutResponseDto,
   RefreshTokenDto,
   RefreshTokenResponseDto,
   SetPasswordDto,
   SignupDto,
+  TempTokenResponseDto,
+  TwoFactorGenerateResponseDto,
+  TwoFactorLoginDto,
+  TwoFactorVerifyDto,
 } from './auth.dto';
+
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { type Request, type Response } from 'express';
 import { IsProtected } from '@/common/decorators/protected.decorator';
@@ -58,11 +62,41 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Req() request: Request,
-  ): Promise<LoginResponseDto> {
+  ): Promise<ResponseInterceptor<LoginResponseDto | TempTokenResponseDto>> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
-    return await this.authService.login(loginDto, ipAddress, userAgent);
+    const result = await this.authService.login(loginDto, ipAddress, userAgent);
+
+    const message = result instanceof LoginResponseDto ? "Đăng nhập thành công!" : "Thành công lớp 1"
+
+    return {
+      message,
+      data: result
+    }
+  }
+
+  @Post('two-factor-auth/login')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiOperation({
+    summary: 'Đăng nhập (Public)',
+    description: 'Đăng nhập với email và password',
+  })
+  async loginTwoFa(
+    @Body() twoFactorLoginDto: TwoFactorLoginDto,
+    @Req() request: Request,
+  ): Promise<ResponseInterceptor<LoginResponseDto>> {
+    const ipAddress = request.ip;
+    const userAgent = request.get('user-agent');
+
+    const result = await this.authService.loginTwoFa(twoFactorLoginDto, ipAddress, userAgent);
+
+    return {
+      message: "Đăng nhập thành công",
+      data: result
+    }
   }
 
   // refresh token
@@ -87,15 +121,18 @@ export class AuthController {
   @Post('logout')
   @IsProtected()
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: LogoutResponseDto })
   @ApiOperation({
     summary: 'Đăng xuất (Protect)',
     description: 'Đăng xuất đồng thời thu hồi refresh token',
   })
   async logout(
     @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<LogoutResponseDto> {
-    return await this.authService.logout(refreshTokenDto.refreshToken);
+  ): Promise<ResponseInterceptor<void>> {
+    await this.authService.logout(refreshTokenDto.refreshToken);
+
+    return {
+      message: "Đăng xuất thành công!"
+    }
   }
 
   @Post('signup')
@@ -105,11 +142,10 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Đăng ký thành công' })
   async signup(
     @Body() signupDto: SignupDto,
-  ): Promise<ResponseInterceptor<PublicUser>> {
-    const result = await this.authService.signup(signupDto);
+  ): Promise<ResponseInterceptor<void>> {
+    await this.authService.signup(signupDto);
     return {
       message: 'Đăng ký thành công',
-      data: result,
     };
   }
 
@@ -203,5 +239,52 @@ export class AuthController {
     // Redirect về client mà không mang theo dữ liệu trên URL
     const redirectUrl = `${this.configService.get('CLIENT_URL')}/auth/callback`;
     return res.redirect(redirectUrl);
+  }
+
+  @Post('two-factor-auth/generate')
+  @ApiOkResponse({ type: Object })
+  @ApiOperation({
+    summary: 'Tạo mã 2FA (Protect)',
+  })
+  async generateTwoFactorAuth(
+    @CurrentUser() user: any,
+  ): Promise<ResponseInterceptor<TwoFactorGenerateResponseDto>> {
+    const result = await this.authService.generateTwoFactorSecret(user.id);
+
+    return {
+      message: 'Tạo mã 2FA thành công!',
+      data: result,
+    };
+  }
+
+  @Post('two-factor-auth/verify')
+  @ApiOkResponse({ type: Object })
+  @ApiOperation({
+    summary: 'Xác thực mã 2FA (Protect)',
+  })
+  async verifyTwoFactorAuth(
+    @CurrentUser() user: any,
+    @Body() verifyDto: TwoFactorVerifyDto,
+  ): Promise<ResponseInterceptor<void>> {
+    await this.authService.verifyTwoFactorAuth(user.id, verifyDto.code);
+
+    return {
+      message: 'Bật xác thực 2 yếu tố thành công!',
+    };
+  }
+
+  @Post('two-factor-auth/disable')
+  @ApiOkResponse({ type: Object })
+  @ApiOperation({
+    summary: 'Tắt mã 2FA (Protect)',
+  })
+  async disableTwoFactorAuth(
+    @CurrentUser() user: any,
+  ): Promise<ResponseInterceptor<void>> {
+    await this.authService.disableTwoFactorAuth(user.id);
+
+    return {
+      message: 'Tắt xác thực 2 yếu tố thành công!',
+    };
   }
 }

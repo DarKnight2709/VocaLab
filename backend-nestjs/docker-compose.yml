@@ -2,20 +2,20 @@ services:
   postgres:
     image: postgres:17
     restart: always
-    container_name: realtime-chat-db
+    container_name: voca_lab_db
     ports:
       - "5430:5432"
     environment:
       POSTGRES_USER: postgredb
       POSTGRES_PASSWORD: postgredb
-      POSTGRES_DB: realtime_chat
+      POSTGRES_DB: voca_lab
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
     restart: always
-    container_name: realtime-chat-redis
+    container_name: voca_lab_redis
     ports:
       - "6379:6379"
 

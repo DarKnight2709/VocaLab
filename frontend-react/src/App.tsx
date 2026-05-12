@@ -23,6 +23,10 @@ import CardTypeManagementPage from "./features/vocabulary/pages/CardTypeManageme
 import CardTypePreviewPage from "./features/vocabulary/pages/CardTypePreviewPage";
 import ChatPage from "./features/chat/pages/ChatPage";
 import SearchPage from "./features/search/pages/SearchPage";
+import { ThemeProvider, useTheme } from "./shared/components/ThemeProvider";
+import TwoFactorAuthGuard from "./features/auth/components/TwoFactorAuthGuard";
+import TwoFactorAuthPage from "./features/auth/pages/TwoFactorAuthPage";
+import { twoFactorAuthLoader } from "./features/auth/TwoFactorAuthLoader";
 
 const router = createBrowserRouter([
   {
@@ -64,6 +68,20 @@ const router = createBrowserRouter([
     ],
   },
   {
+    loader: twoFactorAuthLoader,
+    element: <TwoFactorAuthGuard />,
+    children: [
+      {
+        path: ROUTES.AUTH_2FA.url,
+        element: (
+          <ErrorBoundary>
+            <TwoFactorAuthPage />
+          </ErrorBoundary>
+        ),
+      },
+    ],
+  },
+  {
     path: ROUTES.LOGIN.url,
     element: (
       <ErrorBoundary>
@@ -89,7 +107,6 @@ const router = createBrowserRouter([
   },
 ]);
 
-import { ThemeProvider, useTheme } from "./shared/components/ThemeProvider";
 
 function ThemedToaster() {
   const { theme } = useTheme();

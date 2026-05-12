@@ -3,6 +3,10 @@ const ROUTES = {
     title: "Trang chủ",
     url: "/",
   },
+  AUTH_2FA: {
+    title: "Xác thực 2 yếu tố",
+    url: "/auth/two-factor",
+  },
   BLOG: {
     title: "Blog",
     url: "/blogs",

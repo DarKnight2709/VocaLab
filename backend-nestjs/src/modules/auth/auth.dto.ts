@@ -36,6 +36,34 @@ export class LoginResponseDto {
   refreshToken!: string;
 }
 
+export class TempTokenResponseDto {
+  @ApiProperty({
+    description: "Temp token",
+    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+  })
+  tempToken!: string;
+}
+
+export class TwoFactorLoginDto {
+  @ApiProperty({
+    description: "Temp token",
+    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+  })
+  @IsString()
+  @IsNotEmpty()
+  tempToken!: string;
+
+  @ApiProperty({
+    description: "Mã OTP (6 chữ số)",
+    example: "123456",
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  @MaxLength(6)
+  code!: string;
+}
+
 
 
 export class RefreshTokenResponseDto {
@@ -65,15 +93,6 @@ export class RefreshTokenDto {
   @IsString()
   @IsNotEmpty()
   refreshToken!: string;
-}
-
-
-export class LogoutResponseDto {
-  @ApiProperty({
-    description: "Thông báo logout thành công",
-    example: "Đăng xuất thành công",
-  })
-  message!: string;
 }
 
 
@@ -118,3 +137,24 @@ export class ChangePasswordDto {
   @MinLength(6)
   newPassword!: string;
 }
+
+export class TwoFactorGenerateResponseDto {
+  @ApiProperty({
+    description: "Mã QR code cho 2FA",
+    example: "data:image/png;base64,iVBORw0KGgo...",
+  })
+  qrCode!: string;
+}
+
+export class TwoFactorVerifyDto {
+  @ApiProperty({
+    description: "Mã OTP (6 chữ số)",
+    example: "123456",
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  @MaxLength(6)
+  code!: string;
+}
+

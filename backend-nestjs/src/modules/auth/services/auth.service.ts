@@ -18,16 +18,20 @@ import {
   ChangePasswordDto,
   LoginDto,
   LoginResponseDto,
-  LogoutResponseDto,
   RefreshTokenDto,
   RefreshTokenResponseDto,
   SetPasswordDto,
   SignupDto,
+  TempTokenResponseDto,
+  TwoFactorGenerateResponseDto,
+  TwoFactorLoginDto,
 } from '../auth.dto';
 import { HashingService } from '@/common/services/hashing.service';
 import { RsaKeyManager } from '@/common/utils/RsaKeyManager';
 import { UserService } from '@/modules/users/users.service';
 import { PublicUser, TokenUser } from '@/modules/users/user.types';
+import * as speakeasy from 'speakeasy';
+import * as QRCode from 'qrcode';
 
 export interface JWTRefreshPayLoad {
   sub: string;
@@ -59,7 +63,7 @@ export class AuthService {
     loginDto: LoginDto,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<LoginResponseDto> {
+  ): Promise<LoginResponseDto | TempTokenResponseDto> {
     const { email, password } = loginDto;
 
     // tìm user theo email (bao gồm cả user đã bị xóa mềm)
@@ -90,11 +94,74 @@ export class AuthService {
       await this.restoreAccount(user.id);
     }
 
+    if(user.isTwoFactorEnabled) {
+      const tempToken = this.generateTempToken(user);
+      return {
+        tempToken
+      };
+    }
+
     // tạo access token và refresh token
     const accessToken = this.generateAccessToken(user);
 
     // create refresh token
     // store the refresh token into dabase.
+    const refreshToken = await this.generateRefreshToken(
+      user,
+      ipAddress,
+      userAgent,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+
+  async loginTwoFa(
+    twoFactorLoginDto: TwoFactorLoginDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<LoginResponseDto> {
+    const { tempToken, code } = twoFactorLoginDto;
+
+    // 1. Verify tempToken
+    let payload: any;
+    try {
+      payload = jwt.verify(tempToken, this.keyManager.getPublicKeyTemp(), {
+        algorithms: ['RS256'],
+      });
+    } catch (error) {
+      throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
+    }
+
+    const userId = payload.sub;
+
+    // 2. Find user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
+      throw new UnauthorizedException('Yêu cầu xác thực không hợp lệ');
+    }
+
+    // 3. Verify OTP code
+    const isValid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: code,
+      window: 2,
+    });
+
+    if (!isValid) {
+      this.logger.warn(`OTP verification failed for user ${user.id}`);
+      throw new UnauthorizedException('Mã OTP không chính xác');
+    }
+
+    // 4. Generate tokens
+    const accessToken = this.generateAccessToken(user);
     const refreshToken = await this.generateRefreshToken(
       user,
       ipAddress,
@@ -212,7 +279,7 @@ export class AuthService {
     }
   }
 
-  async signup(signupDto: SignupDto): Promise<PublicUser> {
+  async signup(signupDto: SignupDto): Promise<void> {
     // Check username exists
     const existingUser = await this.userService.findByUsername(
       signupDto.username,
@@ -233,14 +300,12 @@ export class AuthService {
     const hashedPassword = bcrypt.hashSync(signupDto.password, 10);
 
     // Create user
-    const newUser = await this.userService.create({
+    await this.userService.create({
       username: signupDto.username,
       hashedPassword,
       fullName: signupDto.fullName,
       email: signupDto.email,
     });
-
-    return newUser;
   }
 
   async handleGoogleLogin(
@@ -324,7 +389,7 @@ export class AuthService {
     };
   }
 
-  async logout(refreshToken: string): Promise<LogoutResponseDto> {
+  async logout(refreshToken: string): Promise<void> {
     try {
       // verify refresh token
       const payload = jwt.verify(
@@ -345,14 +410,8 @@ export class AuthService {
         },
         data: { isRevoked: true },
       });
-
-      return {
-        message: 'Đăng xuất thành công',
-      };
     } catch (error) {
       this.logger.error('Logout failed:', error);
-      // Vẫn trả về thành công để không leak thông tin
-      return { message: 'Đăng xuất thành công' };
     }
   }
 
@@ -455,6 +514,106 @@ export class AuthService {
     });
   }
 
+
+  async generateTwoFactorSecret(userId: string): Promise<TwoFactorGenerateResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    let secretBase32 = user.twoFactorSecret;
+
+    // Nếu chưa có secret hoặc đã bật 2FA rồi mà vẫn gọi generate (muốn reset)
+    // thì mới tạo mới. Còn đang thiết lập dở dang thì dùng lại cái cũ.
+    if (!secretBase32 || user.isTwoFactorEnabled) {
+      const secret = speakeasy.generateSecret({
+        name: `VocaLab (${user.email})`,
+        issuer: 'VocaLab',
+      });
+      secretBase32 = secret.base32;
+
+      await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          twoFactorSecret: secretBase32,
+        },
+      });
+    }
+
+    const otpauth_url = speakeasy.otpauthURL({
+      secret: secretBase32,
+      label: user.email,
+      issuer: 'VocaLab',
+      encoding: 'base32',
+    });
+
+    const qrCode = await QRCode.toDataURL(otpauth_url);
+
+    return {
+      qrCode,
+    };
+  }
+
+  async verifyTwoFactorAuth(userId: string, code: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId
+      }
+    });
+    this.logger.debug(`verifyTwoFactorAuth code=${code}`);
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    const isValid = speakeasy.totp.verify({
+      secret: user?.twoFactorSecret,
+      encoding: 'base32',
+      token: code,
+      window: 2,
+    });
+
+    if (!isValid) {
+      this.logger.warn(`OTP verification failed during setup for user ${user.id}`);
+      throw new BadRequestException('Mã OTP không chính xác');
+    }
+
+    // bật 2FA
+    await this.prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        isTwoFactorEnabled: true,
+      }
+    });
+  }
+
+  async disableTwoFactorAuth(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    });
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    await this.prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        isTwoFactorEnabled: false,
+        twoFactorSecret: null,
+      }
+    });
+  }
+
   private generateAccessToken(user: TokenUser): string {
     // mã hóa(sign) dữ liệu bằng private access key.
     const payload = {
@@ -513,5 +672,20 @@ export class AuthService {
     }
 
     return refreshToken;
+  }
+
+
+  private generateTempToken(user: TokenUser) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+    };
+
+    const tempToken = jwt.sign(payload, this.keyManager.getPrivateKeyTemp(), {
+      algorithm: 'RS256',
+      expiresIn: this.configService.get('TEMP_TOKEN_EXPIRES_IN')
+    });
+
+    return tempToken;
   }
 }

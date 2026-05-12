@@ -66,6 +66,9 @@ model User {
   username       String   @unique
   hashedPassword String?
   googleId       String?  @unique
+  isTwoFactorEnabled Boolean @default(false)
+  twoFactorSecret String?
+
   fullName       String
   email          String   @unique
   avatar         String?

@@ -11,7 +11,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useState } from "react";
-import { useMeQuery } from "@/features/auth/api/authService";
+import { useMeQuery, useUpdateTwoFactorAuthMutation, useDisableTwoFactorAuthMutation } from "@/features/auth/api/authService";
 import AccountSettingTab from "../components/setting-tabs/AccountSettingTab";
 import PrivacySettingTab from "../components/setting-tabs/PrivacySettingTab";
 import PreferencesSettingTab from "../components/setting-tabs/PreferencesSettingTab";
@@ -27,6 +27,8 @@ import { useDeleteAccountMutation } from "@/features/user/api/userService";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { SetPasswordDialog } from "@/features/auth/components/SetPasswordDialog";
+import { TwoFactorAuthDialog } from "@/features/auth/components/TwoFactorAuthDialog";
+
 
 // Cấu trúc phân nhóm Sidebar
 const sidebarGroups = [
@@ -64,9 +66,15 @@ export default function SettingPage() {
   const [setPasswordOpen, setSetPasswordOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [twoFactorOpen, setTwoFactorOpen] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+
+
 
   const navigate = useNavigate();
   const deleteAccountMutation = useDeleteAccountMutation();
+  const updateTwoFactorAuthMutation = useUpdateTwoFactorAuthMutation();
+  const disableTwoFactorAuthMutation = useDisableTwoFactorAuthMutation();
   const logout = useAuthStore((s) => s.logout);
   const disconnect = useSocketStore((s) => s.disconnect);
 
@@ -87,6 +95,25 @@ export default function SettingPage() {
     }
   };
 
+  const handleTwoFactorAuthToggle = async () => {
+    try {
+      if (me?.isTwoFactorEnabled) {
+        // Tắt 2FA
+        await disableTwoFactorAuthMutation.mutateAsync();
+      } else {
+        // Bật 2FA
+        const { data } = await updateTwoFactorAuthMutation.mutateAsync();
+        if (data.qrCode) {
+          setQrCode(data.qrCode);
+          setTwoFactorOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error("2FA Toggle error:", error);
+    }
+  };
+
+
   return (
     <div className="h-full overflow-y-auto p-6 bg-background">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -101,7 +128,7 @@ export default function SettingPage() {
 
         <div className="flex flex-col md:flex-row gap-10">
           {/* Sidebar Left */}
-          <aside className="w-full md:w-64 flex-shrink-0 space-y-6">
+          <aside className="w-full md:w-64 shrink-0 space-y-6">
             <nav className="space-y-1">
               {sidebarGroups.map((group) => {
                 const isExpanded = expandedGroups.includes(group.title);
@@ -167,6 +194,7 @@ export default function SettingPage() {
                       onSocialLinks={() => setSocialOpen(true)}
                       onDeleteAccount={() => setDeleteOpen(true)}
                       onSetPassword={() => setSetPasswordOpen(true)}
+                      onSetTwoFactorAuth={handleTwoFactorAuthToggle}
                       me={me}
                     />
                   )}
@@ -214,7 +242,13 @@ export default function SettingPage() {
         onSuccess={() => navigate(ROUTES.LOGIN.url)}
       />
       <UserSocialDialog open={socialOpen} onOpenChange={setSocialOpen} />
+      <TwoFactorAuthDialog
+        open={twoFactorOpen}
+        onOpenChange={setTwoFactorOpen}
+        qrCode={qrCode}
+      />
       <ConfirmModal
+
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Xóa tài khoản"

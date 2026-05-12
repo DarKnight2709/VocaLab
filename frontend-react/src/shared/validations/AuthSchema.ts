@@ -40,11 +40,20 @@ export const LoginResponseSchema = z
   })
   .strip();
 
-export const SignUpResponseSchema = z
+export const TempTokenResponseSchema = z
   .object({
-    message: z.string(),
+    tempToken: z.string(),
   })
   .strip();
+
+export const TwoFactorLoginSchema = z
+  .object({
+    tempToken: z.string(),
+    code: z.string().trim().length(6, "Mã OTP phải có đúng 6 ký tự"),
+  })
+  .strict()
+  .strip();
+
 
 export const RefreshTokenResponseSchema = z
   .object({
@@ -57,6 +66,7 @@ export const MeResponseSchema = BaseEntityDTO.extend({
   username: z.string(),
   fullName: z.string(),
   hasPassword: z.boolean().optional(),
+  isTwoFactorEnabled: z.boolean().optional(),
   email: z.string().optional(),
   avatar: z.string().optional().nullable(),
 });
@@ -80,18 +90,19 @@ export const SetPasswordSchema = z
   .strict()
   .strip();
 
+export const TwoFactorAuthResponseSchema = z.object({
+  qrCode: z.string()
+});
+
 export const UploadAvatarResponseSchema = z.object({
   avatarUrl: z.string(),
 });
 
-export const LogoutResponseSchema = z.object({
-  message: z.string().optional(),
-});
 
 export type LoginBodyType = z.infer<typeof LoginSchema>;
 export type SignUpBodyType = z.infer<typeof SignUpSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
-export type SignUpResponse = z.infer<typeof SignUpResponseSchema>;
+export type TempTokenResponse = z.infer<typeof TempTokenResponseSchema>;
 export type ChangePasswordBodyType = z.infer<typeof ChangePasswordSchema>;
 export type SetPasswordBodyType = z.infer<typeof SetPasswordSchema>;
 export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
@@ -99,3 +110,4 @@ export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
 export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
 export type LogoutBodyType = z.infer<typeof LogoutSchema>;
+export type TwoFactorLoginBodyType = z.infer<typeof TwoFactorLoginSchema>;

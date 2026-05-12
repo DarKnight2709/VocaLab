@@ -1,4 +1,6 @@
 import { Button } from "@/shared/components/ui/button";
+import { Switch } from "@/shared/components/ui/switch";
+
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 import { User, Lock, Share2, Trash2, ShieldCheck, Key } from "lucide-react";
 
@@ -8,6 +10,7 @@ interface AccountSettingTabProps {
   onSocialLinks: () => void;
   onDeleteAccount: () => void;
   onSetPassword: () => void;
+  onSetTwoFactorAuth: () => void;
   me: MeResponse | null | undefined;
 }
 
@@ -17,6 +20,7 @@ export default function AccountSettingTab({
   onSocialLinks,
   onDeleteAccount,
   onSetPassword,
+  onSetTwoFactorAuth,
   me,
 }: AccountSettingTabProps) {
   return (
@@ -77,17 +81,19 @@ export default function AccountSettingTab({
             }
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 opacity-60">
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
             <div>
               <div className="flex items-center gap-2">
                 <p className="font-medium">Xác thực 2 yếu tố (2FA)</p>
-                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Sắp ra mắt</span>
               </div>
               <p className="text-sm text-muted-foreground">Thêm một lớp bảo mật bổ sung cho tài khoản của bạn.</p>
             </div>
-            <Button variant="outline" size="sm" disabled>
-              Thiết lập
-            </Button>
+            <Switch
+              checked={me?.isTwoFactorEnabled}
+              onCheckedChange={onSetTwoFactorAuth}
+              id="2fa-toggle"
+            />
+
           </div>
         </div>
       </section>

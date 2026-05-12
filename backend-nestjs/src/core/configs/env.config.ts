@@ -86,14 +86,24 @@ export class EnvironmentValidation {
   @IsString()
   JWT_PUBLIC_REFRESH!: string;
 
+  @IsString()
+  JWT_PRIVATE_TEMP!: string;
+
+  @IsString()
+  JWT_PUBLIC_TEMP!: string;
+
   // JWT
   @IsNumber()
-  @Transform(({ value }) => (value ? parseInt(value, 10) : 300))
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 60 * 15))
   ACCESS_TOKEN_EXPIRES_IN!: number;
 
   @IsNumber()
-  @Transform(({ value }) => (value ? parseInt(value, 10) : 3600))
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 60 * 24 * 7))
   REFRESH_TOKEN_EXPIRES_IN!: number;
+
+  @IsNumber()
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 60 * 3))
+  TEMP_TOKEN_EXPIRES_IN!: number;
 
   // Redis
   @IsString()

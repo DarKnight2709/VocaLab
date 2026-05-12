@@ -7,6 +7,7 @@ import { ConfigService } from '../services/config.service';
 const KeyType = {
   ACCESS_TOKEN: 'ACCESS_TOKEN',
   REFRESH_TOKEN: 'REFRESH_TOKEN',
+  TEMP_TOKEN: 'TEMP_TOKEN',
 } as const;
 
 type KeyType = (typeof KeyType)[keyof typeof KeyType];
@@ -21,11 +22,15 @@ export class RsaKeyManager {
   private publicKeyAccessFilename: string;
   private privateKeyRefreshFilename: string;
   private publicKeyRefreshFilename: string;
+  private privateKeyTempFilename: string;
+  private publicKeyTempFilename: string;
 
   public privateKeyAccess!: string;
   public publicKeyAccess!: string;
   public privateKeyRefresh!: string;
   public publicKeyRefresh!: string;
+  public privateKeyTemp!: string;
+  public publicKeyTemp!: string;
 
   private readonly logger = new Logger(RsaKeyManager.name);
 
@@ -40,6 +45,10 @@ export class RsaKeyManager {
       'private_key_refresh.pem';
     this.publicKeyRefreshFilename =
       this.configService.get('JWT_PUBLIC_REFRESH') || 'public_key_refresh.pem';
+    this.privateKeyTempFilename =
+      this.configService.get('JWT_PRIVATE_TEMP') || 'private_key_temp.pem';
+    this.publicKeyTempFilename =
+      this.configService.get('JWT_PUBLIC_TEMP') || 'public_key_temp.pem';
 
     this.init().catch((err) => {
       this.logger.error('Lỗi khởi tạo RsaKeyManager:', err);
@@ -68,12 +77,23 @@ export class RsaKeyManager {
         this.publicKeyRefreshFilename,
       );
 
+      const privTempPath = path.join(
+        this.keyDirectory,
+        this.privateKeyTempFilename,
+      );
+      const pubTempPath = path.join(
+        this.keyDirectory,
+        this.publicKeyTempFilename,
+      );
+
       if (
         this.allKeysExist(
           privAccessPath,
           pubAccessPath,
           privRefreshPath,
           pubRefreshPath,
+          privTempPath,
+          pubTempPath,
         )
       ) {
         this.logger.log(
@@ -84,6 +104,8 @@ export class RsaKeyManager {
           pubAccessPath,
           privRefreshPath,
           pubRefreshPath,
+          privTempPath,
+          pubTempPath,
         );
       } else {
         this.logger.log('Không tìm thấy cặp khóa, tiến hành tạo mới...');
@@ -96,6 +118,11 @@ export class RsaKeyManager {
           privRefreshPath,
           pubRefreshPath,
           KeyType.REFRESH_TOKEN,
+        );
+        this.generateAndSaveKeyPair(
+          privTempPath,
+          pubTempPath,
+          KeyType.TEMP_TOKEN,
         );
       }
 
@@ -126,11 +153,15 @@ export class RsaKeyManager {
     publicKeyAccessPath: string,
     privateKeyRefreshPath: string,
     publicKeyRefreshPath: string,
+    privateKeyTempPath: string,
+    publicKeyTempPath: string,
   ) {
     this.privateKeyAccess = fs.readFileSync(privateKeyAccessPath, 'utf8');
     this.publicKeyAccess = fs.readFileSync(publicKeyAccessPath, 'utf8');
     this.privateKeyRefresh = fs.readFileSync(privateKeyRefreshPath, 'utf8');
     this.publicKeyRefresh = fs.readFileSync(publicKeyRefreshPath, 'utf8');
+    this.privateKeyTemp = fs.readFileSync(privateKeyTempPath, 'utf8');
+    this.publicKeyTemp = fs.readFileSync(publicKeyTempPath, 'utf8');
 
     this.logger.log('Tải các cặp khóa RSA từ file thành công');
   }
@@ -158,9 +189,12 @@ export class RsaKeyManager {
     if (type === KeyType.ACCESS_TOKEN) {
       this.privateKeyAccess = privateKey;
       this.publicKeyAccess = publicKey;
-    } else {
+    } else if (type === KeyType.REFRESH_TOKEN) {
       this.privateKeyRefresh = privateKey;
       this.publicKeyRefresh = publicKey;
+    } else {
+      this.privateKeyTemp = privateKey;
+      this.publicKeyTemp = publicKey;
     }
 
     fs.writeFileSync(privateKeyPath, privateKey);
@@ -180,5 +214,11 @@ export class RsaKeyManager {
   }
   public getPublicKeyRefresh(): string {
     return this.publicKeyRefresh;
+  }
+  public getPrivateKeyTemp(): string {
+    return this.privateKeyTemp;
+  }
+  public getPublicKeyTemp(): string {
+    return this.publicKeyTemp;
   }
 }

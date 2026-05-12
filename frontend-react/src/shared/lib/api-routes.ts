@@ -10,6 +10,10 @@ const API_ROUTES = {
     REFRESH_TOKEN: "v1/auth/refresh-token",
     CHANGE_PASSWORD: "v1/auth/change-password",
     SET_PASSWORD: "v1/auth/set-password",
+    TWO_FACTOR_AUTH_GENERATE: "v1/auth/two-factor-auth/generate",
+    TWO_FACTOR_AUTH_VERIFY: "v1/auth/two-factor-auth/verify",
+    TWO_FACTOR_AUTH_LOGIN: "v1/auth/two-factor-auth/login",
+    TWO_FACTOR_AUTH_DISABLE: "v1/auth/two-factor-auth/disable",
   },
   USER: {
     PROFILE: "v1/users/profile",
