@@ -6,6 +6,7 @@ import { api } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import ROUTES from "@/shared/lib/routes";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 // ──────────────────────────────────────────────
 // Types
@@ -107,6 +108,7 @@ function UserCard({ user }: { user: UserResult }) {
 }
 
 function GroupCard({ group }: { group: GroupResult }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 transition-shadow hover:shadow-sm">
       <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
@@ -126,7 +128,7 @@ function GroupCard({ group }: { group: GroupResult }) {
         <p className="font-medium">{group.name}</p>
         {group._count && (
           <p className="text-sm text-muted-foreground">
-            {group._count.members} thành viên
+            {group._count.members} {t("search.members")}
           </p>
         )}
         {group.description && (
@@ -140,6 +142,7 @@ function GroupCard({ group }: { group: GroupResult }) {
 }
 
 function BlogCard({ blog }: { blog: BlogResult }) {
+  const { t } = useTranslation();
   return (
     <Link
       to={ROUTES.BLOG_DETAIL.url.replace(":id", blog.id)}
@@ -160,7 +163,7 @@ function BlogCard({ blog }: { blog: BlogResult }) {
           </p>
         )}
         <p className="mt-2 text-xs text-muted-foreground">
-          bởi {blog.author.fullName}
+          {t("search.by")} {blog.author.fullName}
         </p>
       </div>
     </Link>
@@ -171,16 +174,18 @@ function BlogCard({ blog }: { blog: BlogResult }) {
 // Main page
 // ──────────────────────────────────────────────
 
-const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
-  { key: "users", label: "Người dùng", icon: <User size={15} /> },
-  { key: "groups", label: "Nhóm", icon: <Users size={15} /> },
-  { key: "blogs", label: "Bài viết", icon: <BookOpen size={15} /> },
-];
-
 export default function SearchPage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("users");
+
+  const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: "users", label: t("search.tabs.users"), icon: <User size={15} /> },
+    { key: "groups", label: t("search.tabs.groups"), icon: <Users size={15} /> },
+    { key: "blogs", label: t("search.tabs.blogs"), icon: <BookOpen size={15} /> },
+  ];
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -214,8 +219,8 @@ export default function SearchPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8">
-      <Breadcrumb items={[{ label: "Tìm kiếm" }]} />
-      <h1 className="mb-6 text-2xl font-bold">Tìm kiếm</h1>
+      <Breadcrumb items={[{ label: t("search.title") }]} />
+      <h1 className="mb-6 text-2xl font-bold">{t("search.title")}</h1>
 
       {/* Search input */}
       <div className="relative mb-6">
@@ -228,7 +233,7 @@ export default function SearchPage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Tìm người dùng, nhóm, bài viết..."
+          placeholder={t("search.placeholder")}
           className="w-full rounded-2xl border bg-background py-3 pl-11 pr-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
         />
       </div>
@@ -257,10 +262,10 @@ export default function SearchPage() {
       </div>
 
       {/* Results */}
-      {!debouncedQuery ? (
+        {!debouncedQuery ? (
         <div className="py-16 text-center text-muted-foreground">
           <Search size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Nhập từ khóa để tìm kiếm</p>
+          <p className="text-sm">{t("search.enterKeyword")}</p>
         </div>
       ) : loading ? (
         <div className="space-y-3">
@@ -272,19 +277,19 @@ export default function SearchPage() {
         <div className="space-y-3">
           {activeTab === "users" &&
             (users.length === 0 ? (
-              <Empty query={debouncedQuery} type="người dùng" />
+              <Empty query={debouncedQuery} type={t("search.types.users")} />
             ) : (
               users.map((u) => <UserCard key={u.id} user={u} />)
             ))}
           {activeTab === "groups" &&
             (groups.length === 0 ? (
-              <Empty query={debouncedQuery} type="nhóm" />
+              <Empty query={debouncedQuery} type={t("search.types.groups")} />
             ) : (
               groups.map((g) => <GroupCard key={g.id} group={g} />)
             ))}
           {activeTab === "blogs" &&
             (blogs.length === 0 ? (
-              <Empty query={debouncedQuery} type="bài viết" />
+              <Empty query={debouncedQuery} type={t("search.types.posts")} />
             ) : (
               blogs.map((b) => <BlogCard key={b.id} blog={b} />)
             ))}
@@ -295,10 +300,10 @@ export default function SearchPage() {
 }
 
 function Empty({ query, type }: { query: string; type: string }) {
+  const { t } = useTranslation();
   return (
     <div className="py-12 text-center text-muted-foreground">
-      Không tìm thấy {type} nào cho "
-      <span className="font-medium text-foreground">{query}</span>"
+      {t("search.noResults", { type, query })}
     </div>
   );
 }

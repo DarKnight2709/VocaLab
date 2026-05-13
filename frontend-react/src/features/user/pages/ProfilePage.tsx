@@ -14,8 +14,10 @@ import ProfileActionButtons from "@/features/user/components/ProfileActionButton
 import ProfileStatsGrid from "@/features/user/components/ProfileStatsGrid";
 import ProfileContentSection from "@/features/user/components/ProfileContentSection";
 import { useStatsQuery, useUserByUsernameQuery } from "@/features/user/api/userService";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { username: urlUsername } = useParams<{ username: string }>();
   const { data: me } = useMeQuery();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -45,23 +47,23 @@ export default function ProfilePage() {
 
   const stats = useMemo(
     () => [
-      { label: "Followers", value: userStats?.followers ?? 0 },
-      { label: "Following", value: userStats?.following ?? 0 },
-      { label: "Friends", value: userStats?.friends ?? 0},
-      { label: "Posts", value: userStats?.posts ?? 0 },
+      { label: t("profile.tabs.followers"), value: userStats?.followers ?? 0 },
+      { label: t("profile.tabs.following"), value: userStats?.following ?? 0 },
+      { label: t("profile.tabs.friends"), value: userStats?.friends ?? 0},
+      { label: t("profile.tabs.posts"), value: userStats?.posts ?? 0 },
     ],
-    [userStats],
+    [userStats, t],
   );
 
   if (shouldShowNotFound) {
     return (
       <div className="h-full overflow-y-auto p-6">
         <div className="mx-auto max-w-6xl space-y-6">
-          <Breadcrumb items={[{ label: "Trang cá nhân" }]} />
+          <Breadcrumb items={[{ label: t("common.profile") }]} />
           <div className="rounded-xl border bg-muted/20 p-8 text-center">
-            <h2 className="text-2xl font-semibold">Không tìm thấy người dùng</h2>
+            <h2 className="text-2xl font-semibold">{t("profile.userNotFound")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Đường dẫn hồ sơ không tồn tại hoặc đã bị thay đổi.
+              {t("profile.userNotFoundHint")}
             </p>
           </div>
         </div>
@@ -72,7 +74,7 @@ export default function ProfilePage() {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <Breadcrumb items={[{ label: "Trang cá nhân" }]} />
+        <Breadcrumb items={[{ label: t("common.profile") }]} />
 
         {/* Profile Header */}
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
@@ -123,3 +125,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

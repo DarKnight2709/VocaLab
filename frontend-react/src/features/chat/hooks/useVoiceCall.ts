@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 import { toast } from "sonner";
+import i18n from "@/shared/i18n";
 
 export type CallState =
   | "idle"
@@ -25,7 +26,6 @@ const ICE_SERVERS: RTCConfiguration = {
 
 export function useVoiceCall(
   socketRef: React.RefObject<Socket | null>,
-  myId: string,
 ) {
   const [callState, setCallState] = useState<CallState>("idle");
   const [peerId, setPeerId] = useState<string | null>(null);
@@ -68,7 +68,7 @@ export function useVoiceCall(
       localStreamRef.current = stream;
       return stream;
     } catch {
-      toast.error("Không thể truy cập microphone");
+      toast.error(i18n.t("chat.micAccessError"));
       return null;
     }
   }, []);
@@ -144,7 +144,7 @@ export function useVoiceCall(
         { receiverId: targetUserId },
         (res: { success: boolean; message?: string }) => {
           if (!res?.success) {
-            toast.error(res?.message || "Không thể gọi người dùng này");
+            toast.error(res?.message || i18n.t("chat.cannotCallUser")); // Need to add this key or use a generic one
             cleanup();
             setCallState("idle");
             setPeerId(null);
@@ -239,14 +239,14 @@ export function useVoiceCall(
     };
 
     const onCallRejected = () => {
-      toast.info("Cuộc gọi bị từ chối");
+      toast.info(i18n.t("chat.callRejected"));
       cleanup();
       setCallState("idle");
       setPeerId(null);
     };
 
     const onCallEnded = () => {
-      toast.info("Cuộc gọi đã kết thúc");
+      toast.info(i18n.t("chat.callEnded"));
       cleanup();
       setCallState("idle");
       setPeerId(null);

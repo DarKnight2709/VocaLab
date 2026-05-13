@@ -39,6 +39,7 @@ import {
   useTransferOwnershipMutation,
 } from '@/features/chat/api/groupService'
 import PERMISSION_GROUP from '@/shared/constants/permissions.constant'
+import { useTranslation } from "@/shared/hooks/useTranslation"
 import type { UserItem } from '@/shared/validations/ChatSchema'
 import type { GroupInfo, GroupMember } from '@/shared/validations/GroupSchema'
 
@@ -73,6 +74,7 @@ export function GroupInfoDialog({
   onLeftGroup,
   onUpdatedGroup,
 }: Props) {
+  const { t } = useTranslation()
   const [group, setGroup] = useState<GroupInfo | null>(null)
   const [members, setMembers] = useState<GroupMember[]>([])
 
@@ -172,7 +174,7 @@ export function GroupInfoDialog({
   async function handleAddMembers() {
     if (!groupId) return
     if (selectedToAdd.length === 0) {
-      toast.error('Chọn thành viên để thêm')
+      toast.error(t('chat.selectMembersToAdd'))
       return
     }
 
@@ -180,13 +182,13 @@ export function GroupInfoDialog({
 
     try {
       await addMembersMutation.mutateAsync({ groupId, memberIds: ids })
-      toast.success('Thêm thành viên thành công')
+      toast.success(t('chat.membersAdded'))
       setSelectedToAdd([])
       setKeyword('')
       setResults([])
       onAddedMembers?.()
     } catch (e: any) {
-      toast.error(getErrorMessage(e, 'Thêm thành viên thất bại'))
+      toast.error(getErrorMessage(e, t('chat.addMembersFailed')))
     }
   }
 
@@ -194,8 +196,8 @@ export function GroupInfoDialog({
     if (!groupId) return;
     setConfirmConfig({
       open: true,
-      title: 'Xóa nhóm',
-      description: 'Bạn chắc chắn muốn xóa nhóm này? Hành động này không thể hoàn tác.',
+      title: t('chat.deleteGroupConfirmTitle'),
+      description: t('chat.deleteGroupConfirmDesc'),
       isLoading: false,
       variant: "destructive",
       onConfirm: async () => {
@@ -205,7 +207,9 @@ export function GroupInfoDialog({
           setConfirmConfig(prev => ({ ...prev, open: false }))
           onOpenChange(false)
           onLeftGroup?.()
+          toast.success(t('chat.groupDeleted'))
         } catch (e: any) {
+          toast.error(getErrorMessage(e, t('chat.groupDeleteFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -216,8 +220,8 @@ export function GroupInfoDialog({
     if (!groupId) return
     setConfirmConfig({
       open: true,
-      title: 'Rời nhóm',
-      description: 'Bạn chắc chắn muốn rời nhóm này?',
+      title: t('chat.leaveGroupConfirmTitle'),
+      description: t('chat.leaveGroupConfirmDesc'),
       isLoading: false,
       variant: "destructive",
       onConfirm: async () => {
@@ -227,7 +231,9 @@ export function GroupInfoDialog({
           setConfirmConfig(prev => ({ ...prev, open: false }))
           onOpenChange(false)
           onLeftGroup?.()
+          toast.success(t('chat.leftGroup'))
         } catch (e: any) {
+          toast.error(getErrorMessage(e, t('chat.leaveGroupFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -238,44 +244,44 @@ export function GroupInfoDialog({
     if (!groupId) return
     setConfirmConfig({
       open: true,
-      title: 'Chuyển quyền sở hữu',
-      description: `Bạn chắc chắn muốn chuyển quyền sở hữu cho ${targetUserName}? Bạn sẽ không còn là chủ nhóm sau hành động này.`,
+      title: t('chat.transferOwnershipConfirmTitle'),
+      description: t('chat.transferOwnershipConfirmDesc', { name: targetUserName }),
       isLoading: false,
       variant: "destructive",
       onConfirm: async () => {
         try {
           setConfirmConfig(prev => ({ ...prev, isLoading: true }))
           await transferOwnershipMutation.mutateAsync({ groupId, newOwnerId: targetUserId })
+          toast.success(t('chat.transferOwnershipSuccess'))
           setConfirmConfig(prev => ({ ...prev, open: false }))
         } catch (e: any) {
+          toast.error(getErrorMessage(e, t('chat.transferOwnershipFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
     })
   }
 
- 
-
   async function handleKick(memberId: string) {
     if (!groupId) return
 
     const target = members.find((m) => m.user?.id === memberId)
-    const memberName = target?.user?.fullName || target?.user?.username || 'Thành viên'
+    const memberName = target?.user?.fullName || target?.user?.username || t('chat.user')
 
     setConfirmConfig({
       open: true,
-      title: 'Xóa thành viên',
-      description: `Bạn chắc chắn muốn xóa ${memberName} khỏi nhóm?`,
+      title: t('chat.removeMember'),
+      description: t('chat.removeMemberConfirmDesc', { name: memberName }),
       isLoading: false,
       variant: "destructive",
       onConfirm: async () => {
         try {
           setConfirmConfig(prev => ({ ...prev, isLoading: true }))
           await deleteMemberMutation.mutateAsync({ groupId, memberId })
-          toast.success('Đã xóa thành viên')
+          toast.success(t('chat.memberRemoved'))
           setConfirmConfig(prev => ({ ...prev, open: false }))
         } catch (e: any) {
-          toast.error(getErrorMessage(e, 'Xóa thành viên thất bại'))
+          toast.error(getErrorMessage(e, t('chat.removeMemberFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -286,20 +292,22 @@ export function GroupInfoDialog({
     if (!groupId) return
 
     const target = members.find((m) => m.user?.id === memberId)
-    const memberName = target?.user?.fullName || target?.user?.username || 'Thành viên'
-    const roleName = nextRole === MemberRole.CO_OWNER ? 'Phó nhóm' : 'Thành viên'
+    const memberName = target?.user?.fullName || target?.user?.username || t('chat.user')
+    const roleName = nextRole === MemberRole.CO_OWNER ? t('chat.roleCoOwner') : t('chat.roleMember')
 
     setConfirmConfig({
       open: true,
-      title: 'Đổi vai trò',
-      description: `Bạn muốn đổi ${memberName} thành ${roleName}?`,
+      title: t('chat.changeRole'),
+      description: t('chat.changeRoleConfirmDesc', { name: memberName, role: roleName }),
       isLoading: false,
       onConfirm: async () => {
         try {
           setConfirmConfig(prev => ({ ...prev, isLoading: true }))
           await changeRoleMutation.mutateAsync({ groupId, memberId, role: nextRole })
+          toast.success(t('chat.roleChanged'))
           setConfirmConfig(prev => ({ ...prev, open: false }))
         } catch (e: any) {
+          toast.error(getErrorMessage(e, t('chat.changeRoleFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -309,9 +317,10 @@ export function GroupInfoDialog({
     if (!groupId) return
     try {
       await updateRolePermissionMutation.mutateAsync({ groupId, role, permissionId, isEnabled })
+      toast.success(t('chat.permissionsUpdated'))
       void infoQuery.refetch()
     } catch (e: any) {
-      toast.error(getErrorMessage(e, 'Cập nhật phân quyền thất bại'))
+      toast.error(getErrorMessage(e, t('chat.updatePermissionsFailed')))
     }
   }
 
@@ -333,27 +342,27 @@ export function GroupInfoDialog({
     return [
       {
         role: MemberRole.CO_OWNER,
-        label: 'Phó nhóm',
+        label: t('chat.roleCoOwner'),
         perms: [
-          { key: PERMISSION_GROUP.ADD_MEMBER, label: 'Thêm thành viên', id: getPermId(PERMISSION_GROUP.ADD_MEMBER) },
-          { key: PERMISSION_GROUP.REMOVE_MEMBER, label: 'Xoá thành viên', id: getPermId(PERMISSION_GROUP.REMOVE_MEMBER) },
-          { key: PERMISSION_GROUP.UPDATE_GROUP_INFO, label: 'Cập nhật thông tin nhóm', id: getPermId(PERMISSION_GROUP.UPDATE_GROUP_INFO) },
-          { key: PERMISSION_GROUP.MANAGE_PERMISSIONS, label: 'Quản lý phân quyền', id: getPermId(PERMISSION_GROUP.MANAGE_PERMISSIONS) },
+          { key: PERMISSION_GROUP.ADD_MEMBER, label: t('chat.permAddMember'), id: getPermId(PERMISSION_GROUP.ADD_MEMBER) },
+          { key: PERMISSION_GROUP.REMOVE_MEMBER, label: t('chat.permRemoveMember'), id: getPermId(PERMISSION_GROUP.REMOVE_MEMBER) },
+          { key: PERMISSION_GROUP.UPDATE_GROUP_INFO, label: t('chat.permUpdateGroupInfo'), id: getPermId(PERMISSION_GROUP.UPDATE_GROUP_INFO) },
+          { key: PERMISSION_GROUP.MANAGE_PERMISSIONS, label: t('chat.permManagePermissions'), id: getPermId(PERMISSION_GROUP.MANAGE_PERMISSIONS) },
         ],
       },
       {
         role: MemberRole.MEMBER,
-        label: 'Thành viên',
+        label: t('chat.roleMember'),
         perms: [
-          { key: PERMISSION_GROUP.ADD_MEMBER, label: 'Thêm thành viên', id: getPermId(PERMISSION_GROUP.ADD_MEMBER) },
-          { key: PERMISSION_GROUP.UPDATE_GROUP_INFO, label: 'Cập nhật thông tin nhóm', id: getPermId(PERMISSION_GROUP.UPDATE_GROUP_INFO) },
+          { key: PERMISSION_GROUP.ADD_MEMBER, label: t('chat.permAddMember'), id: getPermId(PERMISSION_GROUP.ADD_MEMBER) },
+          { key: PERMISSION_GROUP.UPDATE_GROUP_INFO, label: t('chat.permUpdateGroupInfo'), id: getPermId(PERMISSION_GROUP.UPDATE_GROUP_INFO) },
         ],
       },
     ]
-  }, [availablePermissions])
+  }, [availablePermissions, t])
 
-  const groupName = group?.name || 'Nhóm'
-  const groupDesc = group?.description?.trim() ? group?.description : 'Chưa có mô tả'
+  const groupName = group?.name || t('chat.group')
+  const groupDesc = group?.description?.trim() ? group?.description : t('chat.noDescription')
   const ownerId = (group?.owner as any)?.id as string | undefined
 
   const isOwner = !!ownerId && ownerId === myId
@@ -376,7 +385,7 @@ export function GroupInfoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Thông tin nhóm</DialogTitle>
+          <DialogTitle>{t('chat.groupInfo')}</DialogTitle>
         </DialogHeader>
 
         <GroupEditDialog
@@ -384,16 +393,16 @@ export function GroupInfoDialog({
           onOpenChange={setEditOpen}
           groupId={groupId}
           initial={group ? { id: group.id, name: group.name, description: group.description, avatar: group.avatar } : null}
-          onUpdated={(g) => {
+          onUpdated={(g: any) => {
             setGroup((prev) => (prev ? { ...prev, ...g } : (g as any)))
             onUpdatedGroup?.(g as any)
           }}
         />
 
         {loading ? (
-          <div className="text-sm text-muted-foreground">Đang tải...</div>
+          <div className="text-sm text-muted-foreground">{t('chat.loading')}</div>
         ) : !groupId ? (
-          <div className="text-sm text-muted-foreground">Chưa chọn nhóm</div>
+          <div className="text-sm text-muted-foreground">{t('chat.noGroupsFound')}</div>
         ) : (
           <div className="space-y-5">
             <div className="flex items-center gap-3">
@@ -408,12 +417,12 @@ export function GroupInfoDialog({
             </div>
 
             <div className="space-y-2">
-              <div className="font-medium">Hành động</div>
+              <div className="font-medium">{t('chat.actions')}</div>
               <div className="flex gap-2">
                 {canEditGroup && (
                   <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(true)} className="h-9 hover:bg-primary/5 transition-colors">
                     <Pencil className="mr-2 h-4 w-4 text-primary" />
-                    Sửa nhóm
+                    {t('vocabulary.edit')}
                   </Button>
                 )}
                 
@@ -425,7 +434,7 @@ export function GroupInfoDialog({
                   className="h-9 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 hover:border-destructive/30 transition-all font-medium"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Rời nhóm
+                  {t('chat.leaveGroup')}
                 </Button>
 
                 {isOwner && (
@@ -437,7 +446,7 @@ export function GroupInfoDialog({
                     className="h-9"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Xóa nhóm
+                    {t('chat.deleteGroup')}
                   </Button>
                 )}
               </div>
@@ -447,16 +456,16 @@ export function GroupInfoDialog({
               <div className="space-y-3 pt-3 border-t">
                 <div className="font-medium flex items-center gap-2 text-primary">
                   <ShieldCheck className="h-4 w-4" />
-                  Phân quyền
+                  {t('chat.permissions')}
                 </div>
                 
                 {availablePermissionsQuery.isLoading ? (
                    <div className="text-xs text-muted-foreground animate-pulse p-4 text-center bg-muted/50 rounded-lg">
-                     Đang tải danh sách quyền...
+                     {t('chat.loadingPermissions')}
                    </div>
                 ) : availablePermissions.length === 0 ? (
                   <div className="text-xs text-destructive p-4 text-center bg-destructive/5 rounded-lg border border-destructive/10">
-                    Không thể lấy danh sách quyền. Vui lòng thử lại sau.
+                    {t('chat.unableToLoadPermissions')}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-3 bg-muted/30 rounded-lg">
@@ -486,7 +495,7 @@ export function GroupInfoDialog({
                                       type="checkbox"
                                       checked={!!enabled}
                                       disabled={isUpdating}
-                                      onChange={(e) => p.id && handleUpdateRolePermission(config.role, p.id, e.target.checked)}
+                                      onChange={(e) => p.id && handleUpdateRolePermission(config.role as MemberRole, p.id, e.target.checked)}
                                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                                     />
                                   )}
@@ -506,7 +515,7 @@ export function GroupInfoDialog({
               <div className="space-y-2">
                 <div className="font-medium flex items-center gap-2">
                   <UserPlus className="h-4 w-4 text-primary" />
-                  Thêm thành viên
+                    {t('chat.addMembers')}
                 </div>
                 {selectedToAdd.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -516,7 +525,7 @@ export function GroupInfoDialog({
                         type="button"
                         onClick={() => removePick(u.id)}
                         className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm hover:bg-muted"
-                        title="Bấm để xoá"
+                        title={t('chat.clickToRemove')}
                       >
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs overflow-hidden">
                           {u.avatar ? (
@@ -539,20 +548,20 @@ export function GroupInfoDialog({
                     <Input 
                       value={keyword} 
                       onChange={(e) => setKeyword(e.target.value)} 
-                      placeholder="Tìm theo tên hoặc username..." 
+                      placeholder={t('chat.searchByNameOrUsername')} 
                       className="h-9"
                     />
                     <Button type="button" onClick={handleAddMembers} disabled={selectedToAdd.length === 0} size="sm">
-                      Thêm
+                      {t('chat.add')}
                     </Button>
                   </div>
 
                   {(searching || keyword.trim() !== '') && (
                     <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border bg-popover p-2 shadow-xl max-h-56 overflow-auto">
                       {searching ? (
-                        <div className="text-sm text-muted-foreground p-2">Đang tìm...</div>
+                        <div className="text-sm text-muted-foreground p-2">{t('chat.searching')}</div>
                       ) : results.length === 0 ? (
-                        <div className="text-sm text-muted-foreground p-2">Không có kết quả</div>
+                        <div className="text-sm text-muted-foreground p-2">{t('chat.noUsersFound')}</div>
                       ) : (
                         <div className="space-y-1">
                           {results.map((u) => {
@@ -577,7 +586,7 @@ export function GroupInfoDialog({
                                   </div>
                                 </div>
                                 <Button size="sm" variant={disabled ? 'secondary' : 'default'} disabled={disabled} onClick={() => addPick(u)} className="h-7 px-3 text-xs">
-                                  {disabled ? 'Đã thêm' : 'Chọn'}
+                                  {disabled ? t('chat.added') : t('chat.add')}
                                 </Button>
                               </div>
                             )
@@ -591,14 +600,14 @@ export function GroupInfoDialog({
             )}
 
             <div className="space-y-2">
-              <div className="font-medium">Danh sách thành viên ({members.length})</div>
+              <div className="font-medium">{t('chat.members')} ({members.length})</div>
               <div className="rounded-lg border divide-y">
                 {sortedMembers.length === 0 ? (
-                  <div className="p-3 text-sm text-muted-foreground">Chưa có thành viên</div>
+                  <div className="p-3 text-sm text-muted-foreground">{t('chat.noUsersYet')}</div>
                 ) : (
                   sortedMembers.map((m) => {
                     const u = m.user
-                    const name = u?.fullName || u?.username || 'User'
+                    const name = u?.fullName || u?.username || t('chat.user')
                     const isAdmin = m.role === MemberRole.CO_OWNER
                     const isMemberOwner = m.role === MemberRole.OWNER
                     const canKick =
@@ -636,12 +645,12 @@ export function GroupInfoDialog({
                                   {m.role === MemberRole.CO_OWNER ? (
                                     <>
                                       <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
-                                      <span className="text-blue-600">Phó nhóm</span>
+                                      <span className="text-blue-600">{t('chat.roleCoOwner')}</span>
                                     </>
                                   ) : (
                                     <>
                                       <User className="h-3.5 w-3.5 text-muted-foreground" />
-                                      <span className="text-muted-foreground">Thành viên</span>
+                                      <span className="text-muted-foreground">{t('chat.roleMember')}</span>
                                     </>
                                   )}
                                   <ChevronDown className="h-3 w-3 opacity-50" />
@@ -653,14 +662,14 @@ export function GroupInfoDialog({
                                   className="gap-2 text-xs"
                                 >
                                   <User className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span>Thành viên</span>
+                                    <span>{t('chat.roleMember')}</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
                                   onClick={() => void handleChangeRole(u.id, MemberRole.CO_OWNER)}
                                   className="gap-2 text-xs"
                                 >
                                   <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
-                                  <span>Phó nhóm</span>
+                                    <span>{t('chat.roleCoOwner')}</span>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -669,17 +678,17 @@ export function GroupInfoDialog({
                               {isMemberOwner ? (
                                 <>
                                   <Crown className="h-3.5 w-3.5 text-amber-500" />
-                                  <span className="text-amber-600">Chủ nhóm</span>
+                                    <span className="text-amber-600">{t('chat.roleOwner')}</span>
                                 </>
                               ) : isAdmin ? (
                                 <>
                                   <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
-                                  <span className="text-blue-600">Phó nhóm</span>
+                                    <span className="text-blue-600">{t('chat.roleCoOwner')}</span>
                                 </>
                               ) : (
                                 <>
                                   <User className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="text-muted-foreground">Thành viên</span>
+                                    <span className="text-muted-foreground">{t('chat.roleMember')}</span>
                                 </>
                               )}
                             </div>
@@ -691,7 +700,7 @@ export function GroupInfoDialog({
                               variant="ghost" 
                               size="sm" 
                               onClick={() => void handleTransferOwnership(u.id, name)} 
-                              title="Chuyển quyền sở hữu"
+                              title={t('chat.transferOwnership')}
                               className="h-8 w-8 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                             >
                               <Crown className="h-4 w-4" />

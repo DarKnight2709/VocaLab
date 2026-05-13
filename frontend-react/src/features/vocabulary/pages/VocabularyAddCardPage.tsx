@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { toast } from "sonner";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface FieldConfig {
   value: string;
@@ -25,6 +26,7 @@ interface FieldConfig {
 
 export default function VocabularyAddCardPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { collectionId } = useParams<{ collectionId: string }>();
 
   const { data: cardTypesData, isLoading: isTypesLoading } = useCardTypesQuery();
@@ -87,13 +89,15 @@ export default function VocabularyAddCardPage() {
     });
     
     if (!hasValue) {
-      toast.warning("Tất cả các trường đều rỗng. Vui lòng nhập ít nhất một trường.");
+      toast.warning(t("vocabulary.fillAtLeastOneField"));
       return;
     }
 
     const missingRequired = selectedType.fields.filter(f => f.isRequired && !(fieldConfigs[f.id]?.value?.trim()));
     if (missingRequired.length > 0) {
-      toast.warning(`Trường "${missingRequired[0].label}" là bắt buộc.`);
+      toast.warning(
+        t("vocabulary.fieldIsRequired").replace("{label}", missingRequired[0].label),
+      );
       return;
     }
 
@@ -118,18 +122,17 @@ export default function VocabularyAddCardPage() {
       <div className="max-w-6xl mx-auto space-y-5">
         <Breadcrumb 
           items={[
-            { label: "Từ vựng", href: "/vocabulary" },
-            { label: isColLoading ? "Đang tải..." : colData?.collection.name || "Bộ sưu tập", href: `/vocabulary/${collectionId}` },
-            { label: "Tạo card mới" }
+            { label: t("vocabulary.title"), href: "/vocabulary" },
+            { label: isColLoading ? t("vocabulary.loading") : colData?.collection.name || t("vocabulary.collectionsTitle"), href: `/vocabulary/${collectionId}` },
+            { label: t("vocabulary.createCard") }
           ]} 
         />
 
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Tạo card mới</h1>
+            <h1 className="text-2xl font-bold">{t("vocabulary.createCard")}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Chọn card type, điền value cho các field và sắp xếp mặt trước/mặt
-              sau.
+              {t("vocabulary.createCardDescription")}
             </p>
           </div>
         </div>
@@ -138,14 +141,14 @@ export default function VocabularyAddCardPage() {
           <div className="rounded-2xl border bg-card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Card type</Label>
+                <Label>{t("vocabulary.cardType")}</Label>
                 <Button
                   type="button"
                   variant="link"
                   className="h-auto p-0"
                   onClick={() => navigate("/vocabulary/card-types")}
                 >
-                  Quản lý
+                  {t("vocabulary.manage")}
                 </Button>
               </div>
               <Select
@@ -154,7 +157,7 @@ export default function VocabularyAddCardPage() {
               >
                 <SelectTrigger>
                   <SelectValue
-                    placeholder={isTypesLoading ? "Đang tải..." : "Chọn type"}
+                    placeholder={isTypesLoading ? t("vocabulary.loading") : t("vocabulary.chooseType")}
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -169,7 +172,7 @@ export default function VocabularyAddCardPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Fields</Label>
+                <Label>{t("vocabulary.fields")}</Label>
                 <Button
                   type="button"
                   variant="link"
@@ -177,13 +180,13 @@ export default function VocabularyAddCardPage() {
                   onClick={() => navigate(`/vocabulary/card-types/${selectedTypeId}`)}
                   disabled={!selectedTypeId}
                 >
-                  Quản lý
+                  {t("vocabulary.manage")}
                 </Button>
               </div>
 
               <div className="min-h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
                 {(selectedType?.fields ?? []).length === 0 ? (
-                  <p className="text-muted-foreground">Chưa có field</p>
+                  <p className="text-muted-foreground">{t("vocabulary.noField")}</p>
                 ) : (
                   <ul className="space-y-1">
                     {(selectedType?.fields ?? []).map((field) => (
@@ -197,7 +200,7 @@ export default function VocabularyAddCardPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Preview</Label>
+              <Label>{t("vocabulary.preview")}</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -205,17 +208,17 @@ export default function VocabularyAddCardPage() {
                 disabled={!selectedTypeId}
                 className="w-full"
               >
-                Mở preview card type
+                {t("vocabulary.preview")}
               </Button>
             </div>
           </div>
 
           <div className="rounded-2xl border bg-card p-4 space-y-4">
-            <h2 className="font-semibold">Điền dữ liệu field</h2>
+            <h2 className="font-semibold">{t("vocabulary.createCardHelp")}</h2>
 
             {(selectedType?.fields ?? []).length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Type này chưa có field.
+                {t("vocabulary.noFieldType")}
               </p>
             )}
 
@@ -232,7 +235,7 @@ export default function VocabularyAddCardPage() {
                       value: e.target.value,
                     })
                   }
-                  placeholder={`Nhập ${field.label.toLowerCase()}`}
+                  placeholder={t("vocabulary.enterFieldPlaceholder").replace("{label}", field.label.toLowerCase())}
                   required={field.isRequired}
                 />
               </div>
@@ -245,7 +248,7 @@ export default function VocabularyAddCardPage() {
               variant="outline"
               onClick={() => navigate(`/vocabulary/${collectionId}`)}
             >
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -254,7 +257,7 @@ export default function VocabularyAddCardPage() {
               }
               className="gap-2"
             >
-              <Plus className="h-4 w-4" /> Create
+              <Plus className="h-4 w-4" /> {t("vocabulary.create")}
             </Button>
           </div>
         </form>

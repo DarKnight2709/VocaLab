@@ -16,10 +16,11 @@ import { getErrorMessage } from "@/shared/lib/api";
 import { toast } from "sonner";
 import type { UserItem } from "@/shared/validations/ChatSchema";
 import {
-  CreateGroupSchema,
+  getCreateGroupSchema,
   type CreateGroupInput,
   type GroupItem,
 } from "@/shared/validations/GroupSchema";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 type Props = {
   open: boolean;
@@ -40,6 +41,7 @@ function initials(name?: string) {
 }
 
 export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState("");
   const [selected, setSelected] = useState<UserItem[]>([]);
   const createGroupMutation = useCreateGroupMutation();
@@ -61,7 +63,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
     reset,
     formState: { errors },
   } = useForm<CreateGroupInput>({
-    resolver: zodResolver(CreateGroupSchema),
+    resolver: zodResolver(getCreateGroupSchema()),
     defaultValues: {
       name: "",
       description: "",
@@ -105,11 +107,11 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
       const {data: groupData}= await createGroupMutation.mutateAsync(values);
 
       const groupId = (groupData as GroupItem)?.id as string | undefined;
-      toast.success("Tạo nhóm thành công");
+      toast.success(t("chat.groupCreated"));
       onOpenChange(false);
       if (groupId) onCreated?.();
     } catch (e: any) {
-      toast.error(getErrorMessage(e, "Tạo nhóm thất bại"));
+      toast.error(getErrorMessage(e, t("chat.groupCreateFailed")));
     }
   };
 
@@ -117,16 +119,16 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Tạo nhóm</DialogTitle>
+          <DialogTitle>{t("chat.createGroup")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="group-name">Tên nhóm</Label>
+            <Label htmlFor="group-name">{t("chat.groupName")}</Label>
             <Input
               id="group-name"
               {...register("name")}
-              placeholder="Nhập tên nhóm"
+              placeholder={t("chat.groupNamePlaceholder")}
             />
             {errors.name && (
               <p className="text-xs text-destructive">{errors.name.message}</p>
@@ -134,11 +136,11 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="group-desc">Mô tả (tuỳ chọn)</Label>
+            <Label htmlFor="group-desc">{t("chat.descriptionOptional")}</Label>
             <Input
               id="group-desc"
               {...register("description")}
-              placeholder="Nhập mô tả nhóm"
+              placeholder={t("chat.descriptionPlaceholder")}
             />
             {errors.description && (
               <p className="text-xs text-destructive">
@@ -148,11 +150,11 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Thêm thành viên</Label>
+            <Label>{t("chat.addMembers")}</Label>
             <Input
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Tìm kiếm thành viên..."
+              placeholder={t("chat.searchMembersPlaceholder")}
             />
             {errors.members && (
               <p className="text-xs text-destructive">
@@ -168,7 +170,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
                     type="button"
                     onClick={() => removeMember(u.id)}
                     className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm hover:bg-muted"
-                    title="Bấm để xoá"
+                    title={t("chat.clickToRemove")}
                   >
                     <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs overflow-hidden">
                       {u.avatar ? (
@@ -193,11 +195,11 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
             <div className="rounded-lg border p-2 max-h-64 overflow-auto mt-2">
               {loadingUsers ? (
                 <div className="text-sm text-muted-foreground p-2 text-center italic">
-                  Đang tải danh sách người dùng...
+                  {t("chat.loadingUsers")}
                 </div>
               ) : filteredResults.length === 0 ? (
                 <div className="text-sm text-muted-foreground p-2 text-center">
-                  Không tìm thấy người dùng nào
+                  {t("chat.noUsersFound")}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -238,7 +240,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
                           disabled={disabled}
                           onClick={() => addMember(u)}
                         >
-                          {disabled ? "Đã chọn" : "Thêm"}
+                          {disabled ? t("chat.selected") : t("chat.add")}
                         </Button>
                       </div>
                     );
@@ -254,13 +256,13 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Huỷ
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
               disabled={createGroupMutation.isPending}
             >
-              {createGroupMutation.isPending ? "Đang tạo..." : "Tạo nhóm"}
+              {createGroupMutation.isPending ? t("chat.creating") : t("chat.createGroup")}
             </Button>
           </div>
         </form>

@@ -15,6 +15,8 @@ import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
 import { useUpdateGroupMutation } from "@/features/chat/api/groupService";
 import type { GroupItem } from "@/shared/validations/GroupSchema";
+import { useTranslation } from "@/shared/hooks/useTranslation";
+import { getErrorMessage } from "@/shared/lib/api";
 
 type GroupInfo = Partial<GroupItem> & { id: string };
 
@@ -45,6 +47,7 @@ export function GroupEditDialog({
   initial,
   onUpdated,
 }: Props) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [group, setGroup] = useState<GroupInfo | null>(initial || null);
@@ -53,7 +56,7 @@ export function GroupEditDialog({
   const [description, setDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const groupName = useMemo(() => group?.name || "Nhóm", [group]);
+  const groupName = useMemo(() => group?.name || "Group", [group]);
   const updateGroupMutation = useUpdateGroupMutation();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -91,7 +94,7 @@ export function GroupEditDialog({
     if (!groupId) return;
     const trimmed = name.trim();
     if (!trimmed) {
-      toast.error("Tên nhóm không được để trống");
+      toast.error(t("chat.groupNameEmpty"));
       return;
     }
 
@@ -106,12 +109,14 @@ export function GroupEditDialog({
         id: groupId,
         name: trimmed,
         description,
-        avatar: avatarPreview || group?.avatar,
+        avatar: (avatarPreview || group?.avatar) as string | null | undefined,
       };
+      toast.success(t("chat.groupUpdated"));
       setGroup(updated);
       onUpdated?.(updated);
       onOpenChange(false);
     } catch (e: any) {
+      toast.error(getErrorMessage(e, t("chat.groupUpdateFailed")));
     } finally {
       setSaving(false);
     }
@@ -119,13 +124,13 @@ export function GroupEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Chỉnh sửa nhóm</DialogTitle>
+          <DialogTitle>{t("chat.editGroup")}</DialogTitle>
         </DialogHeader>
 
         {loading ? (
-          <div className="text-sm text-muted-foreground">Đang tải...</div>
+          <div className="text-sm text-muted-foreground">{t("chat.loading")}</div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -134,7 +139,7 @@ export function GroupEditDialog({
                 className="group relative cursor-pointer overflow-hidden rounded-full border-4 border-background transition hover:opacity-80 disabled:cursor-not-allowed"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={saving || loading}
-                title="Đổi ảnh nhóm"
+                title={t("chat.changePhoto")}
               >
                 <Avatar className="h-14 w-14">
                   <AvatarImage src={avatarPreview || group?.avatar || undefined} />
@@ -142,7 +147,7 @@ export function GroupEditDialog({
                 </Avatar>
               </button>
               <div className="text-sm text-muted-foreground">
-                Bấm avatar để đổi ảnh
+                {t("chat.clickToChangePhoto")}
               </div>
               <input
                 ref={fileInputRef}
@@ -157,20 +162,20 @@ export function GroupEditDialog({
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm font-medium">Tên nhóm</div>
+              <div className="text-sm font-medium">{t("chat.groupName")}</div>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Nhập tên nhóm"
+                placeholder={t("chat.groupNamePlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm font-medium">Mô tả</div>
+              <div className="text-sm font-medium">{t("chat.description")}</div>
               <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Nhập mô tả"
+                placeholder={t("chat.descriptionPlaceholder")}
               />
             </div>
 
@@ -180,14 +185,14 @@ export function GroupEditDialog({
                 type="button"
                 onClick={() => onOpenChange(false)}
               >
-                Huỷ
+                {t("common.cancel")}
               </Button>
               <Button
                 type="button"
                 onClick={handleSave}
                 disabled={saving || !groupId}
               >
-                {saving ? "Đang lưu..." : "Lưu"}
+                {saving ? t("common.processing") : t("grammar.update")}
               </Button>
             </div>
           </div>

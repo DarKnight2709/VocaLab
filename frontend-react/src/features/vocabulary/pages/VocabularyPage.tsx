@@ -42,9 +42,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/shared/components/ui/dropdown-menu";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function VocabularyPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [newColOpen, setNewColOpen] = useState(false);
   const [newColName, setNewColName] = useState("");
@@ -122,7 +124,7 @@ export default function VocabularyPage() {
 
       const cards = res.data.collection.cards || [];
       if (cards.length === 0) {
-        toast.info("Collection này chưa có card để xuất");
+        toast.info(t("vocabulary.noCardsToLearn"));
         return;
       }
 
@@ -146,15 +148,15 @@ export default function VocabularyPage() {
         .replace(/\s+/g, "-")
         .toLowerCase();
       anchor.href = url;
-      anchor.download = `${safeName || "vocabulary-collection"}.csv`;
+      anchor.download = `${safeName || t("vocabulary.downloadFileName")}.csv`;
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
 
-      toast.success("Xuất CSV thành công");
+      toast.success(t("vocabulary.csvExportSuccess"));
     } catch (error) {
-      toast.error(getErrorMessage(error, "Xuất CSV thất bại"));
+      toast.error(getErrorMessage(error, t("vocabulary.csvExportFailed")));
     }
   }
 
@@ -184,12 +186,12 @@ export default function VocabularyPage() {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-6xl mx-auto">
-        <Breadcrumb items={[{ label: "Từ vựng" }]} />
+        <Breadcrumb items={[{ label: t("vocabulary.title") }]} />
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Bộ sưu tập từ vựng</h1>
+            <h1 className="text-2xl font-bold">{t("vocabulary.collectionsTitle")}</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Chọn một bộ sưu tập để mở trang học riêng của bộ đó.
+              {t("vocabulary.collectionsDesc")}
             </p>
           </div>
 
@@ -199,7 +201,7 @@ export default function VocabularyPage() {
               className="gap-2"
               disabled={createColMutation.isPending}
             >
-              <Plus className="h-4 w-4" /> Tạo collection
+              <Plus className="h-4 w-4" /> {t("vocabulary.createCollection")}
             </Button>
 
             <Button
@@ -207,7 +209,7 @@ export default function VocabularyPage() {
               variant="outline"
               className="gap-2"
             >
-              <Import className="h-4 w-4" /> Nhập dữ liệu
+              <Import className="h-4 w-4" /> {t("vocabulary.importData")}
             </Button>
 
             <Button
@@ -215,7 +217,7 @@ export default function VocabularyPage() {
               variant="outline"
               className="gap-2"
             >
-              <Settings className="h-4 w-4" /> Quản lý kiểu thẻ
+              <Settings className="h-4 w-4" /> {t("vocabulary.manageCardTypes")}
             </Button>
           </div>
         </div>
@@ -234,7 +236,7 @@ export default function VocabularyPage() {
             {colsData?.collections.length === 0 && (
               <div className="col-span-full text-center py-16 border rounded-2xl bg-card text-muted-foreground">
                 <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p>Chưa có collection nào</p>
+                <p>{t("vocabulary.noCollections")}</p>
               </div>
             )}
 
@@ -280,7 +282,7 @@ export default function VocabularyPage() {
                         }}
                         className="gap-2"
                       >
-                        <Pencil className="h-4 w-4" /> Đổi tên
+                        <Pencil className="h-4 w-4" /> {t("vocabulary.rename")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -289,7 +291,7 @@ export default function VocabularyPage() {
                         }}
                         className="gap-2"
                       >
-                        <Download className="h-4 w-4" /> Xuất CSV
+                        <Download className="h-4 w-4" /> {t("vocabulary.exportCsv")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -298,7 +300,7 @@ export default function VocabularyPage() {
                         }}
                         className="gap-2 text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" /> Xóa
+                        <Trash2 className="h-4 w-4" /> {t("vocabulary.delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -306,7 +308,7 @@ export default function VocabularyPage() {
 
                 <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
                   <Layers className="h-4 w-4" />
-                  <span>{col._count?.cards ?? 0} cards</span>
+                  <span>{col._count?.cards ?? 0} {t("vocabulary.cards")}</span>
                 </div>
               </div>
             ))}
@@ -317,24 +319,24 @@ export default function VocabularyPage() {
       <Dialog open={newColOpen} onOpenChange={setNewColOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Tạo collection mới</DialogTitle>
+            <DialogTitle>{t("vocabulary.newCollection")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateCollection} className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Tên collection *</Label>
+              <Label>{t("vocabulary.collectionName")} *</Label>
               <Input
                 value={newColName}
                 onChange={(e) => setNewColName(e.target.value)}
-                placeholder="VD: IELTS Vocabulary"
+                placeholder={t("vocabulary.collectionNamePlaceholder")}
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Mô tả</Label>
+              <Label>{t("vocabulary.description")}</Label>
               <Input
                 value={newColDesc}
                 onChange={(e) => setNewColDesc(e.target.value)}
-                placeholder="Mô tả ngắn..."
+                placeholder={t("vocabulary.descriptionPlaceholder")}
               />
             </div>
             <DialogFooter>
@@ -343,10 +345,10 @@ export default function VocabularyPage() {
                 variant="outline"
                 onClick={() => setNewColOpen(false)}
               >
-                Hủy
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={createColMutation.isPending}>
-                Tạo
+                {t("vocabulary.create")}
               </Button>
             </DialogFooter>
           </form>
@@ -356,24 +358,24 @@ export default function VocabularyPage() {
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Đổi tên collection</DialogTitle>
+            <DialogTitle>{t("vocabulary.editCollection")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleRenameCollection} className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Tên mới *</Label>
+              <Label>{t("vocabulary.newName")} *</Label>
               <Input
                 value={renameName}
                 onChange={(e) => setRenameName(e.target.value)}
-                placeholder="Tên collection"
+                placeholder={t("vocabulary.collectionName")}
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Mô tả</Label>
+              <Label>{t("vocabulary.description")}</Label>
               <Input
                 value={renameDesc}
                 onChange={(e) => setRenameDesc(e.target.value)}
-                placeholder="Mô tả ngắn..."
+                placeholder={t("vocabulary.descriptionPlaceholder")}
               />
             </div>
             <DialogFooter>
@@ -382,10 +384,10 @@ export default function VocabularyPage() {
                 variant="outline"
                 onClick={() => setRenameOpen(false)}
               >
-                Hủy
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={updateColMutation.isPending}>
-                Lưu
+                {t("vocabulary.save")}
               </Button>
             </DialogFooter>
           </form>
@@ -402,8 +404,8 @@ export default function VocabularyPage() {
         onOpenChange={setDeleteConfirmOpen}
         onConfirm={handleConfirmDelete}
         isLoading={deleteColMutation.isPending}
-        title="Xóa bộ sưu tập"
-        description="Toàn bộ thẻ trong bộ sưu tập này sẽ bị xóa vĩnh viễn và không thể khôi phục."
+        title={t("vocabulary.deleteCollectionTitle")}
+        description={t("vocabulary.deleteCollectionDesc")}
       />
     </div>
   );

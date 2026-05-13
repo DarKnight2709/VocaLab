@@ -10,7 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMeQuery, useUpdateTwoFactorAuthMutation, useDisableTwoFactorAuthMutation } from "@/features/auth/api/authService";
 import AccountSettingTab from "../components/setting-tabs/AccountSettingTab";
 import PrivacySettingTab from "../components/setting-tabs/PrivacySettingTab";
@@ -28,36 +28,43 @@ import { useAuthStore } from "@/features/auth/stores/authStore";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { SetPasswordDialog } from "@/features/auth/components/SetPasswordDialog";
 import { TwoFactorAuthDialog } from "@/features/auth/components/TwoFactorAuthDialog";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
-
-// Cấu trúc phân nhóm Sidebar
-const sidebarGroups = [
-  {
-    title: "General",
-    items: [
-      { key: SettingTab.ACCCOUNT, label: "Account", icon: User },
-      { key: SettingTab.PREFERENCES, label: "Preferences", icon: Edit },
-    ],
-  },
-  {
-    title: "Security & Privacy",
-    items: [
-      { key: SettingTab.PRIVACY, label: "Privacy", icon: Lock },
-      { key: SettingTab.NOTIFICATIONS, label: "Notifications", icon: Bell },
-    ],
-  },
-  {
-    title: "Learning & Activity",
-    items: [{ key: SettingTab.LEARNING, label: "Learning", icon: Goal }],
-  },
-];
 
 export default function SettingPage() {
+  const { t } = useTranslation();
+  const sidebarGroups = useMemo(
+    () => [
+      {
+        id: "general",
+        title: t("settings.tabs.general"),
+        items: [
+          { key: SettingTab.ACCCOUNT, label: t("settings.tabs.account"), icon: User },
+          { key: SettingTab.PREFERENCES, label: t("settings.tabs.preferences"), icon: Edit },
+        ],
+      },
+      {
+        id: "security",
+        title: t("settings.tabs.securityAndPrivacy"),
+        items: [
+          { key: SettingTab.PRIVACY, label: t("settings.tabs.privacy"), icon: Lock },
+          { key: SettingTab.NOTIFICATIONS, label: t("settings.tabs.notifications"), icon: Bell },
+        ],
+      },
+      {
+        id: "learning",
+        title: t("settings.tabs.learningAndActivity"),
+        items: [{ key: SettingTab.LEARNING, label: t("settings.tabs.learning"), icon: Goal }],
+      },
+    ],
+    [t],
+  );
+
   const [activeTab, setActiveTab] = useState<SettingTab>(SettingTab.ACCCOUNT);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
-    "General",
-    "Security & Privacy",
-    "Learning & Activity",
+    "general",
+    "security",
+    "learning",
   ]);
 
   const { data: me } = useMeQuery();
@@ -78,9 +85,9 @@ export default function SettingPage() {
   const logout = useAuthStore((s) => s.logout);
   const disconnect = useSocketStore((s) => s.disconnect);
 
-  const toggleGroup = (title: string) => {
+  const toggleGroup = (id: string) => {
     setExpandedGroups((prev) =>
-      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title],
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
     );
   };
 
@@ -117,12 +124,12 @@ export default function SettingPage() {
   return (
     <div className="h-full overflow-y-auto p-6 bg-background">
       <div className="max-w-7xl mx-auto space-y-6">
-        <Breadcrumb items={[{ label: "Trang cài đặt" }]} />
+        <Breadcrumb items={[{ label: t("common.settingsPage") }]} />
 
         <div className="pb-4 border-b">
-          <h1 className="text-3xl font-bold tracking-tight">Trang cài đặt</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("common.settingsPage")}</h1>
           <p className="text-muted-foreground mt-1">
-            Quản lý tài khoản và tùy chỉnh trải nghiệm học tập của bạn.
+            {t("settings.displayLanguageDesc")}
           </p>
         </div>
 
@@ -131,11 +138,11 @@ export default function SettingPage() {
           <aside className="w-full md:w-64 shrink-0 space-y-6">
             <nav className="space-y-1">
               {sidebarGroups.map((group) => {
-                const isExpanded = expandedGroups.includes(group.title);
+                const isExpanded = expandedGroups.includes(group.id);
                 return (
-                  <div key={group.title} className="mb-4">
+                  <div key={group.id} className="mb-4">
                     <button
-                      onClick={() => toggleGroup(group.title)}
+                      onClick={() => toggleGroup(group.id)}
                       className="flex w-full items-center justify-between px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors group"
                     >
                       <span className="uppercase tracking-wider text-xs">
@@ -183,7 +190,7 @@ export default function SettingPage() {
           </aside>
 
           {/* Content Right */}
-          <main className="flex-1 min-h-[600px]">
+          <main className="flex-1 min-h-150">
             <div className="bg-card rounded-xl border p-6 shadow-sm">
               {me?.id ? (
                 <>
@@ -213,7 +220,7 @@ export default function SettingPage() {
                     <Users className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">
-                    Không tìm thấy thông tin người dùng.
+                    {t("profile.userNotFound")}
                   </p>
                 </div>
               )}
@@ -251,10 +258,10 @@ export default function SettingPage() {
 
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title="Xóa tài khoản"
-        description="Bạn có chắc chắn muốn xóa tài khoản? Hành động này sẽ vô hiệu hóa tài khoản của bạn và sau 30 ngày sẽ tự động xóa vĩnh viễn. Trong 30 ngày bạn có thể khôi phục tài khoản bằng cách đăng nhập lại."
+        title={t("common.confirm")}
+        description={t("common.helpSoon")}
         onConfirm={handleDeleteConfirm}
-        confirmText="Xóa tài khoản"
+        confirmText={t("common.confirm")}
         variant="destructive"
         isLoading={deleteAccountMutation.isPending}
       />

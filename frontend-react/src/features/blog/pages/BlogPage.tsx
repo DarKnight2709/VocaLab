@@ -5,8 +5,10 @@ import Breadcrumb from "@/shared/components/Breadcrumb";
 import BlogCard, { SkeletonCard } from "../components/BlogCard";
 import BlogListHeader from "../components/BlogListHeader";
 import { useAuthStore } from "@/features/auth/stores/authStore";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function BlogPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -28,7 +30,7 @@ export default function BlogPage() {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="mx-auto max-w-6xl space-y-6">
-        <Breadcrumb items={[{ label: "Blog" }]} />
+        <Breadcrumb items={[{ label: t("common.blog") }]} />
 
         <BlogListHeader
           search={search}
@@ -50,13 +52,11 @@ export default function BlogPage() {
             </div>
             <p className="text-base font-medium">
               {debouncedSearch
-                ? `Không tìm thấy kết quả cho "${debouncedSearch}"`
-                : "Chưa có bài viết nào"}
+                ? t("blog.noSearchResults").replace("{query}", debouncedSearch)
+                : t("blog.noPosts")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {debouncedSearch
-                ? "Hãy thử từ khóa khác."
-                : "Hãy là người đầu tiên chia sẻ!"}
+              {debouncedSearch ? t("blog.noSearchResultsHint") : t("blog.noPostsHint")}
             </p>
           </div>
         ) : (
@@ -78,7 +78,7 @@ export default function BlogPage() {
               <ChevronLeft size={16} />
             </button>
             <span className="text-sm text-muted-foreground">
-              Trang {page} / {blogData.data.meta.totalPages}
+              {t("blog.page")} {page} / {blogData.data.meta.totalPages}
             </span>
             <button
               onClick={() =>

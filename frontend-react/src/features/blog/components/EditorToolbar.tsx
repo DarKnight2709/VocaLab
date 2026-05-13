@@ -16,6 +16,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { useUploadImageMutation } from "@/shared/hooks/useUpload";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 function ToolbarBtn({
   onClick,
@@ -44,6 +45,7 @@ function ToolbarBtn({
 }
 
 export function EditorToolbar({ editor }: { editor: Editor | null }) {
+  const { t } = useTranslation();
   const uploadImage = useUploadImageMutation();
   if (!editor) return null;
 
@@ -63,7 +65,7 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
   };
 
   const addLink = () => {
-    const url = prompt("Nhập URL:");
+    const url = prompt(t("blog.editor.enterUrl"));
     if (url) editor.chain().focus().setLink({ href: url }).run();
   };
 
@@ -106,28 +108,28 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleBold().run()}
         active={editor.isActive("bold")}
-        title="In đậm"
+        title={t("blog.editor.bold")}
       >
         <Bold size={15} />
       </ToolbarBtn>
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleItalic().run()}
         active={editor.isActive("italic")}
-        title="In nghiêng"
+        title={t("blog.editor.italic")}
       >
         <Italic size={15} />
       </ToolbarBtn>
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         active={editor.isActive("underline")}
-        title="Gạch chân"
+        title={t("blog.editor.underline")}
       >
         <UnderlineIcon size={15} />
       </ToolbarBtn>
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleStrike().run()}
         active={editor.isActive("strike")}
-        title="Gạch ngang"
+        title={t("blog.editor.strike")}
       >
         <Strikethrough size={15} />
       </ToolbarBtn>
@@ -135,14 +137,14 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         active={editor.isActive("heading", { level: 1 })}
-        title="Tiêu đề 1"
+        title={t("blog.editor.h1")}
       >
         <Heading1 size={15} />
       </ToolbarBtn>
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         active={editor.isActive("heading", { level: 2 })}
-        title="Tiêu đề 2"
+        title={t("blog.editor.h2")}
       >
         <Heading2 size={15} />
       </ToolbarBtn>
@@ -150,14 +152,14 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         active={editor.isActive("bulletList")}
-        title="Danh sách"
+        title={t("blog.editor.list")}
       >
         <List size={15} />
       </ToolbarBtn>
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         active={editor.isActive("orderedList")}
-        title="Danh sách đánh số"
+        title={t("blog.editor.orderedList")}
       >
         <ListOrdered size={15} />
       </ToolbarBtn>
@@ -165,21 +167,21 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       <ToolbarBtn
         onClick={() => setAlignment("left")}
         active={isAlignActive("left")}
-        title="Căn trái"
+        title={t("blog.editor.alignLeft")}
       >
         <AlignLeft size={15} />
       </ToolbarBtn>
       <ToolbarBtn
         onClick={() => setAlignment("center")}
         active={isAlignActive("center")}
-        title="Căn giữa"
+        title={t("blog.editor.alignCenter")}
       >
         <AlignCenter size={15} />
       </ToolbarBtn>
       <ToolbarBtn
         onClick={() => setAlignment("right")}
         active={isAlignActive("right")}
-        title="Căn phải"
+        title={t("blog.editor.alignRight")}
       >
         <AlignRight size={15} />
       </ToolbarBtn>
@@ -187,11 +189,11 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       <ToolbarBtn
         onClick={addLink}
         active={editor.isActive("link")}
-        title="Chèn liên kết"
+        title={t("blog.editor.insertLink")}
       >
         <LinkIcon size={15} />
       </ToolbarBtn>
-      <ToolbarBtn onClick={addImage} title="Chèn ảnh">
+      <ToolbarBtn onClick={addImage} title={t("blog.editor.insertImage")}>
         <ImageIcon size={15} />
       </ToolbarBtn>
     </div>

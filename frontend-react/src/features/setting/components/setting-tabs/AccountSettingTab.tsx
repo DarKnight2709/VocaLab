@@ -3,6 +3,7 @@ import { Switch } from "@/shared/components/ui/switch";
 
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 import { User, Lock, Share2, Trash2, ShieldCheck, Key } from "lucide-react";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface AccountSettingTabProps {
   onEditProfile: () => void;
@@ -23,33 +24,35 @@ export default function AccountSettingTab({
   onSetTwoFactorAuth,
   me,
 }: AccountSettingTabProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Profile Section */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 pb-2 border-b">
           <User className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
+          <h2 className="text-xl font-semibold">{t("profile.title")}</h2>
         </div>
         <div className="grid gap-4">
           <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
             <div>
-              <p className="font-medium">Hồ sơ công khai</p>
-              <p className="text-sm text-muted-foreground">Cập nhật ảnh đại diện, tên hiển thị và tiểu sử của bạn.</p>
+              <p className="font-medium">{t("settings.publicProfile")}</p>
+              <p className="text-sm text-muted-foreground">{t("settings.publicProfileDesc")}</p>
             </div>
             <Button variant="outline" size="sm" onClick={onEditProfile}>
-              Chỉnh sửa
+              {t("settings.editProfile")}
             </Button>
           </div>
           
           <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
             <div>
-              <p className="font-medium">Mạng xã hội</p>
-              <p className="text-sm text-muted-foreground">Kết nối các tài khoản mạng xã hội để hiển thị trên hồ sơ.</p>
+              <p className="font-medium">{t("settings.socialLinks")}</p>
+              <p className="text-sm text-muted-foreground">{t("settings.socialLinksDesc")}</p>
             </div>
             <Button variant="outline" size="sm" onClick={onSocialLinks}>
               <Share2 className="h-4 w-4 mr-2" />
-              Liên kết
+              {t("settings.socialLinks")}
             </Button>
           </div>
         </div>
@@ -59,23 +62,23 @@ export default function AccountSettingTab({
       <section className="space-y-4">
         <div className="flex items-center gap-2 pb-2 border-b">
           <ShieldCheck className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">Bảo mật</h2>
+          <h2 className="text-xl font-semibold">{t("settings.security")}</h2>
         </div>
         <div className="grid gap-4">
           <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
             <div>
-              <p className="font-medium">Mật khẩu</p>
-              <p className="text-sm text-muted-foreground">Thay đổi mật khẩu định kỳ để bảo vệ tài khoản của bạn.</p>
+              <p className="font-medium">{t("auth.password")}</p>
+              <p className="text-sm text-muted-foreground">{t("settings.securityDesc")}</p>
             </div>
             { me?.hasPassword ? (
               <Button variant="outline" size="sm" onClick={onChangePassword}>
                 <Lock className="h-4 w-4 mr-2" />
-                Đổi mật khẩu
+                {t("settings.changePassword")}
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={onSetPassword}>
                 <Key className="h-4 w-4 mr-2" />
-                Thiết lập mật khẩu
+                {t("settings.setPassword")}
               </Button>
             )
             }
@@ -84,9 +87,9 @@ export default function AccountSettingTab({
           <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
             <div>
               <div className="flex items-center gap-2">
-                <p className="font-medium">Xác thực 2 yếu tố (2FA)</p>
+                <p className="font-medium">{t("settings.twoFactorAuth")}</p>
               </div>
-              <p className="text-sm text-muted-foreground">Thêm một lớp bảo mật bổ sung cho tài khoản của bạn.</p>
+              <p className="text-sm text-muted-foreground">{t("settings.twoFactorAuthDesc")}</p>
             </div>
             <Switch
               checked={me?.isTwoFactorEnabled}
@@ -103,12 +106,12 @@ export default function AccountSettingTab({
         <div className="p-4 rounded-lg border border-destructive/20 bg-destructive/5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold text-destructive">Khu vực nguy hiểm</p>
-              <p className="text-sm text-muted-foreground">Xóa vĩnh viễn tài khoản và tất cả dữ liệu của bạn.</p>
+              <p className="font-semibold text-destructive">{t("settings.dangerZone")}</p>
+              <p className="text-sm text-muted-foreground">{t("settings.dangerZoneDesc")}</p>
             </div>
             <Button variant="destructive" size="sm" onClick={onDeleteAccount}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Xóa tài khoản
+              {t("settings.deleteAccount")}
             </Button>
           </div>
         </div>

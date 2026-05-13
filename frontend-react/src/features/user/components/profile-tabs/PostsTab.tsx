@@ -13,6 +13,7 @@ import { formatDate } from "@/features/blog/components/BlogCard";
 import ROUTES from "@/shared/lib/routes";
 import { useState } from "react";
 import { PostVisibility } from "../../../../shared/enums/PostVisibility.enum";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface PostsTabProps {
   userId: string;
@@ -45,6 +46,7 @@ function VoteDisplay({ post }: { post: any }) {
 }
 
 function PostCard({ post }: { post: any }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const detailUrl = ROUTES.BLOG_DETAIL.url.replace(":id", post.id);
 
@@ -59,7 +61,7 @@ function PostCard({ post }: { post: any }) {
           navigate(detailUrl);
         }
       }}
-      className="group flex flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/50 transition-all duration-300 hover:bg-white dark:bg-white/[0.02] dark:hover:bg-white/[0.05] backdrop-blur-xl shadow-sm hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer"
+      className="group flex flex-col overflow-hidden rounded-4xl border border-white/10 bg-white/50 transition-all duration-300 hover:bg-white dark:bg-white/2 dark:hover:bg-white/5 backdrop-blur-xl shadow-sm hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer"
     >
       <div className="relative h-48 shrink-0 overflow-hidden">
         {post.coverImage ? (
@@ -69,17 +71,17 @@ function PostCard({ post }: { post: any }) {
               alt={post.title}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
           </>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted/50 to-muted/20 transition-colors group-hover:from-primary/10 group-hover:to-primary/5">
+          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-muted/50 to-muted/20 transition-colors group-hover:from-primary/10 group-hover:to-primary/5">
             <FileText className="h-12 w-12 text-muted-foreground/20 transition-transform duration-300 group-hover:scale-110" />
           </div>
         )}
         <div className="absolute top-4 left-4">
            {!post.isPublic && (
              <div className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-               Private
+               {t("blog.private")}
              </div>
            )}
         </div>
@@ -107,7 +109,7 @@ function PostCard({ post }: { post: any }) {
 
           <div className="flex items-center gap-3 shrink-0 text-muted-foreground">
             <VoteDisplay post={post} />
-            <div className="h-3 w-[1px] bg-white/10" />
+            <div className="h-3 w-px bg-white/10" />
             <span className="flex items-center gap-1 text-[11px] font-semibold">
               <MessageCircle size={14} className="text-primary/70" />
               {post._count?.comments ?? 0}
@@ -120,6 +122,7 @@ function PostCard({ post }: { post: any }) {
 }
 
 export default function PostsTab({ userId, search, visibility = PostVisibility.ALL }: PostsTabProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const { data, isLoading } = useUserPostsQuery(userId, page, 12, search, visibility);
 
@@ -127,7 +130,7 @@ export default function PostsTab({ userId, search, visibility = PostVisibility.A
     return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex h-[320px] animate-pulse flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
+          <div key={i} className="flex h-80 animate-pulse flex-col overflow-hidden rounded-4xl border border-white/10 bg-white/5">
             <div className="h-48 bg-muted" />
             <div className="flex flex-1 flex-col gap-4 p-5">
               <div className="h-5 w-3/4 rounded bg-muted" />
@@ -150,10 +153,10 @@ export default function PostsTab({ userId, search, visibility = PostVisibility.A
           <FileText className="h-12 w-12 text-muted-foreground/40" />
         </div>
         <h3 className="text-xl font-bold tracking-tight">
-          {search ? `Không tìm thấy kết quả cho "${search}"` : "Chưa có bài viết nào"}
+          {search ? t("profile.noResults").replace("{query}", search) : t("profile.noPosts")}
         </h3>
         <p className="mt-2 max-w-xs text-center text-sm text-muted-foreground leading-relaxed">
-          {search ? "Hãy thử tìm kiếm với từ khóa khác hoặc kiểm tra lại chính tả." : "Khi có nội dung mới, các bài viết sẽ xuất hiện tại khu vực này."}
+          {search ? t("profile.noResultsHint") : t("profile.noPostsHint")}
         </p>
       </div>
     );
@@ -177,7 +180,7 @@ export default function PostsTab({ userId, search, visibility = PostVisibility.A
             <ChevronLeft size={18} />
           </button>
           <div className="px-4 py-1.5 rounded-full bg-muted/30 border border-white/5 text-xs font-semibold tabular-nums">
-            Trang {page} <span className="mx-1 text-muted-foreground">/</span> {data!.meta.totalPages}
+            Page {page} <span className="mx-1 text-muted-foreground">/</span> {data!.meta.totalPages}
           </div>
           <button
             onClick={() => setPage((p) => Math.min(data!.meta.totalPages, p + 1))}

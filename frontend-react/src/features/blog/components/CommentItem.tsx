@@ -6,6 +6,8 @@ import { Pencil, Trash2, ArrowBigUp, ArrowBigDown, Reply } from "lucide-react";
 import { ReplyCommentDialog } from "./ReplyCommentDialog";
 import { EditCommentDialog } from "./EditCommentDialog";
 import ROUTES from "@/shared/lib/routes";
+import { useTranslation } from "@/shared/hooks/useTranslation";
+
 
 type CommentItemProps = {
   comment: BlogComment;
@@ -32,6 +34,8 @@ export function CommentItem({
   onVote,
   level = 0,
 }: CommentItemProps) {
+  const { t, language } = useTranslation();
+
   const [editSectionOpen, setEditSectionOpen] = useState(false);
   const [replySectionOpen, setReplySectionOpen] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
@@ -41,7 +45,8 @@ export function CommentItem({
   const isUpvoted = comment.userVote === VoteType.UPVOTE;
   const isDownvoted = comment.userVote === VoteType.DOWNVOTE;
 
-  const date = new Date(comment.createdAt).toLocaleDateString("vi-VN", {
+  const date = new Date(comment.createdAt).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US", {
+
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -59,7 +64,7 @@ export function CommentItem({
             comment.author.username,
           )}
           className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
-          aria-label={`Xem trang cá nhân của ${comment.author.fullName}`}
+          aria-label={t("chat.viewProfile").replace("{name}", comment.author.fullName)}
         >
           {comment.author.avatar ? (
             <img
@@ -83,7 +88,7 @@ export function CommentItem({
               <span className="ml-2 text-xs text-muted-foreground">{date}</span>
               {comment.updatedAt && comment.updatedAt !== comment.createdAt && (
                 <span className="ml-2 text-xs text-muted-foreground italic">
-                  (Đã chỉnh sửa)
+                  ({t("blog.edited")})
                 </span>
               )}
             </div>
@@ -94,7 +99,7 @@ export function CommentItem({
                   type="button"
                   onClick={() => setEditSectionOpen(true)}
                   className="text-muted-foreground transition-colors hover:text-green-500"
-                  aria-label="Chỉnh sửa bình luận"
+                  aria-label={t("blog.editComment")}
                 >
                   <Pencil size={14} />
                 </button>
@@ -102,7 +107,7 @@ export function CommentItem({
                   type="button"
                   onClick={() => onDelete(comment.id)}
                   className="text-muted-foreground transition-colors hover:text-destructive"
-                  aria-label="Xóa bình luận"
+                  aria-label={t("blog.deleteComment")}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -112,7 +117,7 @@ export function CommentItem({
 
           {comment.deletedAt ? (
             <p className="mt-1 text-sm italic text-gray-400">
-              Bình luận này đã bị xóa
+              {t("blog.commentDeleted")}
             </p>
           ) : (
             <p className="mt-1 text-sm">{comment.content}</p>
@@ -130,7 +135,7 @@ export function CommentItem({
                         ? "bg-green-50 text-green-600 dark:bg-green-950"
                         : "hover:bg-muted text-muted-foreground"
                     }`}
-                    aria-label="Upvote bình luận"
+                    aria-label={t("blog.upvote")}
                   >
                     <ArrowBigUp
                       size={16}
@@ -148,7 +153,7 @@ export function CommentItem({
                         ? "bg-red-50 text-red-600 dark:bg-red-950"
                         : "hover:bg-muted text-muted-foreground"
                     }`}
-                    aria-label="Downvote bình luận"
+                    aria-label={t("blog.downvote")}
                   >
                     <ArrowBigDown
                       size={16}
@@ -161,8 +166,8 @@ export function CommentItem({
                   type="button"
                   onClick={() => setReplySectionOpen(true)}
                   className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  aria-label="Phản hồi bình luận"
-                  title="Phản hồi"
+                  aria-label={t("blog.reply")}
+                  title={t("blog.reply")}
                 >
                   <Reply size={16} />
                 </button>
@@ -176,8 +181,8 @@ export function CommentItem({
                 className="hover:underline"
               >
                 {showReplies
-                  ? "Ẩn phản hồi"
-                  : `Xem ${comment.replies.length} phản hồi`}
+                  ? t("blog.hideReplies")
+                  : t("blog.viewReplies", { count: comment.replies.length })}
               </button>
             )}
           </div>

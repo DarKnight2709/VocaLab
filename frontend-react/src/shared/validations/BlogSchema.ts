@@ -1,12 +1,15 @@
 import z from "zod"
 import { VoteType } from "../enums/VoteType.enum";
 import type { VoteType as VoteTypeType } from "../enums/VoteType.enum";
+import i18n from "@/shared/i18n";
 
-export const EditCommentSectionSchema = z.object({
-  content: z.string().trim().min(1, "Không được để trống")
-})
-.strict()
-.strip();
+export const getEditCommentSectionSchema = () =>
+  z
+    .object({
+      content: z.string().trim().min(1, i18n.t("validation.fieldRequired")),
+    })
+    .strict()
+    .strip();
 
 export const VoteTypeSchema = z.enum([VoteType.UPVOTE, VoteType.DOWNVOTE]);
 
@@ -91,4 +94,6 @@ export type BlogItem = z.infer<typeof BlogItemSchema>;
 export type BlogDetail = z.infer<typeof BlogDetailSchema>;
 export type BlogComment = z.infer<typeof CommentSchema>;
 export type BlogListResponse = z.infer<typeof BlogListResponseSchema>;
-export type EditCommentSectionBodyType = z.infer<typeof EditCommentSectionSchema>
+export type EditCommentSectionBodyType = z.infer<
+  ReturnType<typeof getEditCommentSectionSchema>
+>;

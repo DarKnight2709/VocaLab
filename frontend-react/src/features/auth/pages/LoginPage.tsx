@@ -17,17 +17,19 @@ import {
   useSignUpMutation,
 } from "@/features/auth/api/authService";
 import {
-  LoginSchema,
-  SignUpSchema,
+  getLoginSchema,
+  getSignUpSchema,
   type LoginBodyType,
   type SignUpBodyType,
 } from "@/shared/validations/AuthSchema";
 import ROUTES from "@/shared/lib/routes";
 import { useAuthStore } from "../stores/authStore";
 import { toast } from "sonner";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function LoginPage() {
   const isAuth = useAuthStore((state) => state.isAuth);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
@@ -39,12 +41,12 @@ export default function LoginPage() {
   const signUpMutation = useSignUpMutation();
 
   const loginForm = useForm<LoginBodyType>({
-    resolver: zodResolver(LoginSchema),
+    resolver: zodResolver(getLoginSchema()),
     defaultValues: { email: "", password: "" },
   });
 
   const signupForm = useForm<SignUpBodyType>({
-    resolver: zodResolver(SignUpSchema),
+    resolver: zodResolver(getSignUpSchema()),
     defaultValues: { username: "", fullName: "", email: "", password: "" },
   });
 
@@ -71,7 +73,7 @@ export default function LoginPage() {
         navigate(from, { replace: true });
       }
     } catch (err: any) {
-      toast.error(err?.data?.message || "Đăng nhập thất bại.");
+      toast.error(err?.data?.message || t("auth.loginFailed"));
     }
   }
 
@@ -87,7 +89,7 @@ export default function LoginPage() {
       setActiveTab("login");
       loginForm.setValue("email", data.email);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Đăng ký thất bại.");
+      toast.error(err?.data?.message || t("auth.signingUp"));
     }
   }
 
@@ -100,22 +102,22 @@ export default function LoginPage() {
         >
           <div className="p-6 border-b">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Đăng nhập</TabsTrigger>
-              <TabsTrigger value="signup">Đăng ký</TabsTrigger>
+              <TabsTrigger value="login">{t("auth.signIn")}</TabsTrigger>
+              <TabsTrigger value="signup">{t("auth.signUp")}</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="login" className="p-6 space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-center mb-2">Đăng nhập</h2>
+              <h2 className="text-2xl font-bold text-center mb-2">{t("auth.signIn")}</h2>
               <p className="text-sm text-muted-foreground text-center">
-                Chưa có tài khoản?{" "}
+                {t("auth.noAccount")} {" "}
                 <button
                   type="button"
                   className="text-primary hover:underline font-medium"
                   onClick={() => setActiveTab("signup")}
                 >
-                  Đăng ký
+                  {t("auth.signUp")}
                 </button>
               </p>
             </div>
@@ -157,7 +159,7 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white px-2 text-muted-foreground">
-                  hoặc
+                  {t("auth.or")}
                 </span>
               </div>
             </div>
@@ -182,7 +184,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="login-password">Mật khẩu</Label>
+                <Label htmlFor="login-password">{t("auth.password")}</Label>
                 <Input
                   id="login-password"
                   type="password"
@@ -204,23 +206,23 @@ export default function LoginPage() {
                 }
               >
                 {loginForm.formState.isSubmitting || loginMutation.isPending
-                  ? "Đang đăng nhập..."
-                  : "Đăng nhập"}
+                  ? t("auth.signingIn")
+                  : t("auth.signIn")}
               </Button>
             </form>
           </TabsContent>
 
           <TabsContent value="signup" className="p-6 space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-center mb-2">Đăng ký</h2>
+              <h2 className="text-2xl font-bold text-center mb-2">{t("auth.signUp")}</h2>
               <p className="text-sm text-muted-foreground text-center">
-                Đã có tài khoản?{" "}
+                {t("auth.haveAccount")} {" "}
                 <button
                   type="button"
                   className="text-primary hover:underline font-medium"
                   onClick={() => setActiveTab("login")}
                 >
-                  Đăng nhập
+                  {t("auth.signIn")}
                 </button>
               </p>
             </div>
@@ -262,7 +264,7 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white px-2 text-muted-foreground">
-                  hoặc
+                  {t("auth.or")}
                 </span>
               </div>
             </div>
@@ -272,7 +274,7 @@ export default function LoginPage() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="signup-username">Tên đăng nhập</Label>
+                <Label htmlFor="signup-username">{t("auth.username")}</Label>
                 <Input
                   id="signup-username"
                   {...signupForm.register("username")}
@@ -286,7 +288,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-fullname">Họ và tên</Label>
+                <Label htmlFor="signup-fullname">{t("auth.fullName")}</Label>
                 <Input
                   id="signup-fullname"
                   {...signupForm.register("fullName")}
@@ -314,7 +316,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Mật khẩu</Label>
+                <Label htmlFor="signup-password">{t("auth.password")}</Label>
                 <Input
                   id="signup-password"
                   type="password"
@@ -336,8 +338,8 @@ export default function LoginPage() {
                 }
               >
                 {signupForm.formState.isSubmitting || signUpMutation.isPending
-                  ? "Đang đăng ký..."
-                  : "Đăng ký"}
+                  ? t("auth.signingUp")
+                  : t("auth.signUp")}
               </Button>
             </form>
           </TabsContent>

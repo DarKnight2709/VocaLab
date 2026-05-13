@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import { useLoginTwoFaMutation } from "@/features/auth/api/authService";
 import {
-  TwoFactorLoginSchema,
+  getTwoFactorLoginSchema,
   type TwoFactorLoginBodyType,
 } from "@/shared/validations/AuthSchema";
 import { Button } from "@/shared/components/ui/button";
@@ -12,8 +12,10 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import ROUTES from "@/shared/lib/routes";
 import { toast } from "sonner";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 function TwoFactorAuthPage() {
+  const { t } = useTranslation();
   const tempToken = useAuthStore((state) => state.tempToken?.tempToken);
   const logout = useAuthStore((state) => state.logout);
   
@@ -25,7 +27,7 @@ function TwoFactorAuthPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<TwoFactorLoginBodyType>({
-    resolver: zodResolver(TwoFactorLoginSchema),
+    resolver: zodResolver(getTwoFactorLoginSchema()),
     defaultValues: {
       tempToken: tempToken || "",
       code: "",
@@ -50,9 +52,9 @@ function TwoFactorAuthPage() {
     <div className="min-h-dvh flex items-center justify-center p-4 bg-muted">
       <div className="w-full max-w-md bg-card border text-card-foreground rounded-xl shadow-xl overflow-hidden p-6 space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Xác thực 2 yếu tố</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("auth.twoFactorAuth")}</h1>
           <p className="text-sm text-muted-foreground">
-            Vui lòng nhập mã OTP từ ứng dụng xác thực của bạn để tiếp tục.
+            {t("auth.enterOtpToContinue")}
           </p>
         </div>
 
@@ -60,7 +62,7 @@ function TwoFactorAuthPage() {
           <input type="hidden" {...register("tempToken")} />
           
           <div className="space-y-2">
-            <Label htmlFor="code">Mã xác thực</Label>
+            <Label htmlFor="code">{t("auth.authenticationCode")}</Label>
             <Input
               id="code"
               placeholder="000000"
@@ -83,8 +85,8 @@ function TwoFactorAuthPage() {
             disabled={isSubmitting || loginTwoFaMutation.isPending}
           >
             {isSubmitting || loginTwoFaMutation.isPending
-              ? "Đang xác thực..."
-              : "Xác nhận"}
+              ? t("auth.verifying")
+              : t("auth.confirm")}
           </Button>
 
           <Button
@@ -93,7 +95,7 @@ function TwoFactorAuthPage() {
             className="w-full"
             onClick={handleCancel}
           >
-            Quay lại đăng nhập
+            {t("auth.backToLogin")}
           </Button>
         </form>
       </div>

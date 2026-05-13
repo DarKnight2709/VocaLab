@@ -9,6 +9,7 @@ import { ShieldCheck, Loader2 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { useState } from "react";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useVerifyTwoFactorAuthMutation } from "@/features/auth/api/authService";
 
 
@@ -25,6 +26,7 @@ export function TwoFactorAuthDialog({
   qrCode,
   onSuccess,
 }: TwoFactorAuthDialogProps) {
+  const { t } = useTranslation();
   const [otp, setOtp] = useState("");
   const verifyMutation = useVerifyTwoFactorAuthMutation();
 
@@ -52,10 +54,10 @@ export function TwoFactorAuthDialog({
               <div className="p-1.5 rounded-full bg-primary/10">
                 <ShieldCheck className="h-5 w-5 text-primary" />
               </div>
-              <DialogTitle className="text-xl">Thiết lập 2FA</DialogTitle>
+              <DialogTitle className="text-xl">{t("auth.setupTwoFactor")}</DialogTitle>
             </div>
             <DialogDescription className="text-sm">
-              Sử dụng <b>Google Authenticator</b> hoặc <b>Authy</b> để quét mã QR và bảo mật tài khoản.
+              {t("auth.setupTwoFactorDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -71,7 +73,7 @@ export function TwoFactorAuthDialog({
             ) : (
               <div className="w-48 h-48 bg-muted animate-pulse rounded-lg flex items-center justify-center">
                 <p className="text-xs text-muted-foreground text-center px-4">
-                  Đang tạo mã...
+                  {t("vocabulary.loading")}
                 </p>
               </div>
             )}
@@ -80,19 +82,19 @@ export function TwoFactorAuthDialog({
               <div className="p-3 rounded-lg bg-muted/30 border text-xs space-y-1.5">
                 <div className="flex items-start gap-2">
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">1</span>
-                  <p className="text-muted-foreground">Mở ứng dụng xác thực (Google Authenticator, Authy,...) trên điện thoại.</p>
+                  <p className="text-muted-foreground">{t("auth.step1")}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">2</span>
-                  <p className="text-muted-foreground">Chọn quét mã QR và quét hình ảnh trên.</p>
+                  <p className="text-muted-foreground">{t("auth.step2")}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">3</span>
                   <div className="space-y-3 flex-1">
-                    <p className="text-muted-foreground">Nhập mã xác thực từ ứng dụng và nhấn xác nhận.</p>
+                    <p className="text-muted-foreground">{t("auth.step3")}</p>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Nhập mã 6 số"
+                        placeholder={t("auth.otpPlaceholder")}
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
                         maxLength={6}
@@ -107,7 +109,7 @@ export function TwoFactorAuthDialog({
                         {verifyMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          "Xác nhận"
+                          t("auth.confirm")
                         )}
                       </Button>
                     </div>

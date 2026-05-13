@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface Field {
   id?: string;
@@ -37,29 +38,31 @@ interface FieldSelectionDialogProps {
   onSelectFields: (fields: Field[]) => void;
 }
 
-const PREDEFINED_FIELDS: Field[] = [
-  {
-    key: "front",
-    label: "Front",
-    fieldType: "TEXT",
-    side: "FRONT",
-    order: 0,
-  },
-  {
-    key: "back",
-    label: "Back",
-    fieldType: "TEXT",
-    side: "BACK",
-    order: 1,
-  },
-];
-
 export default function FieldSelectionDialog({
   open,
   onOpenChange,
   initialFields,
   onSelectFields,
 }: FieldSelectionDialogProps) {
+  const { t } = useTranslation();
+
+  const PREDEFINED_FIELDS: Field[] = [
+    {
+      key: "front",
+      label: t("vocabulary.fieldsObj.front"),
+      fieldType: "TEXT",
+      side: "FRONT",
+      order: 0,
+    },
+    {
+      key: "back",
+      label: t("vocabulary.fieldsObj.back"),
+      fieldType: "TEXT",
+      side: "BACK",
+      order: 1,
+    },
+  ];
+
   const [defaultFields, setDefaultFields] = useState<Field[]>(PREDEFINED_FIELDS);
   const [selectedFields, setSelectedFields] = useState<Set<string>>(new Set());
   const [customFieldName, setCustomFieldName] = useState("");
@@ -258,13 +261,13 @@ export default function FieldSelectionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Chọn/Tạo trường</DialogTitle>
+          <DialogTitle>{t("vocabulary.fieldsObj.selectionTitle")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Predefined Fields */}
           <div className="space-y-3">
-            <Label className="font-semibold">Trường</Label>
+            <Label className="font-semibold">{t("vocabulary.fieldsObj.fieldsLabel")}</Label>
             <div className="space-y-2">
               {allFields.map((field) => {
                 const customIndex = customFields.findIndex((f) => f.key === field.key);
@@ -284,7 +287,7 @@ export default function FieldSelectionDialog({
                   <div className="flex-1">
                     <div className="font-medium text-sm">{field.label}</div>
                     <div className="text-xs text-muted-foreground">
-                      {field.fieldType} • {field.side}
+                      {t(`vocabulary.fieldsObj.types.${field.fieldType.toLowerCase()}`)} • {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
                     </div>
                   </div>
 
@@ -319,24 +322,24 @@ export default function FieldSelectionDialog({
 
           {/* Create Custom Field */}
           <div className="space-y-3 border-t pt-4">
-            <Label className="font-semibold">Tạo trường tùy chỉnh</Label>
+            <Label className="font-semibold">{t("vocabulary.fieldsObj.createCustom")}</Label>
             <div className="space-y-3">
               <div>
                 <Label htmlFor="field-name" className="text-xs">
-                  Tên trường
+                  {t("vocabulary.fieldsObj.fieldName")}
                 </Label>
                 <Input
                   id="field-name"
                   value={customFieldName}
                   onChange={(e) => setCustomFieldName(e.target.value)}
-                  placeholder="VD: Từ loại"
+                  placeholder={t("vocabulary.fieldsObj.fieldNamePlaceholder")}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="field-type" className="text-xs">
-                    Loại trường
+                    {t("vocabulary.fieldsObj.fieldType")}
                   </Label>
                   <Select
                     value={customFieldType}
@@ -346,16 +349,16 @@ export default function FieldSelectionDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="TEXT">Text</SelectItem>
-                      <SelectItem value="TEXTAREA">Textarea</SelectItem>
-                      <SelectItem value="IMAGE">Image</SelectItem>
+                      <SelectItem value="TEXT">{t("vocabulary.fieldsObj.types.text")}</SelectItem>
+                      <SelectItem value="TEXTAREA">{t("vocabulary.fieldsObj.types.textarea")}</SelectItem>
+                      <SelectItem value="IMAGE">{t("vocabulary.fieldsObj.types.image")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <Label htmlFor="field-side" className="text-xs">
-                    Bên
+                    {t("vocabulary.fieldsObj.side")}
                   </Label>
                   <Select
                     value={customFieldSide}
@@ -365,15 +368,15 @@ export default function FieldSelectionDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="FRONT">Front</SelectItem>
-                      <SelectItem value="BACK">Back</SelectItem>
+                      <SelectItem value="FRONT">{t("vocabulary.fieldsObj.front")}</SelectItem>
+                      <SelectItem value="BACK">{t("vocabulary.fieldsObj.back")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <Label htmlFor="field-font-size" className="text-xs">
-                    Cỡ chữ (px)
+                    {t("vocabulary.fieldsObj.fontSize")}
                   </Label>
                   <Input
                     id="field-font-size"
@@ -386,7 +389,7 @@ export default function FieldSelectionDialog({
                 </div>
 
                 <div>
-                  <Label className="text-xs mb-1.5 block">Màu chữ</Label>
+                  <Label className="text-xs mb-1.5 block">{t("vocabulary.fieldsObj.fontColor")}</Label>
                   <div className="flex flex-wrap gap-1 mb-2">
                     {[
                       { name: "Default", value: "" },
@@ -414,7 +417,7 @@ export default function FieldSelectionDialog({
                   <Input
                     value={customFieldColor}
                     onChange={(e) => setCustomFieldColor(e.target.value)}
-                    placeholder="Mã màu Hex"
+                    placeholder={t("vocabulary.fieldsObj.hexCode")}
                     className="h-7 text-[10px] px-2"
                   />
                 </div>
@@ -429,7 +432,7 @@ export default function FieldSelectionDialog({
                 disabled={!customFieldName.trim()}
               >
                 <Plus className="h-4 w-4" />
-                {editingField ? "Cập nhật trường" : "Thêm trường"}
+                {editingField ? t("vocabulary.fieldsObj.updateField") : t("vocabulary.fieldsObj.addField")}
               </Button>
 
               {editingField && (
@@ -444,7 +447,7 @@ export default function FieldSelectionDialog({
                     setCustomFieldSide("FRONT");
                   }}
                 >
-                  Hủy chỉnh sửa
+                  {t("vocabulary.fieldsObj.cancelEditing")}
                 </Button>
               )}
             </div>
@@ -453,7 +456,7 @@ export default function FieldSelectionDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Hủy
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleConfirm}

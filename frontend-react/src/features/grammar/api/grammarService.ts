@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
+import i18n from "@/shared/i18n";
 
 // ──────────────────────────────────────────────
 // Types
@@ -67,20 +68,22 @@ export const useGrammarCategoriesQuery = () =>
 
 export const useCreateGrammarMutation = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (body: CreateGrammarBody) =>
       api.post(API_ROUTES.GRAMMAR.CREATE, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["grammar"] });
       queryClient.invalidateQueries({ queryKey: ["grammar-categories"] });
-      toast.success("Tạo cấu trúc ngữ pháp thành công");
+      toast.success(i18n.t("grammar.createSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Tạo thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("grammar.createError"))),
   });
 };
 
 export const useUpdateGrammarMutation = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({
       id,
@@ -91,20 +94,21 @@ export const useUpdateGrammarMutation = () => {
     }) => api.patch(API_ROUTES.GRAMMAR.UPDATE(id), body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["grammar"] });
-      toast.success("Cập nhật thành công");
+      toast.success(i18n.t("grammar.updateSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Cập nhật thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("grammar.updateError"))),
   });
 };
 
 export const useDeleteGrammarMutation = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) => api.delete(API_ROUTES.GRAMMAR.DELETE(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["grammar"] });
-      toast.success("Đã xóa cấu trúc ngữ pháp");
+      toast.success(i18n.t("grammar.deleteSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Xóa thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("grammar.deleteError"))),
   });
 };

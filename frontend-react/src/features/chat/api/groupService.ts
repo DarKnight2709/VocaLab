@@ -17,6 +17,7 @@ import { z } from "zod";
 
 
 import { toast } from "sonner";
+import i18n from "@/shared/i18n";
 
 export const groupKeys = {
   all: ["groups"] as const,
@@ -103,10 +104,10 @@ export function useCreateGroupMutation() {
     },
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || "Tạo nhóm thành công.");
+      toast.success(data.message || i18n.t("chat.groupCreated"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Tạo nhóm thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.groupCreateFailed")));
     },
   });
 }
@@ -138,10 +139,10 @@ export function useUpdateGroupMutation() {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.info(vars.groupId),
       });
-      toast.success(data.message || "Cập nhật nhóm thành công.");
+      toast.success(data.message || i18n.t("chat.groupUpdated"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Cập nhật nhóm thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.groupUpdateFailed")));
     },
   });
 }
@@ -158,10 +159,10 @@ export function useDeleteGroupMutation() {
     onSuccess: (data, groupId) => {
       queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || "Xóa nhóm thành công.");
+      toast.success(data.message || i18n.t("chat.groupDeleted"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Xóa nhóm thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.groupDeleteFailed")));
     },
   });
 }
@@ -175,10 +176,10 @@ export function useLeaveGroupMutation() {
     onSuccess: (data, groupId) => {
       queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success((data as any)?.message || "Rời nhóm thành công.");
+      toast.success((data as any)?.message || i18n.t("chat.leftGroup"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Rời nhóm thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.leaveGroupFailed")));
     },
   });
 }
@@ -199,10 +200,10 @@ export function useTransferOwnershipMutation() {
         queryKey: groupKeys.detail(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || "Chuyển quyền sở hữu thành công.");
+      toast.success(data.message || i18n.t("chat.transferOwnershipSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Chuyển quyền sở hữu thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.transferOwnershipFailed")));
     },
   });
 }
@@ -226,10 +227,10 @@ export function useAddGroupMembersMutation() {
         queryKey: groupKeys.info(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || "Thêm thành viên thành công.");
+      toast.success(data.message || i18n.t("chat.membersAdded"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Thêm thành viên thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.addMembersFailed")));
     },
   });
 }
@@ -253,10 +254,10 @@ export function useDeleteGroupMemberMutation() {
         queryKey: groupKeys.info(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || "Xóa thành viên thành công.");
+      toast.success(data.message || i18n.t("chat.memberRemoved"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Xóa thành viên thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.removeMemberFailed")));
     },
   });
 }
@@ -284,10 +285,10 @@ export function useChangeGroupRoleMutation() {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.info(vars.groupId),
       });
-      toast.success(data.message || "Thay đổi vai trò thành công.");
+      toast.success(data.message || i18n.t("chat.roleChanged"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Thay đổi vai trò thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.changeRoleFailed")));
     },
   });
 }
@@ -314,10 +315,10 @@ export function useUpdateRolePermissionMutation() {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
-      toast.success((data as any)?.message || "Cập nhật phân quyền thành công.");
+      toast.success((data as any)?.message || i18n.t("chat.permissionsUpdated"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Cập nhật phân quyền thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("chat.updatePermissionsFailed")));
     },
   });
 }

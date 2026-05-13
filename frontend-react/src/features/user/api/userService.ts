@@ -3,7 +3,6 @@ import API_ROUTES from "@/shared/lib/api-routes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostVisibility } from "../../../shared/enums/PostVisibility.enum";
 import {
-  UpdateProfileResponseSchema,
   UserProfileDataResponseSchema,
   UserStatsResponseSchema,
   UserPostsResponseSchema,
@@ -17,8 +16,10 @@ import {
   DeleteUserSocialResponseSchema,
   type UpdatePersonalInfoBodyType,
   type CreateUserSocialBody,
+  getUpdateProfileResponseSchema,
 } from "@/shared/validations/UserSchema";
 import { toast } from "sonner";
+import i18n from "@/shared/i18n";
 
 
 export const useUpdatePersonalInfoMutation = () => {
@@ -42,15 +43,15 @@ export const useUpdatePersonalInfoMutation = () => {
       }
       return fetchWithSchema(
         api.patch(API_ROUTES.USER.PROFILE, formData),
-        UpdateProfileResponseSchema,
+        getUpdateProfileResponseSchema(),
       );
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(data.message || "Cập nhật thông tin cá nhân thành công.");
+      toast.success(data.message || i18n.t("profile.updateSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Cập nhật thông tin thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("profile.updateFailed")));
     },
   });
 };
@@ -182,9 +183,9 @@ export const useFollowUserMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["me"] }); // Invalidate current user stats too if needed
-      toast.success("Theo dõi thành công");
+      toast.success(i18n.t("profile.followSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Theo dõi thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.followFailed"))),
   });
 };
 
@@ -196,9 +197,9 @@ export const useUnfollowUserMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Bỏ theo dõi thành công");
+      toast.success(i18n.t("profile.unfollowSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Bỏ theo dõi thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.unfollowFailed"))),
   });
 };
 
@@ -220,10 +221,10 @@ export const useCreateSocialMutation = () => {
       ),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
-      toast.success(data.message || "Thêm liên kết mạng xã hội thành công");
+      toast.success(data.message || i18n.t("profile.socialAddSuccess"));
     },
     onError: (err) =>
-      toast.error(getErrorMessage(err, "Thêm liên kết thất bại")),
+      toast.error(getErrorMessage(err, i18n.t("profile.socialAddFailed"))),
   });
 };
 
@@ -238,10 +239,10 @@ export const useUpdateSocialMutation = () => {
       ),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
-      toast.success(data.message || "Cập nhật liên kết thành công");
+      toast.success(data.message || i18n.t("profile.socialUpdateSuccess"));
     },
     onError: (err) =>
-      toast.error(getErrorMessage(err, "Cập nhật liên kết thất bại")),
+      toast.error(getErrorMessage(err, i18n.t("profile.socialUpdateFailed"))),
   });
 };
 
@@ -256,9 +257,9 @@ export const useDeleteSocialMutation = () => {
       ),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
-      toast.success(data.message || "Xóa liên kết thành công");
+      toast.success(data.message || i18n.t("profile.socialDeleteSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Xóa liên kết thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.socialDeleteFailed"))),
   });
 };
 
@@ -268,8 +269,8 @@ export const useDeleteAccountMutation = () => {
     mutationFn: () => api.delete(API_ROUTES.USER.DELETE_ACCOUNT),
     onSuccess: (data) => {
       qc.clear(); // Clear all cache
-      toast.success(data.data.message || "Xóa tài khoản thành công");
+      toast.success(data.data.message || i18n.t("profile.accountDeleteSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Xóa tài khoản thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.accountDeleteFailed"))),
   });
 };

@@ -11,10 +11,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  EditCommentSectionSchema as ReplyCommentSchema,
+  getEditCommentSectionSchema as getReplyCommentSchema,
   type BlogComment,
   type EditCommentSectionBodyType as ReplyCommentFormValues,
 } from "@/shared/validations/BlogSchema";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export function ReplyCommentDialog(props: {
   open: boolean;
@@ -23,11 +24,12 @@ export function ReplyCommentDialog(props: {
   comment: BlogComment;
 }) {
   const { open, onOpenChange, onReply, comment } = props;
+  const { t } = useTranslation();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ReplyCommentFormValues>({
-    resolver: zodResolver(ReplyCommentSchema),
+    resolver: zodResolver(getReplyCommentSchema()),
     defaultValues: {
       content: "",
     },
@@ -62,13 +64,13 @@ export function ReplyCommentDialog(props: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Trả lời bình luận</DialogTitle>
+          <DialogTitle>{t("blog.replyComment")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleFormSubmit)}>
           <div className="space-y-2">
             <Input
               id="reply-comment-content"
-              placeholder={`Phản hồi ${comment.author.fullName}...`}
+              placeholder={t("blog.replyPlaceholder").replace("{name}", comment.author.fullName)}
               {...form.register("content")}
               autoComplete="content"
             />
@@ -85,10 +87,10 @@ export function ReplyCommentDialog(props: {
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Hủy
+              {t("blog.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Đang gửi..." : "Gửi phản hồi"}
+              {isSubmitting ? t("blog.sending") : t("blog.sendReply")}
             </Button>
           </DialogFooter>
         </form>

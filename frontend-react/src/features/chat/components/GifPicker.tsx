@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/shared/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type GifPickerProps = {
   onSelect: (url: string, title?: string) => void;
@@ -10,6 +11,7 @@ type GifPickerProps = {
 const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || "";
 
 export function GifPicker({ onSelect }: GifPickerProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [gifs, setGifs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ export function GifPicker({ onSelect }: GifPickerProps) {
       const data = await res.json();
       setGifs(data.data || []);
     } catch (e) {
-      console.error("Lỗi khi load GIF:", e);
+      console.error(t("chat.errorLoadingGif"), e);
     } finally {
       setLoading(false);
     }
@@ -52,7 +54,7 @@ export function GifPicker({ onSelect }: GifPickerProps) {
   return (
     <div className="w-75 sm:w-87.5 p-2 bg-background border rounded-lg shadow-xl flex flex-col gap-2 max-h-100">
       <Input
-        placeholder="Tìm kiếm GIF..."
+        placeholder={t("chat.searchGif")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="h-9 focus-visible:ring-1"
@@ -84,7 +86,7 @@ export function GifPicker({ onSelect }: GifPickerProps) {
         
         {!loading && gifs.length === 0 && (
           <div className="text-center text-sm text-muted-foreground mt-10">
-            Không tìm thấy kết quả.
+            {t("chat.noGifsFound")}
           </div>
         )}
       </div>

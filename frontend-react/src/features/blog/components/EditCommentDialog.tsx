@@ -11,10 +11,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  EditCommentSectionSchema,
+  getEditCommentSectionSchema,
   type BlogComment,
   type EditCommentSectionBodyType,
 } from "@/shared/validations/BlogSchema";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export function EditCommentDialog(props: {
   open: boolean;
@@ -23,11 +24,12 @@ export function EditCommentDialog(props: {
   comment: BlogComment;
 }) {
   const { open, onOpenChange, onEdit, comment } = props;
+  const { t } = useTranslation();
 
   const [saving, setSaving] = useState(false);
 
   const form = useForm<EditCommentSectionBodyType>({
-    resolver: zodResolver(EditCommentSectionSchema),
+    resolver: zodResolver(getEditCommentSectionSchema()),
     defaultValues: {
       content: comment?.content || "",
     },
@@ -62,7 +64,7 @@ export function EditCommentDialog(props: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Chỉnh sửa bình luận</DialogTitle>
+          <DialogTitle>{t("blog.editComment")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleFormSubmit)}>
           <div className="flex items-center gap-4">
@@ -87,10 +89,10 @@ export function EditCommentDialog(props: {
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Hủy
+              {t("blog.cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+              {saving ? t("blog.saving") : t("blog.saveChanges")}
             </Button>
           </DialogFooter>
         </form>

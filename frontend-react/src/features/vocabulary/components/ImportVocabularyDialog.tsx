@@ -35,6 +35,7 @@ import {
   useImportVocabularyMutation,
   DuplicatePolicy,
 } from "../api/vocabularyService";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface ImportVocabularyDialogProps {
   open: boolean;
@@ -47,6 +48,7 @@ export default function ImportVocabularyDialog({
   onOpenChange,
   defaultCollectionId,
 }: ImportVocabularyDialogProps) {
+  const { t } = useTranslation();
   const [importMode, setImportMode] = useState<"text" | "file">("text");
   const [rawText, setRawText] = useState("");
   const [delimiter, setDelimiter] = useState(",");
@@ -143,48 +145,48 @@ export default function ImportVocabularyDialog({
               <div className="mx-auto w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <CheckCircle2 className="h-6 w-6 text-green-600" />
               </div>
-              <h2 className="text-xl font-bold">Import hoàn tất!</h2>
+              <h2 className="text-xl font-bold">{t("vocabulary.import.completed")}</h2>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
                 <span className="text-2xl font-bold">{importResult.imported.count}</span>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Thêm mới</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.new")}</span>
               </div>
               <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
                 <RefreshCw className="h-5 w-5 text-blue-500" />
                 <span className="text-2xl font-bold">{importResult.updated.count}</span>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Cập nhật</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.updated")}</span>
               </div>
               <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
                 <SkipForward className="h-5 w-5 text-yellow-500" />
                 <span className="text-2xl font-bold">{importResult.skipped.count}</span>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Bỏ qua</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.skipped")}</span>
               </div>
               <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
                 <XCircle className="h-5 w-5 text-red-500" />
                 <span className="text-2xl font-bold">{importResult.errors.count}</span>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Lỗi</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.errors")}</span>
               </div>
             </div>
 
             <Tabs defaultValue="imported" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="imported" className="text-xs">Thêm mới</TabsTrigger>
-                <TabsTrigger value="updated" className="text-xs">Cập nhật</TabsTrigger>
-                <TabsTrigger value="skipped" className="text-xs">Bỏ qua</TabsTrigger>
-                <TabsTrigger value="errors" className="text-xs">Lỗi</TabsTrigger>
+                <TabsTrigger value="imported" className="text-xs">{t("vocabulary.import.new")}</TabsTrigger>
+                <TabsTrigger value="updated" className="text-xs">{t("vocabulary.import.updated")}</TabsTrigger>
+                <TabsTrigger value="skipped" className="text-xs">{t("vocabulary.import.skipped")}</TabsTrigger>
+                <TabsTrigger value="errors" className="text-xs">{t("vocabulary.import.errors")}</TabsTrigger>
               </TabsList>
               
               <div className="mt-4 border rounded-xl overflow-hidden bg-muted/20">
-                <div className="max-h-[200px] overflow-y-auto p-2 custom-scrollbar">
+                <div className="max-h-50 overflow-y-auto p-2 custom-scrollbar">
                   <TabsContent value="imported" className="m-0 space-y-1">
                     {importResult.imported.cards.length > 0 ? (
                       importResult.imported.cards.map((line, i) => (
                         <div key={i} className="px-3 py-2 text-xs bg-card border rounded-lg">{line}</div>
                       ))
-                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">Không có dữ liệu thêm mới</p>}
+                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">{t("vocabulary.import.noItems")}</p>}
                   </TabsContent>
                   
                   <TabsContent value="updated" className="m-0 space-y-1">
@@ -192,7 +194,7 @@ export default function ImportVocabularyDialog({
                       importResult.updated.cards.map((line, i) => (
                         <div key={i} className="px-3 py-2 text-xs bg-card border rounded-lg">{line}</div>
                       ))
-                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">Không có dữ liệu cập nhật</p>}
+                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">{t("vocabulary.import.noItems")}</p>}
                   </TabsContent>
                   
                   <TabsContent value="skipped" className="m-0 space-y-1">
@@ -200,7 +202,7 @@ export default function ImportVocabularyDialog({
                       importResult.skipped.cards.map((line, i) => (
                         <div key={i} className="px-3 py-2 text-xs bg-card border rounded-lg">{line}</div>
                       ))
-                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">Không có dữ liệu bị bỏ qua</p>}
+                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">{t("vocabulary.import.noItems")}</p>}
                   </TabsContent>
                   
                   <TabsContent value="errors" className="m-0 space-y-1">
@@ -208,7 +210,7 @@ export default function ImportVocabularyDialog({
                       importResult.errors.lines.map((line, i) => (
                         <div key={i} className="px-3 py-2 text-xs bg-red-500/10 text-red-600 border border-red-500/20 rounded-lg">{line}</div>
                       ))
-                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">Không có lỗi phát sinh</p>}
+                    ) : <p className="text-center py-4 text-xs text-muted-foreground italic">{t("vocabulary.import.noItems")}</p>}
                   </TabsContent>
                 </div>
               </div>
@@ -216,7 +218,7 @@ export default function ImportVocabularyDialog({
 
             <DialogFooter>
               <Button onClick={handleClose} className="w-full">
-                Đóng
+                {t("vocabulary.import.close")}
               </Button>
             </DialogFooter>
           </div>
@@ -225,10 +227,10 @@ export default function ImportVocabularyDialog({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Import className="h-5 w-5 text-primary" />
-                Nhập dữ liệu từ vựng
+                {t("vocabulary.import.title")}
               </DialogTitle>
               <DialogDescription>
-                Nhập nhanh danh sách từ vựng từ văn bản hoặc file CSV/TXT
+                {t("vocabulary.import.desc")}
               </DialogDescription>
             </DialogHeader>
 
@@ -236,20 +238,20 @@ export default function ImportVocabularyDialog({
           <Tabs value={importMode} onValueChange={(v) => setImportMode(v as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="text" className="gap-2">
-                <FileText className="h-4 w-4" /> Nhập trực tiếp
+                <FileText className="h-4 w-4" /> {t("vocabulary.import.pasteText")}
               </TabsTrigger>
               <TabsTrigger value="file" className="gap-2">
-                <Upload className="h-4 w-4" /> Tải file
+                <Upload className="h-4 w-4" /> {t("vocabulary.import.uploadFile")}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="text" className="mt-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="raw-text">Nội dung văn bản</Label>
-                <Textarea
+                <Label htmlFor="raw-text">{t("vocabulary.import.textContent")}</Label>
+                  <Textarea
                   id="raw-text"
-                  placeholder="hello, xin chào&#10;bye, tạm biệt"
-                  className="min-h-[200px] font-mono text-sm"
+                  placeholder={t("vocabulary.import.placeholder")}
+                  className="min-h-50 font-mono text-sm"
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
                 />
@@ -265,9 +267,9 @@ export default function ImportVocabularyDialog({
                   onChange={handleFileChange}
                 />
                 <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-                <p className="text-sm font-medium">Hỗ trợ định dạng .csv, .txt</p>
+                <p className="text-sm font-medium">{t("vocabulary.import.supportFormat")}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Kéo thả hoặc click để chọn file
+                  {t("vocabulary.import.dragDrop")}
                 </p>
                 {fileName && (
                   <div className="mt-4 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium flex items-center gap-2">
@@ -278,24 +280,24 @@ export default function ImportVocabularyDialog({
               </div>
               <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 flex gap-3 text-sm text-blue-600 dark:text-blue-400">
                 <AlertCircle className="h-5 w-5 shrink-0" />
-                <p>Nên sử dụng Encode UTF-8 để tránh lỗi phông chữ tiếng Việt.</p>
+                <p>{t("vocabulary.import.encodingAlert")}</p>
               </div>
             </TabsContent>
           </Tabs>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Dấu phân cách (Delimiter)</Label>
+              <Label>{t("vocabulary.import.delimiter")}</Label>
               <Input
                 value={delimiter}
                 onChange={(e) => setDelimiter(e.target.value)}
-                placeholder="VD: , hoặc ; hoặc |"
+                placeholder={t("vocabulary.import.delimiterPlaceholder")}
                 maxLength={5}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Chính sách trùng lặp</Label>
+              <Label>{t("vocabulary.import.duplicatePolicy")}</Label>
               <Select
                 value={duplicatePolicy}
                 onValueChange={(v) => setDuplicatePolicy(v as any)}
@@ -304,18 +306,18 @@ export default function ImportVocabularyDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={DuplicatePolicy.SKIP}>Bỏ qua (Skip)</SelectItem>
-                  <SelectItem value={DuplicatePolicy.UPDATE}>Cập nhật (Update)</SelectItem>
-                  <SelectItem value={DuplicatePolicy.DUPLICATE}>Cho phép trùng (Duplicate)</SelectItem>
+                  <SelectItem value={DuplicatePolicy.SKIP}>{t("vocabulary.import.policy.skip")}</SelectItem>
+                  <SelectItem value={DuplicatePolicy.UPDATE}>{t("vocabulary.import.policy.update")}</SelectItem>
+                  <SelectItem value={DuplicatePolicy.DUPLICATE}>{t("vocabulary.import.policy.duplicate")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Kiểu thẻ (Card Type)</Label>
+              <Label>{t("vocabulary.import.cardType")}</Label>
               <Select value={cardTypeId} onValueChange={setCardTypeId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn kiểu thẻ" />
+                  <SelectValue placeholder={t("vocabulary.import.selectCardType")} />
                 </SelectTrigger>
                 <SelectContent>
                   {cardTypesData?.cardTypes.map((type) => (
@@ -328,10 +330,10 @@ export default function ImportVocabularyDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Bộ sưu tập (Collection)</Label>
+              <Label>{t("vocabulary.import.collection")}</Label>
               <Select value={collectionId} onValueChange={setCollectionId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn bộ sưu tập" />
+                  <SelectValue placeholder={t("vocabulary.import.selectCollection")} />
                 </SelectTrigger>
                 <SelectContent>
                   {collectionsData?.collections.map((col) => (
@@ -346,17 +348,17 @@ export default function ImportVocabularyDialog({
 
           {previewData && (
             <div className="space-y-3">
-              <Label className="text-primary font-bold">Xem trước (1 thẻ đầu tiên)</Label>
+              <Label className="text-primary font-bold">{t("vocabulary.import.preview")}</Label>
               <div className="border rounded-xl p-4 bg-muted/20">
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                   {previewData.fields.map((field, idx) => (
                     <div key={field.id} className="space-y-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                        Trường: {field.label} ({field.key})
+                        {t("vocabulary.import.fieldLabel", { label: field.label, key: field.key })}
                       </span>
-                      <div className="p-2 border rounded-md bg-background min-h-[40px] flex items-center text-sm">
+                      <div className="p-2 border rounded-md bg-background min-h-10 flex items-center text-sm">
                         {previewData.parts[idx] || (
-                          <span className="text-muted-foreground italic">(Trống)</span>
+                          <span className="text-muted-foreground italic">{t("vocabulary.import.empty")}</span>
                         )}
                       </div>
                     </div>
@@ -365,7 +367,7 @@ export default function ImportVocabularyDialog({
                 {previewData.parts.length > previewData.fields.length && (
                   <div className="mt-4 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-xs text-yellow-600 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4" />
-                    Số lượng giá trị ({previewData.parts.length}) nhiều hơn số lượng trường của kiểu thẻ ({previewData.fields.length}).
+                    {t("vocabulary.import.fieldMismatch", { count: previewData.parts.length, fieldsCount: previewData.fields.length })}
                   </div>
                 )}
               </div>
@@ -375,14 +377,14 @@ export default function ImportVocabularyDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
-            Hủy bỏ
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleImport}
             disabled={!rawText.trim() || !cardTypeId || !collectionId || importMutation.isPending}
-            className="min-w-[100px]"
+            className="min-w-25"
           >
-            {importMutation.isPending ? "Đang xử lý..." : "Import ngay"}
+            {importMutation.isPending ? t("vocabulary.import.processing") : t("vocabulary.import.importNow")}
           </Button>
         </DialogFooter>
           </>

@@ -1,24 +1,27 @@
 import { z } from "zod";
 import { VoteType } from "../enums/VoteType.enum";
 import { SocialPlatform } from "../enums/SocialPlatform";
+import i18n from "@/shared/i18n";
 
-export const UpdatePersonalInfoSchema = z
-  .object({
-    fullName: z.string().trim().min(1, "Họ và tên không được để trống").optional(),
-    username: z.string().trim().min(1, "Tên đăng nhập không được để trống").optional(),
-    email: z.string().email("Email không hợp lệ").optional().nullable(),
+export const getUpdatePersonalInfoSchema = () =>
+  z
+    .object({
+      fullName: z.string().trim().min(1, i18n.t("validation.fullNameRequired")).optional(),
+      username: z.string().trim().min(1, i18n.t("validation.usernameRequired")).optional(),
+      email: z.string().email(i18n.t("validation.invalidEmail")).optional().nullable(),
+      avatar: z.string().optional().nullable(),
+    })
+    .strict()
+    .strip();
+
+export const getUpdateProfileResponseSchema = () =>
+  z.object({
+    id: z.string(),
+    username: z.string(),
+    fullName: z.string(),
+    email: z.string().email(i18n.t("validation.invalidEmail")),
     avatar: z.string().optional().nullable(),
-  })
-  .strict()
-  .strip();
-
-export const UpdateProfileResponseSchema = z.object({
-  id: z.string(),
-  username: z.string(),
-  fullName: z.string(),
-  email: z.string().email("Email không hợp lệ"),
-  avatar: z.string().optional().nullable(),
-});
+  });
 
 export const UserProfileDataResponseSchema = z.object({
   id: z.string(),
@@ -88,7 +91,7 @@ export const UserFriendsResponseSchema = z.object({
   }),
 });
 
-// Giữ lại union để tương thích nếu cần, hoặc xóa nếu đã tách hoàn toàn
+// Keep the union for compatibility if needed, or remove it once the split is complete.
 export const UserProfileContentResponseSchema = z.union([
   UserFollowersResponseSchema,
   UserFollowingResponseSchema,
@@ -113,11 +116,12 @@ export const UserSocialItemSchema = z.object({
   updatedAt: z.string(),
 });
 
-export const CreateUserSocialSchema = z.object({
-  platform: z.nativeEnum(SocialPlatform),
-  name: z.string().optional().nullable(),
-  link: z.string().url("Link không hợp lệ").min(1, "Vui lòng nhập link"),
-});
+export const getCreateUserSocialSchema = () =>
+  z.object({
+    platform: z.nativeEnum(SocialPlatform),
+    name: z.string().optional().nullable(),
+    link: z.string().url(i18n.t("validation.invalidLink")).min(1, i18n.t("validation.enterLink")),
+  });
 
 export const UserSocialsResponseSchema = z.array(UserSocialItemSchema);
 export const CreateUserSocialResponseSchema = UserSocialItemSchema;
@@ -138,10 +142,16 @@ export const UnfollowUserResponseSchema = z.object({
 
 
 export type UserSocialItem = z.infer<typeof UserSocialItemSchema>;
-export type CreateUserSocialBody = z.infer<typeof CreateUserSocialSchema>;
+export type CreateUserSocialBody = z.infer<
+  ReturnType<typeof getCreateUserSocialSchema>
+>;
 
-export type UpdateProfileResponse = z.infer<typeof UpdateProfileResponseSchema>;
-export type UpdatePersonalInfoBodyType = z.infer<typeof UpdatePersonalInfoSchema>;
+export type UpdateProfileResponse = z.infer<
+  ReturnType<typeof getUpdateProfileResponseSchema>
+>;
+export type UpdatePersonalInfoBodyType = z.infer<
+  ReturnType<typeof getUpdatePersonalInfoSchema>
+>;
 export type UserProfileDataResponse = z.infer<
   typeof UserProfileDataResponseSchema
 >;

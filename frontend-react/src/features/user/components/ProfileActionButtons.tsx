@@ -5,6 +5,7 @@ import {
   useFollowUserMutation,
   useUnfollowUserMutation,
 } from "../api/userService";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface ProfileActionButtonsProps {
   isOwnProfile: boolean;
@@ -17,20 +18,21 @@ export default function ProfileActionButtons({
   onEditProfile,
   profileUserId,
 }: ProfileActionButtonsProps) {
+  const { t } = useTranslation();
+
+  // Move all hooks to the top, before any conditional logic
+  const { data: followStatus } = useCheckFollowingListQuery(profileUserId);
+  const followMutation = useFollowUserMutation();
+  const unfollowMutation = useUnfollowUserMutation();
+
   if (isOwnProfile) {
     return (
       <Button size="lg" onClick={onEditProfile}>
         <Pencil className="mr-1.5 h-4 w-4" />
-        Chỉnh sửa hồ sơ
+        {t("profile.editProfile")}
       </Button>
     );
   }
-
-  // check dữ liệu gửi từ backend xem người này có trong following list của mình không
-  const { data: followStatus } = useCheckFollowingListQuery(profileUserId);
-
-  const followMutation = useFollowUserMutation();
-  const unfollowMutation = useUnfollowUserMutation();
 
   const handleFollowAction = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,21 +52,21 @@ export default function ProfileActionButtons({
         className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:bg-muted"
       >
         <MessageCircle className="h-5 w-5" />
-        Nhắn tin
+        {t("profile.message")}
       </Button>
       <Button
         size="lg"
         variant={followStatus?.isFollowing ? "secondary" : "default"}
         onClick={handleFollowAction}
         disabled={followMutation.isPending || unfollowMutation.isPending}
-        className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:shadow-md min-w-[140px]"
+        className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:shadow-md min-w-35"
       >
         {followStatus?.isFollowing ? (
-          "Unfollow"
+          t("profile.unfollow")
         ) : (
           <span className="flex items-center gap-1.5">
             <UserPlus className="h-5 w-5" />
-            Follow
+            {t("profile.follow")}
           </span>
         )}
       </Button>

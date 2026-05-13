@@ -1,4 +1,5 @@
 import { Button } from "@/shared/components/ui/button";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Input } from "@/shared/components/ui/input";
 import {
   Avatar,
@@ -58,6 +59,7 @@ export function ChatSidebar({
   onGroupClick,
   onCreateGroupClick,
 }: ChatSidebarProps) {
+  const { t } = useTranslation();
   const isEmbeddedChatView = embedded && (!!selectedUser || !!selectedGroup);
 
   return (
@@ -74,7 +76,7 @@ export function ChatSidebar({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Tìm kiếm người dùng/ nhóm..."
+                  placeholder={t("chat.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => onSearchQueryChange(e.target.value)}
                   className="pl-9"
@@ -92,11 +94,11 @@ export function ChatSidebar({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="users" className="gap-2">
                   <UserRound className="h-4 w-4" />
-                  Người dùng
+                  {t("chat.users")}
                 </TabsTrigger>
                 <TabsTrigger value="groups" className="gap-2">
                   <UsersRound className="h-4 w-4" />
-                  Nhóm
+                  {t("chat.groups")}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -107,17 +109,17 @@ export function ChatSidebar({
             >
               {loadingUsers ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  Đang tải...
+                  {t("chat.loading")}
                 </div>
               ) : filteredUsers.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
                   {searchQuery
-                    ? "Không tìm thấy người dùng"
-                    : "Không có người dùng nào"}
+                    ? t("chat.noUsersFound")
+                    : t("chat.noUsersYet")}
                 </div>
               ) : (
                 filteredUsers.map((u: UserItem) => {
-                  const name = u.fullName || u.username || "User";
+                  const name = u.fullName || u.username || t("chat.user");
                   const active = selectedUser?.id === u.id;
                   const online = onlineIds.has(u.id);
                   const unread = u.unreadCount || 0;
@@ -159,7 +161,7 @@ export function ChatSidebar({
                             className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
                           >
                             {u.lastMessage
-                              ? `${u.lastMessage.isMine ? "Bạn: " : ""}${u.lastMessage.content?.slice(0, 30)}${u.lastMessage.content && u.lastMessage.content.length > 30 ? "..." : ""}`
+                              ? `${u.lastMessage.isMine ? `${t("chat.you")}: ` : ""}${u.lastMessage.content?.slice(0, 30)}${u.lastMessage.content && u.lastMessage.content.length > 30 ? "..." : ""}`
                               : `@${u.username || ""}`}
                           </div>
                         </div>
@@ -181,26 +183,26 @@ export function ChatSidebar({
                   className="w-full"
                   onClick={onCreateGroupClick}
                 >
-                  + Tạo nhóm
+                  + {t("chat.createGroup")}
                 </Button>
               </div>
 
               {loadingGroups ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  Đang tải...
+                  {t("chat.loading")}
                 </div>
               ) : filteredGroups.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  {searchQuery ? "Không tìm thấy nhóm" : "Bạn chưa có nhóm nào"}
+                  {searchQuery ? t("chat.noGroupsFound") : t("chat.noGroupsYet")}
                 </div>
               ) : (
                 filteredGroups.map((g) => {
-                  const name = g.name || "Nhóm";
+                  const name = g.name || t("chat.group");
                   const active = selectedGroup?.id === g.id;
                   const unread = g.unreadCount || 0;
                   const last = g.lastMessage;
                   const preview = last?.content
-                    ? `${last.senderName ? `${last.isMine ? "Bạn" : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
+                    ? `${last.senderName ? `${last.isMine ? t("chat.you") : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
                     : g.description || "";
 
                   const isGroupActive = g.members?.some(
@@ -253,7 +255,7 @@ export function ChatSidebar({
                                     : "text-green-600 font-medium"
                                 }
                               >
-                                Đang hoạt động
+                                {t("chat.online")}
                               </span>
                             ) : (
                               preview

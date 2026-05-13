@@ -27,6 +27,8 @@ import { ThemeProvider, useTheme } from "./shared/components/ThemeProvider";
 import TwoFactorAuthGuard from "./features/auth/components/TwoFactorAuthGuard";
 import TwoFactorAuthPage from "./features/auth/pages/TwoFactorAuthPage";
 import { twoFactorAuthLoader } from "./features/auth/TwoFactorAuthLoader";
+import { useEffect } from "react";
+import { useTranslation } from "./shared/hooks/useTranslation";
 
 const router = createBrowserRouter([
   {
@@ -119,11 +121,22 @@ function ThemedToaster() {
   );
 }
 
+function LanguageSync() {
+  const { language } = useTranslation();
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <ReactQueryProvider>
       <GlobalLoadingProvider>
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          <LanguageSync />
           <RouterProvider router={router} />
           <ThemedToaster />
         </ThemeProvider>

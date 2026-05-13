@@ -1,4 +1,5 @@
 import { Button } from "@/shared/components/ui/button";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Input } from "@/shared/components/ui/input";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import { Smile, Paperclip } from "lucide-react";
@@ -30,6 +31,7 @@ export function MessageInput({
   onEmojiClick,
   onSend,
 }: MessageInputProps) {
+  const { t } = useTranslation();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +99,7 @@ export function MessageInput({
         <div className="absolute bottom-20 z-50">
           <GifPicker
             onSelect={(url, title) => {
-              setPendingGifs((prev) => [...prev, { url, name: title || "GIF" }]);
+              setPendingGifs((prev) => [...prev, { url, name: title || t("chat.gif") }]);
               setShowGifPicker(false);
             }}
           />
@@ -149,7 +151,7 @@ export function MessageInput({
                     type="button"
                     onClick={() => handleRemoveFile(i)}
                     className="absolute -top-2 -right-2 z-10 h-5 w-5 rounded-full bg-background border border-border shadow flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive transition-colors"
-                    title="Xóa"
+                    title={t("chat.remove")}
                   >
                     <span className="text-sm leading-none">&times;</span>
                   </button>
@@ -163,7 +165,7 @@ export function MessageInput({
                     type="button"
                     onClick={() => handleRemoveFile(i)}
                     className="shrink-0 ml-1 text-muted-foreground hover:text-destructive transition-colors"
-                    title="Xóa"
+                    title={t("chat.remove")}
                   >
                     <span className="text-base font-light leading-none">&times;</span>
                   </button>
@@ -187,7 +189,7 @@ export function MessageInput({
                   type="button"
                   onClick={() => handleRemoveGif(i)}
                   className="absolute -top-2 -right-2 z-10 h-5 w-5 rounded-full bg-background border border-border shadow flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive transition-colors"
-                  title="Xóa"
+                  title={t("chat.remove")}
                 >
                   <span className="text-sm leading-none">&times;</span>
                 </button>
@@ -236,7 +238,7 @@ export function MessageInput({
         </Button>
 
         <Input
-          placeholder="Nhập tin nhắn..."
+          placeholder={t("chat.typeMessage")}
           value={messageText}
           onChange={(e) => {
             onMessageTextChange(e.target.value);
@@ -255,7 +257,7 @@ export function MessageInput({
           onClick={handleSend}
           disabled={!messageText.trim() && pendingFiles.length === 0 && pendingGifs.length === 0}
         >
-          Gửi
+          {t("chat.send")}
         </Button>
       </div>
     </div>

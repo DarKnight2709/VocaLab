@@ -16,6 +16,7 @@ import {
 import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
+import i18n from "@/shared/i18n";
 import { useAuthStore } from "../stores/authStore";
 import z from "zod";
 
@@ -29,10 +30,10 @@ export const useLoginMutation = () => {
       ),
     onSuccess: (response) => {
       login(response.data);
-      toast.success(response.message || "Đăng nhập thành công.");
+      toast.success(response.message || i18n.t("auth.loginSuccess"));
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Đăng nhập thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("auth.loginFailed")));
     },
   });
 };
@@ -40,10 +41,10 @@ export const useSignUpMutation = () => {
   return useMutation({
     mutationFn: (body: SignUpBodyType) => api.post(API_ROUTES.AUTH.SIGNUP, body),
     onSuccess: (response: any) => {
-      toast.success(response.data.message || "Đăng ký thành công.");
+      toast.success(response.data.message || i18n.t("auth.signUpSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Đăng ký thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("auth.signUpFailed")));
     },
   });
 };
@@ -73,12 +74,12 @@ export const useLogoutMutation = () => {
     onSuccess: (response: any) => {
       logout();
       queryClient.clear();
-      toast.success(response.data.message || "Đăng xuất thành công.");
+      toast.success(response.data.message || i18n.t("auth.logoutSuccess"));
     },
     onError: (error) => {
       logout();
       queryClient.clear();
-      toast.error(getErrorMessage(error, "Đăng xuất thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("auth.logoutFailed")));
     },
   });
 };
@@ -90,10 +91,10 @@ export const useChangePasswordMutation = () => {
       api.patch(API_ROUTES.AUTH.CHANGE_PASSWORD, body),
     onSuccess: (response: any) => {
       logout();
-      toast.success(response.data.message || "Đổi mật khẩu thành công.");
+      toast.success(response.data.message || i18n.t("auth.changePasswordSuccess"));
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Đổi mật khẩu thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("auth.changePasswordFailed")));
     },
   });
 };
@@ -105,10 +106,10 @@ export const useSetPasswordMutation = () => {
       api.patch(API_ROUTES.AUTH.SET_PASSWORD, body),
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(response.data.message || "Thiết lập mật khẩu thành công.");
+      toast.success(response.data.message || i18n.t("auth.setPasswordSuccess"));
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Thiết lập mật khẩu thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("auth.setPasswordFailed")));
     },
   });
 };
@@ -118,10 +119,10 @@ export const useUpdateTwoFactorAuthMutation = () => {
   return useMutation({
     mutationFn: () => fetchWithSchema(api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_GENERATE), TwoFactorAuthResponseSchema),
     onSuccess: (response: any) => {
-      toast.success(response.message || "Tạo mã 2FA thành công!");
+      toast.success(response.message || i18n.t("auth.generateTwoFactorSuccess"));
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Tạo mã 2FA thất bại!"));
+      toast.error(getErrorMessage(error, i18n.t("auth.generateTwoFactorFailed")));
     }
   })
 }
@@ -132,10 +133,10 @@ export const useVerifyTwoFactorAuthMutation = () => {
     mutationFn: (code: string) => api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_VERIFY, { code }),
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(response.data.message || "Bật xác thực 2 yếu tố thành công!");
+      toast.success(response.data.message || i18n.t("auth.verifyTwoFactorSuccess"));
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Bật xác thực 2 yếu tố thất bại!"));
+      toast.error(getErrorMessage(error, i18n.t("auth.verifyTwoFactorFailed")));
     },
   });
 };
@@ -150,10 +151,10 @@ export const useLoginTwoFaMutation = () => {
       ),
     onSuccess: (response) => {
       login(response.data);
-      toast.success(response.message || "Đăng nhập thành công.");
+      toast.success(response.message || i18n.t("auth.loginSuccess"));
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Xác thực 2FA thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("auth.verifyTwoFactorFailedGeneric")));
     },
   });
 };
@@ -164,10 +165,10 @@ export const useDisableTwoFactorAuthMutation = () => {
     mutationFn: () => api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_DISABLE),
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(response.data.message || "Tắt xác thực 2 yếu tố thành công.");
+      toast.success(response.data.message || i18n.t("auth.disableTwoFactorSuccess"));
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, "Tắt xác thực 2 yếu tố thất bại."));
+      toast.error(getErrorMessage(error, i18n.t("auth.disableTwoFactorFailed")));
     },
   });
 };

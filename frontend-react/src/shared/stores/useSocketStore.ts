@@ -1,16 +1,17 @@
 // stores/socketStore.ts
 
-// File này tạo ra một global store (Zustand):
-  // Quản lý một instance Socket.IO duy nhất (Tránh tạo nhiều kết nối trùng).
-  // Theo dõi trạng thái kết nối (isConnected, isConnecting, error).
-  // Kết nối socket bằng JWT token
-  // Xử lý reconnect, lỗi kết nối, lỗi xác thực
-  // Hiển thị thông báo lỗi cho người dùng bằng sonner toast
-  // Đảm bảo không kết nối nhiều lần khi đã đang kết nối.
+// This file creates a global Zustand store:
+// - manages a single Socket.IO instance to avoid duplicate connections
+// - tracks connection state (isConnected, isConnecting, error)
+// - connects with a JWT token
+// - handles reconnects, connection errors, and auth errors
+// - shows user-facing errors with Sonner toast
+// - prevents repeated connect calls while already connecting
 import { io, type Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import envConfig from '../config/envConfig'
+import i18n from '@/shared/i18n'
 
 const getAccessTokenFromAuthStorage = (): string | null => {
   try {
@@ -25,21 +26,21 @@ const getAccessTokenFromAuthStorage = (): string | null => {
 }
 
 interface SocketState {
-  socket: Socket | null  // instance socket hiện tại
+  socket: Socket | null  // current socket instance
   isConnected: boolean
-  isConnecting: boolean  // đang trong qtr kết nối (để tránh gọi nhiều lần).
+  isConnecting: boolean  // true while connecting to prevent duplicate calls
   error: string | null
-  connect: (token?: string) => void  // connect, disconnect, setter thủ công
+  connect: (token?: string) => void  // connect, disconnect, manual setters
   disconnect: () => void
   setConnected: (connected: boolean) => void
   setError: (error: string | null) => void
   setConnecting: (connecting: boolean) => void
 }
 
-// set: hàm để cập nhật state
-// get: hàm lấy state hiện tại (rất hữu ích để kiểm tra trước khi connect).
+// set: updates the store state
+// get: reads the current store state before connecting
 export const useSocketStore = create<SocketState>()((set, get) => ({
-  // state mặc định khi chưa kết nối gì 
+  // default state before any connection is established
   socket: null,
   isConnected: false,
   isConnecting: false,
@@ -48,34 +49,34 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
   connect: (accessToken?: string) => {
     const { socket, isConnected } = get()
 
-    // nếu đã kết nối rồi -> không làm gì
+    // already connected, nothing to do
     if (socket && isConnected) {
       return
     }
 
-    // nếu đang kết nối -> không cho connect lại (tránh spam)
+    // currently connecting, do not reconnect
     if (get().isConnecting) {
       return
     }
 
-    // trong quá trình kết nối
+    // mark the connection attempt as in progress
     set({ isConnecting: true, error: null })
 
     try {
       const token = accessToken ?? getAccessTokenFromAuthStorage()
 
       if (!token) {
-        toast.error('Thiếu token để kết nối socket!', {
-          description: 'Vui lòng đăng nhập lại để tiếp tục sử dụng realtime.'
+        toast.error(i18n.t('socket.missingToken'), {
+          description: i18n.t('socket.signInToContinue')
         })
-        set({ isConnecting: false, error: 'Thiếu token để kết nối socket!' })
+        set({ isConnecting: false, error: i18n.t('socket.missingToken') })
         return
       }
 
-      // tạo socket instance
+      // create the socket instance
       const newSocket = io(`${envConfig.VITE_SOCKET_URL}`, {
-        auth: { token: token }, // Gửi accessToken để server xác thực
-        transports: ['websocket'], // chỉ dùng websocket (không fallback polling)
+        auth: { token: token }, // send the access token for server auth
+        transports: ['websocket'], // websocket only, no polling fallback
         autoConnect: true,
         reconnection: true,
         reconnectionAttempts: 5,
@@ -83,7 +84,7 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
       })
 
 
-      // connect: khi kết nối thành công
+      // successful connection
       newSocket.on('connect', () => {
         set({
           isConnected: true,
@@ -94,54 +95,54 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
       })
 
 
-      // mất kết nối
+      // disconnected
       newSocket.on('disconnect', (reason: any) => {
         set({
           isConnected: false,
           isConnecting: false,
-          error: reason === 'io server disconnect' ? 'Server disconnected' : null
+          error: reason === 'io server disconnect' ? i18n.t('socket.serverDisconnected') : null
         })
       })
 
 
-      // lỗi kết nối
+      // connection error
       newSocket.on('connect_error', (err: any) => {
-        // Backend rejects handshake with Error('auth_error') when JWT is missing/invalid.
+        // Backend rejects the handshake with Error('auth_error') when JWT is missing or invalid.
         if (err?.message === 'auth_error') {
-          toast.error('Lỗi xác thực khi kết nối socket!', {
-            description: 'Vui lòng kiểm tra lại thông tin đăng nhập và thử đăng nhập lại.'
+          toast.error(i18n.t('socket.authFailed'), {
+            description: i18n.t('socket.checkSignInDetails')
           })
           set({
             isConnected: false,
             isConnecting: false,
-            error: 'Lỗi xác thực khi kết nối socket!'
+            error: i18n.t('socket.authFailed')
           })
           return
         }
 
-        toast.error('Lỗi kết nối socket!', {
-          description: 'Vui lòng kiểm tra lại kết nối internet và thử đăng nhập lại.'
+        toast.error(i18n.t('socket.connectionFailed'), {
+          description: i18n.t('socket.checkInternet')
         })
         set({
           isConnected: false,
           isConnecting: false,
-          error: 'Lỗi kết nối socket!'
+          error: i18n.t('socket.connectionFailed')
         })
       })
 
       set({ socket: newSocket })
     } catch {
-      toast.error('Lỗi kết nối socket!', {
-        description: 'Vui lòng kiểm tra lại kết nối internet và thử đăng nhập lại.'
+      toast.error(i18n.t('socket.connectionFailed'), {
+        description: i18n.t('socket.checkInternet')
       })
       set({
         isConnecting: false,
-        error: 'Lỗi kết nối socket!'
+        error: i18n.t('socket.connectionFailed')
       })
     }
   },
 
-  // dùng khi logout, chuyển tài khoản, hoặc rời app
+  // use this on logout, account switch, or when leaving the app
   disconnect: () => {
     const { socket } = get()
 
@@ -156,22 +157,8 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
     }
   },
 
-  // các setter thủ công
-  // dành cho các component khác có thể cập nhật state nếu cần (ví dụ từ bên ngoài).
+  // manual setters for components that need direct state updates
   setConnected: (connected: boolean) => set({ isConnected: connected }),
   setError: (error: string | null) => set({ error }),
   setConnecting: (connecting: boolean) => set({ isConnecting: connecting })
 }))
-
-
-// VD:
-//   const { connect, disconnect, isConnected } = useSocketStore()
-
-// // Khi login thành công
-// connect(tokenFromLogin)
-
-// // Khi logout
-// disconnect()
-
-// // Hiển thị trạng thái
-// {isConnected ? '🟢 Đang kết nối' : '🔴 Mất kết nối'}

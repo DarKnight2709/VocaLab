@@ -10,6 +10,7 @@ import ROUTES from "@/shared/lib/routes";
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 import { useLogoutMutation } from "@/features/auth/api/authService";
 import { useAuthStore } from "@/features/auth/stores/authStore";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface MainHeaderProps {
   me: MeResponse | undefined | null;
@@ -18,13 +19,14 @@ interface MainHeaderProps {
 
 export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   const [headerSearch, setHeaderSearch] = useState("");
+  const { t } = useTranslation();
 
   const logoutMutation = useLogoutMutation();
 
   const navigate = useNavigate();
 
   const logout = useAuthStore((state) => state.logout);
-  const refreshToken = useAuthStore((state) => state.token?.refreshToken);
+  const refreshToken = useAuthStore((state) => state.authToken?.refreshToken);
 
   async function handleLogout() {
     if (!refreshToken) {
@@ -55,7 +57,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   }
 
   function handleHelp() {
-    toast.info("Mục Help sẽ được cập nhật sớm");
+    toast.info(t("common.helpSoon"));
   }
 
   const { theme, setTheme } = useTheme();
@@ -69,16 +71,16 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               type="button"
               onClick={toggleLeftSidebar}
               className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
-              aria-label="Thu gọn/Mở rộng thanh bên"
+              aria-label={t("common.toggleSidebar")}
             >
               <Menu className="h-5 w-5" />
             </button>
             <Link
               to={ROUTES.HOME.url}
-              aria-label="Mở blog"
+              aria-label={t("common.home")}
               className="inline-flex items-center rounded-xl p-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              <img src="/logo1.png" alt="Blog app" className="h-24 w-24" />
+              <img src="/logo1.png" alt={t("common.logoAlt")} className="h-24 w-24" />
             </Link>
           </div>
 
@@ -87,7 +89,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
             <Input
               value={headerSearch}
               onChange={(e) => onHeaderSearchChange(e.target.value)}
-              placeholder="Tìm kiếm trên..."
+              placeholder={t("common.searchPlaceholder")}
               className="h-10 pl-9 bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
             />
           </div>
@@ -97,7 +99,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               type="button"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground"
-              aria-label="Đổi chế độ sáng/tối"
+              aria-label={t("common.toggleTheme")}
             >
               {theme === "dark" ? (
                 <Sun className="h-5 w-5 text-yellow-500" />

@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useAuthStore } from "../stores/authStore";
-import { toast } from "sonner";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 const AuthCallback = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
 
@@ -30,10 +31,8 @@ const AuthCallback = () => {
       const isAuth = useAuthStore.getState().isAuth;
 
       if (!isAuth) {
-        console.log("Không thấy token, quay lại login");
         navigate("/login", { replace: true });
       }
-      toast.success("Hello");
     }
   }, [navigate, login]);
 
@@ -41,7 +40,7 @@ const AuthCallback = () => {
     <div className="flex h-screen w-screen items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        <p className="text-lg font-medium">Đang hoàn tất đăng nhập...</p>
+        <p className="text-lg font-medium">{t("auth.finishingSignIn")}</p>
       </div>
     </div>
   );

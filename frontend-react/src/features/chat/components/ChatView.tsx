@@ -17,6 +17,7 @@ import { useUsersQuery, chatKeys } from "@/features/chat/api/chatService";
 import { useMessagesQuery } from "@/features/chat/api/chatService";
 import { useUploadFilesMutation } from "@/shared/hooks/useUpload";
 
+import { useTranslation } from "@/shared/hooks/useTranslation";
 import type { ChatViewProps } from "../types";
 import type {
   UserItem,
@@ -34,6 +35,7 @@ export default function ChatView({
   hideHeader = false,
   hideSidebarSearch = false,
 }: ChatViewProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -86,7 +88,7 @@ export default function ChatView({
     setGroupTypingText,
   });
 
-  const voiceCall = useVoiceCall(socketRef, me!.id);
+  const voiceCall = useVoiceCall(socketRef);
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
@@ -140,7 +142,7 @@ export default function ChatView({
       });
       void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
     } catch (e: any) {
-      toast.error(getErrorMessage(e, "Không thể tải tin nhắn"));
+      toast.error(getErrorMessage(e, t('chat.loadMessagesFailed')));
     }
   }
 
@@ -167,7 +169,7 @@ export default function ChatView({
         },
       );
     } catch (e: any) {
-      toast.error(getErrorMessage(e, "Không thể tải tin nhắn nhóm"));
+      toast.error(getErrorMessage(e, t('chat.loadMessagesFailed')));
     }
   }
 
@@ -276,7 +278,7 @@ export default function ChatView({
             (prev) => (prev || []).filter((m) => m.id !== uploadingId),
           );
         }
-        toast.error("Upload file thất bại");
+        toast.error(t('chat.uploadFilesFailed'));
         return;
       }
 
@@ -315,7 +317,7 @@ export default function ChatView({
         },
         (status: { success: boolean; message?: string }) => {
           if (!status?.success) {
-            toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
+            toast.error(status?.message || t('chat.sendMessageFailed'));
             return;
           }
           setMessageText("");
@@ -364,7 +366,7 @@ export default function ChatView({
       },
       (status: { success: boolean; message?: string }) => {
         if (!status?.success) {
-          toast.error(status?.message || "Gửi tin nhắn thất bại");
+          toast.error(status?.message || t('chat.sendMessageFailed'));
           return;
         }
         setMessageText("");
@@ -462,7 +464,7 @@ export default function ChatView({
         },
         (status: { success: boolean; message?: string }) => {
           if (!status?.success) {
-            toast.error(status?.message || "Gửi tin nhắn nhóm thất bại");
+            toast.error(status?.message || t('chat.sendMessageFailed'));
             return;
           }
           setMessageText("");
@@ -480,7 +482,7 @@ export default function ChatView({
       { messageId },
       (status: { success: boolean; message?: string }) => {
         if (!status?.success) {
-          toast.error(status?.message || "Thu hồi tin nhắn thất bại");
+          toast.error(status?.message || t('chat.recallMessageFailed'));
           return;
         }
         queryClient.invalidateQueries({ queryKey: chatKeys.list() });
@@ -567,7 +569,7 @@ export default function ChatView({
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
                   <p className="text-lg text-muted-foreground">
-                    Chọn một người dùng hoặc nhóm để bắt đầu chat
+                    {t('chat.chooseToStart')}
                   </p>
                 </div>
               </div>
@@ -599,7 +601,7 @@ export default function ChatView({
                           selectedUser.id,
                           selectedUser.fullName ||
                             selectedUser.username ||
-                            "User",
+                            t('chat.user'),
                           selectedUser.avatar || undefined,
                         )
                     : undefined

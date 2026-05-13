@@ -2,6 +2,7 @@ import { z } from "zod";
 import { MessageType } from "../enums/MessageType.enum";
 import { PopulatedSenderSchema } from "./ChatSchema";
 import { MemberRole } from "../enums/MemberRole.enum";
+import i18n from "@/shared/i18n";
 
 // Schema cho User (sử dụng chung)
 export const MemberUserSchema = z.object({
@@ -109,20 +110,21 @@ export const SuccessResponseSchema = z.object({
 });
 
 // Schema cho việc tạo nhóm
-export const CreateGroupSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Tên nhóm không được để trống")
-    .max(50, "Tên nhóm không được quá 50 ký tự"),
-  description: z.string().max(200, "Mô tả không được quá 200 ký tự").optional(),
-  members: z.array(z.string()).min(2, "Chọn ít nhất 2 thành viên (ngoài bạn)"),
-});
+export const getCreateGroupSchema = () =>
+  z.object({
+    name: z
+      .string()
+      .min(1, i18n.t("validation.groupNameRequired"))
+      .max(50, i18n.t("validation.groupNameMaxLength")),
+    description: z.string().max(200, i18n.t("validation.descriptionMaxLength")).optional(),
+    members: z.array(z.string()).min(2, i18n.t("validation.selectMinMembers")),
+  });
 
 export const UpdateGroupResponseSchema = z.object({
   message: z.string(),
 });
 
-export type CreateGroupInput = z.infer<typeof CreateGroupSchema>;
+export type CreateGroupInput = z.infer<ReturnType<typeof getCreateGroupSchema>>;
 export type GroupInfo = z.infer<typeof GroupInfoSchema>;
 export type GroupMember = z.infer<typeof GroupMemberSchema>;
 export type GroupItem = z.infer<typeof GroupItemSchema>;

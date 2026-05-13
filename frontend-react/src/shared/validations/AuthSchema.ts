@@ -1,23 +1,26 @@
-import z from "zod";
+import { z } from "zod";
 import { BaseEntityDTO } from "./CommonSchema";
+import i18n from "@/shared/i18n";
 
-export const LoginSchema = z
-  .object({
-    email: z.string().email("Email không hợp lệ"),
-    password: z.string().trim().min(1, "Mật khẩu không được để trống"),
-  })
-  .strict()
-  .strip();
+export const getLoginSchema = () =>
+  z
+    .object({
+      email: z.string().email(i18n.t("validation.invalidEmail")),
+      password: z.string().trim().min(1, i18n.t("validation.passwordRequired")),
+    })
+    .strict()
+    .strip();
 
-export const SignUpSchema = z
-  .object({
-    username: z.string().trim().min(1, "Tên đăng nhập không được để trống"),
-    fullName: z.string().trim().min(1, "Họ và tên không được để trống"),
-    email: z.string().email("Email không hợp lệ"),
-    password: z.string().trim().min(1, "Mật khẩu không được để trống"),
-  })
-  .strict()
-  .strip();
+export const getSignUpSchema = () =>
+  z
+    .object({
+      username: z.string().trim().min(1, i18n.t("validation.usernameRequired")),
+      fullName: z.string().trim().min(1, i18n.t("validation.fullNameRequired")),
+      email: z.string().email(i18n.t("validation.invalidEmail")),
+      password: z.string().trim().min(1, i18n.t("validation.passwordRequired")),
+    })
+    .strict()
+    .strip();
 
 export const LogoutSchema = z
   .object({
@@ -46,13 +49,14 @@ export const TempTokenResponseSchema = z
   })
   .strip();
 
-export const TwoFactorLoginSchema = z
-  .object({
-    tempToken: z.string(),
-    code: z.string().trim().length(6, "Mã OTP phải có đúng 6 ký tự"),
-  })
-  .strict()
-  .strip();
+export const getTwoFactorLoginSchema = () =>
+  z
+    .object({
+      tempToken: z.string(),
+      code: z.string().trim().length(6, i18n.t("validation.otpLength")),
+    })
+    .strict()
+    .strip();
 
 
 export const RefreshTokenResponseSchema = z
@@ -71,24 +75,26 @@ export const MeResponseSchema = BaseEntityDTO.extend({
   avatar: z.string().optional().nullable(),
 });
 
-export const ChangePasswordSchema = z
-  .object({
-    oldPassword: z.string().trim().min(1, "Mật khẩu cũ không được để trống"),
-    newPassword: z
-      .string()
-      .trim()
-      .min(6, "Mật khẩu mới phải có ít nhất 6 ký tự"),
-  })
-  // dùng để đảm bảo không có trường dư thừa
-  .strict()
-  .strip();
-export const SetPasswordSchema = z
-  .object({
-    password: z.string().trim().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-  })
-  // dùng để đảm bảo không có trường dư thừa
-  .strict()
-  .strip();
+export const getChangePasswordSchema = () =>
+  z
+    .object({
+      oldPassword: z.string().trim().min(1, i18n.t("validation.currentPasswordRequired")),
+      newPassword: z
+        .string()
+        .trim()
+        .min(6, i18n.t("validation.passwordMin")),
+    })
+    // Keep the payload strict so no extra fields slip through.
+    .strict()
+    .strip();
+export const getSetPasswordSchema = () =>
+  z
+    .object({
+      password: z.string().trim().min(6, i18n.t("validation.passwordMin")),
+    })
+    // Keep the payload strict so no extra fields slip through.
+    .strict()
+    .strip();
 
 export const TwoFactorAuthResponseSchema = z.object({
   qrCode: z.string()
@@ -99,15 +105,15 @@ export const UploadAvatarResponseSchema = z.object({
 });
 
 
-export type LoginBodyType = z.infer<typeof LoginSchema>;
-export type SignUpBodyType = z.infer<typeof SignUpSchema>;
+export type LoginBodyType = z.infer<ReturnType<typeof getLoginSchema>>;
+export type SignUpBodyType = z.infer<ReturnType<typeof getSignUpSchema>>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type TempTokenResponse = z.infer<typeof TempTokenResponseSchema>;
-export type ChangePasswordBodyType = z.infer<typeof ChangePasswordSchema>;
-export type SetPasswordBodyType = z.infer<typeof SetPasswordSchema>;
+export type ChangePasswordBodyType = z.infer<ReturnType<typeof getChangePasswordSchema>>;
+export type SetPasswordBodyType = z.infer<ReturnType<typeof getSetPasswordSchema>>;
 export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
 export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
 export type LogoutBodyType = z.infer<typeof LogoutSchema>;
-export type TwoFactorLoginBodyType = z.infer<typeof TwoFactorLoginSchema>;
+export type TwoFactorLoginBodyType = z.infer<ReturnType<typeof getTwoFactorLoginSchema>>;

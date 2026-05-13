@@ -7,6 +7,7 @@ import {
 } from "@/shared/components/ui/avatar";
 import { getInitials } from "../utils";
 import type { CallState } from "../hooks/useVoiceCall";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 type CallOverlayProps = {
   callState: CallState;
@@ -37,14 +38,15 @@ export function CallOverlay({
   onEnd,
   onToggleMute,
 }: CallOverlayProps) {
+  const { t } = useTranslation();
   if (callState === "idle") return null;
 
   const statusText: Record<Exclude<CallState, "idle">, string> = {
-    calling: "Đang gọi...",
-    incoming: "Cuộc gọi đến",
-    connecting: "Đang kết nối...",
+    calling: t("chat.calling"),
+    incoming: t("chat.incomingCall"),
+    connecting: t("chat.connecting"),
     active: formatDuration(callDuration),
-    ended: "Cuộc gọi đã kết thúc",
+    ended: t("chat.callEnded"),
   };
 
   return (
@@ -87,7 +89,7 @@ export function CallOverlay({
                 size="lg"
                 className="rounded-full h-14 w-14"
                 onClick={onReject}
-                title="Từ chối"
+                title={t("chat.reject")}
               >
                 <PhoneOff className="h-6 w-6" />
               </Button>
@@ -95,7 +97,7 @@ export function CallOverlay({
                 size="lg"
                 className="rounded-full h-14 w-14 bg-green-600 hover:bg-green-700 text-white"
                 onClick={onAccept}
-                title="Nghe máy"
+                title={t("chat.accept")}
               >
                 <Phone className="h-6 w-6" />
               </Button>
@@ -109,7 +111,7 @@ export function CallOverlay({
               size="lg"
               className="rounded-full h-14 w-14"
               onClick={onEnd}
-              title="Hủy cuộc gọi"
+              title={t("chat.cancelCall")}
             >
               <PhoneOff className="h-6 w-6" />
             </Button>
@@ -123,7 +125,7 @@ export function CallOverlay({
                 size="lg"
                 className="rounded-full h-14 w-14"
                 onClick={onToggleMute}
-                title={isMuted ? "Bật mic" : "Tắt mic"}
+                title={isMuted ? t("chat.unmute") : t("chat.mute")}
               >
                 {isMuted ? (
                   <MicOff className="h-6 w-6" />
@@ -136,7 +138,7 @@ export function CallOverlay({
                 size="lg"
                 className="rounded-full h-14 w-14"
                 onClick={onEnd}
-                title="Kết thúc cuộc gọi"
+                title={t("chat.endCall")}
               >
                 <PhoneOff className="h-6 w-6" />
               </Button>

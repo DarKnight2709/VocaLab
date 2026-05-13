@@ -13,6 +13,7 @@ import {
   useUpdateCardMutation,
   type CardItem,
 } from "../api/vocabularyService";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface EditCardDialogProps {
   card: CardItem | null;
@@ -27,6 +28,7 @@ export default function EditCardDialog({
   onOpenChange,
   collectionId,
 }: EditCardDialogProps) {
+  const { t } = useTranslation();
   const updateMutation = useUpdateCardMutation(collectionId);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
 
@@ -34,12 +36,12 @@ export default function EditCardDialog({
     if (open && card && card.cardType?.fields) {
       const initialValues: Record<string, string> = {};
       
-      // Khởi tạo toàn bộ field từ CardType
+      // Initialize all fields from the card type
       card.cardType.fields.forEach(field => {
         initialValues[field.id] = "";
       });
 
-      // Ghi đè bằng giá trị thực tế nếu đã có
+      // Override with stored values when available
       if (card.values) {
         card.values.forEach((v) => {
           initialValues[v.fieldId] = v.value;
@@ -72,7 +74,7 @@ export default function EditCardDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Chỉnh sửa thẻ</DialogTitle>
+          <DialogTitle>{t("vocabulary.cardManagement.editTitle")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -87,7 +89,7 @@ export default function EditCardDialog({
                     [field.id]: e.target.value,
                   }))
                 }
-                placeholder={`Nhập ${field.label.toLowerCase()}`}
+                placeholder={t("vocabulary.cardManagement.enterValue", { label: field.label.toLowerCase() })}
               />
             </div>
           ))}
@@ -95,13 +97,13 @@ export default function EditCardDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Hủy
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleUpdate}
             disabled={updateMutation.isPending}
           >
-            {updateMutation.isPending ? "Đang lưu..." : "Cập nhật"}
+            {updateMutation.isPending ? t("vocabulary.cardManagement.saving") : t("vocabulary.cardManagement.update")}
           </Button>
         </DialogFooter>
       </DialogContent>

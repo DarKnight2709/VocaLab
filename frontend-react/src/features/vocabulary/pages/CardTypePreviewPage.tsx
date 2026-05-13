@@ -4,9 +4,11 @@ import { toast } from "sonner";
 import CardFieldDragDrop from "../components/CardFieldDragDrop";
 import { useCardTypeDetailsQuery, useUpdateCardTypeMutation } from "../api/vocabularyService";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function CardTypePreviewPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { cardTypeId } = useParams();
 
   const {
@@ -21,7 +23,7 @@ export default function CardTypePreviewPage() {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <p className="text-muted-foreground">Đang tải...</p>
+        <p className="text-muted-foreground">{t("vocabulary.loading")}</p>
       </div>
     );
   }
@@ -29,8 +31,8 @@ export default function CardTypePreviewPage() {
   if (isError || !cardType) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-3">
-        <p className="text-muted-foreground">Không tải được kiểu thẻ</p>
-        <Button variant="outline" onClick={() => navigate("/vocabulary/card-types")}>Quay lại</Button>
+        <p className="text-muted-foreground">{t("vocabulary.cardTypeLoadFailed")}</p>
+        <Button variant="outline" onClick={() => navigate("/vocabulary/card-types")}>{t("vocabulary.back")}</Button>
       </div>
     );
   }
@@ -47,7 +49,7 @@ export default function CardTypePreviewPage() {
       });
 
     } catch {
-      toast.error("Cập nhật kiểu thẻ thất bại");
+      toast.error(t("vocabulary.cardTypeUpdateFailed"));
     }
   };
 
@@ -56,8 +58,8 @@ export default function CardTypePreviewPage() {
       <div className="max-w-6xl mx-auto">
         <Breadcrumb 
           items={[
-            { label: "Từ vựng", href: "/vocabulary" },
-            { label: "Quản lý kiểu thẻ", href: "/vocabulary/card-types" },
+            { label: t("vocabulary.title"), href: "/vocabulary" },
+            { label: t("vocabulary.cardTypeManagement"), href: "/vocabulary/card-types" },
             { label: cardType.name }
           ]} 
         />

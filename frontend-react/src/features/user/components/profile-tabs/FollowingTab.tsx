@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, UserX } from "lucide-react";
 import { useState } from "react";
 import { useUserFollowingQuery } from "../../api/userService";
 import { UserCard } from "../UserCard";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface FollowingTabProps {
   userId: string;
@@ -9,6 +10,7 @@ interface FollowingTabProps {
 }
 
 export default function FollowingTab({ userId, search }: FollowingTabProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const { data, isLoading } = useUserFollowingQuery(userId, page, 12, search);
 
@@ -38,10 +40,10 @@ export default function FollowingTab({ userId, search }: FollowingTabProps) {
           <UserX className="h-12 w-12 text-muted-foreground/40" />
         </div>
         <h3 className="text-xl font-bold tracking-tight">
-          {search ? `Không tìm thấy kết quả cho "${search}"` : "Chưa theo dõi ai"}
+          {search ? t("profile.noResults", { query: search }) : t("profile.noFollowing")}
         </h3>
         <p className="mt-2 max-w-xs text-center text-sm text-muted-foreground leading-relaxed">
-          {search ? "Hãy thử tìm kiếm với từ khóa khác hoặc kiểm tra lại chính tả." : "Những người mà profile này đang theo dõi sẽ được liệt kê tại đây."}
+          {search ? t("profile.noResultsHint") : t("profile.noFollowingHint")}
         </p>
       </div>
     );
@@ -65,7 +67,7 @@ export default function FollowingTab({ userId, search }: FollowingTabProps) {
             <ChevronLeft size={18} />
           </button>
           <div className="px-4 py-1.5 rounded-full bg-muted/30 border border-white/5 text-xs font-semibold tabular-nums">
-            Trang {page} <span className="mx-1 text-muted-foreground">/</span> {data!.meta.totalPages}
+            {t("common.page")} {page} <span className="mx-1 text-muted-foreground">/</span> {data!.meta.totalPages}
           </div>
           <button
             onClick={() => setPage((p) => Math.min(data!.meta.totalPages, p + 1))}

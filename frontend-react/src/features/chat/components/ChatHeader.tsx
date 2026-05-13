@@ -1,4 +1,5 @@
 import { Button } from "@/shared/components/ui/button";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 import {
   Avatar,
   AvatarFallback,
@@ -30,9 +31,10 @@ export function ChatHeader({
   onGroupInfoClick,
   onCallClick,
 }: ChatHeaderProps) {
+  const { t } = useTranslation();
   const selectedUserDisplayName = selectedUser
-    ? selectedUser.fullName || selectedUser.username || "User"
-    : "Chọn người để chat";
+    ? selectedUser.fullName || selectedUser.username || t("chat.user")
+    : t("chat.chooseSomeone");
 
   return (
     <div className="border-b p-4 bg-card">
@@ -43,8 +45,8 @@ export function ChatHeader({
             variant="ghost"
             size="icon"
             onClick={onBack}
-            aria-label="Quay lại danh sách"
-            title="Quay lại"
+            aria-label={t("chat.backToList")}
+            title={t("chat.back")}
             className="shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -55,20 +57,20 @@ export function ChatHeader({
             <Avatar className="h-10 w-10">
               <AvatarImage src={selectedGroup?.avatar || undefined} />
               <AvatarFallback>
-                {getInitials(selectedGroup.name || "Nhóm")}
+                {getInitials(selectedGroup.name || t("chat.group"))}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <div className="font-semibold">
-                  {selectedGroup.name || "Nhóm"}
+                  {selectedGroup.name || t("chat.group")}
                 </div>
                 {isSelectedUserOnline && (
                   <div className="h-2 w-2 bg-green-500 rounded-full" />
                 )}
               </div>
               <div className="text-sm text-muted-foreground">
-                {isSelectedUserOnline ? "Đang hoạt động" : "Không hoạt động"}
+                {isSelectedUserOnline ? t("chat.online") : t("chat.offline")}
               </div>
             </div>
             <Button
@@ -76,8 +78,8 @@ export function ChatHeader({
               variant="outline"
               size="sm"
               onClick={onGroupInfoClick}
-              aria-label="Xem thông tin nhóm"
-              title="Thông tin nhóm"
+              aria-label={t("chat.groupInfo")}
+              title={t("chat.groupInfo")}
             >
               ...
             </Button>
@@ -87,10 +89,10 @@ export function ChatHeader({
             <Link
               to={ROUTES.PROFILE.url.replace(
                 ":username",
-                selectedUser?.username || "user",
+                selectedUser?.username || t("chat.user"),
               )}
               className="hover:opacity-80 transition-opacity"
-              aria-label={`Xem trang cá nhân của ${selectedUserDisplayName}`}
+              aria-label={t("chat.viewProfileOf", { name: selectedUserDisplayName })}
             >
               <Avatar className="h-10 w-10">
                 <AvatarImage src={selectedUser?.avatar || undefined} />
@@ -107,7 +109,7 @@ export function ChatHeader({
                 )}
               </div>
               <div className="text-sm text-muted-foreground">
-                {isSelectedUserOnline ? "Đang hoạt động" : "Không hoạt động"}
+                {isSelectedUserOnline ? t("chat.online") : t("chat.offline")}
               </div>
             </div>
             {onCallClick && (
@@ -116,7 +118,7 @@ export function ChatHeader({
                 variant="ghost"
                 size="icon"
                 onClick={onCallClick}
-                title="Gọi thoại"
+                title={t("chat.voiceCall")}
                 className="shrink-0"
               >
                 <Phone className="h-5 w-5" />

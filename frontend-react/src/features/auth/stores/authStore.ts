@@ -8,6 +8,7 @@ import { decodeToken } from "@/shared/lib/jwt";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import type { JwtPayload } from "jwt-decode";
+import i18n from "@/shared/i18n";
 
 interface AuthState {
   isAuth: boolean;
@@ -40,8 +41,8 @@ export const useAuthStore = create<AuthState>()(
           "tempToken" in token ? token.tempToken : token.accessToken;
 
         if (!rawToken) {
-          toast.error("Thiếu token!", {
-            description: "Vui lòng đăng nhập lại.",
+          toast.error(i18n.t("auth.missingToken"), {
+            description: i18n.t("auth.pleaseSignInAgain"),
           });
           get().clearAuthState();
           return;
@@ -53,8 +54,8 @@ export const useAuthStore = create<AuthState>()(
           decoded = decodeToken(rawToken);
           if (!decoded) throw new Error("Invalid token");
         } catch (error) {
-          toast.error("Token không hợp lệ!", {
-            description: "Vui lòng đăng nhập lại.",
+          toast.error(i18n.t("auth.invalidToken"), {
+            description: i18n.t("auth.pleaseSignInAgain"),
           });
           get().clearAuthState();
           return;

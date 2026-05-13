@@ -22,6 +22,7 @@ import Breadcrumb from "@/shared/components/Breadcrumb";
 import { CommentItem } from "../components/CommentItem";
 import { VoteType } from "@/shared/enums/VoteType.enum";
 import { useAuthStore } from "@/features/auth/stores/authStore";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 function ReadOnlyEditor({ content }: { content: string }) {
   const editor = useEditor({
@@ -66,6 +67,7 @@ function ReadOnlyEditor({ content }: { content: string }) {
 export default function BlogDetailPage() {
   const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t, language } = useTranslation();
   const [commentText, setCommentText] = useState("");
 
   const currentUserId = useAuthStore((state) => state.userId ?? undefined);
@@ -80,6 +82,7 @@ export default function BlogDetailPage() {
   const replyComment = useReplyCommentMutation(id);
   const voteComment = useVoteCommentMutation(id);
   const deleteBlog = useDeleteBlogMutation();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
 
   const handleSubmitComment = () => {
     const text = commentText.trim();
@@ -88,7 +91,7 @@ export default function BlogDetailPage() {
   };
 
   const handleDeleteBlog = () => {
-    if (!confirm("Bạn có chắc muốn xóa bài viết này?")) return;
+    if (!confirm(t("blog.deleteConfirm"))) return;
     deleteBlog.mutate(id, { onSuccess: () => navigate(ROUTES.BLOG.url) });
   };
 
@@ -106,12 +109,12 @@ export default function BlogDetailPage() {
   if (!blog) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-8 text-center text-muted-foreground">
-        Bài viết không tồn tại hoặc đã bị xóa.
+        {t("blog.postNotFound")}
       </div>
     );
   }
 
-  const date = new Date(blog.createdAt).toLocaleDateString("vi-VN", {
+  const date = new Date(blog.createdAt).toLocaleDateString(dateLocale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -122,7 +125,7 @@ export default function BlogDetailPage() {
     new Date(blog.updatedAt).getTime() - new Date(blog.createdAt).getTime() >
       1000;
   const editDate = blog.updatedAt
-    ? new Date(blog.updatedAt).toLocaleDateString("vi-VN", {
+    ? new Date(blog.updatedAt).toLocaleDateString(dateLocale, {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -136,7 +139,7 @@ export default function BlogDetailPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
       <Breadcrumb
         items={[
-          { label: "Blog", href: ROUTES.BLOG.url },
+          { label: t("common.blog"), href: ROUTES.BLOG.url },
           { label: blog.title },
         ]}
       />
@@ -153,7 +156,7 @@ export default function BlogDetailPage() {
               blog.author.username,
             )}
             className="h-9 w-9 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
-            aria-label={`Xem trang cá nhân của ${blog.author.fullName}`}
+            aria-label={`${t("common.viewProfile")} ${blog.author.fullName}`}
           >
             {blog.author.avatar ? (
               <img
@@ -174,9 +177,9 @@ export default function BlogDetailPage() {
               {isEdited && (
                 <span
                   className="italic"
-                  title={`Chỉnh sửa lần cuối: ${editDate}`}
+                  title={`${t("blog.lastEdited")}: ${editDate}`}
                 >
-                  (Đã chỉnh sửa {editDate})
+                  ({t("blog.edited")} {editDate})
                 </span>
               )}
             </p>
@@ -189,13 +192,13 @@ export default function BlogDetailPage() {
                 to={ROUTES.BLOG_EDIT.url.replace(":id", id)}
                 className="rounded-lg border px-3 py-1.5 text-xs hover:bg-muted"
               >
-                Chỉnh sửa
+                {t("blog.edit")}
               </Link>
               <button
                 onClick={handleDeleteBlog}
                 className="rounded-lg border border-destructive/30 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10"
               >
-                Xóa
+                {t("blog.delete")}
               </button>
             </>
           )}
@@ -248,8 +251,8 @@ export default function BlogDetailPage() {
 
       {/* Comments */}
       <div className="border-t pt-8">
-        <h2 className="mb-5 text-lg font-semibold">
-          Bình luận ({blog._count?.comments ?? 0})
+          <h2 className="mb-5 text-lg font-semibold">
+          {t("blog.comments")} ({blog._count?.comments ?? 0})
         </h2>
 
         <div className="mb-6 flex gap-3">
@@ -262,7 +265,7 @@ export default function BlogDetailPage() {
                 handleSubmitComment();
               }
             }}
-            placeholder="Viết bình luận..."
+            placeholder={t("blog.writeComment")}
             rows={2}
             className="flex-1 resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
@@ -296,7 +299,7 @@ export default function BlogDetailPage() {
           ))}
           {!blog.comments?.length && (
             <p className="text-sm text-muted-foreground">
-              Chưa có bình luận nào. Hãy là người đầu tiên!
+              {t("blog.noComments")}
             </p>
           )}
         </div>

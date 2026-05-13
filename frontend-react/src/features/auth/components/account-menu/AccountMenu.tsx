@@ -1,8 +1,5 @@
 import { useMemo } from "react";
-import {
-  CircleHelp,
-  Settings,
-} from "lucide-react";
+import { CircleHelp, Settings, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +15,7 @@ import {
 import { getInitials } from "@/shared/lib/utils";
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 import { AccountMenuProfileBlock } from "./AccountMenuProfileBlock";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface AccountMenuProps {
   me: MeResponse | undefined | null;
@@ -34,9 +32,10 @@ export function AccountMenu({
   onOpenHelp,
   onSignOut,
 }: AccountMenuProps) {
+  const { t } = useTranslation();
   const displayName = useMemo(() => {
-    return me?.fullName || me?.username || "User";
-  }, [me]);
+    return me?.fullName || me?.username || t("chat.user");
+  }, [me, t]);
 
   return (
     <DropdownMenu>
@@ -44,7 +43,7 @@ export function AccountMenu({
         <button
           type="button"
           className="shrink-0 transition-transform active:scale-95"
-          aria-label="Mở menu tài khoản"
+          aria-label={t("common.openAccountMenu")}
         >
           <Avatar className="h-11 w-11 border-2 border-border/50">
             <AvatarImage src={me?.avatar || "image.png"} />
@@ -63,15 +62,22 @@ export function AccountMenu({
         <AccountMenuProfileBlock
           avatar={me?.avatar}
           displayName={displayName}
-          onViewProfile={onViewProfile}
         />
+
+        <DropdownMenuItem
+          onClick={onViewProfile}
+          className="px-4 py-3 text-base text-foreground"
+        >
+          <User  className="h-5 w-5 text-muted-foreground" />
+          {t("common.viewProfile")}
+        </DropdownMenuItem>
 
         <DropdownMenuItem
           onClick={onOpenSettings}
           className="px-4 py-3 text-base text-foreground"
         >
           <Settings className="h-5 w-5 text-muted-foreground" />
-          Settings
+          {t("common.settings")}
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -79,7 +85,7 @@ export function AccountMenu({
           className="px-4 py-3 text-base text-foreground"
         >
           <CircleHelp className="h-5 w-5 text-muted-foreground" />
-          Help
+          {t("common.help")}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator className="my-0" />
@@ -92,13 +98,14 @@ export function AccountMenu({
             onClick={onSignOut}
             className="text-left text-base text-foreground hover:opacity-80 transition-opacity"
           >
-            Sign out
+            {t("common.signOut")}
           </button>
-          <p className="mt-1 truncate text-sm text-muted-foreground">{me?.email || ""}</p>
+          <p className="mt-1 truncate text-sm text-muted-foreground">
+            {me?.email || ""}
+          </p>
         </div>
 
         <DropdownMenuSeparator className="my-0" />
-
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -30,7 +30,7 @@ import {
 } from "@/features/user/api/userService";
 import {
   type UserSocialItem,
-  CreateUserSocialSchema,
+  getCreateUserSocialSchema,
   type CreateUserSocialBody,
 } from "@/shared/validations/UserSchema";
 import {
@@ -43,6 +43,7 @@ import {
 import { SocialPlatform } from "@/shared/enums/SocialPlatform";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface UserSocialDialogProps {
   open: boolean;
@@ -63,6 +64,7 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { t } = useTranslation();
   const { data: socials, isLoading } = useMySocialsQuery();
   const socialResult = socials?.data;
   console.log()
@@ -80,7 +82,7 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
     reset,
     formState: { errors },
   } = useForm<CreateUserSocialBody>({
-    resolver: zodResolver(CreateUserSocialSchema),
+    resolver: zodResolver(getCreateUserSocialSchema()),
     defaultValues: {
       platform: SocialPlatform.FACEBOOK,
       name: "",
@@ -131,27 +133,27 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>
             {mode === "list"
-              ? "Liên kết mạng xã hội"
+              ? t("social.title")
               : mode === "add"
-              ? "Thêm liên kết mới"
-              : "Chỉnh sửa liên kết"}
+              ? t("social.addNew")
+              : t("social.edit")}
           </DialogTitle>
         </DialogHeader>
 
         {mode === "list" ? (
           <div className="py-4 space-y-4">
-            <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
+            <div className="max-h-75 overflow-y-auto space-y-2 pr-2">
               {isLoading ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
               ) : socialResult?.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Chưa có liên kết nào.
+                  {t("social.none")}
                 </div>
               ) : (
                 socialResult?.map((social: UserSocialItem) => (
@@ -165,7 +167,7 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
                         <p className="text-sm font-medium leading-none truncate">
                           {social.name || social.platform}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[250px]">
+                        <p className="text-xs text-muted-foreground truncate max-w-62.5">
                           {social.link}
                         </p>
                       </div>
@@ -210,12 +212,12 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
                 setMode("add");
               }}
             >
-              <Plus className="w-4 h-4 mr-2" /> Thêm liên kết mới
+              <Plus className="w-4 h-4 mr-2" /> {t("social.addNew")}
             </Button>
 
             <DialogFooter>
               <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
-                Đóng
+                {t("social.close")}
               </Button>
             </DialogFooter>
           </div>
@@ -223,7 +225,7 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>
-                Nền tảng <span className="text-destructive">*</span>
+                {t("social.platform")} <span className="text-destructive">*</span>
               </Label>
               <Controller
                 name="platform"
@@ -231,7 +233,7 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Chọn nền tảng" />
+                      <SelectValue placeholder={t("social.choosePlatform")} />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.values(SocialPlatform).map((p) => (
@@ -254,10 +256,10 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="social-name">Tên hiển thị</Label>
+              <Label htmlFor="social-name">{t("social.displayName")}</Label>
               <Input
                 id="social-name"
-                placeholder="Ví dụ: Portfolio của tôi"
+                placeholder={t("social.displayNamePlaceholder")}
                 {...register("name")}
               />
               {errors.name && (
@@ -269,11 +271,11 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="social-link">
-                Đường dẫn (URL) <span className="text-destructive">*</span>
+                {t("social.url")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="social-link"
-                placeholder="https://..."
+                placeholder={t("social.urlPlaceholder")}
                 {...register("link")}
               />
               {errors.link && (
@@ -292,11 +294,11 @@ export const UserSocialDialog: React.FC<UserSocialDialogProps> = ({
                   setEditingId(null);
                 }}
               >
-                Quay lại
+                {t("social.back")}
               </Button>
               <Button type="submit" disabled={isPending}>
                 {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {mode === "add" ? "Thêm vào danh sách" : "Cập nhật"}
+                {mode === "add" ? t("social.addToList") : t("social.update")}
               </Button>
             </div>
           </form>

@@ -8,6 +8,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
@@ -23,9 +24,11 @@ export default function ConfirmDeleteDialog({
   onOpenChange,
   onConfirm,
   isLoading,
-  title = "Xác nhận xóa",
-  description = "Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa bản ghi này?",
+  title,
+  description,
 }: ConfirmDeleteDialogProps) {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -34,10 +37,10 @@ export default function ConfirmDeleteDialog({
             <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{title || t("vocabulary.confirmDeleteObj.title")}</DialogTitle>
           </div>
           <DialogDescription className="pt-3">
-            {description}
+            {description || t("vocabulary.confirmDeleteObj.desc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -47,14 +50,14 @@ export default function ConfirmDeleteDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Hủy
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
             onClick={onConfirm}
             disabled={isLoading}
           >
-            {isLoading ? "Đang xóa..." : "Xác nhận xóa"}
+            {isLoading ? t("vocabulary.confirmDeleteObj.deleting") : (title ? title : t("vocabulary.confirmDeleteObj.confirm"))}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,7 @@
 import { PenSquare, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import ROUTES from "@/shared/lib/routes";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface BlogListHeaderProps {
   search: string;
@@ -13,12 +14,13 @@ export default function BlogListHeader({
   onSearch,
   isAuth,
 }: BlogListHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold">Blog</h1>
+        <h1 className="text-2xl font-bold">{t("blog.title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Chia sẻ kinh nghiệm và học từ cộng đồng
+          {t("blog.description")}
         </p>
       </div>
 
@@ -33,7 +35,7 @@ export default function BlogListHeader({
             type="text"
             value={search}
             onChange={(e) => onSearch(e.target.value)}
-            placeholder="Tìm kiếm bài viết..."
+            placeholder={t("blog.searchPlaceholder")}
             className="w-full rounded-xl border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
           />
         </div>
@@ -45,7 +47,7 @@ export default function BlogListHeader({
             className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <PenSquare size={15} />
-            Viết bài
+            {t("blog.writePost")}
           </Link>
         )}
       </div>

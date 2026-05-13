@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
+import i18n from "@/shared/i18n";
  
 export const DuplicatePolicy = {
   SKIP: "SKIP",
@@ -121,9 +122,9 @@ export const useCreateCollectionMutation = () => {
       api.post(API_ROUTES.VOCABULARY.CREATE_COLLECTION, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
-      toast.success("Tạo bộ từ vựng thành công");
+      toast.success(i18n.t("vocabulary.createSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Tạo thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.createFailed"))),
   });
 };
 
@@ -139,9 +140,9 @@ export const useUpdateCollectionMutation = () => {
     }) => api.patch(API_ROUTES.VOCABULARY.UPDATE_COLLECTION(id), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
-      toast.success("Cập nhật thành công");
+      toast.success(i18n.t("vocabulary.updateSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Cập nhật thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.updateFailed"))),
   });
 };
 
@@ -152,9 +153,9 @@ export const useDeleteCollectionMutation = () => {
       api.delete(API_ROUTES.VOCABULARY.DELETE_COLLECTION(id)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
-      toast.success("Đã xóa bộ từ vựng");
+      toast.success(i18n.t("vocabulary.deleteSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Xóa thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.deleteFailed"))),
   });
 };
 
@@ -208,9 +209,9 @@ export const useCreateCardTypeMutation = () => {
     }) => api.post(API_ROUTES.VOCABULARY.CREATE_CARD_TYPE, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-types"] });
-      toast.success("Tạo kiểu thẻ thành công");
+      toast.success(i18n.t("vocabulary.cardTypeCreateSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Tạo kiểu thẻ thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardTypeCreateFailed"))),
   });
 };
 
@@ -238,14 +239,14 @@ export const useUpdateCardTypeMutation = () => {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ["card-types"] });
       qc.invalidateQueries({ queryKey: ["card-type-details", id] });
-      // Thêm cái này để refresh toàn bộ Card đang dùng Type này
+      // Refresh all cards using this type
       qc.invalidateQueries({ queryKey: ["card-collections"] });
       qc.invalidateQueries({ queryKey: ["card-collection-cards"] });
       qc.invalidateQueries({ queryKey: ["card-collection-detail"] });
-      toast.success("Cập nhật kiểu thẻ thành công");
+      toast.success(i18n.t("vocabulary.cardTypeUpdateSuccess"));
     },
     onError: (e) =>
-      toast.error(getErrorMessage(e, "Cập nhật kiểu thẻ thất bại")),
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.cardTypeUpdateFailed"))),
   });
 };
 
@@ -256,9 +257,9 @@ export const useDeleteCardTypeMutation = () => {
       api.delete(API_ROUTES.VOCABULARY.DELETE_CARD_TYPE(id)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-types"] });
-      toast.success("Đã xóa kiểu thẻ");
+      toast.success(i18n.t("vocabulary.cardTypeDeleteSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Xóa kiểu thẻ thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardTypeDeleteFailed"))),
   });
 };
 
@@ -283,9 +284,9 @@ export const useCreateCardMutation = (collectionId: string) => {
         queryKey: ["card-collection-detail", collectionId],
       });
       qc.invalidateQueries({ queryKey: ["card-collections"] });
-      toast.success("Thêm từ thành công");
+      toast.success(i18n.t("vocabulary.cardAddSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Thêm từ thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardAddFailed"))),
   });
 };
 
@@ -302,9 +303,9 @@ export const useDeleteCardMutation = (collectionId: string) => {
         queryKey: ["card-collection-detail", collectionId],
       });
       qc.invalidateQueries({ queryKey: ["card-collections"] });
-      toast.success("Đã xóa từ");
+      toast.success(i18n.t("vocabulary.cardDeleteSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Xóa từ thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardDeleteFailed"))),
   });
 };
 
@@ -326,9 +327,9 @@ export const useUpdateCardMutation = (collectionId: string) => {
         queryKey: ["card-collection-detail", collectionId],
       });
       qc.invalidateQueries({ queryKey: ["card-collections"] });
-      toast.success("Cập nhật từ thành công");
+      toast.success(i18n.t("vocabulary.updateSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Cập nhật từ thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.updateFailed"))),
   });
 };
 
@@ -355,8 +356,8 @@ export const useImportVocabularyMutation = () => {
           queryKey: ["card-collection-detail", variables.collectionId],
         });
       }
-      toast.success("Nhập dữ liệu thành công");
+      toast.success(i18n.t("vocabulary.importSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, "Nhập dữ liệu thất bại")),
+    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.importFailed"))),
   });
 };

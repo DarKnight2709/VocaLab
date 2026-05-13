@@ -19,9 +19,11 @@ import ImportVocabularyDialog from "../components/ImportVocabularyDialog";
 import EditCardDialog from "../components/EditCardDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { Button } from "@/shared/components/ui/button";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function VocabularyCollectionPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { collectionId } = useParams<{ collectionId: string }>();
 
   const [mode, setMode] = useState<"preview" | "learn">("preview");
@@ -106,7 +108,7 @@ export default function VocabularyCollectionPage() {
             {entry.value}
           </div>
         ))}
-        {entries.length === 0 && <div className="text-muted-foreground italic text-xs">Trống</div>}
+        {entries.length === 0 && <div className="text-muted-foreground italic text-xs">{t("vocabulary.emptyFieldValue")}</div>}
       </div>
     );
   };
@@ -118,22 +120,22 @@ export default function VocabularyCollectionPage() {
       <div className="max-w-6xl mx-auto space-y-4">
         <Breadcrumb 
           items={[
-            { label: "Từ vựng", href: "/vocabulary" },
-            { label: isLoading ? "Đang tải..." : data?.collection.name || "Bộ sưu tập" }
+            { label: t("vocabulary.title"), href: "/vocabulary" },
+            { label: isLoading ? t("vocabulary.loading") : data?.collection.name || t("vocabulary.collectionsTitle") }
           ]} 
         />
 
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl font-bold truncate">
-              {isLoading ? "Đang tải..." : data?.collection.name}
+              {isLoading ? t("vocabulary.loading") : data?.collection.name}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               {isLoading ? "" : data?.collection.description}
             </p>
             <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
               <Layers className="h-4 w-4" />
-              <span>{cards.length} cards</span>
+              <span>{cards.length} {t("vocabulary.cards")}</span>
             </div>
           </div>
 
@@ -143,7 +145,7 @@ export default function VocabularyCollectionPage() {
               className="gap-2"
               onClick={() => setMode("preview")}
             >
-              <Eye className="h-4 w-4" /> Preview
+              <Eye className="h-4 w-4" /> {t("vocabulary.preview")}
             </Button>
             <Button
               variant={mode === "learn" ? "default" : "outline"}
@@ -153,20 +155,20 @@ export default function VocabularyCollectionPage() {
                 setFlipped(false);
               }}
             >
-              <BookOpenText className="h-4 w-4" /> Learn
+              <BookOpenText className="h-4 w-4" /> {t("vocabulary.learn")}
             </Button>
             <Button
               variant="outline"
               className="gap-2"
               onClick={() => setImportOpen(true)}
             >
-              <Import className="h-4 w-4" /> Import
+              <Import className="h-4 w-4" /> {t("vocabulary.importData")}
             </Button>
             <Button
               className="gap-2"
               onClick={() => navigate(`/vocabulary/${collectionId}/add-card`)}
             >
-              <Plus className="h-4 w-4" /> Add
+              <Plus className="h-4 w-4" /> {t("vocabulary.addCard")}
             </Button>
           </div>
         </div>
@@ -174,8 +176,8 @@ export default function VocabularyCollectionPage() {
         {mode === "preview" ? (
           <div className="space-y-2">
             {cards.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
-                Collection chưa có card nào.
+                <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+                {t("vocabulary.noCards")}
               </div>
             ) : (
               cards.map((card) => (
@@ -185,7 +187,7 @@ export default function VocabularyCollectionPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="text-xs text-muted-foreground mb-1">
-                      {card.cardType?.name ?? "Card type"}
+                      {card.cardType?.name ?? t("vocabulary.cardType")}
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
                       <Button
@@ -219,21 +221,21 @@ export default function VocabularyCollectionPage() {
         ) : (
           <div>
             {cards.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
-                Collection chưa có card nào để học.
+                <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+                {t("vocabulary.noCardsToLearn")}
               </div>
             ) : (
               <>
                 <div className="space-y-4">
                   <div
-                    className="relative h-64 [perspective:2000px] cursor-pointer group"
+                    className="relative h-64 perspective-[2000px] cursor-pointer group"
                     onClick={() => setFlipped((f) => !f)}
                   >
                     <div 
-                      className={`relative w-full h-full duration-300 [transform-style:preserve-3d] transition-transform ${flipped ? '[transform:rotateY(180deg)]' : ''}`}
+                      className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}
                     >
                       {/* Front Face */}
-                      <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
+                      <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
                         <div className="text-center">
                           <CardFace 
                             card={cards[flashcardIdx]} 
@@ -242,12 +244,12 @@ export default function VocabularyCollectionPage() {
                           />
                         </div>
                         <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                          Mặt trước
+                          {t("vocabulary.frontFace")}
                         </div>
                       </div>
 
                       {/* Back Face */}
-                      <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
+                      <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
                         <div className="text-center">
                           <CardFace 
                             card={cards[flashcardIdx]} 
@@ -256,14 +258,16 @@ export default function VocabularyCollectionPage() {
                           />
                         </div>
                         <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
-                          Mặt sau
+                          {t("vocabulary.backFace")}
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   <div className="text-center text-[11px] text-muted-foreground uppercase tracking-widest font-medium">
-                    Thẻ {flashcardIdx + 1} / {cards.length} • Nhấn vào thẻ để lật
+                    {t("vocabulary.flashcardProgress")
+                      .replace("{current}", String(flashcardIdx + 1))
+                      .replace("{total}", String(cards.length))}
                   </div>
                 </div>
 
@@ -276,7 +280,7 @@ export default function VocabularyCollectionPage() {
                     }}
                     disabled={flashcardIdx === 0}
                   >
-                    ← Trước
+                    {t("vocabulary.previous")}
                   </Button>
                   <Button
                     variant="outline"
@@ -286,7 +290,7 @@ export default function VocabularyCollectionPage() {
                     }}
                     disabled={flashcardIdx === cards.length - 1}
                   >
-                    Sau →
+                    {t("vocabulary.next")}
                   </Button>
                 </div>
               </>
@@ -313,8 +317,8 @@ export default function VocabularyCollectionPage() {
         onOpenChange={setDeleteConfirmOpen}
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
-        title="Xóa thẻ từ vựng"
-        description="Bạn có chắc chắn muốn xóa thẻ này khỏi bộ sưu tập? Hành động này không thể hoàn tác."
+        title={t("vocabulary.deleteCardTitle")}
+        description={t("vocabulary.deleteCardDescription")}
       />
     </div>
   );

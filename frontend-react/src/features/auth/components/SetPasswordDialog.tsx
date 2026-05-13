@@ -3,6 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useMemo } from "react";
 
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -17,18 +19,14 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 
 import { useSetPasswordMutation } from "@/features/auth/api/authService";
-import { SetPasswordSchema } from "@/shared/validations/AuthSchema";
+import { getSetPasswordSchema } from "@/shared/validations/AuthSchema";
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 
 // Schema mở rộng cho Form để có thêm Confirm Password
-const SetPasswordFormSchema = SetPasswordSchema.extend({
-  confirmPassword: z.string().trim().min(1, "Vui lòng nhập lại mật khẩu"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Mật khẩu không khớp",
-  path: ["confirmPassword"],
-});
-
-type SetPasswordFormValues = z.infer<typeof SetPasswordFormSchema>;
+// Schema definition moved inside component
+type SetPasswordFormValues = z.infer<ReturnType<typeof getSetPasswordSchema>> & {
+  confirmPassword: string;
+};
 
 export function SetPasswordDialog(props: {
   open: boolean;
@@ -37,6 +35,16 @@ export function SetPasswordDialog(props: {
   onSuccess?: () => void;
 }) {
   const { open, onOpenChange, onSuccess } = props;
+  const { t } = useTranslation();
+
+  const SetPasswordFormSchema = useMemo(() => 
+    getSetPasswordSchema().extend({
+      confirmPassword: z.string().trim().min(1, t("auth.reenterPassword")),
+    }).refine((data) => data.password === data.confirmPassword, {
+      message: t("auth.passwordsDoNotMatch"),
+      path: ["confirmPassword"],
+    }), [t]
+  );
 
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -84,21 +92,21 @@ export function SetPasswordDialog(props: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Thiết lập mật khẩu</DialogTitle>
+          <DialogTitle>{t("auth.setPassword")}</DialogTitle>
           <DialogDescription>
-            Vì bạn đăng nhập bằng Google, hãy thiết lập mật khẩu để có thể đăng nhập bằng Email sau này.
+            {t("auth.setPasswordDesc")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password-new">Mật khẩu mới</Label>
+            <Label htmlFor="password-new">{t("auth.newPassword")}</Label>
             <div className="relative">
               <Input
                 id="password-new"
                 type={showPassword ? "text" : "password"}
                 {...form.register("password")}
-                placeholder="Nhập mật khẩu ít nhất 6 ký tự"
+                placeholder={t("auth.enterPasswordMin6")}
               />
               <button
                 type="button"
@@ -116,13 +124,13 @@ export function SetPasswordDialog(props: {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password-confirm">Nhập lại mật khẩu</Label>
+            <Label htmlFor="password-confirm">{t("auth.confirmPassword")}</Label>
             <div className="relative">
               <Input
                 id="password-confirm"
                 type={showConfirmPassword ? "text" : "password"}
                 {...form.register("confirmPassword")}
-                placeholder="Xác nhận lại mật khẩu"
+                placeholder={t("auth.confirmPasswordPlaceholder")}
               />
               <button
                 type="button"
@@ -145,10 +153,10 @@ export function SetPasswordDialog(props: {
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Đang xử lý..." : "Thiết lập mật khẩu"}
+              {saving ? t("auth.processing") : t("auth.setPassword")}
             </Button>
           </DialogFooter>
         </form>

@@ -8,6 +8,7 @@ import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
 import { z } from "zod";
+import i18n from "@/shared/i18n";
 import { BlogDetailSchema, BlogListResponseSchema } from "@/shared/validations/BlogSchema";
 import type { VoteType } from "@/shared/enums/VoteType.enum";
 
@@ -85,9 +86,9 @@ export const useCreateBlogMutation = () => {
     }) => api.post(API_ROUTES.BLOG.CREATE, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: blogKeys.all });
-      toast.success("Đăng bài thành công!");
+      toast.success(i18n.t("blog.postCreated"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Đăng bài thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("blog.postCreateFailed"))),
   });
 };
 
@@ -109,9 +110,9 @@ export const useUpdateBlogMutation = () => {
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: blogKeys.detail(vars.id) });
       qc.invalidateQueries({ queryKey: blogKeys.all });
-      toast.success("Cập nhật bài viết thành công!");
+      toast.success(i18n.t("blog.postUpdated"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Cập nhật thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("blog.postUpdateFailed"))),
   });
 };
 
@@ -121,9 +122,9 @@ export const useDeleteBlogMutation = () => {
     mutationFn: (id: string) => api.delete(API_ROUTES.BLOG.DELETE(id)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: blogKeys.all });
-      toast.success("Xóa bài viết thành công!");
+      toast.success(i18n.t("blog.postDeleted"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Xóa thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("blog.postDeleteFailed"))),
   });
 };
 
@@ -134,7 +135,7 @@ export const useVoteBlogMutation = (blogId: string) => {
       api.post(API_ROUTES.BLOG.VOTE(blogId), { type }),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: blogKeys.detail(blogId) }),
-    onError: (err) => toast.error(getErrorMessage(err, "Thao tác thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("blog.actionFailed"))),
   });
 };
 
@@ -146,7 +147,7 @@ export const useAddCommentMutation = (blogId: string) => {
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: blogKeys.detail(blogId) }),
     onError: (err) =>
-      toast.error(getErrorMessage(err, "Gửi bình luận thất bại")),
+      toast.error(getErrorMessage(err, i18n.t("blog.commentSentFailed"))),
   });
 };
 
@@ -158,7 +159,7 @@ export const useDeleteCommentMutation = (blogId: string) => {
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: blogKeys.detail(blogId) }),
     onError: (err) =>
-      toast.error(getErrorMessage(err, "Xóa bình luận thất bại")),
+      toast.error(getErrorMessage(err, i18n.t("blog.commentDeleteFailed"))),
   });
 };
 
@@ -177,7 +178,7 @@ export const useEditCommentMutation = (blogId: string) => {
         queryKey: blogKeys.detail(blogId),
       }),
     onError: (err) =>
-      toast.error(getErrorMessage(err, "Cập nhật bình luận thất bại")),
+      toast.error(getErrorMessage(err, i18n.t("blog.commentUpdateFailed"))),
   });
 };
 export const useReplyCommentMutation = (blogId: string) => {
@@ -195,7 +196,7 @@ export const useReplyCommentMutation = (blogId: string) => {
         queryKey: blogKeys.detail(blogId),
       }),
     onError: (err) =>
-      toast.error(getErrorMessage(err, "Phản hồi bình luận thất bại")),
+      toast.error(getErrorMessage(err, i18n.t("blog.commentReplyFailed"))),
   });
 };
 
@@ -211,7 +212,7 @@ export const useVoteCommentMutation = (blogId: string) => {
     }) => api.post(API_ROUTES.BLOG.VOTE_COMMENT(commentId), { type }),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: blogKeys.detail(blogId) }),
-    onError: (err) => toast.error(getErrorMessage(err, "Thao tác thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("blog.actionFailed"))),
   });
 };
 

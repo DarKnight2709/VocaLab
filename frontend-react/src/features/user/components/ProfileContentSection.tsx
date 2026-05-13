@@ -1,22 +1,12 @@
 import { Eye, EyeOff, FileText, Handshake, Search, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 import FollowersTab from "./profile-tabs/FollowersTab";
 import FollowingTab from "./profile-tabs/FollowingTab";
 import FriendsTab from "./profile-tabs/FriendsTab";
 import PostsTab from "./profile-tabs/PostsTab";
 import { ContentTab } from "../../../shared/enums/ContentTab.enum";
 import { PostVisibility } from "../../../shared/enums/PostVisibility.enum";
-
-const contentTabs: Array<{
-  key: ContentTab;
-  label: string;
-  icon: typeof Users;
-}> = [
-  { key: ContentTab.FOLLOWERS, label: "Followers", icon: Users },
-  { key: ContentTab.FOLLOWING, label: "Following", icon: UserPlus },
-  { key: ContentTab.FRIENDS, label: "Friends", icon: Handshake },
-  { key: ContentTab.POSTS, label: "Posts", icon: FileText },
-];
 
 function PostVisibilityFilter({
   value,
@@ -25,10 +15,11 @@ function PostVisibilityFilter({
   value: PostVisibility;
   onChange: (v: PostVisibility) => void;
 }) {
+  const { t } = useTranslation();
   const options: { label: string; value: PostVisibility; icon: any }[] = [
-    { label: "Tất cả", value: PostVisibility.ALL, icon: FileText },
-    { label: "Công khai", value: PostVisibility.PUBLIC, icon: Eye },
-    { label: "Riêng tư", value: PostVisibility.PRIVATE, icon: EyeOff },
+    { label: t("profile.visibility.all"), value: PostVisibility.ALL, icon: FileText },
+    { label: t("profile.visibility.public"), value: PostVisibility.PUBLIC, icon: Eye },
+    { label: t("profile.visibility.private"), value: PostVisibility.PRIVATE, icon: EyeOff },
   ];
 
   return (
@@ -55,8 +46,22 @@ function PostVisibilityFilter({
     </div>
   );
 }
+
 export default function ProfileContentSection({ userId, isOwnProfile }: { userId?: string, isOwnProfile?: boolean }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ContentTab>(ContentTab.FOLLOWERS);
+  
+  const contentTabs: Array<{
+    key: ContentTab;
+    label: string;
+    icon: typeof Users;
+  }> = [
+    { key: ContentTab.FOLLOWERS, label: t("profile.tabs.followers"), icon: Users },
+    { key: ContentTab.FOLLOWING, label: t("profile.tabs.following"), icon: UserPlus },
+    { key: ContentTab.FRIENDS, label: t("profile.tabs.friends"), icon: Handshake },
+    { key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: FileText },
+  ];
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [postVisibility, setPostVisibility] = useState<PostVisibility>(PostVisibility.ALL);
@@ -116,7 +121,7 @@ export default function ProfileContentSection({ userId, isOwnProfile }: { userId
               type="text"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Tìm kiếm..."
+              placeholder={t("profile.searchPlaceholder")}
               className="w-full rounded-xl border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
             />
           </div>
@@ -140,7 +145,7 @@ export default function ProfileContentSection({ userId, isOwnProfile }: { userId
             </>
         ) : (
           <div className="flex items-center justify-center py-16">
-            <p className="text-sm text-muted-foreground">Không tìm thấy người dùng.</p>
+            <p className="text-sm text-muted-foreground">{t("profile.userNotFound")}</p>
           </div>
         )}
       </div>

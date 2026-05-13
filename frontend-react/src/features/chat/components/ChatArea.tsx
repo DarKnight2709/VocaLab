@@ -9,6 +9,8 @@ import type {
   GroupItem,
   GroupMessageItem,
 } from "@/shared/validations/GroupSchema";
+import { useTranslation } from "@/shared/hooks/useTranslation";
+
 
 type ChatAreaProps = {
   embedded?: boolean;
@@ -57,6 +59,7 @@ export function ChatArea({
   onOpenGroupInfo,
   onCallClick,
 }: ChatAreaProps) {
+  const { t } = useTranslation();
   return (
     <div className="relative flex-1 flex flex-col min-h-0">
       {!hideHeader && (
@@ -87,7 +90,7 @@ export function ChatArea({
         <div className="absolute bottom-17 left-0 right-0 px-4 pointer-events-none">
           <span className="text-xs text-muted-foreground">
             {!selectedGroup && typingUsersCount > 0
-              ? "Đang nhập..."
+              ? t("chat.typing")
               : groupTypingText}
           </span>
         </div>

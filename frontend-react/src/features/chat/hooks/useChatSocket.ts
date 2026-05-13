@@ -67,11 +67,9 @@ export function useChatSocket({
 
     socket.on("disconnect", () => {
       socketReadyRef.current = false;
-      console.log("Disconnected from server");
     });
 
     socket.on("noti-onlineList-toMe", (ids: string[]) => {
-      console.log("Nhận danh sách online mới: ", ids);
       setOnlineIds(new Set(ids));
     });
 
@@ -102,9 +100,8 @@ export function useChatSocket({
 
       if (openUser && senderId === openUser.id) {
         // Mark as seen with acknowledgment to avoid race condition on sidebar refresh
-        socket.emit("seen-message", { senderId: openUser.id }, (response: {success: boolean}) => {
+        socket.emit("seen-message", { senderId: openUser.id }, () => {
           void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
-          console.log("response " + response.success)
         });
       } else {
         // Refresh user list if not in open chat (to show unread count)

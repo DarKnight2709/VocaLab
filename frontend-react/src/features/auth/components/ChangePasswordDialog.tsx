@@ -3,6 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useMemo } from "react";
 
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -17,17 +19,13 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 
 import { useChangePasswordMutation } from "@/features/auth/api/authService";
-import { ChangePasswordSchema } from "@/shared/validations/AuthSchema";
+import { getChangePasswordSchema } from "@/shared/validations/AuthSchema";
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 
-const ChangePasswordFormSchema = ChangePasswordSchema.extend({
-  confirmPassword: z.string().trim().min(1, "Vui lòng nhập lại mật khẩu mới"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Mật khẩu không khớp",
-  path: ["confirmPassword"],
-});
-
-type ChangePasswordFormValues = z.infer<typeof ChangePasswordFormSchema>;
+// Schema definition moved inside component to use translation hook
+type ChangePasswordFormValues = z.infer<ReturnType<typeof getChangePasswordSchema>> & {
+  confirmPassword: string;
+};
 
 export function ChangePasswordDialog(props: {
   open: boolean;
@@ -36,6 +34,16 @@ export function ChangePasswordDialog(props: {
   onSuccess?: () => void;
 }) {
   const { open, onOpenChange, onSuccess } = props;
+  const { t } = useTranslation();
+
+  const ChangePasswordFormSchema = useMemo(() => 
+    getChangePasswordSchema().extend({
+      confirmPassword: z.string().trim().min(1, t("auth.reenterNewPassword")),
+    }).refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("auth.passwordsDoNotMatch"),
+      path: ["confirmPassword"],
+    }), [t]
+  );
 
   const [saving, setSaving] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
@@ -86,15 +94,15 @@ export function ChangePasswordDialog(props: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Đổi mật khẩu</DialogTitle>
+          <DialogTitle>{t("auth.changePassword")}</DialogTitle>
           <DialogDescription>
-            Cập nhật mật khẩu mới cho tài khoản của bạn.
+            {t("auth.updatePasswordDesc")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password-old">Mật khẩu hiện tại</Label>
+            <Label htmlFor="password-old">{t("auth.currentPassword")}</Label>
             <div className="relative">
               <Input
                 id="password-old"
@@ -117,7 +125,7 @@ export function ChangePasswordDialog(props: {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password-new">Mật khẩu mới</Label>
+            <Label htmlFor="password-new">{t("auth.newPassword")}</Label>
             <div className="relative">
               <Input
                 id="password-new"
@@ -140,7 +148,7 @@ export function ChangePasswordDialog(props: {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password-confirm">Nhập lại mật khẩu mới</Label>
+            <Label htmlFor="password-confirm">{t("auth.confirmNewPassword")}</Label>
             <div className="relative">
               <Input
                 id="password-confirm"
@@ -168,10 +176,10 @@ export function ChangePasswordDialog(props: {
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
+              {saving ? t("auth.changingPassword") : t("auth.changePassword")}
             </Button>
           </DialogFooter>
         </form>

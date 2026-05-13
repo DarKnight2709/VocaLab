@@ -6,6 +6,7 @@ import ROUTES from "@/shared/lib/routes";
 import { useCheckFollowingListQuery, useFollowUserMutation, useUnfollowUserMutation } from "../api/userService";
 import { useMeQuery } from "@/features/auth/api/authService";
 import { getInitials } from "@/shared/lib/utils";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface UserCardProps {
   user: {
@@ -17,6 +18,7 @@ interface UserCardProps {
 }
 
 export function UserCard({ user }: UserCardProps) {
+  const { t } = useTranslation();
   const { data: me } = useMeQuery();
   const isMe = me?.id === user.id;
 
@@ -39,7 +41,7 @@ export function UserCard({ user }: UserCardProps) {
   return (
     <Link
       to={ROUTES.PROFILE.url.replace(":username", user.username)}
-      className="group relative flex items-center gap-4 rounded-3xl border border-white/10 bg-white/50 p-4 transition-all duration-300 hover:border-primary/10 hover:bg-white/70 dark:bg-white/[0.02] dark:hover:bg-white/[0.04] backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5"
+      className="group relative flex items-center gap-4 rounded-3xl border border-white/10 bg-white/50 p-4 transition-all duration-300 hover:border-primary/10 hover:bg-white/70 dark:bg-white/2 dark:hover:bg-white/4 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5"
     >
       <div className="relative">
         <Avatar className="h-14 w-14 ring-2 ring-background ring-offset-2 ring-offset-primary/10 transition-transform group-hover:scale-105">
@@ -73,11 +75,11 @@ export function UserCard({ user }: UserCardProps) {
           className="ml-2 rounded-full px-5 h-9 font-semibold text-xs transition-all active:scale-95 shadow-sm hover:shadow-md"
         >
           {followStatus?.isFollowing ? (
-            "Unfollow"
+            t("profile.unfollow")
           ) : (
             <span className="flex items-center gap-1.5">
               <UserPlus className="h-3.5 w-3.5" />
-              Follow
+              {t("profile.follow")}
             </span>
           )}
         </Button>

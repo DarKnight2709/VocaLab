@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { GripVertical, Trash2, Save, Pencil, Settings2 } from "lucide-react";
+import { GripVertical, Trash2, Save, Pencil } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import FieldSelectionDialog from "./FieldSelectionDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface CardField {
   id: string;
@@ -35,6 +36,7 @@ export default function CardFieldDragDrop({
   onSave,
   isSaving = false,
 }: CardFieldDragDropProps) {
+  const { t } = useTranslation();
   const [fields, setFields] = useState<CardField[]>(cardType.fields || []);
   const [hasChanges, setHasChanges] = useState(false);
   const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
@@ -198,7 +200,7 @@ export default function CardFieldDragDrop({
       await onSave(fields);
       setHasChanges(false);
     } catch {
-      toast.error("Lưu thất bại");
+      toast.error(t("vocabulary.updateFailed"));
     }
   };
 
@@ -286,13 +288,13 @@ export default function CardFieldDragDrop({
       style={{ minHeight: "300px" }}
     >
       <div className="font-semibold text-sm mb-2">
-        {side === "FRONT" ? "Mặt trước (Front)" : "Mặt sau (Back)"}
+        {side === "FRONT" ? t("vocabulary.dragDrop.frontSide") : t("vocabulary.dragDrop.backSide")}
       </div>
 
       <div className="flex-1 flex flex-col">
         {fields.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-            Kéo trường vào đây
+            {t("vocabulary.dragDrop.dragPlaceholder")}
           </div>
         ) : (
           <div className="flex flex-col">
@@ -323,7 +325,7 @@ export default function CardFieldDragDrop({
         <div className="flex justify-end pt-2 border-t">
           <Button onClick={handleSave} disabled={isSaving} className="gap-2 shadow-lg">
             <Save className="h-4 w-4" />
-            {isSaving ? "Đang lưu..." : "Lưu thay đổi kiểu thẻ"}
+            {isSaving ? t("vocabulary.cardManagement.saving") : t("vocabulary.dragDrop.saveChanges")}
           </Button>
         </div>
       )}
@@ -342,9 +344,10 @@ export default function CardFieldDragDrop({
         open={removeConfirmOpen}
         onOpenChange={setRemoveConfirmOpen}
         onConfirm={confirmRemoveField}
-        title="Gỡ bỏ trường dữ liệu"
-        description="Bạn có chắc chắn muốn gỡ bỏ trường này khỏi kiểu thẻ? Mọi dữ liệu của thẻ gắn với trường này cũng sẽ mất nếu bạn Lưu thay đổi."
+        title={t("vocabulary.dragDrop.removeField")}
+        description={t("vocabulary.dragDrop.removeFieldDesc")}
       />
     </div>
   );
 }
+

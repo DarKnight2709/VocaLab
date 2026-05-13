@@ -11,9 +11,11 @@ import { Button } from "@/shared/components/ui/button";
 import CreateCardTypeDialog from "../components/CreateCardTypeDialog.tsx";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { useCardTypesQuery, useDeleteCardTypeMutation } from "../api/vocabularyService";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function CardTypeManagementPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingCardType, setEditingCardType] = useState<any | null>(null);
@@ -30,24 +32,24 @@ export default function CardTypeManagementPage() {
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-6xl mx-auto">
         <Breadcrumb items={[
-          { label: "Từ vựng", href: "/vocabulary" },
-          { label: "Quản lý kiểu thẻ" }
+          { label: t("vocabulary.title"), href: "/vocabulary" },
+          { label: t("vocabulary.cardTypeManagement") }
         ]} />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-bold">Quản lý kiểu thẻ</h1>
+          <h1 className="text-2xl font-bold">{t("vocabulary.cardTypeManagement")}</h1>
 
           <Button
             onClick={() => setDialogOpen(true)}
             className="gap-2 shrink-0"
           >
-            <Plus className="h-4 w-4" /> Tạo kiểu thẻ mới
+            <Plus className="h-4 w-4" /> {t("vocabulary.createCardType")}
           </Button>
         </div>
 
         {cardTypes.length === 0 ? (
           <div className="text-center py-16 border rounded-2xl bg-card text-muted-foreground">
-            <p>Chưa có kiểu thẻ nào</p>
+            <p>{t("vocabulary.noCardTypes")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -78,7 +80,7 @@ export default function CardTypeManagementPage() {
                       navigate(`/vocabulary/card-types/${cardType.id}`)
                     }
                   >
-                    <Eye className="h-3.5 w-3.5" /> Xem
+                    <Eye className="h-3.5 w-3.5" /> {t("vocabulary.view")}
                   </Button>
                   <Button
                     variant="outline"
@@ -104,7 +106,7 @@ export default function CardTypeManagementPage() {
                       setEditDialogOpen(true);
                     }}
                   >
-                    <Pencil className="h-3.5 w-3.5" /> Edit
+                    <Pencil className="h-3.5 w-3.5" /> {t("vocabulary.edit")}
                   </Button>
                   <Button
                     variant="ghost"
@@ -149,8 +151,8 @@ export default function CardTypeManagementPage() {
           }
         }}
         isLoading={deleteCardTypeMutation.isPending}
-        title="Xóa kiểu thẻ"
-        description="LƯU Ý: Toàn bộ thẻ (cards) đang sử dụng kiểu thẻ này cũng sẽ bị xóa vĩnh viễn khỏi tất cả các bộ sưu tập."
+        title={t("vocabulary.deleteCardTypeTitle")}
+        description={t("vocabulary.deleteCardTypeDesc")}
       />
     </div>
   );

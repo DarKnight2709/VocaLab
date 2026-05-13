@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { api, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export interface UploadResponse {
   url: string;
@@ -19,18 +20,20 @@ export const uploadFileRequest = async (file: File): Promise<UploadResponse> => 
 };
 
 export const useUploadFilesMutation = () => {
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (files: File[]) => {
       const uploaded = await Promise.all(files.map(uploadFileRequest));
       return uploaded;
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Tải file lên thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, t("upload.uploadFailed"))),
   });
 };
 
 export const useUploadImageMutation = () => {
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: uploadFileRequest,
-    onError: (err) => toast.error(getErrorMessage(err, "Tải ảnh lên thất bại")),
+    onError: (err) => toast.error(getErrorMessage(err, t("upload.uploadImageFailed"))),
   });
 };

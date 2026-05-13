@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog"
 import { Button } from "@/shared/components/ui/button"
+import { useTranslation } from "@/shared/hooks/useTranslation"
 
 interface ConfirmModalProps {
   open: boolean
@@ -26,11 +27,13 @@ export function ConfirmModal({
   title,
   description,
   onConfirm,
-  confirmText = "Xác nhận",
-  cancelText = "Hủy",
+  confirmText,
+  cancelText,
   variant = "default",
   isLoading = false,
 }: ConfirmModalProps) {
+  const { t } = useTranslation()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-106.25">
@@ -46,7 +49,7 @@ export function ConfirmModal({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            {cancelText}
+            {cancelText || t("common.cancel")}
           </Button>
           <Button
             variant={variant}
@@ -57,7 +60,7 @@ export function ConfirmModal({
             }}
             disabled={isLoading}
           >
-            {isLoading ? "Đang xử lý..." : confirmText}
+            {isLoading ? t("common.processing") : (confirmText || t("common.confirm"))}
           </Button>
         </DialogFooter>
       </DialogContent>

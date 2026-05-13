@@ -15,6 +15,7 @@ import {
   useCreateCardTypeMutation,
   useUpdateCardTypeMutation,
 } from "../api/vocabularyService";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface CreateCardTypeDialogProps {
   open: boolean;
@@ -44,6 +45,7 @@ export default function CreateCardTypeDialog({
   mode = "create",
   initialData = null,
 }: CreateCardTypeDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [fields, setFields] = useState<Field[]>([]);
@@ -133,33 +135,33 @@ export default function CreateCardTypeDialog({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? "Chỉnh sửa kiểu thẻ" : "Tạo kiểu thẻ mới"}
+              {isEditMode ? t("vocabulary.cardTypesObj.editTitle") : t("vocabulary.cardTypesObj.createTitle")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Tên kiểu thẻ *</Label>
+              <Label>{t("vocabulary.cardTypesObj.nameLabel")}</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="VD: Basic Card"
+                placeholder={t("vocabulary.cardTypesObj.namePlaceholder")}
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Mô tả</Label>
+              <Label>{t("vocabulary.cardTypesObj.descLabel")}</Label>
               <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Mô tả kiểu thẻ..."
+                placeholder={t("vocabulary.cardTypesObj.descPlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Chọn/Tạo trường ({fields.length})</Label>
+                <Label>{t("vocabulary.cardTypesObj.selectCreateFields", { count: fields.length })}</Label>
                 <Button
                   type="button"
                   size="sm"
@@ -167,13 +169,13 @@ export default function CreateCardTypeDialog({
                   className="gap-1"
                   onClick={() => setFieldSelectionOpen(true)}
                 >
-                  <Plus className="h-3 w-3" /> Chọn trường
+                  <Plus className="h-3 w-3" /> {t("vocabulary.cardTypesObj.selectFields")}
                 </Button>
               </div>
 
               {fields.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Trường đã chọn</Label>
+                  <Label>{t("vocabulary.cardTypesObj.selectedFields")}</Label>
                 <div className="border rounded-lg p-3 space-y-2 bg-card">
                   {fields.map((field, index) => (
                     <div
@@ -183,7 +185,7 @@ export default function CreateCardTypeDialog({
                       <div className="flex-1">
                         <div className="font-medium text-sm">{field.label}</div>
                         <div className="text-xs text-muted-foreground">
-                          {field.fieldType} • {field.side}
+                          {t(`vocabulary.fieldsObj.types.${field.fieldType.toLowerCase()}`)} • {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
                         </div>
                       </div>
                       <Button
@@ -209,14 +211,14 @@ export default function CreateCardTypeDialog({
               variant="outline"
               onClick={() => handleDialogOpenChange(false)}
             >
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
               onClick={handleSubmit}
               disabled={!name.trim() || fields.length === 0 || isPending}
             >
-              {isEditMode ? "Lưu" : "Tạo"}
+              {isEditMode ? t("vocabulary.cardTypesObj.save") : t("vocabulary.cardTypesObj.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -25,7 +25,8 @@ import {
 
 import { getInitials } from "@/shared/lib/utils";
 import { useUpdatePersonalInfoMutation } from "@/features/user/api/userService";
-import { UpdatePersonalInfoSchema, type UpdatePersonalInfoBodyType } from "@/shared/validations/UserSchema";
+import { getUpdatePersonalInfoSchema, type UpdatePersonalInfoBodyType } from "@/shared/validations/UserSchema";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export function EditProfileDialog(props: {
   open: boolean;
@@ -34,6 +35,7 @@ export function EditProfileDialog(props: {
   onSuccess?: (values: UpdatePersonalInfoBodyType) => void;
 }) {
   const { open, onOpenChange, me, onSuccess } = props;
+  const { t } = useTranslation();
 
   const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -48,7 +50,7 @@ export function EditProfileDialog(props: {
   }, [me]);
 
   const form = useForm<UpdatePersonalInfoBodyType>({
-    resolver: zodResolver(UpdatePersonalInfoSchema),
+    resolver: zodResolver(getUpdatePersonalInfoSchema()),
     defaultValues: {
       fullName: me?.fullName || "",
       username: me?.username || "",
@@ -105,10 +107,8 @@ export function EditProfileDialog(props: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Thông tin cá nhân</DialogTitle>
-          <DialogDescription>
-            Cập nhật họ tên, username, email và ảnh đại diện.
-          </DialogDescription>
+          <DialogTitle>{t("profile.title")}</DialogTitle>
+          <DialogDescription>{t("profile.description")}</DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center gap-4">
@@ -123,7 +123,7 @@ export function EditProfileDialog(props: {
               onClick={handlePickAvatar}
               disabled={saving}
             >
-              {selectedFile ? "Đã chọn ảnh" : "Đổi ảnh đại diện"}
+              {selectedFile ? t("profile.selectedImage") : t("profile.changeAvatar")}
             </Button>
             <input
               ref={fileInputRef}
@@ -133,14 +133,14 @@ export function EditProfileDialog(props: {
               onChange={(e) => void handleAvatarSelected(e.target.files?.[0])}
             />
             <div className="text-xs text-muted-foreground">
-              {selectedFile ? selectedFile.name : "PNG/JPG, chọn 1 file."}
+              {selectedFile ? selectedFile.name : t("profile.fileHint")}
             </div>
           </div>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="profile-fullName">Họ tên</Label>
+            <Label htmlFor="profile-fullName">{t("profile.fullName")}</Label>
             <Input
               id="profile-fullName"
               {...form.register("fullName")}
@@ -154,7 +154,7 @@ export function EditProfileDialog(props: {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="profile-username">Tên đăng nhập</Label>
+            <Label htmlFor="profile-username">{t("profile.username")}</Label>
             <Input
               id="profile-username"
               {...form.register("username")}
@@ -168,7 +168,7 @@ export function EditProfileDialog(props: {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="profile-email">Email</Label>
+            <Label htmlFor="profile-email">{t("profile.email")}</Label>
             <Input
               id="profile-email"
               {...form.register("email")}
@@ -187,10 +187,10 @@ export function EditProfileDialog(props: {
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Hủy
+              {t("profile.cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+              {saving ? t("profile.saving") : t("profile.saveChanges")}
             </Button>
           </DialogFooter>
         </form>

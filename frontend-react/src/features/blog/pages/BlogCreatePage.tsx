@@ -21,11 +21,13 @@ import ROUTES from "@/shared/lib/routes";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { EditorToolbar } from "@/features/blog/components/EditorToolbar";
 import { CustomImage } from "../components/CustomImage";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 // ──────────────────────────────────────────────
 // Main page
 // ──────────────────────────────────────────────
 export default function BlogCreatePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id: editId } = useParams<{ id: string }>();
 
@@ -51,7 +53,7 @@ StarterKit.configure({
       LinkExt.configure({ openOnClick: false }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({
-        placeholder: "Bắt đầu viết nội dung bài viết của bạn...",
+        placeholder: t("blog.contentPlaceholder"),
       }),
     ],
     editorProps: {
@@ -131,7 +133,7 @@ StarterKit.configure({
   if (editId && isLoading) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-8">
-        <div className="text-center text-muted-foreground">Đang tải dữ liệu bài viết...</div>
+        <div className="text-center text-muted-foreground">{t("blog.loadingPostData")}</div>
       </div>
     );
   }
@@ -140,26 +142,26 @@ StarterKit.configure({
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
       <Breadcrumb 
         items={[
-          { label: "Blog", href: ROUTES.BLOG.url },
-          { label: editId ? "Chỉnh sửa bài viết" : "Viết bài mới" }
+          { label: t("common.blog"), href: ROUTES.BLOG.url },
+          { label: editId ? t("blog.editPost") : t("blog.createPost") }
         ]} 
       />
 
       <h1 className="mb-6 text-2xl font-bold">
-        {editId ? "Chỉnh sửa bài viết" : "Viết bài mới"}
+        {editId ? t("blog.editPost") : t("blog.createPost")}
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Title */}
         <div>
           <label className="mb-1.5 block text-sm font-medium">
-            Tiêu đề <span className="text-destructive">*</span>
+            {t("blog.titleLabel")} <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Tiêu đề bài viết..."
+            placeholder={t("blog.titlePlaceholder")}
             required
             className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
@@ -167,11 +169,11 @@ StarterKit.configure({
 
         {/* Excerpt */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Mô tả ngắn</label>
+          <label className="mb-1.5 block text-sm font-medium">{t("blog.excerptLabel")}</label>
           <textarea
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
-            placeholder="Mô tả ngắn về bài viết (tùy chọn)..."
+            placeholder={t("blog.excerptPlaceholder")}
             rows={2}
             className="w-full resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
@@ -179,24 +181,24 @@ StarterKit.configure({
 
         {/* Cover image */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Ảnh bìa</label>
+          <label className="mb-1.5 block text-sm font-medium">{t("blog.coverImageLabel")}</label>
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
-              <input
+                <input
                 type="url"
                 value={coverImage}
                 onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://example.com/image.jpg hoặc tải ảnh lên"
+                placeholder={t("blog.coverImagePlaceholder")}
                 className="flex-1 rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
-              <button
+                <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadImage.isPending}
                 className="flex items-center gap-2 rounded-xl border bg-muted/50 px-4 py-2.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
               >
                 <UploadCloud size={16} />
-                <span className="hidden sm:inline">Tải ảnh lên</span>
+                <span className="hidden sm:inline">{t("blog.uploadImage")}</span>
               </button>
               <input
                 type="file"
@@ -207,13 +209,13 @@ StarterKit.configure({
               />
             </div>
             {uploadImage.isPending && (
-              <p className="text-xs text-muted-foreground animate-pulse">Đang tải ảnh lên...</p>
+              <p className="text-xs text-muted-foreground animate-pulse">{t("blog.uploadingImage")}</p>
             )}
             {coverImage && (
               <div className="mt-2 flex justify-center rounded-xl border bg-muted/30 p-2">
                 <img
                   src={coverImage}
-                  alt="cover preview"
+                  alt={t("blog.coverPreviewAlt")}
                   className="max-h-40 w-auto rounded-lg object-contain"
                 />
               </div>
@@ -223,7 +225,7 @@ StarterKit.configure({
 
         {/* Visibility */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Hiển thị</label>
+          <label className="mb-1.5 block text-sm font-medium">{t("blog.visibilityLabel")}</label>
           <div className="flex gap-3">
             <button
               type="button"
@@ -235,7 +237,7 @@ StarterKit.configure({
               }`}
             >
               <Globe size={15} />
-              Công khai
+              {t("blog.public")}
             </button>
             <button
               type="button"
@@ -247,7 +249,7 @@ StarterKit.configure({
               }`}
             >
               <Lock size={15} />
-              Riêng tư
+              {t("blog.private")}
             </button>
           </div>
         </div>
@@ -255,7 +257,7 @@ StarterKit.configure({
         {/* Content editor */}
         <div>
           <label className="mb-1.5 block text-sm font-medium">
-            Nội dung <span className="text-destructive">*</span>
+            {t("blog.contentLabel")} <span className="text-destructive">*</span>
           </label>
           <div className="overflow-hidden rounded-xl border focus-within:ring-2 focus-within:ring-primary/50">
             <EditorToolbar editor={editor} />
@@ -270,14 +272,14 @@ StarterKit.configure({
             onClick={() => navigate(-1)}
             className="rounded-xl border px-6 py-2.5 text-sm hover:bg-muted"
           >
-            Hủy
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
             disabled={createBlog.isPending || updateBlog.isPending || !title.trim()}
             className="rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {createBlog.isPending || updateBlog.isPending ? "Đang lưu..." : (editId ? "Lưu thay đổi" : "Đăng bài")}
+            {createBlog.isPending || updateBlog.isPending ? t("blog.saving") : (editId ? t("blog.saveChanges") : t("blog.publish"))}
           </button>
         </div>
       </form>

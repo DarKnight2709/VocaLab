@@ -36,6 +36,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import { useTranslation } from "@/shared/hooks/useTranslation";
+
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -58,6 +60,8 @@ const emptyForm: CreateGrammarBody & { examples_text: string } = {
 };
 
 export default function GrammarPage() {
+  const { t } = useTranslation();
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -135,20 +139,21 @@ export default function GrammarPage() {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <Breadcrumb items={[{ label: "Ngữ pháp" }]} />
+        <Breadcrumb items={[{ label: t("common.grammar") }]} />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Ngữ pháp tiếng Anh</h1>
+            <h1 className="text-2xl font-bold">{t("grammar.title")}</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Tra cứu và học các cấu trúc ngữ pháp
+              {t("grammar.subtitle")}
             </p>
           </div>
           <Button onClick={openCreate} className="gap-2">
             <Plus className="h-4 w-4" />
-            Thêm cấu trúc
+            {t("grammar.addStructure")}
           </Button>
         </div>
+
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
@@ -158,14 +163,15 @@ export default function GrammarPage() {
               <Input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Tìm cấu trúc ngữ pháp..."
+                placeholder={t("grammar.searchPlaceholder")}
                 className="pl-9"
               />
             </div>
             <Button type="submit" variant="outline">
-              Tìm
+              {t("grammar.search")}
             </Button>
           </form>
+
 
           <Select
             value={category}
@@ -174,11 +180,12 @@ export default function GrammarPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Lọc theo chủ đề" />
+              <SelectTrigger className="w-48">
+              <SelectValue placeholder={t("grammar.filterTopic")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tất cả chủ đề</SelectItem>
+              <SelectItem value="all">{t("grammar.allTopics")}</SelectItem>
+
               {categoriesData?.categories.map((c) => (
                 <SelectItem key={c} value={c}>
                   {c}
@@ -194,11 +201,12 @@ export default function GrammarPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Trình độ" />
+              <SelectTrigger className="w-36">
+              <SelectValue placeholder={t("grammar.level")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="all">{t("grammar.all")}</SelectItem>
+
               {LEVELS.map((l) => (
                 <SelectItem key={l} value={l}>
                   {l}
@@ -227,13 +235,13 @@ export default function GrammarPage() {
                     {item.title}
                   </h3>
                   <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
+                      <Button
                       type="button"
                       size="sm"
                       variant="outline"
                       onClick={() => openEdit(item)}
                       className="h-6 w-6 p-0.5"
-                      aria-label="Sửa"
+                      aria-label={t("grammar.edit")}
                     >
                       <Pencil className="h-2.5 w-2.5" />
                     </Button>
@@ -243,7 +251,7 @@ export default function GrammarPage() {
                       variant="destructive"
                       onClick={() => setDeleteConfirm(item)}
                       className="h-6 w-6 p-0.5"
-                      aria-label="Xóa"
+                      aria-label={t("grammar.delete")}
                     >
                       <Trash2 className="h-2.5 w-2.5" />
                     </Button>
@@ -277,7 +285,7 @@ export default function GrammarPage() {
                   )}
                   {item.isDefault && (
                     <Badge variant="secondary" className="text-xs">
-                      Mặc định
+                      {t("grammar.default")}
                     </Badge>
                   )}
                 </div>
@@ -298,7 +306,7 @@ export default function GrammarPage() {
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm text-muted-foreground">
-              Trang {page} / {data.meta.totalPages}
+              {t("grammar.page")} {page} / {data.meta.totalPages}
             </span>
             <Button
               variant="outline"
@@ -319,46 +327,46 @@ export default function GrammarPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editItem ? "Chỉnh sửa cấu trúc" : "Thêm cấu trúc ngữ pháp"}
+              {editItem ? t("grammar.editStructure") : t("grammar.addGrammarStructure")}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Tên cấu trúc *</Label>
+              <Label>{t("grammar.structureName")} *</Label>
               <Input
                 value={form.title}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, title: e.target.value }))
                 }
-                placeholder="VD: Present Perfect Simple"
+                placeholder="E.g. Present Perfect Simple"
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Công thức *</Label>
+              <Label>{t("grammar.formula")} *</Label>
               <Input
                 value={form.structure}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, structure: e.target.value }))
                 }
-                placeholder="VD: S + have/has + V3"
+                placeholder="E.g. S + have/has + V3"
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Giải thích *</Label>
+              <Label>{t("grammar.explanation")} *</Label>
               <Textarea
                 value={form.explanation}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, explanation: e.target.value }))
                 }
-                placeholder="Giải thích nghĩa và cách dùng..."
+                placeholder="Explain the meaning and usage..."
                 rows={3}
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Ví dụ (mỗi ví dụ một dòng)</Label>
+              <Label>{t("grammar.examples")}</Label>
               <Textarea
                 value={form.examples_text}
                 onChange={(e) =>
@@ -372,23 +380,23 @@ export default function GrammarPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Chủ đề</Label>
+                <Label>{t("grammar.topic")}</Label>
                 <Input
                   value={form.category}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, category: e.target.value }))
                   }
-                  placeholder="VD: Thì hiện tại"
+                  placeholder="E.g. Present tense"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Trình độ</Label>
+                <Label>{t("grammar.level")}</Label>
                 <Select
                   value={form.level}
                   onValueChange={(v) => setForm((f) => ({ ...f, level: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn trình độ" />
+                    <SelectValue placeholder={t("grammar.selectLevel")} />
                   </SelectTrigger>
                   <SelectContent>
                     {LEVELS.map((l) => (
@@ -406,13 +414,13 @@ export default function GrammarPage() {
                 variant="outline"
                 onClick={() => setDialogOpen(false)}
               >
-                Hủy
+                {t("grammar.cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
-                {editItem ? "Cập nhật" : "Tạo mới"}
+                {editItem ? t("grammar.update") : t("grammar.create")}
               </Button>
             </DialogFooter>
           </form>
@@ -426,22 +434,23 @@ export default function GrammarPage() {
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Xóa cấu trúc ngữ pháp</DialogTitle>
+            <DialogTitle>{t("grammar.deleteConfirmTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Bạn có chắc muốn xóa <strong>{deleteConfirm?.title}</strong>? Hành
-            động này không thể hoàn tác.
+            <span dangerouslySetInnerHTML={{ 
+              __html: t("grammar.deleteConfirmDesc", { title: deleteConfirm?.title }) 
+            }} />
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-              Hủy
+              {t("grammar.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              Xóa
+              {t("grammar.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
