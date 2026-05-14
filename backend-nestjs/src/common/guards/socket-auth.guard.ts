@@ -1,3 +1,4 @@
+import { ErrorCode } from '@/common/enums/error-code.enum';
 import {
   Injectable,
   CanActivate,
@@ -37,7 +38,7 @@ export class SocketAuthGuard implements CanActivate {
 
     if (!token) {
       this.logger.error('No token found in handshake');
-      throw new WsException('Vui lòng đăng nhập để tiếp tục socket');
+      throw new WsException(ErrorCode.UNAUTHORIZED);
     }
 
     try {
@@ -55,7 +56,7 @@ export class SocketAuthGuard implements CanActivate {
       });
 
       if (!user) {
-        throw new WsException('Vui lòng đăng nhập để tiếp tục');
+        throw new WsException(ErrorCode.UNAUTHORIZED);
       }
 
       client.user = {
@@ -71,13 +72,11 @@ export class SocketAuthGuard implements CanActivate {
           error.name === 'JsonWebTokenError' ||
           error.name === 'TokenExpiredError'
         ) {
-          throw new WsException(
-            'Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại',
-          );
+          throw new WsException(ErrorCode.INVALID_TOKEN);
         }
       }
 
-      throw new WsException('Internal server error');
+      throw new WsException(ErrorCode.INTERNAL_SERVER_ERROR);
     }
   }
 }

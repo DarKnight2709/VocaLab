@@ -1,16 +1,9 @@
 import {
   Controller,
   Get,
-  Post,
   Param,
-  UseInterceptors,
-  UploadedFile,
-  Body,
-  HttpStatus,
-  HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation} from '@nestjs/swagger';
 import { MessagesService } from './services/messages.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';

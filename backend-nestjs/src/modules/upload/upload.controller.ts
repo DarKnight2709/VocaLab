@@ -9,6 +9,7 @@ import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { IsProtected } from '@/common/decorators/protected.decorator';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 @ApiTags('upload')
 @Controller('upload')
@@ -33,7 +34,7 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('Vui lòng cung cấp file để upload');
+      throw new BadRequestException(ErrorCode.UPLOAD_FILE_REQUIRED);
     }
     const result = await this.cloudinaryService.uploadFile(file);
 

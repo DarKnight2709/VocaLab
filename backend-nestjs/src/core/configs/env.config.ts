@@ -1,3 +1,4 @@
+import { ErrorCode } from '@/common/enums/error-code.enum';
 import { Transform, plainToClass } from 'class-transformer';
 
 import {
@@ -44,7 +45,6 @@ export class EnvironmentValidation {
   @IsString()
   DATABASE_URL!: string;
 
-
   // Auth
   @IsString()
   GOOGLE_CLIENT_ID!: string;
@@ -54,7 +54,6 @@ export class EnvironmentValidation {
 
   @IsString()
   GOOGLE_CALLBACK_URL!: string;
-
 
   // Swagger
   @IsString()
@@ -141,7 +140,7 @@ export function validateConfig(config: Record<string, unknown>) {
         Object.values(error.constraints ?? {}).join(', '),
       ),
     );
-    throw new Error('Biến môi trường không hợp lệ');
+    throw new Error(ErrorCode.INVALID_ENVIRONMENT_VARIABLES);
   }
 
   return validatedConfig;
@@ -161,6 +160,6 @@ export default () => {
     return env;
   } catch (error) {
     console.log('Biến môi trường không hợp lệ: ', error);
-    throw new Error('Biến môi trường không hợp lệ');
+    throw new Error(ErrorCode.INVALID_ENVIRONMENT_VARIABLES);
   }
 };

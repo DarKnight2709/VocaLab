@@ -9,7 +9,6 @@ import { map } from 'rxjs/operators';
 
 export interface Response<T> {
   success?: boolean;
-  message?: string;
   data?: T;
 }
 
@@ -31,7 +30,6 @@ export class TransformInterceptor<T> implements NestInterceptor<
         ) {
           return {
             success: response.success ?? true,
-            message: response.message ?? 'Success',
             data: response.data ?? null,
           };
         }
@@ -39,7 +37,6 @@ export class TransformInterceptor<T> implements NestInterceptor<
         // Raw data
         return {
           success: true,
-          message: 'Success',
           data: response ?? null,
         };
       }),

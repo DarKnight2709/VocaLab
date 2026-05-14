@@ -15,6 +15,7 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IRequest } from '../types';
 import { RsaKeyManager } from '../utils/RsaKeyManager';
 import { PrismaService } from '@/core/database/prisma.service';
+import { ErrorCode } from '../enums/error-code.enum';
 
 export interface JwtPayload {
   sub: string;
@@ -53,7 +54,7 @@ export class JwtGuard implements CanActivate {
 
     // không có token -> 401
     if (!token) {
-      throw new UnauthorizedException('Vui lòng đăng nhập để tiếp tục');
+      throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
     }
 
     // giải mã token + xác minh chữ kí bằng public key -> lấy được payload
@@ -76,7 +77,7 @@ export class JwtGuard implements CanActivate {
         },
       });
       if (!user) {
-        throw new UnauthorizedException('Vui lòng đăng nhập để tiếp tục');
+        throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
       }
 
       // Gán thông tin user vào request để tiếp tục khâu permission guard
@@ -89,12 +90,10 @@ export class JwtGuard implements CanActivate {
       return true;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedException(
-          'Token đã hết hạn, vui lòng đăng nhập lại',
-        );
+        throw new UnauthorizedException(ErrorCode.EXPIRED_TOKEN);
       } else if (error instanceof jwt.JsonWebTokenError) {
         throw new UnauthorizedException(
-          'Token không hợp lệ, vui lòng đăng nhập lại',
+          ErrorCode.INVALID_TOKEN,
         );
       } else if (error instanceof ForbiddenException) {
         throw error;
@@ -102,7 +101,7 @@ export class JwtGuard implements CanActivate {
         throw error;
       } else {
         this.logger.error('JWT verification failed:', error);
-        throw new UnauthorizedException('Vui lòng đăng nhập để tiếp tục');
+        throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
       }
     }
   }

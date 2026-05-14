@@ -4,7 +4,6 @@ import {
   ConflictException,
   Logger,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
@@ -13,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { Prisma } from '@prisma/client';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 import {
   ChangePasswordDto,
@@ -54,7 +54,7 @@ export class AuthService {
   async getCurrentUser(userId: string): Promise<PublicUser> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
     return user;
   }
@@ -72,13 +72,11 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Tài khoản không tồn tại');
+      throw new UnauthorizedException(ErrorCode.USER_NOT_FOUND);
     }
 
     if (!user.hashedPassword && user.googleId) {
-      throw new UnauthorizedException(
-        'Tài khoản của bạn đã được đăng ký bằng Google, vui lòng đăng nhập bằng Google và đặt mật mẩu để tiếp tục đăng nhập',
-      );
+      throw new UnauthorizedException(ErrorCode.GOOGLE_AUTH_REQUIRED);
     }
 
     // Kiểm tra mật khẩu
@@ -87,17 +85,17 @@ export class AuthService {
       user.hashedPassword,
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Mật khẩu không hợp lệ');
+      throw new UnauthorizedException(ErrorCode.PASSWORD_INCORRECT);
     }
 
     if (user.deletedAt !== null) {
       await this.restoreAccount(user.id);
     }
 
-    if(user.isTwoFactorEnabled) {
+    if (user.isTwoFactorEnabled) {
       const tempToken = this.generateTempToken(user);
       return {
-        tempToken
+        tempToken,
       };
     }
 
@@ -118,7 +116,6 @@ export class AuthService {
     };
   }
 
-
   async loginTwoFa(
     twoFactorLoginDto: TwoFactorLoginDto,
     ipAddress?: string,
@@ -133,7 +130,7 @@ export class AuthService {
         algorithms: ['RS256'],
       });
     } catch (error) {
-      throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
+      throw new UnauthorizedException(ErrorCode.INVALID_TOKEN);
     }
 
     const userId = payload.sub;
@@ -144,7 +141,7 @@ export class AuthService {
     });
 
     if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
-      throw new UnauthorizedException('Yêu cầu xác thực không hợp lệ');
+      throw new UnauthorizedException(ErrorCode.BAD_REQUEST);
     }
 
     // 3. Verify OTP code
@@ -157,7 +154,7 @@ export class AuthService {
 
     if (!isValid) {
       this.logger.warn(`OTP verification failed for user ${user.id}`);
-      throw new UnauthorizedException('Mã OTP không chính xác');
+      throw new UnauthorizedException(ErrorCode.OTP_INVALID);
     }
 
     // 4. Generate tokens
@@ -192,9 +189,7 @@ export class AuthService {
 
     // check valid
     if (!rawRefreshToken) {
-      throw new UnauthorizedException(
-        'Không thực hiện được hành động này vì thiếu refresh token',
-      );
+      throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
     }
 
     try {
@@ -229,9 +224,7 @@ export class AuthService {
           (ipAddress && tokenEntity.ipAddress !== ipAddress) ||
           (userAgent && tokenEntity.userAgent !== userAgent)
         ) {
-          throw new UnauthorizedException(
-            'Refresh token không hợp lệ hoặc hết hạn',
-          );
+          throw new UnauthorizedException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
 
         // revoke the old refresh.
@@ -261,21 +254,17 @@ export class AuthService {
       });
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedException(
-          'Refresh token đã hết hạn, vui lòng đăng nhập lại',
-        );
+        throw new UnauthorizedException(ErrorCode.EXPIRED_TOKEN);
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new UnauthorizedException(
-          'Refresh token không hợp lệ, vui lòng đăng nhập lại',
-        );
+        throw new UnauthorizedException(ErrorCode.INVALID_TOKEN);
       }
       if (error instanceof UnauthorizedException) {
         throw error;
       }
 
       this.logger.error('Refresh token verification failed:', error);
-      throw new UnauthorizedException('Refresh token không hợp lệ');
+      throw new UnauthorizedException(ErrorCode.REFRESH_TOKEN_INVALID);
     }
   }
 
@@ -286,14 +275,14 @@ export class AuthService {
     );
 
     if (existingUser) {
-      throw new ConflictException('Tên đăng nhập đã tồn tại');
+      throw new ConflictException(ErrorCode.USER_ALREADY_EXISTS);
     }
 
     // Check email exists
     const existingEmail = await this.userService.findByEmail(signupDto.email);
 
     if (existingEmail) {
-      throw new ConflictException('Email đã tồn tại');
+      throw new ConflictException(ErrorCode.EMAIL_ALREADY_EXISTS);
     }
 
     // Hash password
@@ -316,7 +305,7 @@ export class AuthService {
     const { googleId, email, fullName, avatar } = profile;
 
     if (!email || !googleId) {
-      throw new Error('Google profile is missing email or googleId');
+      throw new BadRequestException(ErrorCode.GOOGLE_PROFILE_INCOMPLETE);
     }
 
     // tìm người dùng với email nếu exist mà không có googleId thì cập nhật googleId
@@ -366,7 +355,7 @@ export class AuthService {
       } else {
         if (existUser.googleId !== googleId) {
           throw new UnauthorizedException(
-            'Tài khoảng này đã được liên kết với một Google account khác',
+            ErrorCode.GOOGLE_ACCOUNT_ALREADY_LINKED,
           );
         }
       }
@@ -426,13 +415,11 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     if (user.hashedPassword) {
-      throw new BadRequestException(
-        'You already have a password. Please use change password instead.',
-      );
+      throw new BadRequestException(ErrorCode.PASSWORD_ALREADY_EXISTS);
     }
 
     const hashedPassword = bcrypt.hashSync(setPasswordDto.password, 10);
@@ -458,13 +445,11 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     if (!user.hashedPassword) {
-      throw new BadRequestException(
-        'You are using Google login. Please set a password before changing it.',
-      );
+      throw new BadRequestException(ErrorCode.PASSWORD_NOT_SET);
     }
 
     const isPasswordValid = bcrypt.compareSync(
@@ -473,7 +458,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Sai mật khẩu cũ');
+      throw new UnauthorizedException(ErrorCode.OLD_PASSWORD_INCORRECT);
     }
 
     // check new password if it's the same as old password
@@ -483,9 +468,7 @@ export class AuthService {
     );
 
     if (isNewPasswordValid) {
-      throw new UnauthorizedException(
-        'Mật khẩu mới không được giống mật khẩu cũ',
-      );
+      throw new UnauthorizedException(ErrorCode.NEW_PASSWORD_SAME_AS_OLD);
     }
 
     const hashedNewPassword = bcrypt.hashSync(
@@ -514,8 +497,9 @@ export class AuthService {
     });
   }
 
-
-  async generateTwoFactorSecret(userId: string): Promise<TwoFactorGenerateResponseDto> {
+  async generateTwoFactorSecret(
+    userId: string,
+  ): Promise<TwoFactorGenerateResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -523,7 +507,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     let secretBase32 = user.twoFactorSecret;
@@ -564,12 +548,12 @@ export class AuthService {
   async verifyTwoFactorAuth(userId: string, code: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: {
-        id: userId
-      }
+        id: userId,
+      },
     });
     this.logger.debug(`verifyTwoFactorAuth code=${code}`);
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     const isValid = speakeasy.totp.verify({
@@ -580,37 +564,39 @@ export class AuthService {
     });
 
     if (!isValid) {
-      this.logger.warn(`OTP verification failed during setup for user ${user.id}`);
-      throw new BadRequestException('Mã OTP không chính xác');
+      this.logger.warn(
+        `OTP verification failed during setup for user ${user.id}`,
+      );
+      throw new BadRequestException(ErrorCode.INVALID_OTP);
     }
 
     // bật 2FA
     await this.prisma.user.update({
       where: {
-        id: userId
+        id: userId,
       },
       data: {
         isTwoFactorEnabled: true,
-      }
+      },
     });
   }
 
   async disableTwoFactorAuth(userId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     await this.prisma.user.update({
       where: {
-        id: userId
+        id: userId,
       },
       data: {
         isTwoFactorEnabled: false,
         twoFactorSecret: null,
-      }
+      },
     });
   }
 
@@ -674,7 +660,6 @@ export class AuthService {
     return refreshToken;
   }
 
-
   private generateTempToken(user: TokenUser) {
     const payload = {
       sub: user.id,
@@ -683,7 +668,7 @@ export class AuthService {
 
     const tempToken = jwt.sign(payload, this.keyManager.getPrivateKeyTemp(), {
       algorithm: 'RS256',
-      expiresIn: this.configService.get('TEMP_TOKEN_EXPIRES_IN')
+      expiresIn: this.configService.get('TEMP_TOKEN_EXPIRES_IN'),
     });
 
     return tempToken;

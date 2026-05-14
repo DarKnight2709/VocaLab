@@ -13,6 +13,8 @@ import {
   ReplyCommentDto,
 } from './dto/blog.dto';
 import { mapVoteScore } from '@/common/utils/vote.utils';
+import { ErrorCode } from '@/common/enums/error-code.enum';
+import { CreateBlogResponseDto, CreateCommentResponseDto, DeleteResponseDto, GetBlogByIdResponseDto, GetBlogsResponseDto, GetMyBlogsResponseDto, UpdateBlogResponseDto, UpdateCommentResponseDto } from './dto/blog-response.dto';
 
 @Injectable()
 export class BlogService {
@@ -20,7 +22,7 @@ export class BlogService {
 
   // ==================== BLOG CRUD ====================
 
-  async getBlogs(userId: string, page = 1, limit = 10, search?: string) {
+  async getBlogs(userId: string, page = 1, limit = 10, search?: string): Promise<GetBlogsResponseDto> {
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -80,7 +82,7 @@ export class BlogService {
     };
   }
 
-  async getBlogById(id: string, userId?: string) {
+  async getBlogById(id: string, userId?: string): Promise<GetBlogByIdResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
       include: {
@@ -111,9 +113,9 @@ export class BlogService {
       },
     });
 
-    if (!blog) throw new NotFoundException('Bài viết không tồn tại');
+    if (!blog) throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
     if (!blog.isPublic && blog.authorId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xem bài viết này');
+      throw new ForbiddenException(ErrorCode.BLOG_ACCESS_FORBIDDEN);
     }
 
     const deletedCommentMap = blog.comments.map((c) => ({
@@ -130,11 +132,13 @@ export class BlogService {
       ...rest,
       comments: commentsWithVotes,
     };
+    
+    const mappedBlog = mapVoteScore(formattedBlog, userId);
 
-    return { blog: mapVoteScore(formattedBlog, userId) };
+    return mappedBlog;
   }
 
-  async getMyBlogs(userId: string, page = 1, limit = 10) {
+  async getMyBlogs(userId: string, page = 1, limit = 10): Promise<GetMyBlogsResponseDto> {
     const skip = (page - 1) * limit;
     const [blogs, total] = await Promise.all([
       this.prisma.blog.findMany({
@@ -158,7 +162,7 @@ export class BlogService {
     };
   }
 
-  async createBlog(userId: string, dto: CreateBlogDto) {
+  async createBlog(userId: string, dto: CreateBlogDto): Promise<CreateBlogResponseDto> {
     const blog = await this.prisma.blog.create({
       data: {
         title: dto.title,
@@ -175,18 +179,17 @@ export class BlogService {
       },
     });
 
-    return { message: 'Tạo bài viết thành công', blog };
+    return blog;
   }
 
-  async updateBlog(id: string, userId: string, dto: UpdateBlogDto) {
+  async updateBlog(id: string, userId: string, dto: UpdateBlogDto): Promise<UpdateBlogResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
     });
-    if (!blog) throw new NotFoundException('Bài viết không tồn tại');
+    if (!blog) throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
     if (blog.authorId !== userId)
-      throw new ForbiddenException('Bạn không có quyền chỉnh sửa bài viết này');
-
-    const updated = await this.prisma.blog.update({
+      throw new ForbiddenException(ErrorCode.BLOG_EDIT_FORBIDDEN);
+    const updatedBlog = await this.prisma.blog.update({
       where: { id },
       data: dto,
       include: {
@@ -197,27 +200,26 @@ export class BlogService {
       },
     });
 
-    return { message: 'Cập nhật bài viết thành công', blog: updated };
+    return updatedBlog;
   }
 
-  async deleteBlog(id: string, userId: string) {
+  async deleteBlog(id: string, userId: string): Promise<DeleteResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
     });
-    if (!blog) throw new NotFoundException('Bài viết không tồn tại');
+    if (!blog) throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
     if (blog.authorId !== userId)
-      throw new ForbiddenException('Bạn không có quyền xóa bài viết này');
-
-    await this.prisma.blog.update({
+      throw new ForbiddenException(ErrorCode.BLOG_DELETE_FORBIDDEN);
+    const deletedBlog = await this.prisma.blog.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
-    return { message: 'Xóa bài viết thành công' };
+    return { id: deletedBlog.id };
   }
 
   // ==================== VOTES ====================
 
-  async voteBlog(blogId: string, userId: string, type: VoteType) {
+  async voteBlog(blogId: string, userId: string, type: VoteType): Promise<void> {
     const blog = await this.prisma.blog.findFirst({
       where: {
         id: blogId,
@@ -226,7 +228,7 @@ export class BlogService {
     });
 
     if (!blog) {
-      throw new NotFoundException('Bài viết không tồn tại!');
+      throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
     }
 
     const userVote = await this.prisma.blogVote.findUnique({
@@ -273,13 +275,11 @@ export class BlogService {
         },
       });
     }
-
-    return { message: 'Vote thành công!' };
   }
 
   // ==================== COMMENTS ====================
 
-  async createComment(blogId: string, userId: string, dto: CreateCommentDto) {
+  async createComment(blogId: string, userId: string, dto: CreateCommentDto): Promise<CreateCommentResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: {
         id: blogId,
@@ -288,31 +288,28 @@ export class BlogService {
     });
 
     if (!blog) {
-      throw new NotFoundException('Bài viết không tồn tại');
+      throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
     }
 
-    await this.prisma.comment.create({
+    const comment =await this.prisma.comment.create({
       data: {
         content: dto.content,
         authorId: userId,
         blogId,
       },
     });
-
-    return { message: 'Bình luận bài viết thành công!' };
+    return comment;
   }
 
-  async editComment(commentId: string, userId: string, dto: UpdateCommentDto) {
+  async editComment(commentId: string, userId: string, dto: UpdateCommentDto): Promise<UpdateCommentResponseDto> {
     const comment = await this.prisma.comment.findFirst({
       where: { id: commentId, deletedAt: null },
     });
-    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+    if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
     if (comment.authorId !== userId)
-      throw new ForbiddenException(
-        'Bạn không có quyền chỉnh sửa bình luận này',
-      );
+      throw new ForbiddenException(ErrorCode.COMMENT_EDIT_FORBIDDEN);
 
-    const updated = await this.prisma.comment.update({
+    const updatedComment = await this.prisma.comment.update({
       where: { id: commentId },
       data: { content: dto.content },
       include: {
@@ -322,25 +319,26 @@ export class BlogService {
       },
     });
 
-    return { message: 'Cập nhật bình luận thành công', comment: updated };
+    return updatedComment;
   }
 
-  async deleteComment(commentId: string, userId: string) {
+  async deleteComment(commentId: string, userId: string): Promise<DeleteResponseDto> {
     const comment = await this.prisma.comment.findFirst({
       where: { id: commentId, deletedAt: null },
     });
-    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+    if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
     if (comment.authorId !== userId)
-      throw new ForbiddenException('Bạn không có quyền xóa bình luận này');
-
-    await this.prisma.comment.update({
+      throw new ForbiddenException(ErrorCode.COMMENT_DELETE_FORBIDDEN);
+    const deletedComment = await this.prisma.comment.update({
       where: { id: commentId },
       data: { deletedAt: new Date() },
     });
-    return { message: 'Xóa bình luận thành công' };
+    return {
+      id: deletedComment.id
+    };
   }
 
-  async replyComment(commentId: string, userId: string, dto: ReplyCommentDto) {
+  async replyComment(commentId: string, userId: string, dto: ReplyCommentDto): Promise<CreateCommentResponseDto> {
     const comment = await this.prisma.comment.findFirst({
       where: {
         id: commentId,
@@ -351,11 +349,9 @@ export class BlogService {
       },
     });
 
-    if (!comment) {
-      throw new NotFoundException('Bình luận này không tồn tại!');
-    }
+    if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
 
-    await this.prisma.comment.create({
+    const replyComment = await this.prisma.comment.create({
       data: {
         content: dto.reply,
         blogId: comment.blogId,
@@ -363,11 +359,10 @@ export class BlogService {
         parentCommentId: comment.id,
       },
     });
-
-    return { message: 'Phản hồi bình luận bài viết thành công!' };
+    return replyComment;
   }
 
-  async voteComment(commentId: string, userId: string, type: VoteType) {
+  async voteComment(commentId: string, userId: string, type: VoteType): Promise<void> {
     const comment = await this.prisma.comment.findFirst({
       where: {
         id: commentId,
@@ -375,9 +370,7 @@ export class BlogService {
       },
     });
 
-    if (!comment) {
-      throw new NotFoundException('Bình luận không tồn tại!');
-    }
+    if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
 
     const userVote = await this.prisma.commentVote.findUnique({
       where: {
@@ -420,8 +413,6 @@ export class BlogService {
         },
       });
     }
-
-    return { message: 'Vote bình luận thành công!' };
   }
 
   // ==================== SEARCH ====================
@@ -461,7 +452,6 @@ export class BlogService {
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
-
 
   private mapCommentVotesInTree(
     comments: any[],

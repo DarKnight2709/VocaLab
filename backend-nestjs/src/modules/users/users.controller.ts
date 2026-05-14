@@ -2,7 +2,6 @@ import {
   Controller,
   Patch,
   Get,
-  UseGuards,
   Body,
   Query,
   Param,
@@ -12,13 +11,29 @@ import {
   Post,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { UpdatePersonalInfoDto, UpdatePersonalInfoResponseDto } from './dto/users.dto';
+import { UpdatePersonalInfoDto } from './dto/users.dto';
 import { CreateUserSocialDto } from './dto/social-link.dto';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
-import { Response } from '@/common/interceptors/transform.interceptor';
+import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
+import {
+  UpdateProfileResponseDto,
+  GetByUsernameResponseDto,
+  SearchResponseDto,
+  GetFollowersResponseDto,
+  GetFollowingResponseDto,
+  GetFriendsResponseDto,
+  GetUserPostsResponseDto,
+  GetUserStatsResponseDto,
+  CheckFollowStatusResponseDto,
+  FollowResponseDto,
+  UnfollowResponseDto,
+  UserSocialDto,
+  DeleteSocialResponseDto,
+  PublicUserDto,
+} from './dto/users-response.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -36,12 +51,11 @@ export class UsersController {
     @CurrentUser() user: any,
     @Body() updateDto: UpdatePersonalInfoDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<Response<UpdatePersonalInfoResponseDto>> {
-    const data = await this.userService.updateProfile(user.id, updateDto, file);
+  ): Promise<ResponseInterceptor<UpdateProfileResponseDto>> {
+    const result = await this.userService.updateProfile(user.id, updateDto, file);
     return {
-      data: data,
-      message: 'Cập nhật thông tin thành công!',
-    }
+      data: result,
+    };
   }
 
   @Delete('profile')
@@ -51,139 +65,41 @@ export class UsersController {
   })
   async deleteProfile(
     @CurrentUser() user: any,
-  ): Promise<Response<void>> {
+  ): Promise<void> {
     await this.userService.deleteAccount(user.id);
-    return {
-      message: 'Xóa tài khoản thành công!',
-    };
   }
 
   @Get('search')
   @ApiOperation({ summary: 'Tìm kiếm người dùng và nhóm' })
-  async search(@CurrentUser() user: any, @Query('keyword') keyword: string) {
-    if (!keyword) {
-      return { message: 'Vui lòng cung cấp keyword để tìm kiếm!' };
-    }
-    return this.userService.search(keyword, user.id);
+  @ApiQuery({ name: 'keyword', required: true })
+  async search(
+    @CurrentUser() user: any,
+    @Query('keyword') keyword: string,
+  ): Promise<ResponseInterceptor<SearchResponseDto>> {
+    const result = await this.userService.search(keyword, user.id);
+    return {
+      data: result,
+    };
   }
 
   @Get('all')
   @ApiOperation({ summary: 'Lấy danh sách tất cả người dùng' })
-  async getUsers() {
-    return this.userService.getAllUsers();
-  }
-
-  @Get('by-username/:username')
-  @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
-  async getByUsername(@Param('username') username: string) {
-    return this.userService.getByUsername(username);
-  }
-
-  @Get(':userId/followers')
-  @ApiOperation({ summary: 'Lấy danh sách người theo dõi' })
-  async getFollowers(
-    @Param('userId') userId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.userService.getFollowers(
-      userId,
-      Number(page),
-      Number(limit),
-      search,
-    );
-  }
-
-  @Get(':userId/following')
-  @ApiOperation({ summary: 'Lấy danh sách đang theo dõi' })
-  async getFollowing(
-    @Param('userId') userId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.userService.getFollowing(
-      userId,
-      Number(page),
-      Number(limit),
-      search,
-    );
-  }
-
-  @Get(':userId/friends')
-  @ApiOperation({ summary: 'Lấy danh sách bạn bè' })
-  async getFriends(
-    @Param('userId') userId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.userService.getFriends(
-      userId,
-      Number(page),
-      Number(limit),
-      search,
-    );
-  }
-
-  @Get(':userId/posts')
-  @ApiOperation({ summary: 'Lấy danh sách bài viết của người dùng' })
-  async getPosts(
-    @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-    @Query('visibility') visibility?: PostVisibility,
-  ) {
-    return this.userService.getPosts(
-      userId,
-      currentUser?.id,
-      Number(page),
-      Number(limit),
-      search,
-      visibility,
-    );
-  }
-
-  @Get(':userId/stats')
-  @ApiOperation({ summary: 'Lấy thống kê hồ sơ người dùng' })
-  async getUserStats(@Param('userId') userId: string) {
-    return this.userService.getUserStats(userId);
-  }
-
-  @Get(':userId/me/following')
-  @ApiOperation({ summary: 'Kiểm tra xem mình có đang follow user này không' })
-  async checkFollowStatus(
-    @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
-  ) {
-    return this.userService.checkFollowStatus(userId, currentUser.id);
-  }
-
-  @Post(':userId/follow')
-  @ApiOperation({ summary: 'Theo dõi người dùng' })
-  async followUser(
-    @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
-  ) {
-    return this.userService.followUser(userId, currentUser.id);
-  }
-
-  @Delete(':userId/unfollow')
-  @ApiOperation({ summary: 'Bỏ theo dõi người dùng' })
-  async unfollowUser(
-    @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
-  ) {
-    return this.userService.unfollowUser(userId, currentUser.id);
+  async getUsers(): Promise<ResponseInterceptor<PublicUserDto[]>> {
+    const result = await this.userService.getAllUsers();
+    return {
+      data: result,
+    };
   }
 
   @Get('me/socials')
   @ApiOperation({ summary: 'Lấy danh sách liên kết mạng xã hội của tôi' })
-  async getMySocials(@CurrentUser() user: any) {
-    return this.userService.getMySocials(user.id);
+  async getMySocials(
+    @CurrentUser() user: any,
+  ): Promise<ResponseInterceptor<UserSocialDto[]>> {
+    const result = await this.userService.getMySocials(user.id);
+    return {
+      data: result,
+    };
   }
 
   @Post('me/socials')
@@ -191,8 +107,11 @@ export class UsersController {
   async createSocial(
     @CurrentUser() user: any,
     @Body() createDto: CreateUserSocialDto,
-  ) {
-    return this.userService.createSocial(user.id, createDto);
+  ): Promise<ResponseInterceptor<UserSocialDto>> {
+    const result = await this.userService.createSocial(user.id, createDto);
+    return {
+      data: result,
+    };
   }
 
   @Patch('me/socials/:id')
@@ -201,13 +120,173 @@ export class UsersController {
     @CurrentUser() user: any,
     @Param('id') id: string,
     @Body() updateDto: CreateUserSocialDto,
-  ) {
-    return this.userService.updateSocial(user.id, id, updateDto);
+  ): Promise<ResponseInterceptor<UserSocialDto>> {
+    const result = await this.userService.updateSocial(user.id, id, updateDto);
+    return {
+      data: result,
+    };
   }
 
   @Delete('me/socials/:id')
   @ApiOperation({ summary: 'Xóa một liên kết mạng xã hội' })
-  async deleteSocial(@CurrentUser() user: any, @Param('id') id: string) {
-    return this.userService.deleteSocial(user.id, id);
+  async deleteSocial(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<ResponseInterceptor<DeleteSocialResponseDto>> {
+    const result = await this.userService.deleteSocial(user.id, id);
+    return {
+      data: result,
+    };
+  }
+
+  @Get('by-username/:username')
+  @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
+  async getByUsername(
+    @Param('username') username: string,
+  ): Promise<ResponseInterceptor<GetByUsernameResponseDto>> {
+    const result = await this.userService.getByUsername(username);
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/followers')
+  @ApiOperation({ summary: 'Lấy danh sách người theo dõi' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  async getFollowers(
+    @Param('userId') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ResponseInterceptor<GetFollowersResponseDto>> {
+    const result = await this.userService.getFollowers(
+      userId,
+      Number(page),
+      Number(limit),
+      search,
+    );
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/following')
+  @ApiOperation({ summary: 'Lấy danh sách đang theo dõi' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  async getFollowing(
+    @Param('userId') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ResponseInterceptor<GetFollowingResponseDto>> {
+    const result = await this.userService.getFollowing(
+      userId,
+      Number(page),
+      Number(limit),
+      search,
+    );
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/friends')
+  @ApiOperation({ summary: 'Lấy danh sách bạn bè' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  async getFriends(
+    @Param('userId') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ResponseInterceptor<GetFriendsResponseDto>> {
+    const result = await this.userService.getFriends(
+      userId,
+      Number(page),
+      Number(limit),
+      search,
+    );
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/posts')
+  @ApiOperation({ summary: 'Lấy danh sách bài viết của người dùng' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'visibility', required: false, enum: PostVisibility })
+  async getPosts(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('visibility') visibility?: PostVisibility,
+  ): Promise<ResponseInterceptor<GetUserPostsResponseDto>> {
+    const result = await this.userService.getPosts(
+      userId,
+      currentUser?.id,
+      Number(page),
+      Number(limit),
+      search,
+      visibility,
+    );
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/stats')
+  @ApiOperation({ summary: 'Lấy thống kê hồ sơ người dùng' })
+  async getUserStats(
+    @Param('userId') userId: string,
+  ): Promise<ResponseInterceptor<GetUserStatsResponseDto>> {
+    const result = await this.userService.getUserStats(userId);
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/me/following')
+  @ApiOperation({ summary: 'Kiểm tra xem mình có đang follow user này không' })
+  async checkFollowStatus(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<ResponseInterceptor<CheckFollowStatusResponseDto>> {
+    const result = await this.userService.checkFollowStatus(userId, currentUser.id);
+    return {
+      data: result,
+    };
+  }
+
+  @Post(':userId/follow')
+  @ApiOperation({ summary: 'Theo dõi người dùng' })
+  async followUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<ResponseInterceptor<FollowResponseDto>> {
+    const result = await this.userService.followUser(userId, currentUser.id);
+    return {
+      data: result,
+    };
+  }
+
+  @Delete(':userId/unfollow')
+  @ApiOperation({ summary: 'Bỏ theo dõi người dùng' })
+  async unfollowUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<ResponseInterceptor<UnfollowResponseDto>> {
+    const result = await this.userService.unfollowUser(userId, currentUser.id);
+    return {
+      data: result,
+    };
   }
 }

@@ -7,6 +7,7 @@ import { type ZodType, ZodError } from "zod";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import API_ROUTES from "./api-routes";
 import { RefreshTokenResponseSchema } from "../validations/AuthSchema";
+import i18n from "../i18n";
 
 export const api = axios.create({
   baseURL:
@@ -119,8 +120,19 @@ export type ApiErrorBody = {
 };
 
 export function getErrorMessage(error: unknown, fallback: string) {
-  const axiosError = error as any; // Simplified cast or Use AxiosError if imported
-  return axiosError.response?.data?.message || axiosError.message || fallback;
+  const axiosError = error as any;
+  const message = axiosError.response?.data?.message;
+
+  if (message && typeof message === "string") {
+    // If it's a known error code, translate it
+    const translated = i18n.t(`errors.${message}`);
+    if (translated !== `errors.${message}`) {
+      return translated;
+    }
+    return message;
+  }
+
+  return axiosError.message || fallback;
 }
 
 export async function fetchWithSchema<T>(

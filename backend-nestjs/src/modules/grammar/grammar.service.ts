@@ -7,6 +7,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CreateGrammarDto, UpdateGrammarDto } from './dto/grammar.dto';
+import { ErrorCode } from '@/common/enums/error-code.enum';
+import {
+  GetGrammarsResponseDto,
+  GetCategoriesResponseDto,
+  GetGrammarByIdResponseDto,
+  CreateGrammarResponseDto,
+  UpdateGrammarResponseDto,
+  DeleteGrammarResponseDto,
+} from './dto/grammar-response.dto';
 
 const DEFAULT_GRAMMAR_DATA = [
   {
@@ -378,7 +387,7 @@ export class GrammarService implements OnModuleInit {
     search?: string,
     category?: string,
     level?: string,
-  ) {
+  ): Promise<GetGrammarsResponseDto> {
     const skip = (page - 1) * limit;
     const where: any = {};
 
@@ -412,28 +421,29 @@ export class GrammarService implements OnModuleInit {
     };
   }
 
-  async getCategories() {
+  async getCategories(): Promise<GetCategoriesResponseDto> {
     const items = await this.prisma.grammarStructure.findMany({
       select: { category: true },
       distinct: ['category'],
       where: { category: { not: null } },
       orderBy: { category: 'asc' },
     });
-    return { categories: items.map((i) => i.category).filter(Boolean) };
+    
+    return { categories: items.map((i) => i.category).filter(Boolean) as string[] };
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<GetGrammarByIdResponseDto> {
     const item = await this.prisma.grammarStructure.findUnique({
       where: { id },
       include: {
         author: { select: { id: true, username: true, fullName: true } },
       },
     });
-    if (!item) throw new NotFoundException('Không tìm thấy cấu trúc ngữ pháp');
-    return { item };
+    if (!item) throw new NotFoundException(ErrorCode.GRAMMAR_NOT_FOUND);
+    return item;
   }
 
-  async create(userId: string, dto: CreateGrammarDto) {
+  async create(userId: string, dto: CreateGrammarDto): Promise<CreateGrammarResponseDto> {
     const item = await this.prisma.grammarStructure.create({
       data: {
         title: dto.title,
@@ -446,34 +456,34 @@ export class GrammarService implements OnModuleInit {
         authorId: userId,
       },
     });
-    return { message: 'Tạo cấu trúc ngữ pháp thành công', item };
+    return item;
   }
 
-  async update(id: string, userId: string, dto: UpdateGrammarDto) {
+  async update(id: string, userId: string, dto: UpdateGrammarDto): Promise<UpdateGrammarResponseDto> {
     const item = await this.prisma.grammarStructure.findUnique({
       where: { id },
     });
-    if (!item) throw new NotFoundException('Không tìm thấy cấu trúc ngữ pháp');
+    if (!item) throw new NotFoundException(ErrorCode.GRAMMAR_NOT_FOUND);
     if (!item.isDefault && item.authorId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền chỉnh sửa mục này');
+      throw new ForbiddenException(ErrorCode.GRAMMAR_EDIT_FORBIDDEN);
     }
 
     const updated = await this.prisma.grammarStructure.update({
       where: { id },
       data: dto,
     });
-    return { message: 'Cập nhật thành công', item: updated };
+    return updated;
   }
 
-  async delete(id: string, userId: string) {
+  async delete(id: string, userId: string): Promise<DeleteGrammarResponseDto> {
     const item = await this.prisma.grammarStructure.findUnique({
       where: { id },
     });
-    if (!item) throw new NotFoundException('Không tìm thấy cấu trúc ngữ pháp');
+    if (!item) throw new NotFoundException(ErrorCode.GRAMMAR_NOT_FOUND);
     if (item.isDefault || item.authorId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xóa mục này');
+      throw new ForbiddenException(ErrorCode.GRAMMAR_DELETE_FORBIDDEN);
     }
     await this.prisma.grammarStructure.delete({ where: { id } });
-    return { message: 'Xóa thành công' };
+    return { id };
   }
 }

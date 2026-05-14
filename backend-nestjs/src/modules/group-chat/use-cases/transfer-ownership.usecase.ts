@@ -8,6 +8,7 @@ import {
   type IGroupRepository,
   IGROUP_REPOSITORY,
 } from '../domain/interfaces/group-repository.interface';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 @Injectable()
 export class TransferOwnershipUseCase {
@@ -16,40 +17,23 @@ export class TransferOwnershipUseCase {
     private readonly groupRepository: IGroupRepository,
   ) {}
 
-  async execute(
-    groupId: string,
-    currentOwnerId: string,
-    newOwnerId: string,
-  ) {
+  async execute(groupId: string, currentOwnerId: string, newOwnerId: string) {
     // Verify current user is the owner
-    const isOwner = await this.groupRepository.isOwner(
-      groupId,
-      currentOwnerId,
-    );
+    const isOwner = await this.groupRepository.isOwner(groupId, currentOwnerId);
 
     if (!isOwner) {
-      throw new ForbiddenException(
-        'Chỉ chủ nhóm mới có thể chuyển quyền sở hữu',
-      );
+      throw new ForbiddenException(ErrorCode.ONLY_OWNER_CAN_TRANSFER_OWNERSHIP);
     }
 
     // Verify new owner is a member
-    const isMember = await this.groupRepository.isMember(
-      groupId,
-      newOwnerId,
-    );
+    const isMember = await this.groupRepository.isMember(groupId, newOwnerId);
 
     if (!isMember) {
-      throw new BadRequestException(
-        'Người nhận quyền sở hữu phải là thành viên của nhóm',
-      );
+      throw new BadRequestException(ErrorCode.NEW_OWNER_MUST_BE_MEMBER);
     }
 
     // Transfer ownership
-    await this.groupRepository.transferOwnership(
-      groupId,
-      newOwnerId,
-    );
+    await this.groupRepository.transferOwnership(groupId, newOwnerId);
 
     return {
       message: 'Chuyển quyền sở hữu thành công',

@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import {
   type IGroupRepository,
   IGROUP_REPOSITORY,
@@ -31,6 +25,7 @@ import { GroupChatGateway } from '../group-chat.gateway';
 import { DeleteGroupUseCase } from '../use-cases/delete-group.usecase';
 import { TransferOwnershipUseCase } from '../use-cases/transfer-ownership.usecase';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 @Injectable()
 export class GroupChatService {
@@ -253,7 +248,7 @@ export class GroupChatService {
     // check member đó có trong nhóm này không.
     const member = group.members?.find((m) => m.userId === memberId);
     if (!member) {
-      throw new NotFoundException('Thành viên không tồn tại trong nhóm');
+      throw new NotFoundException(ErrorCode.GROUP_MEMBER_NOT_FOUND);
     }
 
     await this.removeMemberUseCase.execute({
@@ -281,7 +276,7 @@ export class GroupChatService {
     const group = await this.getActiveGroupOrThrow(groupId);
     const member = group.members?.find((m) => m.userId === memberId);
     if (!member) {
-      throw new NotFoundException('Thành viên không tồn tại trong nhóm');
+      throw new NotFoundException(ErrorCode.GROUP_MEMBER_NOT_FOUND);
     }
     const updated = await this.changeRoleUseCase.execute({
       groupId,
@@ -359,9 +354,7 @@ export class GroupChatService {
   private async getActiveGroupOrThrow(groupId: string) {
     const group = await this.groupRepository.findById(groupId);
     if (!group || !group.isActive) {
-      throw new NotFoundException(
-        'Nhóm không tồn tại hoặc không còn hoạt động',
-      );
+      throw new NotFoundException(ErrorCode.GROUP_NOT_FOUND_OR_INACTIVE);
     }
     return group;
   }

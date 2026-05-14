@@ -1,8 +1,12 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
-import { type IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import {
+  type IGroupRepository,
+  IGROUP_REPOSITORY,
+} from '../domain/interfaces/group-repository.interface';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { MemberRole } from '@prisma/client';
 import { GroupPermission } from '../../../common/enums/group-permission.enum';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 export interface CreateGroupInput {
   ownerId: string;
@@ -29,7 +33,7 @@ export class CreateGroupUseCase {
     });
 
     if (existingUsers.length !== input.memberIds.length) {
-      throw new BadRequestException('Một số thành viên không tồn tại!');
+      throw new BadRequestException(ErrorCode.SOME_MEMBERS_NOT_FOUND);
     }
 
     const allPermissions = await this.prisma.permission.findMany({
@@ -46,13 +50,16 @@ export class CreateGroupUseCase {
     });
 
     if (allPermissions.length === 0) {
-      throw new BadRequestException('Không tìm thấy các bản ghi Permission trong hệ thống. Vui lòng chạy seed!');
+      throw new BadRequestException(ErrorCode.PERMISSION_RECORDS_NOT_FOUND);
     }
 
     const permissionMap = new Map(allPermissions.map((p) => [p.name, p.id]));
 
     // Quyền mặc định cho MEMBER
-    const memberPermissionNames = [GroupPermission.ADD_MEMBER, GroupPermission.UPDATE_GROUP_INFO];
+    const memberPermissionNames = [
+      GroupPermission.ADD_MEMBER,
+      GroupPermission.UPDATE_GROUP_INFO,
+    ];
     const memberRolePermissions = memberPermissionNames
       .map((name) => ({
         role: MemberRole.MEMBER,
@@ -73,7 +80,10 @@ export class CreateGroupUseCase {
       }))
       .filter((rp) => rp.permissionId);
 
-    const rolePermissions = [...memberRolePermissions, ...coOwnerRolePermissions] as Array<{
+    const rolePermissions = [
+      ...memberRolePermissions,
+      ...coOwnerRolePermissions,
+    ] as Array<{
       role: MemberRole;
       permissionId: string;
     }>;
@@ -97,4 +107,3 @@ export class CreateGroupUseCase {
     return group;
   }
 }
-

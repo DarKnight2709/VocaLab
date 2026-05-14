@@ -7,11 +7,30 @@ import {
 } from '@nestjs/common';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { PrismaService } from '@/core/database/prisma.service';
-import { CreateUserDto, UpdatePersonalInfoDto, UpdatePersonalInfoResponseDto } from './dto/users.dto';
+import {
+  CreateUserDto,
+  UpdatePersonalInfoDto,
+} from './dto/users.dto';
 import { CreateUserSocialDto } from './dto/social-link.dto';
 import { PublicUser } from './user.types';
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
+import { ErrorCode } from '@/common/enums/error-code.enum';
+import {
+  UpdateProfileResponseDto,
+  GetByUsernameResponseDto,
+  SearchResponseDto,
+  GetFollowersResponseDto,
+  GetFollowingResponseDto,
+  GetFriendsResponseDto,
+  GetUserPostsResponseDto,
+  GetUserStatsResponseDto,
+  CheckFollowStatusResponseDto,
+  FollowResponseDto,
+  UnfollowResponseDto,
+  UserSocialDto,
+  DeleteSocialResponseDto,
+} from './dto/users-response.dto';
 
 @Injectable()
 export class UserService {
@@ -37,23 +56,21 @@ export class UserService {
         updatedAt: true,
       },
     });
-    if(!user) return null;
-    const {hashedPassword, ...rest} = user;
+    if (!user) return null;
+    const { hashedPassword, ...rest } = user;
     return {
       ...rest,
       hasPassword: !!hashedPassword,
     };
   }
 
-  async getByUsername(username: string) {
+  async getByUsername(username: string): Promise<GetByUsernameResponseDto> {
     const user = await this.findByUsername(username);
     if (!user) {
-      throw new NotFoundException(`User with username ${username} not found`);
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND_BY_USERNAME);
     }
     const { updatedAt, createdAt, email, ...rest } = user;
-    return {
-      ...rest,
-    };
+    return rest;
   }
 
   async findByUsername(username: string): Promise<PublicUser | null> {
@@ -148,10 +165,10 @@ export class UserService {
     userId: string,
     updateDto: UpdatePersonalInfoDto,
     file?: Express.Multer.File,
-  ): Promise< UpdatePersonalInfoResponseDto> {
+  ): Promise<UpdateProfileResponseDto> {
     const existingUser = await this.findById(userId);
     if (!existingUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     if (updateDto.username) {
@@ -159,14 +176,14 @@ export class UserService {
         updateDto.username,
       );
       if (existingUserByUsername && existingUserByUsername.id !== userId) {
-        throw new ConflictException('Username này đã tồn tại');
+        throw new ConflictException(ErrorCode.USERNAME_ALREADY_EXISTS);
       }
     }
 
     if (updateDto.email) {
       const existingEmail = await this.findByEmail(updateDto.email);
       if (existingEmail && existingEmail.id !== userId) {
-        throw new ConflictException('Email này đã tồn tại');
+        throw new ConflictException(ErrorCode.EMAIL_ALREADY_EXISTS);
       }
     }
 
@@ -191,16 +208,15 @@ export class UserService {
     return updatedUser;
   }
 
-  async search(keyword: string, userId: string) {
+  async search(keyword: string, userId: string): Promise<SearchResponseDto> {
     const users = await this.searchUsers(keyword, userId);
     return {
-      message: 'Tìm kiếm thành công!',
       users,
       groups: [],
     };
   }
 
-  async getAllUsers() {
+  async getAllUsers(): Promise<PublicUser[]> {
     return this.findAll();
   }
 
@@ -209,10 +225,10 @@ export class UserService {
     page: number = 1,
     limit: number = 12,
     search?: string,
-  ) {
+  ): Promise<GetFollowersResponseDto> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     const skip = (page - 1) * limit;
@@ -266,10 +282,10 @@ export class UserService {
     page: number = 1,
     limit: number = 12,
     search?: string,
-  ) {
+  ): Promise<GetFollowingResponseDto> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     const skip = (page - 1) * limit;
@@ -323,10 +339,10 @@ export class UserService {
     page: number = 1,
     limit: number = 12,
     search?: string,
-  ) {
+  ): Promise<GetFriendsResponseDto> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     const skip = (page - 1) * limit;
@@ -382,11 +398,11 @@ export class UserService {
     limit = 12,
     search?: string,
     visibility?: PostVisibility,
-  ) {
+  ): Promise<GetUserPostsResponseDto> {
     const isOwner = profileUserId === requestingUserId;
 
     const user = await this.findById(profileUserId);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
     const skip = (page - 1) * limit;
 
@@ -401,9 +417,7 @@ export class UserService {
     } else if (visibility === PostVisibility.PRIVATE) {
       // Chỉ chủ nhân mới được xem private
       if (!isOwner)
-        throw new ForbiddenException(
-          'Bạn không có quyền xem bài viết riêng tư',
-        );
+        throw new ForbiddenException(ErrorCode.PRIVATE_POST_ACCESS_DENIED);
       where.isPublic = false;
     } else {
       // 'all' hoặc mặc định
@@ -448,11 +462,11 @@ export class UserService {
     };
   }
 
-  async getUserStats(userId: string) {
+  async getUserStats(userId: string): Promise<GetUserStatsResponseDto> {
     const user = await this.findById(userId);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
 
     const [posts, followersCount, followingCount, friendsCount] =
@@ -491,7 +505,7 @@ export class UserService {
     };
   }
 
-  async checkFollowStatus(targetUserId: string, currentUserId: string) {
+  async checkFollowStatus(targetUserId: string, currentUserId: string): Promise<CheckFollowStatusResponseDto> {
     const follow = await this.prisma.follow.findUnique({
       where: {
         followerId_followingId: {
@@ -503,13 +517,13 @@ export class UserService {
     return { isFollowing: !!follow };
   }
 
-  async followUser(targetUserId: string, currentUserId: string) {
+  async followUser(targetUserId: string, currentUserId: string): Promise<FollowResponseDto> {
     if (targetUserId === currentUserId) {
-      throw new ConflictException('Bạn không thể tự theo dõi chính mình');
+      throw new ConflictException(ErrorCode.CANNOT_FOLLOW_SELF);
     }
 
     const user = await this.findById(targetUserId);
-    if (!user) throw new NotFoundException('User không tồn tại');
+    if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
     const follow = await this.prisma.follow.upsert({
       where: {
@@ -524,12 +538,12 @@ export class UserService {
       },
       update: {}, // Nếu đã follow rồi thì không làm gì cả
     });
-    return { message: 'Theo dõisdfsdf thành công', follow };
+    return follow;
   }
 
-  async unfollowUser(targetUserId: string, currentUserId: string) {
+  async unfollowUser(targetUserId: string, currentUserId: string): Promise<UnfollowResponseDto> {
     const user = await this.findById(targetUserId);
-    if (!user) throw new NotFoundException('User không tồn tại');
+    if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
     try {
       const follow = await this.prisma.follow.delete({
@@ -540,10 +554,10 @@ export class UserService {
           },
         },
       });
-      return { message: 'Bỏ theo dõi thành công', follow };
+      return { followerId: follow.followerId, followingId: follow.followingId };
     } catch (error) {
       // Nếu không tìm thấy bản ghi (đã unfollow rồi), vẫn trả về thành công để tránh lỗi UI
-      return { message: 'Đã bỏ theo dõi' };
+      return { followerId: currentUserId, followingId: targetUserId };
     }
   }
 
@@ -553,14 +567,14 @@ export class UserService {
     });
   }
 
-  async getMySocials(userId: string) {
+  async getMySocials(userId: string): Promise<UserSocialDto[]> {
     return this.prisma.userSocial.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
     });
   }
 
-  async createSocial(userId: string, createDto: CreateUserSocialDto) {
+  async createSocial(userId: string, createDto: CreateUserSocialDto): Promise<UserSocialDto> {
     return this.prisma.userSocial.create({
       data: {
         ...createDto,
@@ -569,14 +583,18 @@ export class UserService {
     });
   }
 
-  async updateSocial(userId: string, id: string, updateDto: CreateUserSocialDto) {
+  async updateSocial(
+    userId: string,
+    id: string,
+    updateDto: CreateUserSocialDto,
+  ): Promise<UserSocialDto> {
     // Check ownership
     const social = await this.prisma.userSocial.findUnique({
       where: { id },
     });
 
     if (!social || social.userId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền chỉnh sửa liên kết này');
+      throw new ForbiddenException(ErrorCode.LINK_EDIT_PERMISSION_DENIED);
     }
 
     return this.prisma.userSocial.update({
@@ -585,20 +603,20 @@ export class UserService {
     });
   }
 
-  async deleteSocial(userId: string, id: string) {
+  async deleteSocial(userId: string, id: string): Promise<DeleteSocialResponseDto> {
     // Check ownership
     const social = await this.prisma.userSocial.findUnique({
       where: { id },
     });
 
     if (!social || social.userId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xóa liên kết này');
+      throw new ForbiddenException(ErrorCode.LINK_DELETE_PERMISSION_DENIED);
     }
 
     await this.prisma.userSocial.delete({
       where: { id },
     });
 
-    return { message: 'Xóa liên kết thành công' };
+    return { id };
   }
 }

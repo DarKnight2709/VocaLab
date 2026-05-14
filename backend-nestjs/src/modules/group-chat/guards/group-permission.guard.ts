@@ -17,6 +17,7 @@ import {
   REQUIRE_OWNER_KEY,
 } from '../../../common/decorators/group-auth.decorators';
 import { GroupPermission } from '../../../common/enums/group-permission.enum';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 @Injectable()
 export class GroupPermissionGuard implements CanActivate {
@@ -42,9 +43,7 @@ export class GroupPermissionGuard implements CanActivate {
     // 1. Kiểm tra sự tồn tại của nhóm
     const group = await this.groupRepository.findById(groupId);
     if (!group || !group.isActive) {
-      throw new NotFoundException(
-        'Nhóm không tồn tại hoặc không còn hoạt động',
-      );
+      throw new NotFoundException(ErrorCode.GROUP_NOT_FOUND_OR_INACTIVE);
     }
 
     // Gắn thông tin nhóm vào request để dùng lại ở UseCase nếu cần
@@ -71,16 +70,14 @@ export class GroupPermissionGuard implements CanActivate {
 
     // If any check is required but user is not a member;
     if ((requireOwner || requireMember || requirePermission) && !member) {
-      throw new ForbiddenException('Bạn không phải thành viên của nhóm này');
+      throw new ForbiddenException(ErrorCode.GROUP_MEMBER_FORBIDDEN);
     }
 
     // Check owner requirement first if requested
     if (requireOwner) {
       const isOwner = group.ownerId === user.id;
-      if(!isOwner) {
-        throw new ForbiddenException(
-          'Chỉ chủ sở hữu mới có quyền thực hiện hành động này',
-        );
+      if (!isOwner) {
+        throw new ForbiddenException(ErrorCode.ONLY_OWNER_ALLOWED);
       }
       return true;
     }
@@ -98,9 +95,7 @@ export class GroupPermissionGuard implements CanActivate {
           .map((rp) => rp.permission.name) || [];
 
       if (!userPermissions.includes(requirePermission)) {
-        throw new ForbiddenException(
-          `Bạn không có quyền thực hiện hành động này (Yêu cầu: ${requirePermission})`,
-        );
+        throw new ForbiddenException(ErrorCode.PERMISSION_DENIED);
       }
     }
 

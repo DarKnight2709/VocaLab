@@ -1,5 +1,15 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
-import { type IGroupRepository, IGROUP_REPOSITORY } from '../domain/interfaces/group-repository.interface';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  Inject,
+} from '@nestjs/common';
+import {
+  type IGroupRepository,
+  IGROUP_REPOSITORY,
+} from '../domain/interfaces/group-repository.interface';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 export interface RemoveMemberInput {
   groupId: string;
@@ -11,7 +21,7 @@ export interface RemoveMemberInput {
 export class RemoveMemberUseCase {
   constructor(
     @Inject(IGROUP_REPOSITORY)
-    private groupRepository: IGroupRepository
+    private groupRepository: IGroupRepository,
   ) {}
 
   async execute(input: RemoveMemberInput) {
@@ -19,7 +29,7 @@ export class RemoveMemberUseCase {
 
     const isTargetOwner = await this.groupRepository.isOwner(groupId, memberId);
     if (isTargetOwner) {
-      throw new BadRequestException('Không thể xóa chủ nhóm ra khỏi danh sách thành viên');
+      throw new BadRequestException(ErrorCode.CANNOT_REMOVE_GROUP_OWNER);
     }
 
     await this.groupRepository.removeMember(groupId, memberId);

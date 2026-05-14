@@ -1,7 +1,17 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
-import { type IGroupRepository, IGROUP_REPOSITORY, GroupWithDetails } from '../domain/interfaces/group-repository.interface';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  Inject,
+} from '@nestjs/common';
+import {
+  type IGroupRepository,
+  IGROUP_REPOSITORY,
+  GroupWithDetails,
+} from '../domain/interfaces/group-repository.interface';
 import { UpdateGroupDto } from '../dto/update-group.dto';
-import { MemberRole } from '@prisma/client';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 export interface UpdateGroupInput {
   groupId: string;
@@ -13,7 +23,7 @@ export interface UpdateGroupInput {
 export class UpdateGroupUseCase {
   constructor(
     @Inject(IGROUP_REPOSITORY)
-    private groupRepository: IGroupRepository
+    private groupRepository: IGroupRepository,
   ) {}
 
   async execute(input: UpdateGroupInput): Promise<GroupWithDetails> {
@@ -23,7 +33,7 @@ export class UpdateGroupUseCase {
     if (data.name !== undefined) {
       const name = data.name.trim();
       if (name === '') {
-        throw new BadRequestException('Tên nhóm không được để trống');
+        throw new BadRequestException(ErrorCode.GROUP_NAME_REQUIRED);
       }
       updateData.name = name;
     }

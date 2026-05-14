@@ -1,9 +1,18 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 
 import { MessageEntity } from '../domain/message.entity';
-import { IMESSAGES_REPOSITORY, type MessagesRepositoryInterface, MessageWithDetails, ConversationListItem } from '../domain/interfaces/messages-repository.interface';
+import {
+  IMESSAGES_REPOSITORY,
+  type MessagesRepositoryInterface,
+  MessageWithDetails,
+  ConversationListItem,
+} from '../domain/interfaces/messages-repository.interface';
 import { MessageStatus, MessageType } from '@prisma/client';
-import { AttachmentType, MessageAttachment } from '../domain/types/message-attachment.type';
+import {
+  AttachmentType,
+  MessageAttachment,
+} from '../domain/types/message-attachment.type';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 
 export interface SendMessageInput {
   senderId: string;
@@ -22,36 +31,53 @@ export class MessagesService {
     private readonly messageRepository: MessagesRepositoryInterface,
   ) {}
 
-  async getConversations(userId: string): Promise<{ users: ConversationListItem[] }> {
+  async getConversations(
+    userId: string,
+  ): Promise<{ users: ConversationListItem[] }> {
     const users = await this.messageRepository.getConversations(userId);
     return { users };
   }
 
-  async getMessages(userId: string, friendId: string): Promise<{ messages: MessageWithDetails[] }> {
-    const messages = await this.messageRepository.findDirectMessages(userId, friendId);
+  async getMessages(
+    userId: string,
+    friendId: string,
+  ): Promise<{ messages: MessageWithDetails[] }> {
+    const messages = await this.messageRepository.findDirectMessages(
+      userId,
+      friendId,
+    );
     return { messages };
   }
 
   async sendMessage(input: SendMessageInput) {
+    const isDirectMessage = MessageEntity.isDirectMessage(input.type);
 
-    const isDirectMessage = MessageEntity.isDirectMessage(input.type)
-
-    if(isDirectMessage){
-      if(!input.receiverId){
-        throw new BadRequestException('Message must have receiverId');
+    if (isDirectMessage) {
+      if (!input.receiverId) {
+        throw new BadRequestException(ErrorCode.RECEIVER_ID_REQUIRED);
       }
     } else {
-      if(!input.groupId){
-        throw new BadRequestException('Message must have groupId');
+      if (!input.groupId) {
+        throw new BadRequestException(ErrorCode.GROUP_ID_REQUIRED);
       }
     }
     // Validate
-    if (!MessageEntity.validateMessageContent(input.content, input.attachments)) {
-      throw new BadRequestException('Message must have content or attachments');
+    if (
+      !MessageEntity.validateMessageContent(input.content, input.attachments)
+    ) {
+      throw new BadRequestException(
+        ErrorCode.MESSAGE_CONTENT_OR_ATTACHMENTS_REQUIRED,
+      );
     }
 
-    if (!MessageEntity.canSendMessage(input.senderId, input.receiverId, input.groupId)) {
-      throw new BadRequestException('Message must have receiverId or groupId');
+    if (
+      !MessageEntity.canSendMessage(
+        input.senderId,
+        input.receiverId,
+        input.groupId,
+      )
+    ) {
+      throw new BadRequestException(ErrorCode.MESSAGE_TARGET_REQUIRED);
     }
 
     // Create message
@@ -71,7 +97,10 @@ export class MessagesService {
   }
 
   async markAsSeen(senderId: string, receiverId: string) {
-    return this.messageRepository.markDirectMessagesAsSeen(senderId, receiverId);
+    return this.messageRepository.markDirectMessagesAsSeen(
+      senderId,
+      receiverId,
+    );
   }
 
   async markGroupAsSeen(groupId: string, userId: string) {

@@ -68,10 +68,7 @@ export class AuthController {
 
     const result = await this.authService.login(loginDto, ipAddress, userAgent);
 
-    const message = result instanceof LoginResponseDto ? "Đăng nhập thành công!" : "Thành công lớp 1"
-
     return {
-      message,
       data: result
     }
   }
@@ -94,7 +91,6 @@ export class AuthController {
     const result = await this.authService.loginTwoFa(twoFactorLoginDto, ipAddress, userAgent);
 
     return {
-      message: "Đăng nhập thành công",
       data: result
     }
   }
@@ -111,11 +107,15 @@ export class AuthController {
   async refreshToken(
     @Body() refreshTokenDto: RefreshTokenDto,
     @Req() request: Request,
-  ): Promise<RefreshTokenResponseDto> {
+  ): Promise<ResponseInterceptor<RefreshTokenResponseDto>> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
-    return this.authService.refreshToken(refreshTokenDto, ipAddress, userAgent);
+    const result = await this.authService.refreshToken(refreshTokenDto, ipAddress, userAgent);
+
+    return {
+      data: result
+    }
   }
 
   @Post('logout')
@@ -127,12 +127,8 @@ export class AuthController {
   })
   async logout(
     @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<ResponseInterceptor<void>> {
+  ): Promise<void> {
     await this.authService.logout(refreshTokenDto.refreshToken);
-
-    return {
-      message: "Đăng xuất thành công!"
-    }
   }
 
   @Post('signup')
@@ -142,11 +138,8 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Đăng ký thành công' })
   async signup(
     @Body() signupDto: SignupDto,
-  ): Promise<ResponseInterceptor<void>> {
+  ): Promise<void> {
     await this.authService.signup(signupDto);
-    return {
-      message: 'Đăng ký thành công',
-    };
   }
 
   // lấy người dùng hiện tại
@@ -155,8 +148,11 @@ export class AuthController {
   @ApiOperation({
     summary: 'Lấy thông tin user từ access token (Protect)',
   })
-  async getCurrentUser(@CurrentUser() user: any) {
-    return await this.authService.getCurrentUser(user.id);
+  async getCurrentUser(@CurrentUser() user: any): Promise<ResponseInterceptor<PublicUser>> {
+    const result =  await this.authService.getCurrentUser(user.id);
+    return {
+      data: result
+    }
   }
 
   @Patch('set-password')
@@ -170,11 +166,8 @@ export class AuthController {
   async setPassword(
     @Body() setPasswordDto: SetPasswordDto,
     @CurrentUser() user: any,
-  ): Promise<ResponseInterceptor<any>> {
+  ): Promise<void> {
     await this.authService.setPassword(user.id, setPasswordDto);
-    return {
-      message: 'Thiết lập mật khẩu thành công!',
-    };
   }
 
   @Patch('change-password')
@@ -185,11 +178,8 @@ export class AuthController {
   async changePassword(
     @CurrentUser() user: any,
     @Body() changePasswordDto: ChangePasswordDto,
-  ): Promise<ResponseInterceptor<void>> {
+  ): Promise<void> {
     await this.authService.changePassword(user.id, changePasswordDto);
-    return {
-      message: 'Đổi mật khẩu thành công!',
-    };
   }
 
   @Get('google')
@@ -252,7 +242,6 @@ export class AuthController {
     const result = await this.authService.generateTwoFactorSecret(user.id);
 
     return {
-      message: 'Tạo mã 2FA thành công!',
       data: result,
     };
   }
@@ -265,12 +254,8 @@ export class AuthController {
   async verifyTwoFactorAuth(
     @CurrentUser() user: any,
     @Body() verifyDto: TwoFactorVerifyDto,
-  ): Promise<ResponseInterceptor<void>> {
+  ): Promise<void> {
     await this.authService.verifyTwoFactorAuth(user.id, verifyDto.code);
-
-    return {
-      message: 'Bật xác thực 2 yếu tố thành công!',
-    };
   }
 
   @Post('two-factor-auth/disable')
@@ -280,11 +265,7 @@ export class AuthController {
   })
   async disableTwoFactorAuth(
     @CurrentUser() user: any,
-  ): Promise<ResponseInterceptor<void>> {
+  ): Promise<void> {
     await this.authService.disableTwoFactorAuth(user.id);
-
-    return {
-      message: 'Tắt xác thực 2 yếu tố thành công!',
-    };
   }
 }

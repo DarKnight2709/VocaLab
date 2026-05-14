@@ -9,6 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PROTECTED_KEY } from '../decorators/protected.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { ConfigService } from '../services/config.service';
+import { ErrorCode } from '../enums/error-code.enum';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -69,9 +70,8 @@ export class PermissionGuard implements CanActivate {
     // const version = apiVersion || defaultApiVersion;
     // // /api/v1
     // const defaultPath = buildFullPath(apiPrefix, `v${String(version)}`);
-    // // /api/v1/users -> replace -> /users 
+    // // /api/v1/users -> replace -> /users
     // const pathSerialized = request.route.path.replace(defaultPath, '');
-
 
     // const hasPermission = permissions.some(
     //   (permission) =>
@@ -80,10 +80,7 @@ export class PermissionGuard implements CanActivate {
     // );
 
     // if (!hasPermission) {
-      throw new ForbiddenException(
-        'Bạn không có quyền thực hiện hành động này',
-      );
+    throw new ForbiddenException(ErrorCode.FORBIDDEN);
     // }
-
   }
 }

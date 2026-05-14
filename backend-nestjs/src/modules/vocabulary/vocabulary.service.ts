@@ -14,6 +14,20 @@ import {
   CreateCardTypeDto,
 } from './dto/vocabulary.dto';
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
+import { ErrorCode } from '@/common/enums/error-code.enum';
+import {
+  GetCollectionsResponseDto,
+  GetCollectionByIdResponseDto,
+  CreateCollectionResponseDto,
+  AddCardResponseDto,
+  UpdateCardResponseDto,
+  ImportCardsResponseDto,
+  GetCardTypesResponseDto,
+  GetCardTypeByIdResponseDto,
+  CreateCardTypeResponseDto,
+  CardTypeWithFieldsDto,
+  DeleteResponseDto,
+} from './dto/vocabulary-response.dto';
 
 @Injectable()
 export class VocabularyService {
@@ -23,7 +37,7 @@ export class VocabularyService {
   // Collections
   // ──────────────────────────────────────────────
 
-  async getCollections(userId: string) {
+  async getCollections(userId: string): Promise<GetCollectionsResponseDto> {
     const collections = await this.prisma.cardCollection.findMany({
       where: { userId },
       select: {
@@ -38,7 +52,10 @@ export class VocabularyService {
     return { collections };
   }
 
-  async getCollectionById(id: string, userId: string) {
+  async getCollectionById(
+    id: string,
+    userId: string,
+  ): Promise<GetCollectionByIdResponseDto> {
     const collection = await this.prisma.cardCollection.findFirst({
       where: { id, userId },
       include: {
@@ -60,39 +77,57 @@ export class VocabularyService {
         _count: { select: { cards: true } },
       },
     });
-    if (!collection) throw new NotFoundException('Không tìm thấy bộ từ vựng');
-    return { collection };
+    if (!collection)
+      throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);
+    return collection;
   }
 
-  async createCollection(userId: string, dto: CreateCollectionDto) {
+  async createCollection(
+    userId: string,
+    dto: CreateCollectionDto,
+  ): Promise<CreateCollectionResponseDto> {
     const collection = await this.prisma.cardCollection.create({
       data: { ...dto, userId },
     });
-    return { message: 'Tạo bộ từ vựng thành công', collection };
+    return collection;
   }
 
-  async updateCollection(id: string, userId: string, dto: UpdateCollectionDto) {
+  async updateCollection(
+    id: string,
+    userId: string,
+    dto: UpdateCollectionDto,
+  ): Promise<CreateCollectionResponseDto> {
     await this.findCollectionOrFail(id, userId);
     const collection = await this.prisma.cardCollection.update({
       where: { id },
       data: dto,
     });
-    return { message: 'Cập nhật thành công', collection };
+    return collection;
   }
 
-  async deleteCollection(id: string, userId: string) {
+  async deleteCollection(
+    id: string,
+    userId: string,
+  ): Promise<DeleteResponseDto> {
     await this.findCollectionOrFail(id, userId);
     await this.prisma.cardCollection.delete({ where: { id } });
+    return {
+      id,
+    };
   }
 
   // ──────────────────────────────────────────────
   // Cards
   // ──────────────────────────────────────────────
 
-  async addCard(collectionId: string, userId: string, dto: CreateCardDto) {
+  async addCard(
+    collectionId: string,
+    userId: string,
+    dto: CreateCardDto,
+  ): Promise<AddCardResponseDto> {
     const targetCollectionId = collectionId || dto.cardCollectionId;
     if (!targetCollectionId) {
-      throw new BadRequestException('Thiếu collectionId');
+      throw new BadRequestException(ErrorCode.COLLECTION_ID_REQUIRED);
     }
 
     await this.findCollectionOrFail(targetCollectionId, userId);
@@ -105,7 +140,7 @@ export class VocabularyService {
     });
 
     if (!cardType) {
-      throw new NotFoundException('Không tìm thấy kiểu thẻ');
+      throw new NotFoundException(ErrorCode.CARD_TYPE_NOT_FOUND);
     }
 
     // get cardFieldId that belongs to that cardType
@@ -127,18 +162,18 @@ export class VocabularyService {
     }
 
     if (duplicateFieldIds.size > 0) {
-      throw new BadRequestException('Dữ liệu field bị trùng');
+      throw new BadRequestException(ErrorCode.DUPLICATE_FIELD_DATA);
     }
 
     const invalidFieldExists = cleanedValues.some(
       (item) => !validFieldIds.has(item.fieldId),
     );
     if (invalidFieldExists) {
-      throw new BadRequestException('Có field không thuộc kiểu thẻ đã chọn');
+      throw new BadRequestException(ErrorCode.FIELD_NOT_IN_CARD_TYPE);
     }
 
     if (cleanedValues.length < 1) {
-      throw new BadRequestException('Tất cả các trường đều chưa được nhập.');
+      throw new BadRequestException(ErrorCode.ALL_FIELDS_EMPTY);
     }
 
     const card = await this.prisma.card.create({
@@ -165,10 +200,14 @@ export class VocabularyService {
       },
     });
 
-    return { message: 'Thêm từ thành công', card };
+    return card;
   }
 
-  async updateCard(cardId: string, userId: string, dto: UpdateCardDto) {
+  async updateCard(
+    cardId: string,
+    userId: string,
+    dto: UpdateCardDto,
+  ): Promise<UpdateCardResponseDto | null> {
     // 1. Kiểm tra quyền sở hữu
     const card = await this.prisma.card.findFirst({
       where: {
@@ -178,37 +217,51 @@ export class VocabularyService {
     });
 
     if (!card) {
-      throw new NotFoundException("Không tìm thấy thẻ hoặc bạn không có quyền");
+      throw new NotFoundException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
     }
 
-    // 2. Cập nhật dữ liệu
-    return await this.prisma.$transaction(async (tx) => {
-      // Cập nhật các trường dữ liệu (values)
-      if (dto.values) {
-        for (const val of dto.values) {
-          await tx.cardFieldValue.upsert({
-            where: {
-              cardId_fieldId: {
+    const updatedCard = await this.prisma.$transaction(async (tx) => {
+      // 1. Cập nhật hoặc tạo mới các values
+      if (dto.values && dto.values.length > 0) {
+        await Promise.all(
+          dto.values.map((val) =>
+            tx.cardFieldValue.upsert({
+              where: {
+                cardId_fieldId: {
+                  cardId: cardId,
+                  fieldId: val.fieldId,
+                },
+              },
+              create: {
                 cardId: cardId,
                 fieldId: val.fieldId,
+                value: val.value,
               },
-            },
-            create: {
-              cardId: cardId,
-              fieldId: val.fieldId,
-              value: val.value,
-            },
-            update: {
-              value: val.value,
-            },
-          });
-        }
+              update: {
+                value: val.value,
+              },
+            }),
+          ),
+        );
       }
-      return { message: "Cập nhật thẻ thành công"};
+
+      // 2. Lấy đối tượng Card hoàn chỉnh sau khi cập nhật để trả về
+      // Bao gồm cả cardType và values mới nhất
+      return tx.card.findUnique({
+        where: { id: cardId },
+        include: {
+          cardType: {
+            include: { fields: true },
+          },
+          values: true,
+        },
+      });
     });
+
+    return updatedCard;
   }
 
-  async deleteCard(cardId: string, userId: string) {
+  async deleteCard(cardId: string, userId: string): Promise<DeleteResponseDto> {
     const card = await this.prisma.card.findFirst({
       where: {
         id: cardId,
@@ -217,39 +270,21 @@ export class VocabularyService {
     });
 
     if (!card) {
-      throw new NotFoundException("Không tìm thấy thẻ hoặc bạn không có quyền");
+      throw new NotFoundException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
     }
 
     await this.prisma.card.delete({
       where: { id: cardId },
     });
 
-    return { message: "Xóa thẻ thành công" };
+    return { id: cardId };
   }
 
-  private parseRawTextWithDelimiter(rawText: string, delimiter: string) {
-    const lines = rawText.split('\n').filter((l) => l.trim().length > 0);
-    return lines.map((line) => {
-      const result: string[] = [];
-      let current = '';
-      let inQuotes = false;
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === delimiter && !inQuotes) {
-          result.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      result.push(current.trim());
-      return result;
-    });
-  }
-
-  async importCards(collectionId: string, userId: string, dto: ImportCardsDto) {
+  async importCards(
+    collectionId: string,
+    userId: string,
+    dto: ImportCardsDto,
+  ): Promise<ImportCardsResponseDto> {
     // validate
     await this.prisma.cardCollection.findUniqueOrThrow({
       where: { id: collectionId, userId },
@@ -278,7 +313,7 @@ export class VocabularyService {
       });
 
       if (cardFields.length === 0) {
-        throw new BadRequestException('Kiểu thẻ này chưa được định nghĩa các trường dữ liệu');
+        throw new BadRequestException(ErrorCode.CARD_TYPE_FIELDS_UNDEFINED);
       }
 
       for (const row of rows) {
@@ -305,7 +340,10 @@ export class VocabularyService {
           });
 
           // Xử lý SKIP
-          if (existingCards.length > 0 && dto.duplicatePolicy === DuplicatePolicy.SKIP) {
+          if (
+            existingCards.length > 0 &&
+            dto.duplicatePolicy === DuplicatePolicy.SKIP
+          ) {
             skipped++;
             skippedCards.push(row.join(dto.delimiter));
             continue;
@@ -317,7 +355,10 @@ export class VocabularyService {
           }));
 
           // Xử lý UPDATE
-          if (existingCards.length > 0 && dto.duplicatePolicy === DuplicatePolicy.UPDATE) {
+          if (
+            existingCards.length > 0 &&
+            dto.duplicatePolicy === DuplicatePolicy.UPDATE
+          ) {
             for (const match of existingCards) {
               // Cập nhật song song các trường của một Thẻ
               await Promise.all(
@@ -365,18 +406,14 @@ export class VocabularyService {
       };
     });
 
-    return {
-      message: `Hoàn tất xử lý ${rows.length} dòng`,
-      summary: `Thêm mới: ${result.imported.count}, Cập nhật: ${result.updated.count}, Bỏ qua: ${result.skipped.count}, Lỗi: ${result.errors.count}`,
-      ...result,
-    };
+    return result;
   }
 
   // ──────────────────────────────────────────────
   // CardTypes
   // ──────────────────────────────────────────────
 
-  async getCardTypes(userId: string) {
+  async getCardTypes(userId: string): Promise<GetCardTypesResponseDto> {
     const cardTypes = await this.prisma.cardType.findMany({
       where: { userId },
       include: {
@@ -388,7 +425,10 @@ export class VocabularyService {
     return { cardTypes };
   }
 
-  async createCardType(userId: string, createCardTypeDto: CreateCardTypeDto) {
+  async createCardType(
+    userId: string,
+    createCardTypeDto: CreateCardTypeDto,
+  ): Promise<CreateCardTypeResponseDto | null> {
     const cardType = await this.prisma.cardType.create({
       data: {
         name: createCardTypeDto.name,
@@ -396,18 +436,29 @@ export class VocabularyService {
         userId,
         fields: {
           create: createCardTypeDto.fields.map((field) => {
-            const side = field.side ? String(field.side).toUpperCase() : 'FRONT';
-            const fieldType = field.fieldType ? String(field.fieldType).toUpperCase() : 'TEXT';
-            
-            const parsedFontSize = field.fontSize ? parseInt(String(field.fontSize), 10) : null;
-            const validFontSize = (parsedFontSize && !isNaN(parsedFontSize)) ? parsedFontSize : null;
-            
+            const side = field.side
+              ? String(field.side).toUpperCase()
+              : 'FRONT';
+            const fieldType = field.fieldType
+              ? String(field.fieldType).toUpperCase()
+              : 'TEXT';
+
+            const parsedFontSize = field.fontSize
+              ? parseInt(String(field.fontSize), 10)
+              : null;
+            const validFontSize =
+              parsedFontSize && !isNaN(parsedFontSize) ? parsedFontSize : null;
+
             return {
-              key: field.key || `field_${Math.random().toString(36).slice(2, 7)}`,
+              key:
+                field.key || `field_${Math.random().toString(36).slice(2, 7)}`,
               label: field.label || 'New Field',
               fieldType: fieldType as any,
               side: side as any,
-              order: (typeof field.order === 'number' && !isNaN(field.order)) ? field.order : 0,
+              order:
+                typeof field.order === 'number' && !isNaN(field.order)
+                  ? field.order
+                  : 0,
               color: field.color || null,
               fontSize: validFontSize,
             };
@@ -426,10 +477,13 @@ export class VocabularyService {
       },
     });
 
-    return { message: 'Tạo kiểu thẻ thành công', cardType: result };
+    return result;
   }
 
-  async getCardTypeById(id: string, userId: string) {
+  async getCardTypeById(
+    id: string,
+    userId: string,
+  ): Promise<GetCardTypeByIdResponseDto> {
     const cardType = await this.prisma.cardType.findFirst({
       where: { id, userId },
       include: {
@@ -440,17 +494,17 @@ export class VocabularyService {
     });
 
     if (!cardType) {
-      throw new NotFoundException('Không tìm thấy kiểu thẻ');
+      throw new NotFoundException(ErrorCode.CARD_TYPE_NOT_FOUND);
     }
 
-    return { cardType };
+    return cardType;
   }
 
   async updateCardType(
     id: string,
     userId: string,
     dto: Partial<CreateCardTypeDto>,
-  ) {
+  ): Promise<CardTypeWithFieldsDto | null> {
     const existingType = await this.findCardTypeOrFail(id, userId);
 
     const cardType = await this.prisma.$transaction(async (tx) => {
@@ -491,15 +545,21 @@ export class VocabularyService {
         for (const field of dto.fields) {
           const { id: fieldId, ...fieldData } = field as any;
 
-          const parsedFontSize = fieldData.fontSize ? parseInt(String(fieldData.fontSize), 10) : null;
-          const validFontSize = (parsedFontSize && !isNaN(parsedFontSize)) ? parsedFontSize : null;
+          const parsedFontSize = fieldData.fontSize
+            ? parseInt(String(fieldData.fontSize), 10)
+            : null;
+          const validFontSize =
+            parsedFontSize && !isNaN(parsedFontSize) ? parsedFontSize : null;
 
           const cleanData = {
             key: fieldData.key,
             label: fieldData.label,
             fieldType: String(fieldData.fieldType).toUpperCase() as any,
             side: String(fieldData.side).toUpperCase() as any,
-            order: (typeof fieldData.order === 'number' && !isNaN(fieldData.order)) ? fieldData.order : 0,
+            order:
+              typeof fieldData.order === 'number' && !isNaN(fieldData.order)
+                ? fieldData.order
+                : 0,
             color: fieldData.color || null,
             fontSize: validFontSize,
           };
@@ -525,19 +585,19 @@ export class VocabularyService {
         where: { id },
         include: {
           fields: {
-            orderBy: { order: "asc" },
+            orderBy: { order: 'asc' },
           },
         },
       });
     });
 
-    return { message: "Cập nhật kiểu thẻ thành công", cardType };
+    return cardType;
   }
 
-  async deleteCardType(id: string, userId: string) {
+  async deleteCardType(id: string, userId: string): Promise<DeleteResponseDto> {
     await this.findCardTypeOrFail(id, userId);
     await this.prisma.cardType.delete({ where: { id } });
-    return { message: 'Đã xóa kiểu thẻ' };
+    return { id };
   }
 
   // ──────────────────────────────────────────────
@@ -549,21 +609,8 @@ export class VocabularyService {
       where: { id, userId },
     });
     if (!col)
-      throw new NotFoundException(
-        'Không tìm thấy bộ từ vựng hoặc bạn không có quyền truy cập',
-      );
+      throw new NotFoundException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
     return col;
-  }
-
-  private async findWordOrFail(wordId: string, userId: string) {
-    // const word = await this.prisma.vocabWord.findFirst({
-    //   where: { id: wordId, collection: { userId } },
-    // });
-    // if (!word)
-    //   throw new NotFoundException(
-    //     'Không tìm thấy từ hoặc bạn không có quyền truy cập',
-    //   );
-    // return word;
   }
 
   private async findCardTypeOrFail(id: string, userId: string) {
@@ -573,11 +620,31 @@ export class VocabularyService {
     });
 
     if (!cardType) {
-      throw new NotFoundException(
-        'Không tìm thấy kiểu thẻ hoặc bạn không có quyền truy cập',
-      );
+      throw new NotFoundException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
     }
 
     return cardType;
+  }
+
+  private parseRawTextWithDelimiter(rawText: string, delimiter: string) {
+    const lines = rawText.split('\n').filter((l) => l.trim().length > 0);
+    return lines.map((line) => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === delimiter && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    });
   }
 }

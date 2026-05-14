@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
+import { ErrorCode } from '../enums/error-code.enum';
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
@@ -28,17 +29,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
         ? transformedException.getResponse()
         : null;
 
-    let message = 'Internal server error';
+    let message = ErrorCode.INTERNAL_SERVER_ERROR;
     let errors: any = null;
 
     if (typeof exceptionResponse === 'string') {
-      message = exceptionResponse;
+      message = exceptionResponse as any;
     } else if (typeof exceptionResponse === 'object' && exceptionResponse) {
       const res: any = exceptionResponse;
 
       if (Array.isArray(res?.message)) {
         errors = res.message;
-        message = 'Validation failed';
+        message = ErrorCode.VALIDATION_FAILED;
       } else {
         message = res?.message || (transformedException as any).message;
       }
@@ -62,29 +63,29 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       switch (exception.code) {
         case 'P2025':
-          return new HttpException('Record not found', HttpStatus.NOT_FOUND);
+          return new HttpException(ErrorCode.RECORD_NOT_FOUND, HttpStatus.NOT_FOUND);
         case 'P2002':
-          return new HttpException('Duplicate value', HttpStatus.CONFLICT);
+          return new HttpException(ErrorCode.DUPLICATE_VALUE, HttpStatus.CONFLICT);
         case 'P2003':
           return new HttpException(
-            'Foreign key constraint failed',
+            ErrorCode.FOREIGN_KEY_FAILED,
             HttpStatus.BAD_REQUEST,
           );
         case 'P2021':
           return new HttpException(
-            'Table does not exist',
+            ErrorCode.DATABASE_ERROR,
             HttpStatus.INTERNAL_SERVER_ERROR,
           );
         default:
           return new HttpException(
-            'Database error',
+            ErrorCode.DATABASE_ERROR,
             HttpStatus.INTERNAL_SERVER_ERROR,
           );
       }
     }
 
     if (exception instanceof Prisma.PrismaClientValidationError) {
-      return new HttpException('Invalid query data', HttpStatus.BAD_REQUEST);
+      return new HttpException(ErrorCode.BAD_REQUEST, HttpStatus.BAD_REQUEST);
     }
 
     return exception;
