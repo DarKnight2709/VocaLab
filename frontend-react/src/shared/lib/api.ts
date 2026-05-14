@@ -14,9 +14,6 @@ export const api = axios.create({
     import.meta.env.VITE_ENV === "development"
       ? "/api/"
       : envConfig.VITE_API_URL,
-  // headers: {
-  //   "Content-Type": "application/json",
-  // },
   paramsSerializer: {
     serialize: (params) => {
       return qs.stringify(params, { arrayFormat: "repeat", skipNulls: true });
@@ -138,13 +135,12 @@ export function getErrorMessage(error: unknown, fallback: string) {
 export async function fetchWithSchema<T>(
   request: Promise<any>,
   schema: ZodType<T>,
-): Promise<{data: T, message?: string}> {
+): Promise<{data: T}> {
   const res = await request;
   try {
     const validatedData = schema.parse(res.data);
     return {
       data: validatedData,
-      message: res.message,
     };
   } catch (error) {
     if (error instanceof ZodError) {

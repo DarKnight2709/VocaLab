@@ -30,7 +30,7 @@ export const useLoginMutation = () => {
       ),
     onSuccess: (response) => {
       login(response.data);
-      toast.success(response.message || i18n.t("auth.loginSuccess"));
+      toast.success(i18n.t("auth.loginSuccess"));
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, i18n.t("auth.loginFailed")));
@@ -40,8 +40,8 @@ export const useLoginMutation = () => {
 export const useSignUpMutation = () => {
   return useMutation({
     mutationFn: (body: SignUpBodyType) => api.post(API_ROUTES.AUTH.SIGNUP, body),
-    onSuccess: (response: any) => {
-      toast.success(response.data.message || i18n.t("auth.signUpSuccess"));
+    onSuccess: () => {
+      toast.success(i18n.t("auth.signUpSuccess"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("auth.signUpFailed")));
@@ -71,10 +71,10 @@ export const useLogoutMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (refreshToken: string) => api.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }),
-    onSuccess: (response: any) => {
+    onSuccess: () => {
       logout();
       queryClient.clear();
-      toast.success(response.data.message || i18n.t("auth.logoutSuccess"));
+      toast.success(i18n.t("auth.logoutSuccess"));
     },
     onError: (error) => {
       logout();
@@ -89,9 +89,9 @@ export const useChangePasswordMutation = () => {
   return useMutation({
     mutationFn: (body: ChangePasswordBodyType) =>
       api.patch(API_ROUTES.AUTH.CHANGE_PASSWORD, body),
-    onSuccess: (response: any) => {
+    onSuccess: () => {
       logout();
-      toast.success(response.data.message || i18n.t("auth.changePasswordSuccess"));
+      toast.success(i18n.t("auth.changePasswordSuccess"));
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, i18n.t("auth.changePasswordFailed")));
@@ -104,9 +104,9 @@ export const useSetPasswordMutation = () => {
   return useMutation({
     mutationFn: (body: SetPasswordBodyType) =>
       api.patch(API_ROUTES.AUTH.SET_PASSWORD, body),
-    onSuccess: (response: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(response.data.message || i18n.t("auth.setPasswordSuccess"));
+      toast.success(i18n.t("auth.setPasswordSuccess"));
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, i18n.t("auth.setPasswordFailed")));
@@ -118,8 +118,8 @@ export const useSetPasswordMutation = () => {
 export const useUpdateTwoFactorAuthMutation = () => {
   return useMutation({
     mutationFn: () => fetchWithSchema(api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_GENERATE), TwoFactorAuthResponseSchema),
-    onSuccess: (response: any) => {
-      toast.success(response.message || i18n.t("auth.generateTwoFactorSuccess"));
+    onSuccess: () => {
+      toast.success(i18n.t("auth.generateTwoFactorSuccess"));
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, i18n.t("auth.generateTwoFactorFailed")));
@@ -131,9 +131,9 @@ export const useVerifyTwoFactorAuthMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (code: string) => api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_VERIFY, { code }),
-    onSuccess: (response: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(response.data.message || i18n.t("auth.verifyTwoFactorSuccess"));
+      toast.success(i18n.t("auth.verifyTwoFactorSuccess"));
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, i18n.t("auth.verifyTwoFactorFailed")));
@@ -151,7 +151,7 @@ export const useLoginTwoFaMutation = () => {
       ),
     onSuccess: (response) => {
       login(response.data);
-      toast.success(response.message || i18n.t("auth.loginSuccess"));
+      toast.success(i18n.t("auth.loginSuccess"));
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, i18n.t("auth.verifyTwoFactorFailedGeneric")));
@@ -163,9 +163,9 @@ export const useDisableTwoFactorAuthMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_DISABLE),
-    onSuccess: (response: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(response.data.message || i18n.t("auth.disableTwoFactorSuccess"));
+      toast.success(i18n.t("auth.disableTwoFactorSuccess"));
     },
     onError: (error: any) => {
       toast.error(getErrorMessage(error, i18n.t("auth.disableTwoFactorFailed")));

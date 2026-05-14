@@ -46,9 +46,9 @@ export const useUpdatePersonalInfoMutation = () => {
         getUpdateProfileResponseSchema(),
       );
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.success(data.message || i18n.t("profile.updateSuccess"));
+      toast.success(i18n.t("profile.updateSuccess"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("profile.updateFailed")));
@@ -219,9 +219,9 @@ export const useCreateSocialMutation = () => {
         api.post(API_ROUTES.USER.CREATE_SOCIAL, body),
         CreateUserSocialResponseSchema,
       ),
-    onSuccess: (data) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
-      toast.success(data.message || i18n.t("profile.socialAddSuccess"));
+      toast.success(i18n.t("profile.socialAddSuccess"));
     },
     onError: (err) =>
       toast.error(getErrorMessage(err, i18n.t("profile.socialAddFailed"))),
@@ -237,9 +237,9 @@ export const useUpdateSocialMutation = () => {
         api.patch(API_ROUTES.USER.UPDATE_SOCIAL(id), body),
         UpdateUserSocialResponseSchema,
       ),
-    onSuccess: (data) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
-      toast.success(data.message || i18n.t("profile.socialUpdateSuccess"));
+      toast.success(i18n.t("profile.socialUpdateSuccess"));
     },
     onError: (err) =>
       toast.error(getErrorMessage(err, i18n.t("profile.socialUpdateFailed"))),
@@ -255,9 +255,9 @@ export const useDeleteSocialMutation = () => {
         api.delete(API_ROUTES.USER.DELETE_SOCIAL(id)),
         DeleteUserSocialResponseSchema,
       ),
-    onSuccess: (data) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
-      toast.success(data.message || i18n.t("profile.socialDeleteSuccess"));
+      toast.success(i18n.t("profile.socialDeleteSuccess"));
     },
     onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.socialDeleteFailed"))),
   });
@@ -267,9 +267,9 @@ export const useDeleteAccountMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.delete(API_ROUTES.USER.DELETE_ACCOUNT),
-    onSuccess: (data) => {
-      qc.clear(); // Clear all cache
-      toast.success(data.data.message || i18n.t("profile.accountDeleteSuccess"));
+    onSuccess: () => {
+      qc.clear();
+      toast.success(i18n.t("profile.accountDeleteSuccess"));
     },
     onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.accountDeleteFailed"))),
   });

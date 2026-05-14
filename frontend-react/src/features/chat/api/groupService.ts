@@ -102,9 +102,9 @@ export function useCreateGroupMutation() {
         GroupItemSchema,
       );
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || i18n.t("chat.groupCreated"));
+      toast.success(i18n.t("chat.groupCreated"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.groupCreateFailed")));
@@ -134,12 +134,12 @@ export function useUpdateGroupMutation() {
         UpdateGroupResponseSchema,
       );
     },
-    onSuccess: (data, vars) => {
+    onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
         queryKey: groupKeys.info(vars.groupId),
       });
-      toast.success(data.message || i18n.t("chat.groupUpdated"));
+      toast.success(i18n.t("chat.groupUpdated"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.groupUpdateFailed")));
@@ -156,10 +156,10 @@ export function useDeleteGroupMutation() {
         SuccessResponseSchema,
       );
     },
-    onSuccess: (data, groupId) => {
+    onSuccess: (_, groupId) => {
       queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || i18n.t("chat.groupDeleted"));
+      toast.success(i18n.t("chat.groupDeleted"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.groupDeleteFailed")));
@@ -173,10 +173,10 @@ export function useLeaveGroupMutation() {
     mutationFn: async (groupId: string) => {
       return await api.post(API_ROUTES.GROUP.LEAVE(groupId));
     },
-    onSuccess: (data, groupId) => {
+    onSuccess: (_, groupId) => {
       queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success((data as any)?.message || i18n.t("chat.leftGroup"));
+      toast.success(i18n.t("chat.leftGroup"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.leaveGroupFailed")));
@@ -195,12 +195,12 @@ export function useTransferOwnershipMutation() {
         SuccessResponseSchema,
       );
     },
-    onSuccess: (data, vars) => {
+    onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.detail(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || i18n.t("chat.transferOwnershipSuccess"));
+      toast.success(i18n.t("chat.transferOwnershipSuccess"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.transferOwnershipFailed")));
@@ -219,7 +219,7 @@ export function useAddGroupMembersMutation() {
         z.any(),
       );
     },
-    onSuccess: (data, vars) => {
+    onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
@@ -227,7 +227,7 @@ export function useAddGroupMembersMutation() {
         queryKey: groupKeys.info(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || i18n.t("chat.membersAdded"));
+      toast.success(i18n.t("chat.membersAdded"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.addMembersFailed")));
@@ -246,7 +246,7 @@ export function useDeleteGroupMemberMutation() {
         SuccessResponseSchema,
       );
     },
-    onSuccess: (data, vars) => {
+    onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
@@ -254,7 +254,7 @@ export function useDeleteGroupMemberMutation() {
         queryKey: groupKeys.info(vars.groupId),
       });
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      toast.success(data.message || i18n.t("chat.memberRemoved"));
+      toast.success(i18n.t("chat.memberRemoved"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.removeMemberFailed")));
@@ -278,14 +278,14 @@ export function useChangeGroupRoleMutation() {
         z.any(),
       );
     },
-    onSuccess: (data, vars) => {
+    onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
       void queryClient.invalidateQueries({
         queryKey: groupKeys.info(vars.groupId),
       });
-      toast.success(data.message || i18n.t("chat.roleChanged"));
+      toast.success(i18n.t("chat.roleChanged"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.changeRoleFailed")));
@@ -308,14 +308,14 @@ export function useUpdateRolePermissionMutation() {
         isEnabled: params.isEnabled,
       });
     },
-    onSuccess: (data, vars) => {
+    onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({
         queryKey: groupKeys.info(vars.groupId),
       });
       void queryClient.invalidateQueries({
         queryKey: groupKeys.members(vars.groupId),
       });
-      toast.success((data as any)?.message || i18n.t("chat.permissionsUpdated"));
+      toast.success(i18n.t("chat.permissionsUpdated"));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.updatePermissionsFailed")));
@@ -334,7 +334,6 @@ export function useAvailablePermissionsQuery() {
         const data = response.data as any;
         const perms = data?.permissions || data?.data?.permissions || [];
         
-        console.log('Fetched Available Permissions:', perms);
         return perms;
       } catch (e) {
         console.error('Failed to fetch permissions:', e);
