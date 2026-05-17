@@ -29,6 +29,8 @@ import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { SetPasswordDialog } from "@/features/auth/components/SetPasswordDialog";
 import { TwoFactorAuthDialog } from "@/features/auth/components/TwoFactorAuthDialog";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useAllowFollowMutation, useUpdateMessageScopeMutation, useUpdateFollowersTabVisibilityMutation, useUpdateFollowingTabVisibilityMutation, useUpdateFriendTabVisibilityMutation } from "../api/settingService";
+import type { ScopeVisibilityType } from "@/shared/enums/ScopeVisibility.enum";
 
 
 export default function SettingPage() {
@@ -82,6 +84,11 @@ export default function SettingPage() {
   const deleteAccountMutation = useDeleteAccountMutation();
   const updateTwoFactorAuthMutation = useUpdateTwoFactorAuthMutation();
   const disableTwoFactorAuthMutation = useDisableTwoFactorAuthMutation();
+  const allowFollowMutation = useAllowFollowMutation();
+  const updateMessageScopeMutation = useUpdateMessageScopeMutation();
+  const updateFollowersTabVisibilityMutation = useUpdateFollowersTabVisibilityMutation();
+  const updateFollowingTabVisibilityMutation = useUpdateFollowingTabVisibilityMutation();
+  const updateFriendTabVisibilityMutation = useUpdateFriendTabVisibilityMutation();
   const logout = useAuthStore((s) => s.logout);
   const disconnect = useSocketStore((s) => s.disconnect);
 
@@ -119,6 +126,46 @@ export default function SettingPage() {
       console.error("2FA Toggle error:", error);
     }
   };
+  const handleAllowFollowToggle = async (allowFollow: boolean) => {
+    try {
+      await allowFollowMutation.mutateAsync(allowFollow);
+    } catch (error) {
+      console.error("Allow follow toggle error:", error);
+    }
+  };
+
+  const handleUpdateMessageScope = async (scope: ScopeVisibilityType) => {
+    try {
+      await updateMessageScopeMutation.mutateAsync(scope);
+    } catch (error) {
+      console.error("Update message scope error:", error);
+    }
+  };
+
+  const handleUpdateFollowersTabVisibility = async (scope: ScopeVisibilityType) => {
+    try {
+      await updateFollowersTabVisibilityMutation.mutateAsync(scope);
+    } catch (error) {
+      console.error("Update followers tab visibility error:", error);
+    }
+  };
+
+  const handleUpdateFollowingTabVisibility = async (scope: ScopeVisibilityType) => {
+    try {
+      await updateFollowingTabVisibilityMutation.mutateAsync(scope);
+    } catch (error) {
+      console.error("Update following tab visibility error:", error);
+    }
+  };
+
+  const handleUpdateFriendTabVisibility = async (scope: ScopeVisibilityType) => {
+    try {
+      await updateFriendTabVisibilityMutation.mutateAsync(scope);
+    } catch (error) {
+      console.error("Update friend tab visibility error:", error);
+    }
+  };
+
 
 
   return (
@@ -205,7 +252,16 @@ export default function SettingPage() {
                       me={me}
                     />
                   )}
-                  {activeTab === SettingTab.PRIVACY && <PrivacySettingTab />}
+                  {activeTab === SettingTab.PRIVACY && (
+                    <PrivacySettingTab
+                      onAllowFollow={handleAllowFollowToggle}
+                      onUpdateMessageScope={handleUpdateMessageScope}
+                      onUpdateFollowersTabVisibility={handleUpdateFollowersTabVisibility}
+                      onUpdateFollowingTabVisibility={handleUpdateFollowingTabVisibility}
+                      onUpdateFriendTabVisibility={handleUpdateFriendTabVisibility}
+                      me={me}
+                    />
+                  )}
                   {activeTab === SettingTab.PREFERENCES && (
                     <PreferencesSettingTab />
                   )}

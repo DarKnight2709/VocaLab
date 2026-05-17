@@ -106,6 +106,14 @@ const API_ROUTES = {
     UPDATE_CARD: (cardId: string) => `v1/vocabulary/cards/${cardId}`,
     // IMPORT_VOCABULARY: "v1/vocabulary/collections/${collectionId}/import",
   },
+
+  SETTING: {
+    ALLOW_FOLLOW: "v1/settings/allow-follow",
+    MESSAGE_SCOPE: "v1/settings/message-scope",
+    FOLLOWERS_TAB_VISIBILITY: "v1/settings/followers-tab-visibility",
+    FOLLOWING_TAB_VISIBILITY: "v1/settings/following-tab-visibility",
+    FRIEND_TAB_VISIBILITY: "v1/settings/friend-tab-visibility",
+  },
 };
 
 export default API_ROUTES;

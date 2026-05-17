@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { BaseEntityDTO } from "./CommonSchema";
 import i18n from "@/shared/i18n";
+import { ScopeVisibility } from "../enums/ScopeVisibility.enum";
 
 export const getLoginSchema = () =>
   z
@@ -58,7 +59,6 @@ export const getTwoFactorLoginSchema = () =>
     .strict()
     .strip();
 
-
 export const RefreshTokenResponseSchema = z
   .object({
     accessToken: z.string(),
@@ -71,6 +71,15 @@ export const MeResponseSchema = BaseEntityDTO.extend({
   fullName: z.string(),
   hasPassword: z.boolean().optional(),
   isTwoFactorEnabled: z.boolean().optional(),
+  privacySettings: z
+    .object({
+      allowFollow: z.boolean().optional(),
+      messageScope: z.nativeEnum(ScopeVisibility).optional(),
+      followersTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
+      followingTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
+      friendTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
+    })
+    .optional(),
   email: z.string().optional(),
   avatar: z.string().optional().nullable(),
 });
@@ -78,11 +87,11 @@ export const MeResponseSchema = BaseEntityDTO.extend({
 export const getChangePasswordSchema = () =>
   z
     .object({
-      oldPassword: z.string().trim().min(1, i18n.t("validation.currentPasswordRequired")),
-      newPassword: z
+      oldPassword: z
         .string()
         .trim()
-        .min(6, i18n.t("validation.passwordMin")),
+        .min(1, i18n.t("validation.currentPasswordRequired")),
+      newPassword: z.string().trim().min(6, i18n.t("validation.passwordMin")),
     })
     // Keep the payload strict so no extra fields slip through.
     .strict()
@@ -97,23 +106,28 @@ export const getSetPasswordSchema = () =>
     .strip();
 
 export const TwoFactorAuthResponseSchema = z.object({
-  qrCode: z.string()
+  qrCode: z.string(),
 });
 
 export const UploadAvatarResponseSchema = z.object({
   avatarUrl: z.string(),
 });
 
-
 export type LoginBodyType = z.infer<ReturnType<typeof getLoginSchema>>;
 export type SignUpBodyType = z.infer<ReturnType<typeof getSignUpSchema>>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type TempTokenResponse = z.infer<typeof TempTokenResponseSchema>;
-export type ChangePasswordBodyType = z.infer<ReturnType<typeof getChangePasswordSchema>>;
-export type SetPasswordBodyType = z.infer<ReturnType<typeof getSetPasswordSchema>>;
+export type ChangePasswordBodyType = z.infer<
+  ReturnType<typeof getChangePasswordSchema>
+>;
+export type SetPasswordBodyType = z.infer<
+  ReturnType<typeof getSetPasswordSchema>
+>;
 export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
 export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
 export type LogoutBodyType = z.infer<typeof LogoutSchema>;
-export type TwoFactorLoginBodyType = z.infer<ReturnType<typeof getTwoFactorLoginSchema>>;
+export type TwoFactorLoginBodyType = z.infer<
+  ReturnType<typeof getTwoFactorLoginSchema>
+>;

@@ -20,6 +20,7 @@ import { JwtGuard } from './common/guards/jwt-auth.guard';
 import { UploadModule } from './modules/upload/upload.module';
 import helmet from 'helmet';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SettingModule } from './modules/setting/setting.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     GrammarModule,
     VocabularyModule,
     UploadModule,
-    ScheduleModule.forRoot()
+    ScheduleModule.forRoot(),
+    SettingModule,
   ],
   controllers: [],
   providers: [

@@ -52,7 +52,29 @@ export class AuthService {
   ) {}
 
   async getCurrentUser(userId: string): Promise<PublicUser> {
-    const user = await this.userService.findById(userId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        hashedPassword: true,
+        fullName: true,
+        email: true,
+        avatar: true,
+        isTwoFactorEnabled: true,
+        privacySettings: {
+          select: {
+            allowFollow: true,
+            messageScope: true,
+            followersTabVisibility: true,
+            followingTabVisibility: true,
+            friendTabVisibility: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     if (!user) {
       throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
@@ -327,6 +349,9 @@ export class AuthService {
           email,
           fullName,
           avatar,
+          privacySettings: {
+            create: {},
+          },
         },
         select: {
           id: true,

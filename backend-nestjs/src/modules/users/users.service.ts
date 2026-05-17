@@ -7,10 +7,7 @@ import {
 } from '@nestjs/common';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { PrismaService } from '@/core/database/prisma.service';
-import {
-  CreateUserDto,
-  UpdatePersonalInfoDto,
-} from './dto/users.dto';
+import { CreateUserDto, UpdatePersonalInfoDto } from './dto/users.dto';
 import { CreateUserSocialDto } from './dto/social-link.dto';
 import { PublicUser } from './user.types';
 import { mapVoteScore } from '@/common/utils/vote.utils';
@@ -146,7 +143,12 @@ export class UserService {
 
   async create(data: CreateUserDto): Promise<PublicUser> {
     const user = await this.prisma.user.create({
-      data,
+      data: {
+        ...data,
+        privacySettings: {
+          create: {},
+        },
+      },
       select: {
         id: true,
         username: true,
@@ -505,7 +507,10 @@ export class UserService {
     };
   }
 
-  async checkFollowStatus(targetUserId: string, currentUserId: string): Promise<CheckFollowStatusResponseDto> {
+  async checkFollowStatus(
+    targetUserId: string,
+    currentUserId: string,
+  ): Promise<CheckFollowStatusResponseDto> {
     const follow = await this.prisma.follow.findUnique({
       where: {
         followerId_followingId: {
@@ -517,7 +522,10 @@ export class UserService {
     return { isFollowing: !!follow };
   }
 
-  async followUser(targetUserId: string, currentUserId: string): Promise<FollowResponseDto> {
+  async followUser(
+    targetUserId: string,
+    currentUserId: string,
+  ): Promise<FollowResponseDto> {
     if (targetUserId === currentUserId) {
       throw new ConflictException(ErrorCode.CANNOT_FOLLOW_SELF);
     }
@@ -541,7 +549,10 @@ export class UserService {
     return follow;
   }
 
-  async unfollowUser(targetUserId: string, currentUserId: string): Promise<UnfollowResponseDto> {
+  async unfollowUser(
+    targetUserId: string,
+    currentUserId: string,
+  ): Promise<UnfollowResponseDto> {
     const user = await this.findById(targetUserId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
@@ -574,7 +585,10 @@ export class UserService {
     });
   }
 
-  async createSocial(userId: string, createDto: CreateUserSocialDto): Promise<UserSocialDto> {
+  async createSocial(
+    userId: string,
+    createDto: CreateUserSocialDto,
+  ): Promise<UserSocialDto> {
     return this.prisma.userSocial.create({
       data: {
         ...createDto,
@@ -603,7 +617,10 @@ export class UserService {
     });
   }
 
-  async deleteSocial(userId: string, id: string): Promise<DeleteSocialResponseDto> {
+  async deleteSocial(
+    userId: string,
+    id: string,
+  ): Promise<DeleteSocialResponseDto> {
     // Check ownership
     const social = await this.prisma.userSocial.findUnique({
       where: { id },
