@@ -4,7 +4,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation} from '@nestjs/swagger';
-import { MessagesService } from './services/messages.service';
+import { MessagesService } from './messages.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 

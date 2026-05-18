@@ -4,11 +4,34 @@ import {
   IsEnum,
   IsArray,
   ValidateNested,
-  IsNotEmpty,
+  IsNumber,
+  IsUrl,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { MessageType } from '@prisma/client';
-import { MessageAttachmentDto } from './message-attachment.dto';
+import { type AttachmentType } from '../messages.types';
+
+export class MessageAttachmentDto {
+  @IsUrl({}, { message: 'URL không hợp lệ' })
+  url!: string;
+
+  @IsEnum(['image', 'video', 'file', 'audio'], {
+    message: 'Type phải là: image, video, file, hoặc audio',
+  })
+  type!: AttachmentType;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Size phải là số' })
+  size?: number;
+
+  @IsOptional()
+  @IsString()
+  mimeType?: string;
+}
 
 export class SendMessageDto {
   @IsString()
@@ -33,7 +56,7 @@ export class SendMessageDto {
   @IsOptional()
   @IsString()
   replyTo?: string;
-  
+
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

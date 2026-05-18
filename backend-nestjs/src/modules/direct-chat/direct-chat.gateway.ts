@@ -11,10 +11,10 @@ import { UseGuards, UsePipes, UseFilters, Inject } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
-import { MessagesService } from '../messages/services/messages.service';
+import { MessagesService } from '../messages/messages.service';
 import { MessageType } from '@prisma/client';
 import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
-import { SendMessageDto } from '../messages/dto/send-message.dto';
+import { SendMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 
 @WebSocketGateway({

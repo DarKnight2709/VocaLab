@@ -12,10 +12,7 @@ import { UpdateGroupUseCase } from '../use-cases/update-group.usecase';
 import { AddMemberUseCase } from '../use-cases/add-member.usecase';
 import { RemoveMemberUseCase } from '../use-cases/remove-member.usecase';
 import { ChangeRoleUseCase } from '../use-cases/change-role.usecase';
-import {
-  IMESSAGES_REPOSITORY,
-  type MessagesRepositoryInterface,
-} from '../../messages/domain/interfaces/messages-repository.interface';
+import { MessagesService } from '../../messages/messages.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateRolePermissionDto } from '../dto/update-role-permission.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';
@@ -41,8 +38,7 @@ export class GroupChatService {
     private addMemberUseCase: AddMemberUseCase,
     private removeMemberUseCase: RemoveMemberUseCase,
     private changeRoleUseCase: ChangeRoleUseCase,
-    @Inject(IMESSAGES_REPOSITORY)
-    private messageRepository: MessagesRepositoryInterface,
+    private readonly messagesService: MessagesService,
     private groupChatGateway: GroupChatGateway,
     private cloudinaryService: CloudinaryService,
   ) {}
@@ -71,8 +67,8 @@ export class GroupChatService {
     const transformedGroups = await Promise.all(
       groups.map(async (group) => {
         const [lastMessage, unreadCount] = await Promise.all([
-          this.messageRepository.findLastGroupMessage(group.id),
-          this.messageRepository.countUnreadGroupMessages(group.id, userId),
+          this.messagesService.findLastGroupMessage(group.id),
+          this.messagesService.countUnreadGroupMessages(group.id, userId),
         ]);
 
         return {
@@ -187,7 +183,7 @@ export class GroupChatService {
   }
 
   async getGroupMessages(groupId: string) {
-    const messages = await this.messageRepository.findGroupMessages(groupId);
+    const messages = await this.messagesService.findGroupMessages(groupId);
     return {
       message: 'Lấy tin nhắn thành công',
       messages,
