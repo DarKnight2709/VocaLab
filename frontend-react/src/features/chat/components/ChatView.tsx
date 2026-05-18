@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/shared/lib/api";
@@ -37,6 +37,7 @@ export default function ChatView({
 }: ChatViewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   // Local UI state (no fetching here)
@@ -49,6 +50,8 @@ export default function ChatView({
   const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [tempChatUser, setTempChatUser] = useState<UserItem | null>(null);
+
   const uploadFilesMutation = useUploadFilesMutation();
 
   // tránh spam event typing-start
@@ -58,6 +61,15 @@ export default function ChatView({
   // Queries
   const { data: users = [], isLoading: loadingUsers } = useUsersQuery();
   const { data: groups = [], isLoading: loadingGroups } = useGroupsQuery();
+
+  // Merge loaded users with tempChatUser if it exists and isn't already loaded
+  const allSidebarUsers = useMemo(() => {
+    if (!tempChatUser) return users;
+    const exists = users.some((u) => u.id === tempChatUser.id);
+    if (exists) return users;
+    return [tempChatUser, ...users];
+  }, [users, tempChatUser]);
+
   const { data: messages = [], isLoading: loadingMessages } = useMessagesQuery(
     selectedUser?.id || "",
   );
@@ -67,9 +79,9 @@ export default function ChatView({
   // Nếu có search query thì lấy user theo search query, nếu không thì lấy tất cả user
   const filteredUsers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => `${u.fullName || ""}`.toLowerCase().includes(q));
-  }, [users, searchQuery]);
+    if (!q) return allSidebarUsers;
+    return allSidebarUsers.filter((u) => `${u.fullName || ""}`.toLowerCase().includes(q));
+  }, [allSidebarUsers, searchQuery]);
 
   // Nếu có search query thì lấy group theo search query, nếu không thì lấy tất cả group
   const filteredGroups = useMemo(() => {
@@ -95,6 +107,22 @@ export default function ChatView({
   const [groupInfoOpen, setGroupInfoOpen] = useState(false);
 
   const isEmbeddedChatView = embedded && (!!selectedUser || !!selectedGroup);
+
+  // Handle start chat with a user passed in router state
+  useEffect(() => {
+    const startChatWith = location.state?.startChatWith as UserItem | undefined;
+    if (startChatWith) {
+      const exists = users.some((u) => u.id === startChatWith.id);
+      if (!exists) {
+        setTempChatUser(startChatWith);
+      }
+      const targetUser = users.find((u) => u.id === startChatWith.id) || startChatWith;
+      void openChat(targetUser);
+
+      // Clear navigation state so a reload/back action doesn't force re-opening
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, users]);
 
   // If auth state is lost (e.g. token invalid), go back to login.
   useEffect(() => {
@@ -440,55 +468,55 @@ export default function ChatView({
     return false;
   }, [selectedUser, selectedGroup, onlineIds, me]);
 
-  function recallMessage(messageId: string) {
-    const socket = socketRef.current;
-    const content = messageText.trim();
-    if (!socket || !content) return;
-
-    if (selectedGroup?.id) {
-      const groupId = selectedGroup.id;
-
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      socket.emit("group-typing-stop", { groupId });
-
-      socket.emit(
-        "send-group-message",
-        {
-          groupId,
-          content,
-          type: MessageType.GROUP,
-          replyTo: null,
-          fileUrl: null,
-        },
-        (status: { success: boolean; message?: string }) => {
-          if (!status?.success) {
-            toast.error(status?.message || t('chat.sendMessageFailed'));
-            return;
-          }
-          setMessageText("");
-          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-          void queryClient.invalidateQueries({
-            queryKey: groupKeys.messages(groupId),
-          });
-        },
-      );
-      return;
-    }
-
-    socket.emit(
-      "recall-message",
-      { messageId },
-      (status: { success: boolean; message?: string }) => {
-        if (!status?.success) {
-          toast.error(status?.message || t('chat.recallMessageFailed'));
-          return;
-        }
-        queryClient.invalidateQueries({ queryKey: chatKeys.list() });
-      },
-    );
-  }
+//   function recallMessage(messageId: string) {
+//     const socket = socketRef.current;
+//     const content = messageText.trim();
+//     if (!socket || !content) return;
+// 
+//     if (selectedGroup?.id) {
+//       const groupId = selectedGroup.id;
+// 
+//       if (typingTimeoutRef.current) {
+//         clearTimeout(typingTimeoutRef.current);
+//       }
+//       socket.emit("group-typing-stop", { groupId });
+// 
+//       socket.emit(
+//         "send-group-message",
+//         {
+//           groupId,
+//           content,
+//           type: MessageType.GROUP,
+//           replyTo: null,
+//           fileUrl: null,
+//         },
+//         (status: { success: boolean; message?: string }) => {
+//           if (!status?.success) {
+//             toast.error(status?.message || t('chat.sendMessageFailed'));
+//             return;
+//           }
+//           setMessageText("");
+//           void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+//           void queryClient.invalidateQueries({
+//             queryKey: groupKeys.messages(groupId),
+//           });
+//         },
+//       );
+//       return;
+//     }
+// 
+//     socket.emit(
+//       "recall-message",
+//       { messageId },
+//       (status: { success: boolean; message?: string }) => {
+//         if (!status?.success) {
+//           toast.error(status?.message || t('chat.recallMessageFailed'));
+//           return;
+//         }
+//         queryClient.invalidateQueries({ queryKey: chatKeys.list() });
+//       },
+//     );
+//   }
 
   function handleBackToList() {
     // Don't leave group (like frontend) - keep joined to receive notifications

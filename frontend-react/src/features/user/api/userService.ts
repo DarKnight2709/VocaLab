@@ -4,12 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostVisibility } from "../../../shared/enums/PostVisibility.enum";
 import {
   UserProfileDataResponseSchema,
-  UserStatsResponseSchema,
   UserPostsResponseSchema,
   UserFollowersResponseSchema,
   UserFollowingResponseSchema,
   UserFriendsResponseSchema,
-  UserMeFollowingResponseSchema,
   UserSocialsResponseSchema,
   CreateUserSocialResponseSchema,
   UpdateUserSocialResponseSchema,
@@ -56,18 +54,6 @@ export const useUpdatePersonalInfoMutation = () => {
   });
 };
 
-export const useStatsQuery = (userId: string | undefined) =>
-  useQuery({
-    queryKey: ["users", userId, "stats"] as const,
-    queryFn: async () => {
-      const result = await fetchWithSchema(
-        api.get(API_ROUTES.USER.STATS(userId as string)),
-        UserStatsResponseSchema,
-      );
-      return result.data;
-    },
-    enabled: !!userId,
-  });
 
 export const useUserFollowersQuery = (
   userId: string | undefined,
@@ -163,18 +149,6 @@ export const useUserByUsernameQuery = (username: string | undefined) =>
     staleTime: 30_000,
   });
 
-export const useCheckFollowingListQuery = (userId: string | undefined) =>
-  useQuery({
-    queryKey: ["users", userId, "me-following"] as const,
-    queryFn: async () => {
-      const result = await fetchWithSchema(
-        api.get(API_ROUTES.USER.ME_FOLLOWING(userId as string)),
-        UserMeFollowingResponseSchema,
-      );
-      return result.data;
-    },
-    enabled: !!userId,
-  });
 
 export const useFollowUserMutation = () => {
   const qc = useQueryClient();

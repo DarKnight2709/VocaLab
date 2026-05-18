@@ -6,9 +6,11 @@ import {
   IsOptional,
   IsNotEmpty,
   ValidateNested,
+  IsEnum,
+  IsUrl,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { SocialPlatform } from '@prisma/client';
 
 export class CreateUserDto {
   // username
@@ -93,4 +95,22 @@ export class UpdatePersonalInfoResponseDto {
 
   @ApiProperty({ example: 'https://example.com/avatar.jpg' })
   avatar?: string | null;
+}
+
+
+export class CreateUserSocialDto {
+  @ApiProperty({ enum: SocialPlatform, example: SocialPlatform.FACEBOOK })
+  @IsEnum(SocialPlatform)
+  @IsNotEmpty()
+  platform!: SocialPlatform;
+
+  @ApiProperty({ example: 'My Facebook', required: false })
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiProperty({ example: 'https://facebook.com/myprofile' })
+  @IsUrl()
+  @IsNotEmpty()
+  link!: string;
 }

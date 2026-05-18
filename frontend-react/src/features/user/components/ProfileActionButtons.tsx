@@ -1,27 +1,40 @@
 import { Button } from "@/shared/components/ui/button";
 import { MessageCircle, Pencil, UserPlus } from "lucide-react";
 import {
-  useCheckFollowingListQuery,
   useFollowUserMutation,
   useUnfollowUserMutation,
 } from "../api/userService";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useNavigate } from "react-router";
+import ROUTES from "@/shared/lib/routes";
 
 interface ProfileActionButtonsProps {
   isOwnProfile: boolean;
   onEditProfile: () => void;
   profileUserId: string | undefined;
+  profileUsername?: string;
+  profileFullName?: string | null;
+  profileAvatar?: string | null;
+  isFollowing?: boolean;
+  canFollow?: boolean;
+  canChat?: boolean;
 };
 
 export default function ProfileActionButtons({
   isOwnProfile,
   onEditProfile,
   profileUserId,
+  profileUsername,
+  profileFullName,
+  profileAvatar,
+  isFollowing,
+  canFollow,
+  canChat,
 }: ProfileActionButtonsProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // Move all hooks to the top, before any conditional logic
-  const { data: followStatus } = useCheckFollowingListQuery(profileUserId);
   const followMutation = useFollowUserMutation();
   const unfollowMutation = useUnfollowUserMutation();
 
@@ -37,39 +50,64 @@ export default function ProfileActionButtons({
   const handleFollowAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (followStatus?.isFollowing) {
+    if (isFollowing) {
       unfollowMutation.mutate(profileUserId!);
     } else {
       followMutation.mutate(profileUserId!);
     }
   };
 
+  const handleChatAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!profileUserId) return;
+    navigate(ROUTES.CHAT.url, {
+      state: {
+        startChatWith: {
+          id: profileUserId,
+          username: profileUsername || "",
+          fullName: profileFullName || profileUsername || "",
+          avatar: profileAvatar || null,
+        },
+      },
+    });
+  };
+
+  const showFollowButton = canFollow || isFollowing;
+
+  if (!showFollowButton && !canChat) return null;
+
   return (
     <div className="flex items-center gap-3">
-      <Button
-        size="lg"
-        variant="outline"
-        className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:bg-muted"
-      >
-        <MessageCircle className="h-5 w-5" />
-        {t("profile.message")}
-      </Button>
-      <Button
-        size="lg"
-        variant={followStatus?.isFollowing ? "secondary" : "default"}
-        onClick={handleFollowAction}
-        disabled={followMutation.isPending || unfollowMutation.isPending}
-        className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:shadow-md min-w-35"
-      >
-        {followStatus?.isFollowing ? (
-          t("profile.unfollow")
-        ) : (
-          <span className="flex items-center gap-1.5">
-            <UserPlus className="h-5 w-5" />
-            {t("profile.follow")}
-          </span>
-        )}
-      </Button>
+      {canChat && (
+        <Button
+          size="lg"
+          variant="outline"
+          onClick={handleChatAction}
+          className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:bg-muted"
+        >
+          <MessageCircle className="h-5 w-5" />
+          {t("profile.message")}
+        </Button>
+      )}
+      {showFollowButton && (
+        <Button
+          size="lg"
+          variant={isFollowing ? "secondary" : "default"}
+          onClick={handleFollowAction}
+          disabled={followMutation.isPending || unfollowMutation.isPending}
+          className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:shadow-md min-w-35"
+        >
+          {isFollowing ? (
+            t("profile.unfollow")
+          ) : (
+            <span className="flex items-center gap-1.5">
+              <UserPlus className="h-5 w-5" />
+              {t("profile.follow")}
+            </span>
+          )}
+        </Button>
+      )}
     </div>
   );
 }

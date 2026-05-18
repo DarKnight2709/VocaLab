@@ -29,6 +29,12 @@ export class UserSummaryDto {
 
   @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg', nullable: true })
   avatar!: string | null;
+
+  @ApiPropertyOptional({ example: true })
+  isFollowing?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  canFollow?: boolean;
 }
 
 export class PublicUserDto {
@@ -78,6 +84,40 @@ export class UpdateProfileResponseDto {
 
 // ─── Get By Username ────────────────────────────────────────
 
+export class UserCapabilitiesDto {
+  @ApiProperty({ example: true })
+  canFollow!: boolean;
+
+  @ApiProperty({ example: false })
+  canChat!: boolean;
+
+  @ApiProperty({ example: false })
+  canSeeFollowers!: boolean;
+
+  @ApiProperty({ example: true })
+  canSeeFollowing!: boolean;
+
+  @ApiProperty({ example: true })
+  canSeeFriends!: boolean;
+}
+
+// ─── User Stats ─────────────────────────────────────────────
+
+export class GetUserStatsResponseDto {
+  @ApiProperty({ example: 10 })
+  followers!: number;
+
+  @ApiProperty({ example: 5 })
+  following!: number;
+
+  @ApiProperty({ example: 3 })
+  friends!: number;
+
+  @ApiProperty({ example: 12 })
+  posts!: number;
+}
+
+
 export class GetByUsernameResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
@@ -93,6 +133,15 @@ export class GetByUsernameResponseDto {
 
   @ApiPropertyOptional({ example: true })
   hasPassword?: boolean;
+
+  @ApiProperty({ type: GetUserStatsResponseDto })
+  stats!: GetUserStatsResponseDto;
+
+  @ApiProperty({ example: true })
+  isFollowing!: boolean;
+
+  @ApiProperty({ type: UserCapabilitiesDto })
+  capabilities!: UserCapabilitiesDto;
 }
 
 // ─── Search ─────────────────────────────────────────────────
@@ -180,21 +229,6 @@ export class GetUserPostsResponseDto {
   meta!: UserPaginationMetaDto;
 }
 
-// ─── User Stats ─────────────────────────────────────────────
-
-export class GetUserStatsResponseDto {
-  @ApiProperty({ example: 10 })
-  followers!: number;
-
-  @ApiProperty({ example: 5 })
-  following!: number;
-
-  @ApiProperty({ example: 3 })
-  friends!: number;
-
-  @ApiProperty({ example: 12 })
-  posts!: number;
-}
 
 // ─── Follow Status ──────────────────────────────────────────
 

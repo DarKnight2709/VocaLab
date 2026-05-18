@@ -11,7 +11,6 @@ import type {
 } from "@/shared/validations/GroupSchema";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 
-
 type ChatAreaProps = {
   embedded?: boolean;
   hideHeader?: boolean;
@@ -60,6 +59,7 @@ export function ChatArea({
   onCallClick,
 }: ChatAreaProps) {
   const { t } = useTranslation();
+  const canChatWithUser = selectedUser ? selectedUser.canChat !== false : true;
   return (
     <div className="relative flex-1 flex flex-col min-h-0">
       {!hideHeader && (
@@ -96,13 +96,32 @@ export function ChatArea({
         </div>
       )}
 
-      <MessageInput
-        messageText={messageText}
-        onMessageTextChange={onMessageTextChange}
-        onTyping={onTyping}
-        onEmojiClick={onEmojiClick}
-        onSend={onSend}
-      />
+      {canChatWithUser ? (
+        <MessageInput
+          messageText={messageText}
+          onMessageTextChange={onMessageTextChange}
+          onTyping={onTyping}
+          onEmojiClick={onEmojiClick}
+          onSend={onSend}
+        />
+      ) : (
+        <div className="p-4 bg-destructive/10 border-t border-destructive/20 flex items-center justify-center gap-2 text-destructive text-sm font-medium">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5 animate-pulse"
+          >
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          {t("chat.cannotMessagePrivacy")}
+        </div>
+      )}
     </div>
   );
 }

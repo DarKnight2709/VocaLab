@@ -1,13 +1,21 @@
+import { UserService } from '@/modules/users/users.service';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { MessageEntity, UserBasicInfo } from '../domain/message.entity';
-import { MessagesRepositoryInterface, MessageWithDetails, ConversationListItem } from '../domain/interfaces/messages-repository.interface';
-import { MessageStatus, MessageType } from '@prisma/client';
+import {
+  MessagesRepositoryInterface,
+  MessageWithDetails,
+  ConversationListItem,
+} from '../domain/interfaces/messages-repository.interface';
+import { MessageStatus, MessageType, VisibilityScope } from '@prisma/client';
 import { MessageAttachment } from '../domain/types/message-attachment.type';
 
 @Injectable()
 export class MessagesRepository implements MessagesRepositoryInterface {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+  ) {}
 
   async create(data: {
     senderId: string;
@@ -72,12 +80,14 @@ export class MessagesRepository implements MessagesRepositoryInterface {
       attachments: Array.isArray(message.attachments)
         ? (message.attachments as unknown as MessageAttachment[])
         : undefined,
-      sender: message.sender ? {
-        id: message.sender.id,
-        username: message.sender.username,
-        fullName: message.sender.fullName ?? undefined,
-        avatar: message.sender.avatar ?? undefined,
-      } : undefined,
+      sender: message.sender
+        ? {
+            id: message.sender.id,
+            username: message.sender.username,
+            fullName: message.sender.fullName ?? undefined,
+            avatar: message.sender.avatar ?? undefined,
+          }
+        : undefined,
       seenBy: message.seenBy.map((seen: any) => {
         const u = seen.user || seen;
         return {
@@ -90,7 +100,10 @@ export class MessagesRepository implements MessagesRepositoryInterface {
     });
   }
 
-  async findDirectMessages(userId1: string, userId2: string): Promise<MessageWithDetails[]> {
+  async findDirectMessages(
+    userId1: string,
+    userId2: string,
+  ): Promise<MessageWithDetails[]> {
     const messages = await this.prisma.message.findMany({
       where: {
         OR: [
@@ -132,7 +145,7 @@ export class MessagesRepository implements MessagesRepositoryInterface {
       },
     });
 
-    return messages.map(m => {
+    return messages.map((m) => {
       const msg = new MessageEntity({
         ...m,
         receiverId: m.receiverId ?? undefined,
@@ -142,7 +155,7 @@ export class MessagesRepository implements MessagesRepositoryInterface {
         attachments: Array.isArray(m.attachments)
           ? (m.attachments as unknown as MessageAttachment[])
           : undefined,
-        seenBy: m.seenBy.map(m => m.user) ?? []
+        seenBy: m.seenBy.map((m) => m.user) ?? [],
       });
 
       return {
@@ -181,7 +194,7 @@ export class MessagesRepository implements MessagesRepositoryInterface {
       },
     });
 
-    return messages.map(m => {
+    return messages.map((m) => {
       const msg = new MessageEntity({
         ...m,
         receiverId: m.receiverId ?? undefined,
@@ -191,7 +204,7 @@ export class MessagesRepository implements MessagesRepositoryInterface {
         attachments: Array.isArray(m.attachments)
           ? (m.attachments as unknown as MessageAttachment[])
           : undefined,
-        seenBy: m.seenBy.map(m => m.user) ?? []
+        seenBy: m.seenBy.map((m) => m.user) ?? [],
       });
 
       return {
@@ -201,7 +214,9 @@ export class MessagesRepository implements MessagesRepositoryInterface {
     });
   }
 
-  async findLastGroupMessage(groupId: string): Promise<MessageWithDetails | null> {
+  async findLastGroupMessage(
+    groupId: string,
+  ): Promise<MessageWithDetails | null> {
     const message = await this.prisma.message.findFirst({
       where: { groupId },
       orderBy: { createdAt: 'desc' },
@@ -240,7 +255,7 @@ export class MessagesRepository implements MessagesRepositoryInterface {
       attachments: Array.isArray(message.attachments)
         ? (message.attachments as unknown as MessageAttachment[])
         : undefined,
-      seenBy: message.seenBy.map(m => m.user) ?? []
+      seenBy: message.seenBy.map((m) => m.user) ?? [],
     });
 
     return {
@@ -262,7 +277,7 @@ export class MessagesRepository implements MessagesRepositoryInterface {
   }
 
   async updateMessageStatus(messageId: string, status: MessageStatus) {
-    const updateMessage =  this.prisma.message.update({
+    const updateMessage = this.prisma.message.update({
       where: { id: messageId },
       data: { status },
     });
@@ -345,10 +360,29 @@ export class MessagesRepository implements MessagesRepositoryInterface {
         fullName: true,
         email: true,
         avatar: true,
+        privacySettings: {
+          select: {
+            messageScope: true,
+          },
+        },
       },
     });
 
-    // 2. Get all direct messages for this user to calculate lastMessage and unreadCount
+    // 2. Fetch all follows to determine friendship
+    const follows = await this.prisma.follow.findMany({
+      where: {
+        OR: [{ followerId: userId }, { followingId: userId }],
+      },
+    });
+
+    const followingIds = new Set(
+      follows.filter((f) => f.followerId === userId).map((f) => f.followingId),
+    );
+    const followerIds = new Set(
+      follows.filter((f) => f.followingId === userId).map((f) => f.followerId),
+    );
+
+    // 3. Get all direct messages for this user to calculate lastMessage and unreadCount
     const messages = await this.prisma.message.findMany({
       where: {
         OR: [{ senderId: userId }, { receiverId: userId }],
@@ -364,8 +398,11 @@ export class MessagesRepository implements MessagesRepositoryInterface {
       },
     });
 
-    // 3. Process messages to find last message and unread count per user
-    const statsMap = new Map<string, { lastMessage: any, unreadCount: number }>();
+    // 4. Process messages to find last message and unread count per user
+    const statsMap = new Map<
+      string,
+      { lastMessage: any; unreadCount: number }
+    >();
     for (const msg of messages) {
       const otherUserId =
         msg.senderId === userId ? msg.receiverId : msg.senderId;
@@ -391,16 +428,30 @@ export class MessagesRepository implements MessagesRepositoryInterface {
       }
     }
 
-    // 4. Combine all users with their stats
+    // 5. Combine all users with their stats and privacy capabilities
     const result = allUsers.map((user) => {
       const stats = statsMap.get(user.id) || {
         lastMessage: null,
         unreadCount: 0,
       };
+
+      const isFriend = followingIds.has(user.id) && followerIds.has(user.id);
+      const scope = user.privacySettings?.messageScope ?? VisibilityScope.EVERYONE;
+
+      let canChat = true;
+      if (scope === VisibilityScope.PRIVATE) {
+        canChat = false;
+      } else if (scope === VisibilityScope.FRIENDS) {
+        canChat = isFriend;
+      }
+
       return {
-        ...user,
+        id: user.id,
+        username: user.username,
         fullName: user.fullName ?? undefined,
         avatar: user.avatar ?? undefined,
+        email: user.email ?? undefined,
+        canChat,
         ...stats,
       } as ConversationListItem;
     });
@@ -415,5 +466,21 @@ export class MessagesRepository implements MessagesRepositoryInterface {
         : 0;
       return timeB - timeA;
     });
+  }
+
+  async canChat(senderId: string, receiverId: string): Promise<boolean> {
+    const privacy = await this.prisma.userPrivacySetting.findUnique({
+      where: { userId: receiverId },
+    });
+    const messageScope = privacy?.messageScope ?? 'EVERYONE';
+
+    if (messageScope === VisibilityScope.EVERYONE) return true;
+    if (messageScope === VisibilityScope.PRIVATE) return false;
+
+    if (messageScope === VisibilityScope.FRIENDS) {
+      return this.userService.checkFriendship(senderId, receiverId);
+    }
+
+    return true;
   }
 }

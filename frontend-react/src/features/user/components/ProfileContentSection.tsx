@@ -47,20 +47,45 @@ function PostVisibilityFilter({
   );
 }
 
-export default function ProfileContentSection({ userId, isOwnProfile }: { userId?: string, isOwnProfile?: boolean }) {
+export default function ProfileContentSection({ 
+  userId, 
+  isOwnProfile,
+  capabilities
+}: { 
+  userId?: string; 
+  isOwnProfile?: boolean;
+  capabilities?: {
+    canSeeFollowers: boolean;
+    canSeeFollowing: boolean;
+    canSeeFriends: boolean;
+  }
+}) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<ContentTab>(ContentTab.FOLLOWERS);
   
   const contentTabs: Array<{
     key: ContentTab;
     label: string;
     icon: typeof Users;
-  }> = [
-    { key: ContentTab.FOLLOWERS, label: t("profile.tabs.followers"), icon: Users },
-    { key: ContentTab.FOLLOWING, label: t("profile.tabs.following"), icon: UserPlus },
-    { key: ContentTab.FRIENDS, label: t("profile.tabs.friends"), icon: Handshake },
-    { key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: FileText },
-  ];
+  }> = [];
+
+  if (capabilities?.canSeeFollowers) {
+    contentTabs.push({ key: ContentTab.FOLLOWERS, label: t("profile.tabs.followers"), icon: Users });
+  }
+  if (capabilities?.canSeeFollowing) {
+    contentTabs.push({ key: ContentTab.FOLLOWING, label: t("profile.tabs.following"), icon: UserPlus });
+  }
+  if (capabilities?.canSeeFriends) {
+    contentTabs.push({ key: ContentTab.FRIENDS, label: t("profile.tabs.friends"), icon: Handshake });
+  }
+  contentTabs.push({ key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: FileText });
+
+  const defaultTab = contentTabs.length > 0 ? contentTabs[0].key : ContentTab.POSTS;
+  const [activeTab, setActiveTab] = useState<ContentTab>(defaultTab);
+
+  // Ensure activeTab is valid when capabilities change
+  if (!contentTabs.find(t => t.key === activeTab)) {
+    setActiveTab(defaultTab);
+  }
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");

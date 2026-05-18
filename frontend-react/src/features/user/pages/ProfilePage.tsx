@@ -13,7 +13,7 @@ import ROUTES from "@/shared/lib/routes";
 import ProfileActionButtons from "@/features/user/components/ProfileActionButtons";
 import ProfileStatsGrid from "@/features/user/components/ProfileStatsGrid";
 import ProfileContentSection from "@/features/user/components/ProfileContentSection";
-import { useStatsQuery, useUserByUsernameQuery } from "@/features/user/api/userService";
+import { useUserByUsernameQuery } from "@/features/user/api/userService";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 
 export default function ProfilePage() {
@@ -42,17 +42,14 @@ export default function ProfilePage() {
     [profileUser?.id],
   );
 
-  // lấy stats
-  const {data: userStats} = useStatsQuery(profileUserId);
-
   const stats = useMemo(
     () => [
-      { label: t("profile.tabs.followers"), value: userStats?.followers ?? 0 },
-      { label: t("profile.tabs.following"), value: userStats?.following ?? 0 },
-      { label: t("profile.tabs.friends"), value: userStats?.friends ?? 0},
-      { label: t("profile.tabs.posts"), value: userStats?.posts ?? 0 },
+      { label: t("profile.tabs.followers"), value: matchedUser?.stats?.followers ?? 0 },
+      { label: t("profile.tabs.following"), value: matchedUser?.stats?.following ?? 0 },
+      { label: t("profile.tabs.friends"), value: matchedUser?.stats?.friends ?? 0},
+      { label: t("profile.tabs.posts"), value: matchedUser?.stats?.posts ?? 0 },
     ],
-    [userStats, t],
+    [matchedUser?.stats, t],
   );
 
   if (shouldShowNotFound) {
@@ -100,12 +97,22 @@ export default function ProfilePage() {
                 isOwnProfile={isOwnProfile}
                 onEditProfile={() => setProfileOpen(true)}
                 profileUserId={profileUserId}
+                profileUsername={profileUser?.username}
+                profileFullName={profileUser?.fullName}
+                profileAvatar={profileUser?.avatar}
+                isFollowing={matchedUser?.isFollowing}
+                canFollow={matchedUser?.capabilities?.canFollow}
+                canChat={matchedUser?.capabilities?.canChat}
               />
             </div>
           </div>
         </div>
 
-        <ProfileContentSection userId={profileUserId} isOwnProfile={isOwnProfile} />
+        <ProfileContentSection 
+          userId={profileUserId} 
+          isOwnProfile={isOwnProfile} 
+          capabilities={matchedUser?.capabilities}
+        />
       </div>
 
       <EditProfileDialog

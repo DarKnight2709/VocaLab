@@ -16,6 +16,7 @@ export const UserItemSchema = z.object({
     })
     .nullable()
     .optional(),
+  canChat: z.boolean().optional(),
 });
 
 export const GetUsersResponseSchema = z.object({

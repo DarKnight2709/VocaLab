@@ -6,6 +6,7 @@ export interface UserBasicInfo {
   username: string;
   fullName?: string | null;
   avatar?: string | null;
+  canChat?: boolean;
 }
 
 export class MessageEntity {

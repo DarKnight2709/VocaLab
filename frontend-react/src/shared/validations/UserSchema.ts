@@ -23,17 +23,45 @@ export const getUpdateProfileResponseSchema = () =>
     avatar: z.string().optional().nullable(),
   });
 
+export const UserCapabilitiesSchema = z.object({
+  canFollow: z.boolean(),
+  canChat: z.boolean(),
+  canSeeFollowers: z.boolean(),
+  canSeeFollowing: z.boolean(),
+  canSeeFriends: z.boolean(),
+});
+
+export const UserStatsResponseSchema = z.object({
+  followers: z.number(),
+  following: z.number(),
+  friends: z.number(),
+  posts: z.number(),
+});
+
 export const UserProfileDataResponseSchema = z.object({
   id: z.string(),
   username: z.string(),
   fullName: z.string().optional().nullable(),
   avatar: z.string().optional().nullable(),
+  hasPassword: z.boolean().optional(),
+  stats: UserStatsResponseSchema,
+  isFollowing: z.boolean(),
+  capabilities: UserCapabilitiesSchema,
 });
 
 
-export const UserFollowerItemSchema = UserProfileDataResponseSchema;
-export const UserFollowingItemSchema = UserProfileDataResponseSchema;
-export const UserFriendItemSchema = UserProfileDataResponseSchema;
+export const UserSummarySchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  fullName: z.string().optional().nullable(),
+  avatar: z.string().optional().nullable(),
+  isFollowing: z.boolean().optional(),
+  canFollow: z.boolean().optional(),
+});
+
+export const UserFollowerItemSchema = UserSummarySchema;
+export const UserFollowingItemSchema = UserSummarySchema;
+export const UserFriendItemSchema = UserSummarySchema;
 export const UserPostItemSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -77,9 +105,6 @@ export const UserFollowingResponseSchema = z.object({
   }),
 });
 
-export const UserMeFollowingResponseSchema = z.object({
-  isFollowing: z.boolean(),
-});
 
 export const UserFriendsResponseSchema = z.object({
   friends: z.array(UserFriendItemSchema),
@@ -99,12 +124,7 @@ export const UserProfileContentResponseSchema = z.union([
   UserPostsResponseSchema,
 ]);
 
-export const UserStatsResponseSchema = z.object({
-  followers: z.number(),
-  following: z.number(),
-  friends: z.number(),
-  posts: z.number(),
-});
+
 
 export const UserSocialItemSchema = z.object({
   id: z.string(),

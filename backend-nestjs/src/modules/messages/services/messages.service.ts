@@ -56,6 +56,10 @@ export class MessagesService {
       if (!input.receiverId) {
         throw new BadRequestException(ErrorCode.RECEIVER_ID_REQUIRED);
       }
+      const allowed = await this.messageRepository.canChat(input.senderId, input.receiverId);
+      if (!allowed) {
+        throw new BadRequestException(ErrorCode.CANNOT_CHAT_WITH_USER);
+      }
     } else {
       if (!input.groupId) {
         throw new BadRequestException(ErrorCode.GROUP_ID_REQUIRED);

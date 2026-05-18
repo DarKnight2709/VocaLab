@@ -7,8 +7,12 @@ import {
 } from '@nestjs/common';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { PrismaService } from '@/core/database/prisma.service';
-import { CreateUserDto, UpdatePersonalInfoDto } from './dto/users.dto';
-import { CreateUserSocialDto } from './dto/social-link.dto';
+import {
+  CreateUserDto,
+  UpdatePersonalInfoDto,
+  CreateUserSocialDto,
+} from './dto/users.dto';
+
 import { PublicUser } from './user.types';
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
@@ -21,13 +25,24 @@ import {
   GetFollowingResponseDto,
   GetFriendsResponseDto,
   GetUserPostsResponseDto,
-  GetUserStatsResponseDto,
-  CheckFollowStatusResponseDto,
   FollowResponseDto,
   UnfollowResponseDto,
   UserSocialDto,
   DeleteSocialResponseDto,
+  UserSummaryDto,
 } from './dto/users-response.dto';
+import { Follow, VisibilityScope } from '@prisma/client';
+import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
+
+interface MappedUserTarget {
+  id: string;
+  username: string;
+  fullName: string;
+  avatar: string | null;
+  privacySettings?: {
+    allowFollow: boolean;
+  } | null;
+}
 
 @Injectable()
 export class UserService {
@@ -61,17 +76,101 @@ export class UserService {
     };
   }
 
-  async getByUsername(username: string): Promise<GetByUsernameResponseDto> {
-    const user = await this.findByUsername(username);
+  async getByUsername(
+    username: string,
+    currentUserId?: string,
+  ): Promise<GetByUsernameResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        avatar: true,
+        hashedPassword: true,
+        privacySettings: true,
+        _count: {
+          select: {
+            blogs: { where: { deletedAt: null } },
+            followers: true,
+            following: true,
+          },
+        },
+      },
+    });
+
     if (!user) {
       throw new NotFoundException(ErrorCode.USER_NOT_FOUND_BY_USERNAME);
     }
-    const { updatedAt, createdAt, email, ...rest } = user;
-    return rest;
+
+    let isFollowing = false;
+    let isFriend = false;
+
+    if (currentUserId && currentUserId !== user.id) {
+      const follows = await this.prisma.follow.findMany({
+        where: {
+          OR: [
+            { followerId: currentUserId, followingId: user.id },
+            { followerId: user.id, followingId: currentUserId },
+          ],
+        },
+      });
+      isFollowing = follows.some(
+        (f) => f.followerId === currentUserId && f.followingId === user.id,
+      );
+      isFriend = follows.length === 2;
+    }
+
+    const isOwner = currentUserId === user.id;
+
+    const p = user.privacySettings;
+    const allowFollow = p?.allowFollow ?? true;
+    const messageScope = p?.messageScope ?? VisibilityScope.EVERYONE;
+    const followersTabVisibility =
+      p?.followersTabVisibility ?? VisibilityScope.EVERYONE;
+    const followingTabVisibility =
+      p?.followingTabVisibility ?? VisibilityScope.EVERYONE;
+    const friendTabVisibility =
+      p?.friendTabVisibility ?? VisibilityScope.EVERYONE;
+
+    const checkVisibility = (scope: VisibilityScope) => {
+      if (isOwner) return true;
+      if (scope === VisibilityScope.EVERYONE) return true;
+      if (scope === VisibilityScope.FRIENDS && isFriend) return true;
+      return false;
+    };
+
+    const capabilities = {
+      canFollow: isOwner ? false : allowFollow,
+      canChat: isOwner ? true : checkVisibility(messageScope),
+      canSeeFollowers: checkVisibility(followersTabVisibility),
+      canSeeFollowing: checkVisibility(followingTabVisibility),
+      canSeeFriends: checkVisibility(friendTabVisibility),
+    };
+
+    const friendsCount =
+      isOwner || checkVisibility(friendTabVisibility)
+        ? await this.getFriendsCount(user.id)
+        : 0;
+    return {
+      id: user.id,
+      username: user.username,
+      fullName: user.fullName,
+      avatar: user.avatar,
+      hasPassword: !!user.hashedPassword,
+      stats: {
+        followers: user._count.followers,
+        following: user._count.following,
+        friends: friendsCount,
+        posts: user._count.blogs,
+      },
+      isFollowing,
+      capabilities,
+    };
   }
 
   async findByUsername(username: string): Promise<PublicUser | null> {
-    const user = await this.prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { username },
       select: {
         id: true,
@@ -83,11 +182,10 @@ export class UserService {
         updatedAt: true,
       },
     });
-    return user;
   }
 
   async findByEmail(email: string): Promise<PublicUser | null> {
-    const user = await this.prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -99,11 +197,10 @@ export class UserService {
         updatedAt: true,
       },
     });
-    return user;
   }
 
   async searchUsers(keyword: string, userId: string): Promise<PublicUser[]> {
-    const users = await this.prisma.user.findMany({
+    return this.prisma.user.findMany({
       where: {
         id: { not: userId },
         OR: [
@@ -121,12 +218,10 @@ export class UserService {
         updatedAt: true,
       },
     });
-
-    return users;
   }
 
   async findAll(): Promise<PublicUser[]> {
-    const users = await this.prisma.user.findMany({
+    return this.prisma.user.findMany({
       select: {
         id: true,
         username: true,
@@ -137,12 +232,10 @@ export class UserService {
         updatedAt: true,
       },
     });
-
-    return users;
   }
 
   async create(data: CreateUserDto): Promise<PublicUser> {
-    const user = await this.prisma.user.create({
+    return this.prisma.user.create({
       data: {
         ...data,
         privacySettings: {
@@ -159,8 +252,6 @@ export class UserService {
         updatedAt: true,
       },
     });
-
-    return user;
   }
 
   async updateProfile(
@@ -195,7 +286,7 @@ export class UserService {
       updateDto.avatar = result.secure_url;
     }
 
-    const updatedUser = await this.prisma.user.update({
+    return await this.prisma.user.update({
       where: { id: userId },
       data: updateDto,
       select: {
@@ -206,8 +297,6 @@ export class UserService {
         avatar: true,
       },
     });
-
-    return updatedUser;
   }
 
   async search(keyword: string, userId: string): Promise<SearchResponseDto> {
@@ -224,13 +313,19 @@ export class UserService {
 
   async getFollowers(
     userId: string,
+    currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
   ): Promise<GetFollowersResponseDto> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    const hasAccess = await this.validateTabAccess(
+      userId,
+      PrivacyVisibilityField.FOLLOWERS,
+      currentUserId,
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException(ErrorCode.PRIVATE_FOLLOWERS_ACCESS_DENIED);
     }
 
     const skip = (page - 1) * limit;
@@ -254,13 +349,18 @@ export class UserService {
         where,
         skip,
         take: limit,
-        include: {
+        select: {
           follower: {
             select: {
               id: true,
               username: true,
               fullName: true,
               avatar: true,
+              privacySettings: {
+                select: {
+                  allowFollow: true,
+                },
+              },
             },
           },
         },
@@ -268,8 +368,13 @@ export class UserService {
       this.prisma.follow.count({ where }),
     ]);
 
+    const mappedFollowers = await this.mapUsersWithCapabilities(
+      followers.map((f) => f.follower),
+      currentUserId,
+    );
+
     return {
-      followers: followers.map((follower) => follower.follower),
+      followers: mappedFollowers,
       meta: {
         page,
         limit,
@@ -281,13 +386,19 @@ export class UserService {
 
   async getFollowing(
     userId: string,
+    currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
   ): Promise<GetFollowingResponseDto> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    const hasAccess = await this.validateTabAccess(
+      userId,
+      PrivacyVisibilityField.FOLLOWING,
+      currentUserId,
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException(ErrorCode.PRIVATE_FOLLOWING_ACCESS_DENIED);
     }
 
     const skip = (page - 1) * limit;
@@ -311,13 +422,18 @@ export class UserService {
         where,
         skip,
         take: limit,
-        include: {
+        select: {
           following: {
             select: {
               id: true,
               username: true,
               fullName: true,
               avatar: true,
+              privacySettings: {
+                select: {
+                  allowFollow: true,
+                },
+              },
             },
           },
         },
@@ -325,8 +441,13 @@ export class UserService {
       this.prisma.follow.count({ where }),
     ]);
 
+    const mappedFollowing = await this.mapUsersWithCapabilities(
+      following.map((f) => f.following),
+      currentUserId,
+    );
+
     return {
-      following: following.map((following) => following.following),
+      following: mappedFollowing,
       meta: {
         page,
         limit,
@@ -338,33 +459,22 @@ export class UserService {
 
   async getFriends(
     userId: string,
+    currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
   ): Promise<GetFriendsResponseDto> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
-    }
+    const hasAccess = await this.validateTabAccess(
+      userId,
+      PrivacyVisibilityField.FRIENDS,
+      currentUserId,
+    );
 
+    if (!hasAccess) {
+      throw new ForbiddenException(ErrorCode.PRIVATE_FRIENDS_ACCESS_DENIED);
+    }
     const skip = (page - 1) * limit;
-
-    const where: any = {};
-
-    if (search) {
-      where.OR = [
-        { username: { contains: search, mode: 'insensitive' } },
-        { fullName: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    const baseWhere: any = {
-      AND: [
-        { followers: { some: { followerId: userId } } }, // Những người mình đang follow họ
-        { following: { some: { followingId: userId } } }, // Và họ cũng đang follow lại mình
-      ],
-      ...where,
-    };
+    const baseWhere = this.buildFriendsWhereClause(userId, search);
 
     // thêm logic để không trả về nếu người dùng không cho phép xem
     const [friends, total] = await Promise.all([
@@ -377,13 +487,23 @@ export class UserService {
           username: true,
           fullName: true,
           avatar: true,
+          privacySettings: {
+            select: {
+              allowFollow: true,
+            },
+          },
         },
       }),
       this.prisma.user.count({ where: baseWhere }),
     ]);
 
-    return {
+    const mappedFriends = await this.mapUsersWithCapabilities(
       friends,
+      currentUserId,
+    );
+
+    return {
+      friends: mappedFriends,
       meta: {
         page,
         limit,
@@ -410,7 +530,7 @@ export class UserService {
 
     const where: any = {
       authorId: profileUserId,
-      deletedAt: null as null,
+      deletedAt: null,
     };
 
     // Visibility logic
@@ -464,64 +584,6 @@ export class UserService {
     };
   }
 
-  async getUserStats(userId: string): Promise<GetUserStatsResponseDto> {
-    const user = await this.findById(userId);
-
-    if (!user) {
-      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
-    }
-
-    const [posts, followersCount, followingCount, friendsCount] =
-      await Promise.all([
-        this.prisma.blog.count({
-          where: {
-            authorId: userId,
-            deletedAt: null,
-          },
-        }),
-        this.prisma.follow.count({
-          where: {
-            followingId: userId,
-          },
-        }),
-        this.prisma.follow.count({
-          where: {
-            followerId: userId,
-          },
-        }),
-        this.prisma.user.count({
-          where: {
-            AND: [
-              { followers: { some: { followerId: userId } } },
-              { following: { some: { followingId: userId } } },
-            ],
-          },
-        }),
-      ]);
-
-    return {
-      followers: followersCount,
-      following: followingCount,
-      friends: friendsCount,
-      posts,
-    };
-  }
-
-  async checkFollowStatus(
-    targetUserId: string,
-    currentUserId: string,
-  ): Promise<CheckFollowStatusResponseDto> {
-    const follow = await this.prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId: currentUserId,
-          followingId: targetUserId,
-        },
-      },
-    });
-    return { isFollowing: !!follow };
-  }
-
   async followUser(
     targetUserId: string,
     currentUserId: string,
@@ -530,8 +592,15 @@ export class UserService {
       throw new ConflictException(ErrorCode.CANNOT_FOLLOW_SELF);
     }
 
-    const user = await this.findById(targetUserId);
-    if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { privacySettings: { select: { allowFollow: true } } },
+    });
+
+    if (!target) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    if (target.privacySettings?.allowFollow === false) {
+      throw new ForbiddenException(ErrorCode.FOLLOW_ACCESS_DENIED);
+    }
 
     const follow = await this.prisma.follow.upsert({
       where: {
@@ -635,5 +704,123 @@ export class UserService {
     });
 
     return { id };
+  }
+
+  // HELPERS
+
+  public async checkFriendship(
+    userId1: string,
+    userId2: string,
+  ): Promise<boolean> {
+    if (!userId1 || !userId2 || userId1 === userId2) return false;
+
+    const mutualFollows = await this.prisma.follow.findMany({
+      where: {
+        OR: [
+          { followerId: userId1, followingId: userId2 },
+          { followerId: userId2, followingId: userId1 },
+        ],
+      },
+    });
+    return mutualFollows.length === 2;
+  }
+
+  private async validateTabAccess(
+    targetUserId: string,
+    tabScopeField: PrivacyVisibilityField,
+    currentUserId?: string,
+  ): Promise<boolean> {
+    const isOwner = currentUserId === targetUserId;
+    if (isOwner) return true; // Nếu là chính mình thì chắc chắn có quyền xem
+
+    // 1. CHỈ 1 QUERY DUY NHẤT: Vừa check User tồn tại, vừa lấy được Privacy Setting
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: {
+        id: true, // Nếu query trả về null => Chứng tỏ User không tồn tại
+        privacySettings: {
+          select: { [tabScopeField]: true },
+        },
+      },
+    });
+
+    // 2. Kiểm tra nếu không tìm thấy User trong Database
+    if (!targetUser) {
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    }
+
+    // 3. Trích xuất Scope (Nếu user chưa từng cập nhật setting, lấy mặc định EVERYONE)
+    const privacy = targetUser.privacySettings;
+    const scope = privacy ? privacy[tabScopeField] : VisibilityScope.EVERYONE;
+
+    if (scope === VisibilityScope.EVERYONE) return true;
+
+    // 4. Nếu cấu hình là FRIENDS, thực hiện check quan hệ bạn bè qua bảng Follow
+    if (scope === VisibilityScope.FRIENDS && currentUserId) {
+      return this.checkFriendship(currentUserId, targetUserId);
+    }
+
+    return false;
+  }
+
+  private buildFriendsWhereClause(userId: string, search?: string): any {
+    const baseWhere: any = {
+      AND: [
+        { followers: { some: { followerId: userId } } },
+        { following: { some: { followingId: userId } } },
+      ],
+    };
+
+    if (search) {
+      baseWhere.OR = [
+        { username: { contains: search, mode: 'insensitive' } },
+        { fullName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    return baseWhere;
+  }
+
+  private async getFriendsCount(userId: string): Promise<number> {
+    return this.prisma.user.count({
+      where: this.buildFriendsWhereClause(userId),
+    });
+  }
+
+  private async mapUsersWithCapabilities(
+    users: MappedUserTarget[],
+    currentUserId?: string,
+  ): Promise<UserSummaryDto[]> {
+    if (users.length === 0) return [];
+
+    const userIds = users.map((u) => u.id);
+    let followRelations: Follow[] = [];
+    if (currentUserId) {
+      followRelations = await this.prisma.follow.findMany({
+        where: {
+          followerId: currentUserId,
+          followingId: { in: userIds },
+        },
+      });
+    }
+
+    return users.map((u) => {
+      const isOwner = currentUserId === u.id;
+      const isFollowing =
+        !isOwner && currentUserId
+          ? followRelations.some((f) => f.followingId === u.id)
+          : false;
+
+      const allowFollow = u.privacySettings?.allowFollow ?? true;
+      const canFollow = isOwner ? false : allowFollow;
+
+      return {
+        id: u.id,
+        username: u.username,
+        fullName: u.fullName,
+        avatar: u.avatar,
+        isFollowing,
+        canFollow,
+      };
+    });
   }
 }

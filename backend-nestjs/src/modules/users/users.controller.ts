@@ -14,8 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { UpdatePersonalInfoDto } from './dto/users.dto';
-import { CreateUserSocialDto } from './dto/social-link.dto';
+import { UpdatePersonalInfoDto, CreateUserSocialDto } from './dto/users.dto';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import {
@@ -26,8 +25,6 @@ import {
   GetFollowingResponseDto,
   GetFriendsResponseDto,
   GetUserPostsResponseDto,
-  GetUserStatsResponseDto,
-  CheckFollowStatusResponseDto,
   FollowResponseDto,
   UnfollowResponseDto,
   UserSocialDto,
@@ -143,8 +140,9 @@ export class UsersController {
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
   async getByUsername(
     @Param('username') username: string,
+    @CurrentUser() currentUser: any,
   ): Promise<ResponseInterceptor<GetByUsernameResponseDto>> {
-    const result = await this.userService.getByUsername(username);
+    const result = await this.userService.getByUsername(username, currentUser?.id);
     return {
       data: result,
     };
@@ -157,12 +155,14 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getFollowers(
     @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ): Promise<ResponseInterceptor<GetFollowersResponseDto>> {
     const result = await this.userService.getFollowers(
       userId,
+      currentUser?.id,
       Number(page),
       Number(limit),
       search,
@@ -179,12 +179,14 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getFollowing(
     @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ): Promise<ResponseInterceptor<GetFollowingResponseDto>> {
     const result = await this.userService.getFollowing(
       userId,
+      currentUser?.id,
       Number(page),
       Number(limit),
       search,
@@ -201,12 +203,14 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getFriends(
     @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ): Promise<ResponseInterceptor<GetFriendsResponseDto>> {
     const result = await this.userService.getFriends(
       userId,
+      currentUser?.id,
       Number(page),
       Number(limit),
       search,
@@ -243,28 +247,7 @@ export class UsersController {
     };
   }
 
-  @Get(':userId/stats')
-  @ApiOperation({ summary: 'Lấy thống kê hồ sơ người dùng' })
-  async getUserStats(
-    @Param('userId') userId: string,
-  ): Promise<ResponseInterceptor<GetUserStatsResponseDto>> {
-    const result = await this.userService.getUserStats(userId);
-    return {
-      data: result,
-    };
-  }
 
-  @Get(':userId/me/following')
-  @ApiOperation({ summary: 'Kiểm tra xem mình có đang follow user này không' })
-  async checkFollowStatus(
-    @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
-  ): Promise<ResponseInterceptor<CheckFollowStatusResponseDto>> {
-    const result = await this.userService.checkFollowStatus(userId, currentUser.id);
-    return {
-      data: result,
-    };
-  }
 
   @Post(':userId/follow')
   @ApiOperation({ summary: 'Theo dõi người dùng' })

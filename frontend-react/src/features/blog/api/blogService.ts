@@ -7,7 +7,6 @@ import {
 import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
-import { z } from "zod";
 import i18n from "@/shared/i18n";
 import { BlogDetailSchema, BlogListResponseSchema } from "@/shared/validations/BlogSchema";
 import type { VoteType } from "@/shared/enums/VoteType.enum";
@@ -69,7 +68,7 @@ export const useBlogDetailQuery = (id: string) =>
     queryFn: () =>
       fetchWithSchema(
         api.get(API_ROUTES.BLOG.DETAIL(id)),
-        z.object({ blog: BlogDetailSchema }),
+        BlogDetailSchema,
       ),
     enabled: !!id,
   });

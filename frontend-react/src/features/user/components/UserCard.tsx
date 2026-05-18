@@ -3,7 +3,7 @@ import { UserPlus, Check } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import ROUTES from "@/shared/lib/routes";
-import { useCheckFollowingListQuery, useFollowUserMutation, useUnfollowUserMutation } from "../api/userService";
+import { useFollowUserMutation, useUnfollowUserMutation } from "../api/userService";
 import { useMeQuery } from "@/features/auth/api/authService";
 import { getInitials } from "@/shared/lib/utils";
 import { useTranslation } from "@/shared/hooks/useTranslation";
@@ -14,6 +14,8 @@ interface UserCardProps {
     username: string;
     fullName?: string | null;
     avatar?: string | null;
+    isFollowing?: boolean;
+    canFollow?: boolean;
   };
 }
 
@@ -22,14 +24,13 @@ export function UserCard({ user }: UserCardProps) {
   const { data: me } = useMeQuery();
   const isMe = me?.id === user.id;
 
-  const { data: followStatus } = useCheckFollowingListQuery(isMe ? undefined : user.id);
   const followMutation = useFollowUserMutation();
   const unfollowMutation = useUnfollowUserMutation();
 
   const handleFollowAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (followStatus?.isFollowing) {
+    if (user.isFollowing) {
       unfollowMutation.mutate(user.id);
     } else {
       followMutation.mutate(user.id);
@@ -50,7 +51,7 @@ export function UserCard({ user }: UserCardProps) {
             {getInitials(displayName)}
           </AvatarFallback>
         </Avatar>
-        {followStatus?.isFollowing && (
+        {user.isFollowing && (
           <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white ring-2 ring-background shadow-lg scale-110">
             <Check className="h-3 w-3 stroke-[3px]" />
           </div>
@@ -66,15 +67,15 @@ export function UserCard({ user }: UserCardProps) {
         </p>
       </div>
 
-      {!isMe && (
+      {!isMe && user.isFollowing !== undefined && (user.canFollow || user.isFollowing) && (
         <Button
           size="sm"
-          variant={followStatus?.isFollowing ? "outline" : "default"}
+          variant={user.isFollowing ? "outline" : "default"}
           onClick={handleFollowAction}
           disabled={followMutation.isPending || unfollowMutation.isPending}
           className="ml-2 rounded-full px-5 h-9 font-semibold text-xs transition-all active:scale-95 shadow-sm hover:shadow-md"
         >
-          {followStatus?.isFollowing ? (
+          {user.isFollowing ? (
             t("profile.unfollow")
           ) : (
             <span className="flex items-center gap-1.5">

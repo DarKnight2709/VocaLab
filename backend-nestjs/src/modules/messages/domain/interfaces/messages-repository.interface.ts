@@ -14,6 +14,7 @@ export interface ConversationListItem extends UserBasicInfo {
     isMine: boolean;
   } | null;
   unreadCount: number;
+  canChat?: boolean;
 }
 
 export const IMESSAGES_REPOSITORY = 'IMESSAGES_REPOSITORY';
@@ -59,4 +60,6 @@ export interface MessagesRepositoryInterface {
   ): Promise<{ count: number }>;
 
   getConversations(userId: string): Promise<ConversationListItem[]>;
+
+  canChat(senderId: string, receiverId: string): Promise<boolean>;
 }

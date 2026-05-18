@@ -42,7 +42,7 @@ export class GroupChatController {
     return this.groupChatService.createGroup(user.id, createDto);
   }
 
-  @Get('getGroups')
+  @Get('all')
   @ApiOperation({ summary: 'Lấy danh sách nhóm đã tham gia' })
   async getGroups(@CurrentUser() user: any) {
     return this.groupChatService.getGroups(user.id);
