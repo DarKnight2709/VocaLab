@@ -103,6 +103,7 @@ export default function ProfilePage() {
                 isFollowing={matchedUser?.isFollowing}
                 canFollow={matchedUser?.capabilities?.canFollow}
                 canChat={matchedUser?.capabilities?.canChat}
+                isBlocking={matchedUser?.isBlocking}
               />
             </div>
           </div>

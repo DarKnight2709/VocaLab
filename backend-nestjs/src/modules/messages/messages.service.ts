@@ -30,10 +30,24 @@ export class MessagesService {
   async getConversations(
     userId: string,
   ): Promise<{ users: ConversationListItem[] }> {
-    // 1. Get all users (except self)
+    // Find all blocks where current userId is the blocked user
+    const blockRelations = await this.prisma.block.findMany({
+      where: {
+        blockedId: userId,
+      },
+      select: {
+        blockingId: true,
+      },
+    });
+
+    const blockerUserIds = blockRelations.map((r) => r.blockingId);
+
+    // 1. Get all users (except self and blockers)
     const allUsers = await this.prisma.user.findMany({
       where: {
-        id: { not: userId },
+        id: {
+          notIn: [userId, ...blockerUserIds],
+        },
       },
       select: {
         id: true,
@@ -501,6 +515,14 @@ export class MessagesService {
   }
 
   async canChat(senderId: string, receiverId: string): Promise<boolean> {
+    const blockedByTarget = await this.prisma.block.findFirst({
+      where: {
+        blockingId: receiverId,
+        blockedId: senderId,
+      },
+    });
+    if (blockedByTarget) return false;
+
     const privacy = await this.prisma.userPrivacySetting.findUnique({
       where: { userId: receiverId },
     });

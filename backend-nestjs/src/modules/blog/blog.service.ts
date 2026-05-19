@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { Comment, VoteType } from '@prisma/client';
+import { VoteType } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import {
   CreateBlogDto,
@@ -22,13 +22,32 @@ export class BlogService {
 
   // ==================== BLOG CRUD ====================
 
-  async getBlogs(userId: string, page = 1, limit = 10, search?: string): Promise<GetBlogsResponseDto> {
+  async getBlogs(userId?: string, page = 1, limit = 10, search?: string): Promise<GetBlogsResponseDto> {
     const skip = (page - 1) * limit;
 
     const where: any = {
       isPublic: true,
       deletedAt: null,
     };
+
+    if (userId) {
+      const blockRelations = await this.prisma.block.findMany({
+        where: {
+          blockedId: userId,
+        },
+        select: {
+          blockingId: true,
+        },
+      });
+
+      const blockerIds = blockRelations.map((r) => r.blockingId);
+
+      if (blockerIds.length > 0) {
+        where.authorId = {
+          notIn: blockerIds,
+        };
+      }
+    }
 
     if (search) {
       where.OR = [
@@ -114,6 +133,19 @@ export class BlogService {
     });
 
     if (!blog) throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
+
+    if (userId && userId !== blog.authorId) {
+      const blockedByTarget = await this.prisma.block.findFirst({
+        where: {
+          blockingId: blog.authorId,
+          blockedId: userId,
+        },
+      });
+      if (blockedByTarget) {
+        throw new ForbiddenException(ErrorCode.BLOG_ACCESS_FORBIDDEN);
+      }
+    }
+
     if (!blog.isPublic && blog.authorId !== userId) {
       throw new ForbiddenException(ErrorCode.BLOG_ACCESS_FORBIDDEN);
     }

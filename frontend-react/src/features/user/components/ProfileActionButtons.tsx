@@ -1,12 +1,15 @@
 import { Button } from "@/shared/components/ui/button";
 import { MessageCircle, Pencil, UserPlus } from "lucide-react";
 import {
+  useBlockUserMutation,
   useFollowUserMutation,
   useUnfollowUserMutation,
+  useUnblockUserMutation,
 } from "../api/userService";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useNavigate } from "react-router";
 import ROUTES from "@/shared/lib/routes";
+import { MoreOptionsMenu } from "./MoreOptionsMenu";
 
 interface ProfileActionButtonsProps {
   isOwnProfile: boolean;
@@ -18,7 +21,8 @@ interface ProfileActionButtonsProps {
   isFollowing?: boolean;
   canFollow?: boolean;
   canChat?: boolean;
-};
+  isBlocking?: boolean;
+}
 
 export default function ProfileActionButtons({
   isOwnProfile,
@@ -30,6 +34,7 @@ export default function ProfileActionButtons({
   isFollowing,
   canFollow,
   canChat,
+  isBlocking,
 }: ProfileActionButtonsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -37,6 +42,8 @@ export default function ProfileActionButtons({
   // Move all hooks to the top, before any conditional logic
   const followMutation = useFollowUserMutation();
   const unfollowMutation = useUnfollowUserMutation();
+  const blockUserMutation = useBlockUserMutation();
+  const unblockUserMutation = useUnblockUserMutation();
 
   if (isOwnProfile) {
     return (
@@ -71,6 +78,15 @@ export default function ProfileActionButtons({
         },
       },
     });
+  };
+
+  const handleBlockUser = () => {
+    if (!profileUserId) return;
+    if (isBlocking) {
+      unblockUserMutation.mutate(profileUserId);
+    } else {
+      blockUserMutation.mutate(profileUserId);
+    }
   };
 
   const showFollowButton = canFollow || isFollowing;
@@ -108,6 +124,7 @@ export default function ProfileActionButtons({
           )}
         </Button>
       )}
+      <MoreOptionsMenu onBlockUser={handleBlockUser} isBlocking={isBlocking} />
     </div>
   );
 }

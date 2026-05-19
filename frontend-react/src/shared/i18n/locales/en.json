@@ -310,7 +310,13 @@
       "all": "All",
       "public": "Public",
       "private": "Private"
-    }
+    },
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockSuccess": "Blocked successfully",
+    "blockFailed": "Block failed",
+    "unblockSuccess": "Unblocked successfully",
+    "unblockFailed": "Unblock failed"
   },
   "social": {
     "title": "Social links",

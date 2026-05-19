@@ -23,7 +23,9 @@ const API_ROUTES = {
     GET_USERS: "v1/users/all",
     BY_USERNAME: (username: string) => `v1/users/by-username/${username}`,
     getContentBy: (userId: string, type: ContentTab) => `v1/users/${userId}/${type}`,
-
+    BLOCK_USER: (userId: string) => `v1/users/${userId}/block`,
+    GET_BLOCKED_USERS: (userId: string) => `v1/users/${userId}/blocked`,
+    UNBLOCK_USER: (userId: string) => `v1/users/${userId}/unblock`,
     FOLLOW: (userId: string) => `v1/users/${userId}/follow`,
     UNFOLLOW: (userId: string) => `v1/users/${userId}/unfollow`,
     MY_SOCIALS: "v1/users/me/socials",

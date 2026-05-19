@@ -46,6 +46,7 @@ export const UserProfileDataResponseSchema = z.object({
   hasPassword: z.boolean().optional(),
   stats: UserStatsResponseSchema,
   isFollowing: z.boolean(),
+  isBlocking: z.boolean(),
   capabilities: UserCapabilitiesSchema,
 });
 
@@ -150,14 +151,20 @@ export const DeleteUserSocialResponseSchema = z.object({
   id: z.string(),
 });
 
-export const FollowUserResponseSchema = z.object({
-  message: z.string().optional(),
+export const UserBlockedUsersResponseSchema = z.object({
+  blockedUsers: z.array(z.object({
+    id: z.string(),
+    username: z.string(),
+    fullName: z.string().optional().nullable(),
+    avatar: z.string().optional().nullable(),
+  })),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
 });
-
-export const UnfollowUserResponseSchema = z.object({
-  message: z.string().optional(),
-});
-
 
 
 

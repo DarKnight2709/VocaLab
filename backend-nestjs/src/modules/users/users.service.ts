@@ -26,13 +26,14 @@ import {
   GetFriendsResponseDto,
   GetUserPostsResponseDto,
   FollowResponseDto,
-  UnfollowResponseDto,
   UserSocialDto,
   DeleteSocialResponseDto,
   UserSummaryDto,
+  GetBlockedUsersResponseDto,
 } from './dto/users-response.dto';
 import { Follow, VisibilityScope } from '@prisma/client';
 import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
+import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 
 interface MappedUserTarget {
   id: string;
@@ -103,8 +104,21 @@ export class UserService {
       throw new NotFoundException(ErrorCode.USER_NOT_FOUND_BY_USERNAME);
     }
 
+    if (currentUserId && currentUserId !== user.id) {
+      const blockedByTarget = await this.prisma.block.findFirst({
+        where: {
+          blockingId: user.id,
+          blockedId: currentUserId,
+        },
+      });
+      if (blockedByTarget) {
+        throw new NotFoundException(ErrorCode.USER_NOT_FOUND_BY_USERNAME);
+      }
+    }
+
     let isFollowing = false;
     let isFriend = false;
+    let isBlocking = false;
 
     if (currentUserId && currentUserId !== user.id) {
       const follows = await this.prisma.follow.findMany({
@@ -115,6 +129,15 @@ export class UserService {
           ],
         },
       });
+      const blocks = await this.prisma.block.findMany({
+        where: {
+          blockingId: currentUserId,
+          blockedId: user.id,
+        },
+      });
+
+      isBlocking = blocks.length > 0;
+
       isFollowing = follows.some(
         (f) => f.followerId === currentUserId && f.followingId === user.id,
       );
@@ -165,6 +188,7 @@ export class UserService {
         posts: user._count.blogs,
       },
       isFollowing,
+      isBlocking,
       capabilities,
     };
   }
@@ -526,6 +550,18 @@ export class UserService {
     const user = await this.findById(profileUserId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
+    if (requestingUserId && requestingUserId !== profileUserId) {
+      const blockedByTarget = await this.prisma.block.findFirst({
+        where: {
+          blockingId: profileUserId,
+          blockedId: requestingUserId,
+        },
+      });
+      if (blockedByTarget) {
+        throw new ForbiddenException(ErrorCode.FORBIDDEN);
+      }
+    }
+
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -602,7 +638,20 @@ export class UserService {
       throw new ForbiddenException(ErrorCode.FOLLOW_ACCESS_DENIED);
     }
 
-    const follow = await this.prisma.follow.upsert({
+    // Check if there is an active block relationship between the two users
+    const blockCount = await this.prisma.block.count({
+      where: {
+        OR: [
+          { blockingId: currentUserId, blockedId: targetUserId },
+          { blockingId: targetUserId, blockedId: currentUserId },
+        ],
+      },
+    });
+    if (blockCount > 0) {
+      throw new ForbiddenException(ErrorCode.FOLLOW_ACCESS_DENIED);
+    }
+
+    await this.prisma.follow.upsert({
       where: {
         followerId_followingId: {
           followerId: currentUserId,
@@ -615,30 +664,31 @@ export class UserService {
       },
       update: {}, // Nếu đã follow rồi thì không làm gì cả
     });
-    return follow;
+    return {
+      id: targetUserId,
+    };
   }
 
   async unfollowUser(
     targetUserId: string,
     currentUserId: string,
-  ): Promise<UnfollowResponseDto> {
+  ): Promise<FollowResponseDto> {
+    if (targetUserId === currentUserId) {
+      throw new ConflictException(ErrorCode.CANNOT_UNFOLLOW_SELF);
+    }
+
     const user = await this.findById(targetUserId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
-    try {
-      const follow = await this.prisma.follow.delete({
-        where: {
-          followerId_followingId: {
-            followerId: currentUserId,
-            followingId: targetUserId,
-          },
+    await this.prisma.follow.delete({
+      where: {
+        followerId_followingId: {
+          followerId: currentUserId,
+          followingId: targetUserId,
         },
-      });
-      return { followerId: follow.followerId, followingId: follow.followingId };
-    } catch (error) {
-      // Nếu không tìm thấy bản ghi (đã unfollow rồi), vẫn trả về thành công để tránh lỗi UI
-      return { followerId: currentUserId, followingId: targetUserId };
-    }
+      },
+    });
+    return { id: targetUserId };
   }
 
   async deleteAccount(userId: string): Promise<void> {
@@ -706,6 +756,127 @@ export class UserService {
     return { id };
   }
 
+  async blockUser(
+    targetUserId: string,
+    currentUserId: string,
+  ): Promise<FollowResponseDto> {
+    if (targetUserId === currentUserId) {
+      throw new ConflictException(ErrorCode.CANNOT_BLOCK_SELF);
+    }
+
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!target) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+
+    await this.prisma.block.upsert({
+      where: {
+        blockingId_blockedId: {
+          blockingId: currentUserId,
+          blockedId: targetUserId,
+        },
+      },
+      create: {
+        blockingId: currentUserId,
+        blockedId: targetUserId,
+      },
+      update: {},
+    });
+
+    return { id: targetUserId };
+  }
+
+  async unblockUser(
+    targetUserId: string,
+    currentUserId: string,
+  ): Promise<FollowResponseDto> {
+    if (targetUserId === currentUserId) {
+      throw new ConflictException(ErrorCode.CANNOT_UNBLOCK_SELF);
+    }
+
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!target) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+
+    await this.prisma.block.delete({
+      where: {
+        blockingId_blockedId: {
+          blockingId: currentUserId,
+          blockedId: targetUserId,
+        },
+      },
+    });
+
+    return { id: targetUserId };
+  }
+
+  async getBlockedUsers(
+    userId: string,
+    currentUserId: string,
+    page = 1,
+    limit = 12,
+    search?: string,
+  ): Promise<GetBlockedUsersResponseDto> {
+    if (userId !== currentUserId) {
+      throw new ForbiddenException(ErrorCode.FORBIDDEN);
+    }
+
+    const where: any = {
+      blockingId: userId,
+    };
+
+    if (search) {
+      where.blockedUser = {
+        OR: [
+          { username: { contains: search, mode: 'insensitive' } },
+          { fullName: { contains: search, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const total = await this.prisma.block.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    const blocks = await this.prisma.block.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        blockedUser: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const blockedUsers = blocks.map((b) => ({
+      id: b.blockedUser.id,
+      username: b.blockedUser.username,
+      fullName: b.blockedUser.fullName,
+      avatar: b.blockedUser.avatar,
+    }));
+
+    return {
+      blockedUsers,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
   // HELPERS
 
   public async checkFriendship(
@@ -732,6 +903,18 @@ export class UserService {
   ): Promise<boolean> {
     const isOwner = currentUserId === targetUserId;
     if (isOwner) return true; // Nếu là chính mình thì chắc chắn có quyền xem
+
+    if (currentUserId) {
+      const blockedByTarget = await this.prisma.block.findFirst({
+        where: {
+          blockingId: targetUserId,
+          blockedId: currentUserId,
+        },
+      });
+      if (blockedByTarget) {
+        throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+      }
+    }
 
     // 1. CHỈ 1 QUERY DUY NHẤT: Vừa check User tồn tại, vừa lấy được Privacy Setting
     const targetUser = await this.prisma.user.findUnique({

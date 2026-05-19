@@ -26,11 +26,12 @@ import {
   GetFriendsResponseDto,
   GetUserPostsResponseDto,
   FollowResponseDto,
-  UnfollowResponseDto,
   UserSocialDto,
   DeleteSocialResponseDto,
   PublicUserDto,
+  GetBlockedUsersResponseDto,
 } from './dto/users-response.dto';
+import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -266,8 +267,56 @@ export class UsersController {
   async unfollowUser(
     @Param('userId') userId: string,
     @CurrentUser() currentUser: any,
-  ): Promise<ResponseInterceptor<UnfollowResponseDto>> {
+  ): Promise<ResponseInterceptor<FollowResponseDto>> {
     const result = await this.userService.unfollowUser(userId, currentUser.id);
+    return {
+      data: result,
+    };
+  }
+
+  @Post(':userId/block')
+  @ApiOperation({ summary: 'Chặn người dùng' })
+  async blockUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<ResponseInterceptor<FollowResponseDto>> {
+    const result = await this.userService.blockUser(userId, currentUser.id);
+    return {
+      data: result,
+    };
+  }
+
+  @Delete(':userId/unblock')
+  @ApiOperation({ summary: 'Bỏ chặn người dùng' })
+  async unblockUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<ResponseInterceptor<FollowResponseDto>> {
+    const result = await this.userService.unblockUser(userId, currentUser.id);
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/blocked')
+  @ApiOperation({ summary: 'Lấy danh sách người dùng đã chặn' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  async getBlockedUsers(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ResponseInterceptor<GetBlockedUsersResponseDto>> {
+    const result = await this.userService.getBlockedUsers(
+      userId,
+      currentUser.id,
+      Number(page) || 1,
+      Number(limit) || 12,
+      search,
+    );
     return {
       data: result,
     };

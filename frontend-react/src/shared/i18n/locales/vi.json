@@ -308,7 +308,13 @@
       "all": "Tất cả",
       "public": "Công khai",
       "private": "Riêng tư"
-    }
+    },
+    "block": "Chặn",
+    "unblock": "Bỏ chặn",
+    "blockSuccess": "Chặn thành công",
+    "blockFailed": "Chặn thất bại",
+    "unblockSuccess": "Bỏ chặn thành công",
+    "unblockFailed": "Bỏ chặn thất bại"
   },
   "social": {
     "title": "Liên kết mạng xã hội",

@@ -15,10 +15,10 @@ import {
   type UpdatePersonalInfoBodyType,
   type CreateUserSocialBody,
   getUpdateProfileResponseSchema,
+  UserBlockedUsersResponseSchema,
 } from "@/shared/validations/UserSchema";
 import { toast } from "sonner";
 import i18n from "@/shared/i18n";
-
 
 export const useUpdatePersonalInfoMutation = () => {
   const queryClient = useQueryClient();
@@ -53,7 +53,6 @@ export const useUpdatePersonalInfoMutation = () => {
     },
   });
 };
-
 
 export const useUserFollowersQuery = (
   userId: string | undefined,
@@ -149,17 +148,17 @@ export const useUserByUsernameQuery = (username: string | undefined) =>
     staleTime: 30_000,
   });
 
-
 export const useFollowUserMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) => api.post(API_ROUTES.USER.FOLLOW(userId)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
-      qc.invalidateQueries({ queryKey: ["me"] }); // Invalidate current user stats too if needed
+      qc.invalidateQueries({ queryKey: ["me"] });
       toast.success(i18n.t("profile.followSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.followFailed"))),
+    onError: (err) =>
+      toast.error(getErrorMessage(err, i18n.t("profile.followFailed"))),
   });
 };
 
@@ -167,13 +166,14 @@ export const useUnfollowUserMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) =>
-        api.delete(API_ROUTES.USER.UNFOLLOW(userId)),
+      api.delete(API_ROUTES.USER.UNFOLLOW(userId)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["me"] });
       toast.success(i18n.t("profile.unfollowSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.unfollowFailed"))),
+    onError: (err) =>
+      toast.error(getErrorMessage(err, i18n.t("profile.unfollowFailed"))),
   });
 };
 
@@ -181,9 +181,11 @@ export const useMySocialsQuery = () =>
   useQuery({
     queryKey: ["me", "socials"],
     queryFn: () =>
-      fetchWithSchema(api.get(API_ROUTES.USER.MY_SOCIALS), UserSocialsResponseSchema),
+      fetchWithSchema(
+        api.get(API_ROUTES.USER.MY_SOCIALS),
+        UserSocialsResponseSchema,
+      ),
   });
-
 
 export const useCreateSocialMutation = () => {
   const qc = useQueryClient();
@@ -202,7 +204,6 @@ export const useCreateSocialMutation = () => {
   });
 };
 
-
 export const useUpdateSocialMutation = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -220,7 +221,6 @@ export const useUpdateSocialMutation = () => {
   });
 };
 
-
 export const useDeleteSocialMutation = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -233,7 +233,8 @@ export const useDeleteSocialMutation = () => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
       toast.success(i18n.t("profile.socialDeleteSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.socialDeleteFailed"))),
+    onError: (err) =>
+      toast.error(getErrorMessage(err, i18n.t("profile.socialDeleteFailed"))),
   });
 };
 
@@ -245,6 +246,57 @@ export const useDeleteAccountMutation = () => {
       qc.clear();
       toast.success(i18n.t("profile.accountDeleteSuccess"));
     },
-    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.accountDeleteFailed"))),
+    onError: (err) =>
+      toast.error(getErrorMessage(err, i18n.t("profile.accountDeleteFailed"))),
   });
 };
+
+export const useBlockUserMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      api.post(API_ROUTES.USER.BLOCK_USER(userId)),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success(i18n.t("profile.blockSuccess"));
+    },
+    onError: (err) =>
+      toast.error(getErrorMessage(err, i18n.t("profile.blockFailed"))),
+  });
+};
+
+export const useUnblockUserMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      api.delete(API_ROUTES.USER.UNBLOCK_USER(userId)),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success(i18n.t("profile.unblockSuccess"));
+    },
+    onError: (err) =>
+      toast.error(getErrorMessage(err, i18n.t("profile.unblockFailed"))),
+  });
+};
+
+export const useBlockedUsersQuery = (
+  userId: string | undefined,
+  page = 1,
+  limit = 12,
+  search?: string,
+) =>
+  useQuery({
+    queryKey: ["users", userId, "blocked", page, search] as const,
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.USER.GET_BLOCKED_USERS(userId as string), {
+          params: { page, limit, search },
+        }),
+        UserBlockedUsersResponseSchema,
+      );
+      return result.data;
+    },
+    enabled: !!userId,
+  });
