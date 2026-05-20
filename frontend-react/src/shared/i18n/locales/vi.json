@@ -57,6 +57,29 @@
     },
     "notificationsTitle": "Thông báo",
     "notificationsDescription": "Tùy chỉnh email, đẩy và các thông báo trong ứng dụng.",
+    "notifications": {
+      "messages": "Tin nhắn",
+      "activity": "Hoạt động",
+      "chatMessages": "Tin nhắn trò chuyện",
+      "chatMessagesDesc": "Khi bạn nhận được tin nhắn trò chuyện mới.",
+      "commentsOnPosts": "Bình luận trên bài viết của bạn",
+      "commentsOnPostsDesc": "Khi ai đó bình luận về bài viết blog của bạn.",
+      "upvotesOnPosts": "Lượt thích bài viết của bạn",
+      "upvotesOnPostsDesc": "Khi ai đó thích bài viết blog của bạn.",
+      "upvotesOnComments": "Lượt thích bình luận của bạn",
+      "upvotesOnCommentsDesc": "Khi ai đó thích bình luận của bạn.",
+      "repliesToComments": "Trả lời bình luận của bạn",
+      "repliesToCommentsDesc": "Khi ai đó trả lời bình luận của bạn.",
+      "newFollowers": "Người theo dõi mới",
+      "newFollowersDesc": "Khi ai đó bắt đầu theo dõi bạn.",
+      "activityFromFollowed": "Hoạt động từ những người bạn theo dõi",
+      "activityFromFollowedDesc": "Khi những người bạn theo dõi đăng nội dung mới.",
+      "options": {
+        "email": "Email",
+        "inbox": "Hộp thư",
+        "off": "Tắt"
+      }
+    },
     "learningTitle": "Học tập",
     "learningDescription": "Theo dõi tiến trình và tùy chọn học tập của bạn.",
     "tabs": {
@@ -101,6 +124,7 @@
     "closeSidebar": "Ẩn thanh bên phải",
     "toggleSidebar": "Thu gọn / Mở rộng",
     "toggleTheme": "Chế độ sáng/tối",
+    "notifications": "Thông báo",
     "logoAlt": "Biểu tượng",
     "openAccountMenu": "Mở menu tài khoản",
     "pageNotFound": "Trang không tồn tại",
@@ -766,5 +790,12 @@
   "upload": {
     "uploadFailed": "Tải file lên thất bại",
     "uploadImageFailed": "Tải ảnh lên thất bại"
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "description": "Cập nhật các hoạt động mới nhất của bạn",
+    "markAllAsRead": "Đánh dấu tất cả đã đọc",
+    "empty": "Chưa có thông báo nào",
+    "emptyHint": "Khi bạn có thông báo mới, chúng sẽ xuất hiện ở đây."
   }
 }

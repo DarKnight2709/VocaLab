@@ -59,6 +59,10 @@ const ROUTES = {
     title: "Settings",
     url: "/setting/me",
   },
+  ME_NOTIFICATION: {
+    title: "Notifications",
+    url: "/notification/me",
+  },
   LOGIN: {
     title: "Login",
     url: "/login",

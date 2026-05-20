@@ -57,6 +57,29 @@
     },
     "notificationsTitle": "Notifications",
     "notificationsDescription": "Customize email, push, and in-app notifications.",
+    "notifications": {
+      "messages": "Messages",
+      "activity": "Activity",
+      "chatMessages": "Chat messages",
+      "chatMessagesDesc": "When you receive a new chat message.",
+      "commentsOnPosts": "Comments on your posts",
+      "commentsOnPostsDesc": "When someone comments on your blog posts.",
+      "upvotesOnPosts": "Upvotes on your posts",
+      "upvotesOnPostsDesc": "When someone upvotes your blog posts.",
+      "upvotesOnComments": "Upvotes on your comments",
+      "upvotesOnCommentsDesc": "When someone upvotes your comments.",
+      "repliesToComments": "Replies to your comments",
+      "repliesToCommentsDesc": "When someone replies to your comments.",
+      "newFollowers": "New followers",
+      "newFollowersDesc": "When someone starts following you.",
+      "activityFromFollowed": "Activity from people you follow",
+      "activityFromFollowedDesc": "When people you follow post something new.",
+      "options": {
+        "email": "Email",
+        "inbox": "Inbox",
+        "off": "Off"
+      }
+    },
     "learningTitle": "Learning",
     "learningDescription": "Track your progress and learning preferences.",
     "tabs": {
@@ -101,6 +124,7 @@
     "closeSidebar": "Close right sidebar",
     "toggleSidebar": "Toggle sidebar",
     "toggleTheme": "Toggle theme",
+    "notifications": "Notifications",
     "logoAlt": "Logo",
     "openAccountMenu": "Open account menu",
     "pageNotFound": "Page Not Found",
@@ -804,6 +828,13 @@
     "checkSignInDetails": "Please check your sign-in details and try again.",
     "connectionFailed": "Socket connection failed!",
     "checkInternet": "Please check your internet connection and try again."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Stay updated with your latest activity",
+    "markAllAsRead": "Mark all as read",
+    "empty": "No notifications yet",
+    "emptyHint": "When you get notifications, they'll show up here."
   },
   "upload": {
     "uploadFailed": "Upload failed",

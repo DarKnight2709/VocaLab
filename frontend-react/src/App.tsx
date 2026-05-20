@@ -23,6 +23,7 @@ import CardTypeManagementPage from "./features/vocabulary/pages/CardTypeManageme
 import CardTypePreviewPage from "./features/vocabulary/pages/CardTypePreviewPage";
 import ChatPage from "./features/chat/pages/ChatPage";
 import SearchPage from "./features/search/pages/SearchPage";
+import NotificationPage from "./features/notification/pages/NotificationPage";
 import { ThemeProvider, useTheme } from "./shared/components/ThemeProvider";
 import TwoFactorAuthGuard from "./features/auth/components/TwoFactorAuthGuard";
 import TwoFactorAuthPage from "./features/auth/pages/TwoFactorAuthPage";
@@ -65,6 +66,7 @@ const router = createBrowserRouter([
           { path: ROUTES.SEARCH.url, element: <SearchPage /> },
           { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
           { path: ROUTES.ME_SETTING.url, element: <SettingPage /> },
+          { path: ROUTES.ME_NOTIFICATION.url, element: <NotificationPage /> }
         ],
       },
     ],

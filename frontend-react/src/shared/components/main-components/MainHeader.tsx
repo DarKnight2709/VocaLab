@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Search, Sun, Moon, Menu } from "lucide-react";
+import { Search, Sun, Moon, Menu, Bell } from "lucide-react";
 import { useTheme } from "@/shared/components/ThemeProvider";
 import { toast } from "sonner";
 
@@ -80,7 +80,11 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               aria-label={t("common.home")}
               className="inline-flex items-center rounded-xl p-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              <img src="/logo1.png" alt={t("common.logoAlt")} className="h-24 w-24" />
+              <img
+                src="/logo1.png"
+                alt={t("common.logoAlt")}
+                className="h-24 w-24"
+              />
             </Link>
           </div>
 
@@ -95,6 +99,14 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.ME_NOTIFICATION.url)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground relative"
+              aria-label={t("common.notifications")}
+            >
+              <Bell className="h-5 w-5" />
+            </button>
             <button
               type="button"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
