@@ -5,19 +5,28 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { UseGuards, UsePipes, UseFilters } from '@nestjs/common';
+import {
+  UseGuards,
+  UsePipes,
+  UseFilters,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
 import { MessagesService } from '../messages/messages.service';
-import { MessageType } from '@prisma/client';
+import { MessageType, NotificationType } from '@prisma/client';
 import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
-import { SendMessageDto } from '../messages/dto/messages.dto';
+import { SendGroupMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:5173',
+    ],
     credentials: true,
   },
   namespace: '/',
@@ -30,22 +39,20 @@ export class GroupChatGateway {
 
   constructor(
     private messagesService: MessagesService,
+    @Inject(forwardRef(() => NotificationsService))
+    private notificationsService: NotificationsService,
   ) {}
 
   @SubscribeMessage('send-group-message')
   @UsePipes(WsValidationPipe)
   async handleSendGroupMessage(
     @SocketUser() user: any,
-    @MessageBody() payload: SendMessageDto,
+    @MessageBody() payload: SendGroupMessageDto,
   ) {
     try {
       const { groupId, content, replyTo, attachments } = payload;
 
-      if (!groupId || (!content?.trim() && !attachments)) {
-        return { success: false, message: 'Dữ liệu không hợp lệ' };
-      }
-
-      const message = await this.messagesService.sendMessage({
+      const savedMessage = await this.messagesService.sendMessage({
         senderId: user.id,
         groupId,
         type: MessageType.GROUP,
@@ -54,18 +61,29 @@ export class GroupChatGateway {
         attachments,
       });
 
+      const notificationMetadata = {
+        replyTo: savedMessage.replyTo,
+        attachmentsCount: attachments?.length || 0,
+      };
+      // create a notification
+      const savedNotification =
+        await this.notificationsService.createChatNotification({
+          type: NotificationType.CHAT_GROUP,
+          senderId: user.id,
+          groupId,
+          content: savedMessage.content || undefined,
+          metadata: notificationMetadata,
+        });
+
       // Emit to all group members with FULL sender information
       this.server.to(`group-${groupId}`).emit('receive-group-message', {
-        id: message.id,
-        senderId: message.senderId,
-        sender: message.sender,
-        groupId,
-        content: message.content,
-        status: message.status,
-        replyTo,
-        attachments: message.attachments,
-        seenBy: [],
-        createdAt: message.createdAt,
+        message: {
+          ...savedMessage,
+          attachments,
+          groupId,
+          seenBy: [],
+        },
+        notification: savedNotification,
       });
 
       return { success: true };
@@ -76,7 +94,10 @@ export class GroupChatGateway {
   }
 
   @SubscribeMessage('seen-group-message')
-  async handleSeenGroupMessage(@SocketUser() user: any, @MessageBody() payload: any) {
+  async handleSeenGroupMessage(
+    @SocketUser() user: any,
+    @MessageBody() payload: any,
+  ) {
     try {
       const { groupId } = payload;
       const userId = user.id;
@@ -103,7 +124,10 @@ export class GroupChatGateway {
   }
 
   @SubscribeMessage('update-message-status')
-  async handleUpdateMessageStatus(@SocketUser() user: any, @MessageBody() payload: any) {
+  async handleUpdateMessageStatus(
+    @SocketUser() user: any,
+    @MessageBody() payload: any,
+  ) {
     try {
       const { messageId, status } = payload;
       const userId = user.id;
@@ -182,4 +206,3 @@ export class GroupChatGateway {
     });
   }
 }
-

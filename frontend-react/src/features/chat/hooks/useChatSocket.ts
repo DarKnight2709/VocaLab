@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import type { Socket } from "socket.io-client";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
+import type { NotificationItem } from "@/shared/validations/NotificationSchema";
 import type { GroupItem, GroupMessageItem } from "@/shared/validations/GroupSchema";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "@/features/chat/api/chatService";
@@ -89,8 +90,14 @@ export function useChatSocket({
       });
     });
 
-    socket.on("receive-message", (msg: ChatMessageItem) => {
+    socket.on("receive-message", (payload: {message: ChatMessageItem, notification: NotificationItem}) => {
       const openUser = selectedUserRef.current;
+      const msg = payload.message;
+      const noti = payload.notification;
+      // stop here to create the api to fetch notification.
+      // increase number of the notifications
+      // update the notifications I have in real time
+      // if (in then notification page, update page and the number on the bell icon) else just update the number on the bell icon
       const senderId = msg.senderId ?? msg.sender?.id;
       if (!senderId) return;
       queryClient.setQueryData<ChatMessageItem[]>(
@@ -132,12 +139,8 @@ export function useChatSocket({
 
     socket.on(
       "receive-group-message",
-      (payload: any) => {
-        // Map _id từ backend sang id cho frontend
-        const msg: GroupMessageItem = {
-          ...payload,
-        };
-
+      (payload: { message: GroupMessageItem; notification: NotificationItem }) => {
+        const msg = payload.message;
         const senderId = msg.senderId || msg.sender?.id;
 
         // If this message was sent by me, my UI already optimistic-updated and refetched it.

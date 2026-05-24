@@ -269,7 +269,7 @@ export function MessageList({
             )}
 
             <MessageBubble
-              content={message.content}
+              content={message.content ?? ""}
               attachments={attachments}
               isMine={isMine}
               currentDate={currentDate}

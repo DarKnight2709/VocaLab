@@ -37,7 +37,9 @@ export const ChatMessageItemSchema = z.object({
   senderId: z.string(),
   sender: PopulatedSenderSchema.optional(),
   receiverId: z.string().optional(),
-  content: z.string(),
+  content: z.string().nullable().optional(),
+  replyTo: z.string().nullable().optional(),
+  type: z.nativeEnum(MessageType).optional(),
   attachments: z
     .array(
       z.object({
@@ -50,7 +52,6 @@ export const ChatMessageItemSchema = z.object({
     )
     .optional(),
   createdAt: z.string(),
-  type: z.literal(MessageType.DIRECT),
   seenBy: z.array(PopulatedSenderSchema).optional(),
 });
 

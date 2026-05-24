@@ -9,12 +9,10 @@ import {
   GetGroupInfoResponseSchema,
   GetGroupMessagesResponseSchema,
   GetGroupMembersResponseSchema,
-  GroupItemSchema,
   UpdateGroupResponseSchema,
-  SuccessResponseSchema,
+  DeleteResponseSchema,
+  PermissionSchema,
 } from "@/shared/validations/GroupSchema";
-import { z } from "zod";
-
 
 import { toast } from "sonner";
 import i18n from "@/shared/i18n";
@@ -37,7 +35,7 @@ export function useGroupsQuery() {
         GetGroupsResponseSchema,
       );
 
-      return result.data.groups ?? [];
+      return result.data ?? [];
     },
   });
 }
@@ -53,7 +51,7 @@ export function useGroupInfoQuery(groupId: string | null) {
         GetGroupInfoResponseSchema,
       );
 
-      return result.data.group ?? null;
+      return result.data ?? null;
     },
   });
 }
@@ -69,7 +67,7 @@ export function useGroupMembersQuery(groupId: string | null) {
         GetGroupMembersResponseSchema,
       );
 
-      return result.data.members ?? [];
+      return result.data ?? [];
     },
   });
 }
@@ -83,7 +81,7 @@ export function useGroupMessagesQuery(groupId: string) {
         GetGroupMessagesResponseSchema,
       );
 
-      return result.data.messages ?? [];
+      return result.data ?? [];
     },
     enabled: !!groupId,
   });
@@ -99,7 +97,7 @@ export function useCreateGroupMutation() {
     }) => {
       return await fetchWithSchema(
         api.post(API_ROUTES.GROUP.CREATE, payload),
-        GroupItemSchema,
+        UpdateGroupResponseSchema,
       );
     },
     onSuccess: () => {
@@ -153,7 +151,7 @@ export function useDeleteGroupMutation() {
     mutationFn: async (groupId: string) => {
       return await fetchWithSchema(
         api.delete(API_ROUTES.GROUP.DELETE(groupId)),
-        SuccessResponseSchema,
+        DeleteResponseSchema,
       );
     },
     onSuccess: (_, groupId) => {
@@ -188,11 +186,11 @@ export function useTransferOwnershipMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: { groupId: string; newOwnerId: string }) => {
-      return await fetchWithSchema(
-        api.patch(API_ROUTES.GROUP.TRANSFER_OWNERSHIP(params.groupId), {
+      return await api.patch(
+        API_ROUTES.GROUP.TRANSFER_OWNERSHIP(params.groupId),
+        {
           newOwnerId: params.newOwnerId,
-        }),
-        SuccessResponseSchema,
+        },
       );
     },
     onSuccess: (_, vars) => {
@@ -203,7 +201,9 @@ export function useTransferOwnershipMutation() {
       toast.success(i18n.t("chat.transferOwnershipSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, i18n.t("chat.transferOwnershipFailed")));
+      toast.error(
+        getErrorMessage(error, i18n.t("chat.transferOwnershipFailed")),
+      );
     },
   });
 }
@@ -212,12 +212,9 @@ export function useAddGroupMembersMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: { groupId: string; memberIds: string[] }) => {
-      return await fetchWithSchema(
-        api.post(API_ROUTES.GROUP.ADD_MEMBERS(params.groupId), {
-          memberIds: params.memberIds,
-        }),
-        z.any(),
-      );
+      return await api.post(API_ROUTES.GROUP.ADD_MEMBERS(params.groupId), {
+        memberIds: params.memberIds,
+      });
     },
     onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({
@@ -243,7 +240,7 @@ export function useDeleteGroupMemberMutation() {
         api.delete(
           API_ROUTES.GROUP.DELETE_MEMBER(params.groupId, params.memberId),
         ),
-        SuccessResponseSchema,
+        DeleteResponseSchema,
       );
     },
     onSuccess: (_, vars) => {
@@ -270,12 +267,9 @@ export function useChangeGroupRoleMutation() {
       memberId: string;
       role: MemberRole;
     }) => {
-      return await fetchWithSchema(
-        api.patch(
-          API_ROUTES.GROUP.CHANGE_ROLE(params.groupId, params.memberId),
-          { newRole: params.role },
-        ),
-        z.any(),
+      return await api.patch(
+        API_ROUTES.GROUP.CHANGE_ROLE(params.groupId, params.memberId),
+        { newRole: params.role },
       );
     },
     onSuccess: (_, vars) => {
@@ -302,11 +296,14 @@ export function useUpdateRolePermissionMutation() {
       permissionId: string;
       isEnabled: boolean;
     }) => {
-      return await api.patch(API_ROUTES.GROUP.UPDATE_ROLE_PERMISSION(params.groupId), {
-        role: params.role,
-        permissionId: params.permissionId,
-        isEnabled: params.isEnabled,
-      });
+      return await api.patch(
+        API_ROUTES.GROUP.UPDATE_ROLE_PERMISSION(params.groupId),
+        {
+          role: params.role,
+          permissionId: params.permissionId,
+          isEnabled: params.isEnabled,
+        },
+      );
     },
     onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({
@@ -318,7 +315,9 @@ export function useUpdateRolePermissionMutation() {
       toast.success(i18n.t("chat.permissionsUpdated"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, i18n.t("chat.updatePermissionsFailed")));
+      toast.error(
+        getErrorMessage(error, i18n.t("chat.updatePermissionsFailed")),
+      );
     },
   });
 }
@@ -327,20 +326,11 @@ export function useAvailablePermissionsQuery() {
   return useQuery({
     queryKey: ["available-permissions"],
     queryFn: async () => {
-      try {
-        const response = await api.get(API_ROUTES.GROUP.GET_AVAILABLE_PERMISSIONS);
-        // The interceptor might have already nested this into response.data
-        // We look for permissions in response.data or response.data.data
-        const data = response.data as any;
-        const perms = data?.permissions || data?.data?.permissions || [];
-        
-        return perms;
-      } catch (e) {
-        console.error('Failed to fetch permissions:', e);
-        return [];
-      }
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.GROUP.GET_AVAILABLE_PERMISSIONS),
+        PermissionSchema,
+      );
+      return result.data ?? [];
     },
-    staleTime: 1000 * 60 * 5,
   });
 }
-

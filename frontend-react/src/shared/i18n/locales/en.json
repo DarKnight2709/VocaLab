@@ -692,6 +692,7 @@
     "selected": "Selected",
     "add": "Add",
     "creating": "Creating...",
+    "edit": "Edit",
     "editGroup": "Edit group",
     "changePhoto": "Change group photo",
     "clickToChangePhoto": "Click the avatar to change the photo",
@@ -738,12 +739,14 @@
     "transferOwnershipConfirmDesc": "Are you sure you want to transfer ownership to {{name}}?",
     "removeMemberConfirmDesc": "Are you sure you want to remove {{name}} from this group?",
     "changeRoleConfirmDesc": "Are you sure you want to change {{name}}'s role to {{role}}?",
+    "roleOwner": "Owner",
     "roleCoOwner": "Co-owner",
     "roleMember": "Member",
     "permAddMember": "Add member",
     "permRemoveMember": "Remove member",
     "permUpdateGroupInfo": "Update group info",
     "permManagePermissions": "Manage permissions",
+    "noDescription": "No description",
     "searchByNameOrUsername": "Search by name or username...",
     "chooseToStart": "Choose a conversation to start messaging",
     "cannotMessagePrivacy": "You cannot message this user due to their privacy settings.",
@@ -834,11 +837,18 @@
     "description": "Stay updated with your latest activity",
     "markAllAsRead": "Mark all as read",
     "empty": "No notifications yet",
-    "emptyHint": "When you get notifications, they'll show up here."
+    "emptyHint": "When you get notifications, they'll show up here.",
+    "directMessage": "<bold>{{sender}}</bold> sent you a message",
+    "directMessageWithAttachment": "<bold>{{sender}}</bold> sent you {{count}} attachment(s)",
+    "directMessageWithReply": "<bold>{{sender}}</bold> replied to you",
+    "directMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> replied with {{count}} attachment(s)",
+    "groupMessage": "<bold>{{sender}}</bold> sent a message in <bold>{{group}}</bold>",
+    "groupMessageWithAttachment": "<bold>{{sender}}</bold> sent {{count}} attachment(s) in <bold>{{group}}</bold>",
+    "groupMessageWithReply": "<bold>{{sender}}</bold> replied in <bold>{{group}}</bold>",
+    "groupMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> replied with {{count}} attachment(s) in <bold>{{group}}</bold>"
   },
   "upload": {
     "uploadFailed": "Upload failed",
     "uploadImageFailed": "Image upload failed"
   }
 }
-

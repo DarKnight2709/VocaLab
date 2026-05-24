@@ -1,9 +1,24 @@
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, Loader2 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import { useNotificationsQuery, useMarkAsReadMutation } from "../api/notificationService";
+import { NotificationItem } from "../components/NotificationItem";
+
 
 export default function NotificationPage() {
   const { t } = useTranslation();
+  const { data: notificationsRes, isLoading } = useNotificationsQuery(1, 20); // Using 1 for now, or infinite query if using infinite scroll, but wait useNotifications uses regular query
+  const markAsReadMutation = useMarkAsReadMutation();
+
+  const notifications = notificationsRes?.notifications || [];
+
+  const handleMarkAllAsRead = () => {
+    markAsReadMutation.mutate(undefined);
+  };
+
+  const handleNotificationClick = (id: string) => {
+    markAsReadMutation.mutate(id);
+  };
 
   return (
     <div className="h-full overflow-y-auto p-6 bg-background">
@@ -19,20 +34,38 @@ export default function NotificationPage() {
           </div>
           
           <button 
-            className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-full font-medium"
+            className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-full font-medium disabled:opacity-50"
+            onClick={handleMarkAllAsRead}
+            disabled={markAsReadMutation.isPending || notifications.length === 0}
           >
-            <CheckCheck className="h-4 w-4" />
+            {markAsReadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
             {t("notifications.markAllAsRead")}
           </button>
         </div>
 
-        <div className="bg-card rounded-xl border p-6 shadow-sm min-h-[400px] flex items-center justify-center">
-          <div className="text-center flex flex-col items-center justify-center text-muted-foreground">
-            <Bell className="h-12 w-12 mb-4 opacity-20" />
-            <p className="text-lg font-medium">{t("notifications.empty")}</p>
-            <p className="text-sm mt-1">{t("notifications.emptyHint")}</p>
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        </div>
+        ) : notifications.length === 0 ? (
+          <div className="bg-card rounded-xl border p-6 shadow-sm min-h-100 flex items-center justify-center">
+            <div className="text-center flex flex-col items-center justify-center text-muted-foreground">
+              <Bell className="h-12 w-12 mb-4 opacity-20" />
+              <p className="text-lg font-medium">{t("notifications.empty")}</p>
+              <p className="text-sm mt-1">{t("notifications.emptyHint")}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onClick={handleNotificationClick}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

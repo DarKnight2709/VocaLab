@@ -104,9 +104,9 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
 
   const onSubmit = async (values: CreateGroupInput) => {
     try {
-      const {data: groupData}= await createGroupMutation.mutateAsync(values);
+      const { data: groupData } = await createGroupMutation.mutateAsync(values);
+      const groupId = groupData?.id;
 
-      const groupId = (groupData as GroupItem)?.id as string | undefined;
       toast.success(t("chat.groupCreated"));
       onOpenChange(false);
       if (groupId) onCreated?.();

@@ -114,6 +114,11 @@ const API_ROUTES = {
     FOLLOWING_TAB_VISIBILITY: "v1/settings/following-tab-visibility",
     FRIEND_TAB_VISIBILITY: "v1/settings/friend-tab-visibility",
   },
+  NOTIFICATION: {
+    LIST: "v1/notifications",
+    UNREAD_COUNT: "v1/notifications/unread-count",
+    MARK_READ: (id?: string) => id ? `v1/notifications/read/${id}` : `v1/notifications/read`,
+  },
 };
 
 export default API_ROUTES;

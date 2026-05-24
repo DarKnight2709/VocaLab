@@ -8,23 +8,19 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
-  IGROUP_REPOSITORY,
-  type IGroupRepository,
-} from '../domain/interfaces/group-repository.interface';
-import {
   REQUIRE_MEMBER_KEY,
   REQUIRE_PERMISSION_KEY,
   REQUIRE_OWNER_KEY,
 } from '../../../common/decorators/group-auth.decorators';
 import { GroupPermission } from '../../../common/enums/group-permission.enum';
 import { ErrorCode } from '@/common/enums/error-code.enum';
+import { GroupChatService } from '../group-chat.service';
 
 @Injectable()
 export class GroupPermissionGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @Inject(IGROUP_REPOSITORY)
-    private groupRepository: IGroupRepository,
+    private groupChatService: GroupChatService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -41,7 +37,7 @@ export class GroupPermissionGuard implements CanActivate {
     }
 
     // 1. Kiểm tra sự tồn tại của nhóm
-    const group = await this.groupRepository.findById(groupId);
+    const group = await this.groupChatService.getActiveGroupOrThrow(groupId);
     if (!group || !group.isActive) {
       throw new NotFoundException(ErrorCode.GROUP_NOT_FOUND_OR_INACTIVE);
     }

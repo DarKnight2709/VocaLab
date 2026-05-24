@@ -111,18 +111,29 @@ export default function ChatView({
   // Handle start chat with a user passed in router state
   useEffect(() => {
     const startChatWith = location.state?.startChatWith as UserItem | undefined;
+    const openGroupId = location.state?.openGroupId as string | undefined;
+
     if (startChatWith) {
       const exists = users.some((u) => u.id === startChatWith.id);
       if (!exists) {
         setTempChatUser(startChatWith);
       }
-      const targetUser = users.find((u) => u.id === startChatWith.id) || startChatWith;
+      const targetUser =
+        users.find((u) => u.id === startChatWith.id) || startChatWith;
       void openChat(targetUser);
 
       // Clear navigation state so a reload/back action doesn't force re-opening
       navigate(location.pathname, { replace: true, state: {} });
+    } else if (openGroupId) {
+      const targetGroup = groups.find((g) => g.id === openGroupId);
+      if (targetGroup) {
+        setActiveTab("groups");
+        void openGroup(targetGroup);
+      }
+      // Clear navigation state
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, users]);
+  }, [location.state, users, groups]);
 
   // If auth state is lost (e.g. token invalid), go back to login.
   useEffect(() => {

@@ -12,10 +12,11 @@ import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
 import { MessagesService } from '../messages/messages.service';
-import { MessageType } from '@prisma/client';
+import { MessageType, NotificationType } from '@prisma/client';
 import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
-import { SendMessageDto } from '../messages/dto/messages.dto';
+import { SendDirectMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @WebSocketGateway({
   cors: {
@@ -37,7 +38,10 @@ export class DirectChatGateway
   // Track unique socket IDs per userId to avoid duplicate counting
   private onlineUsers = new Map<string, Set<string>>();
 
-  constructor(private messagesService: MessagesService) {}
+  constructor(
+    private messagesService: MessagesService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   handleConnection(client: Socket) {
     // Note: We can't use Guard here, and client.user might not be set yet.
@@ -116,7 +120,7 @@ export class DirectChatGateway
   @UsePipes(WsValidationPipe)
   async handleSendMessage(
     @SocketUser() user: any,
-    @MessageBody() payload: SendMessageDto,
+    @MessageBody() payload: SendDirectMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
     console.log('Send message:', payload);
@@ -124,15 +128,7 @@ export class DirectChatGateway
       // payload đã được validate bởi WsValidationPipe
       const { content, receiverId, replyTo, attachments } = payload;
 
-      if (!content && !attachments) {
-        return { success: false, message: 'Thiếu nội dung hoặc file đính kèm' };
-      }
-
-      if (!receiverId) {
-        return { success: false, message: 'Thiếu người nhận' };
-      }
-
-      const message = await this.messagesService.sendMessage({
+      const savedMessage = await this.messagesService.sendMessage({
         senderId: user.id,
         receiverId,
         type: MessageType.DIRECT,
@@ -140,17 +136,31 @@ export class DirectChatGateway
         replyTo,
         attachments,
       });
+      console.log('Message sent:', savedMessage);
+
+      // create a notification
+      const notificationMetadata = {
+        replyTo: savedMessage.replyTo,
+        attachmentsCount: attachments?.length || 0,
+      };
+      const savedNotification =
+        await this.notificationsService.createChatNotification({
+          type: NotificationType.CHAT_DIRECT,
+          senderId: user.id,
+          recipientId: receiverId,
+          content: savedMessage.content || undefined,
+          metadata: notificationMetadata
+        });
 
       // Emit to receiver
       this.server.to(receiverId).emit('receive-message', {
-        id: message.id,
-        senderId: message.senderId,
-        sender: (message as any).sender,
-        content: message.content,
-        status: message.status,
-        createdAt: message.createdAt,
-        replyTo: message.replyTo,
-        attachments: message.attachments,
+        message: {
+          ...savedMessage,
+          attachments: attachments,
+          receiverId,
+          seenBy: []
+        },
+        notification: savedNotification,
       });
 
       return { success: true };

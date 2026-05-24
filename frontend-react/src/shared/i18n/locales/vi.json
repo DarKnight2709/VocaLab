@@ -643,6 +643,7 @@
     "selected": "Đã chọn",
     "add": "Thêm",
     "creating": "Đang tạo...",
+    "edit": "Sửa",
     "editGroup": "Chỉnh sửa nhóm",
     "changePhoto": "Đổi ảnh nhóm",
     "clickToChangePhoto": "Nhấn vào ảnh đại diện để đổi ảnh",
@@ -796,6 +797,14 @@
     "description": "Cập nhật các hoạt động mới nhất của bạn",
     "markAllAsRead": "Đánh dấu tất cả đã đọc",
     "empty": "Chưa có thông báo nào",
-    "emptyHint": "Khi bạn có thông báo mới, chúng sẽ xuất hiện ở đây."
+    "emptyHint": "Khi bạn có thông báo mới, chúng sẽ xuất hiện ở đây.",
+    "directMessage": "<bold>{{sender}}</bold> đã gửi tin nhắn cho bạn",
+    "directMessageWithAttachment": "<bold>{{sender}}</bold> đã gửi {{count}} tệp đính kèm",
+    "directMessageWithReply": "<bold>{{sender}}</bold> đã trả lời bạn",
+    "directMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> đã trả lời bằng {{count}} tệp đính kèm",
+    "groupMessage": "<bold>{{sender}}</bold> đã gửi tin nhắn trong <bold>{{group}}</bold>",
+    "groupMessageWithAttachment": "<bold>{{sender}}</bold> đã gửi {{count}} tệp đính kèm trong <bold>{{group}}</bold>",
+    "groupMessageWithReply": "<bold>{{sender}}</bold> đã trả lời trong <bold>{{group}}</bold>",
+    "groupMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> đã trả lời bằng {{count}} tệp đính kèm trong <bold>{{group}}</bold>"
   }
 }

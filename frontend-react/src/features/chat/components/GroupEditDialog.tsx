@@ -14,18 +14,21 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
 import { useUpdateGroupMutation } from "@/features/chat/api/groupService";
-import type { GroupItem } from "@/shared/validations/GroupSchema";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { getErrorMessage } from "@/shared/lib/api";
 
-type GroupInfo = Partial<GroupItem> & { id: string };
+export type GroupBasicInfo = {
+  id: string;
+  name: string;
+  description?: string | null;
+  avatar?: string | null;
+};
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groupId: string | null;
-  initial?: GroupInfo | null;
-  onUpdated?: (group: GroupInfo) => void;
+  initial?: GroupBasicInfo | null;
+  onUpdated?: (group: GroupBasicInfo) => void;
 };
 
 function initials(name?: string) {
@@ -50,7 +53,7 @@ export function GroupEditDialog({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [group, setGroup] = useState<GroupInfo | null>(initial || null);
+  const [group, setGroup] = useState<GroupBasicInfo | null>(initial || null);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -104,19 +107,19 @@ export function GroupEditDialog({
     };
     try {
       setSaving(true);
-      const data = await updateGroupMutation.mutateAsync({ groupId, payload, file: selectedFile || undefined });
-      const updated = ((data as any)?.group as GroupInfo | undefined) || {
-        id: groupId,
-        name: trimmed,
-        description,
-        avatar: (avatarPreview || group?.avatar) as string | null | undefined,
+      const result = await updateGroupMutation.mutateAsync({ groupId, payload, file: selectedFile || undefined });
+      const updated = result.data;
+      const basicInfo: GroupBasicInfo = {
+        id: updated.id,
+        name: updated.name,
+        description: updated.description,
+        avatar: updated.avatar,
       };
-      toast.success(t("chat.groupUpdated"));
-      setGroup(updated);
-      onUpdated?.(updated);
+      setGroup(basicInfo);
+      onUpdated?.(basicInfo);
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(getErrorMessage(e, t("chat.groupUpdateFailed")));
+      // toast is already handled by useUpdateGroupMutation
     } finally {
       setSaving(false);
     }

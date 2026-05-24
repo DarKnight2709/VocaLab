@@ -67,6 +67,12 @@ enum VisibilityScope {
   PRIVATE
 }
 
+enum NotificationType {
+  CHAT_DIRECT
+  CHAT_GROUP
+  SYSTEM
+}
+
 model User {
   id                 String  @id @default(uuid())
   username           String  @unique
@@ -105,6 +111,9 @@ model User {
 
   blocking Block[] @relation("UserBlocking")
   blocked  Block[] @relation("UserBlocked")
+
+  receivedNotifications Notification[] @relation("NotificationRecipient")
+  sentNotifications     Notification[] @relation("NotificationSender")
 
   @@map("users")
 }
@@ -175,7 +184,7 @@ model Message {
   receiverId  String?
   groupId     String?
   content     String?
-  replyToId   String?
+  replyTo     String?
   attachments Json?
   status      MessageStatus @default(SENT)
 
@@ -188,7 +197,7 @@ model Message {
   receiver User?  @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   group    Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  reply   Message?  @relation("Reply", fields: [replyToId], references: [id], onDelete: SetNull)
+  reply   Message?  @relation("Reply", fields: [replyTo], references: [id], onDelete: SetNull)
   replies Message[] @relation("Reply")
 
   seenBy MessageSeen[]
@@ -196,7 +205,7 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
   @@index([groupId])
-  @@index([replyToId])
+  @@index([replyTo])
   @@index([createdAt])
   @@index([groupId, createdAt])
   @@index([receiverId, createdAt])
@@ -232,6 +241,7 @@ model Group {
   members         GroupMember[]
   messages        Message[]
   rolePermissions GroupRolePermission[]
+  notifications   Notification[]
 
   @@index([ownerId])
   @@map("groups")
@@ -485,4 +495,27 @@ model UserPrivacySetting {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_privacy_settings")
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  recipientId String?
+  groupId     String?
+  senderId    String?
+  type        NotificationType @default(CHAT_DIRECT)
+  content     String?
+  isRead      Boolean          @default(false)
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipient User?  @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  group     Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sender    User?  @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId])
+  @@index([recipientId, isRead])
+  @@index([createdAt(sort: Desc)])
+  @@map("notifications")
 }

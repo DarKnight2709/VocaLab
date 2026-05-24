@@ -6,9 +6,11 @@ import { ErrorCode } from '@/common/enums/error-code.enum';
 import {
   MessageAttachment,
   MessageWithDetails,
-  ConversationListItem,
-  UserBasicInfo,
-} from './messages.types';
+  GetConversationsResponseDto,
+  GetMessagesResponseDto,
+  LastMessageInfo,
+} from './dto/messages-response.dto';
+import { MessageAttachmentDto } from './dto/messages.dto';
 
 export interface SendMessageInput {
   senderId: string;
@@ -17,7 +19,7 @@ export interface SendMessageInput {
   groupId?: string;
   content?: string;
   replyTo?: string;
-  attachments?: MessageAttachment[];
+  attachments?: MessageAttachmentDto[];
 }
 
 @Injectable()
@@ -27,9 +29,7 @@ export class MessagesService {
     private readonly userService: UserService,
   ) {}
 
-  async getConversations(
-    userId: string,
-  ): Promise<{ users: ConversationListItem[] }> {
+  async getConversations(userId: string): Promise<GetConversationsResponseDto> {
     // Find all blocks where current userId is the blocked user
     const blockRelations = await this.prisma.block.findMany({
       where: {
@@ -96,7 +96,7 @@ export class MessagesService {
     // 4. Process messages to find last message and unread count per user
     const statsMap = new Map<
       string,
-      { lastMessage: any; unreadCount: number }
+      { lastMessage: LastMessageInfo; unreadCount: number }
     >();
     for (const msg of messages) {
       const otherUserId =
@@ -106,7 +106,7 @@ export class MessagesService {
       if (!statsMap.has(otherUserId)) {
         statsMap.set(otherUserId, {
           lastMessage: {
-            content: msg.content ?? undefined,
+            content: msg.content ?? null,
             createdAt: msg.createdAt,
             isMine: msg.senderId === userId,
           },
@@ -131,7 +131,8 @@ export class MessagesService {
       };
 
       const isFriend = followingIds.has(user.id) && followerIds.has(user.id);
-      const scope = user.privacySettings?.messageScope ?? VisibilityScope.EVERYONE;
+      const scope =
+        user.privacySettings?.messageScope ?? VisibilityScope.EVERYONE;
 
       let canChat = true;
       if (scope === VisibilityScope.PRIVATE) {
@@ -143,12 +144,12 @@ export class MessagesService {
       return {
         id: user.id,
         username: user.username,
-        fullName: user.fullName ?? undefined,
-        avatar: user.avatar ?? undefined,
-        email: user.email ?? undefined,
+        fullName: user.fullName ?? null,
+        avatar: user.avatar ?? null,
+        email: user.email ?? null,
         canChat,
         ...stats,
-      } as ConversationListItem;
+      };
     });
 
     // Sort by last message time (users with messages first)
@@ -168,7 +169,7 @@ export class MessagesService {
   async getMessages(
     userId: string,
     friendId: string,
-  ): Promise<{ messages: MessageWithDetails[] }> {
+  ): Promise<GetMessagesResponseDto> {
     const messages = await this.prisma.message.findMany({
       where: {
         OR: [
@@ -213,21 +214,21 @@ export class MessagesService {
     const mapped = messages.map((m) => {
       return {
         id: m.id,
+        type: m.type,
         senderId: m.senderId,
-        receiverId: m.receiverId ?? undefined,
-        groupId: m.groupId ?? undefined,
-        content: m.content ?? undefined,
-        replyTo: m.replyToId ?? undefined,
+        receiverId: m.receiverId ?? null,
+        groupId: m.groupId ?? null,
+        content: m.content ?? null,
+        replyTo: m.replyTo ?? null,
         attachments: Array.isArray(m.attachments)
           ? (m.attachments as unknown as MessageAttachment[])
-          : undefined,
+          : null,
         status: m.status,
         createdAt: m.createdAt,
-        updatedAt: m.updatedAt,
-        sender: m.sender as UserBasicInfo,
-        receiver: m.receiver as UserBasicInfo,
-        seenBy: m.seenBy.map((item: any) => item.user) ?? [],
-      } as MessageWithDetails;
+        sender: { ...m.sender, canChat: null },
+        receiver: m.receiver ? { ...m.receiver, canChat: null } : null,
+        seenBy: m.seenBy.map((item: any) => item.user),
+      };
     });
 
     return { messages: mapped };
@@ -250,11 +251,27 @@ export class MessagesService {
       }
     }
 
+    // validate replyTo
+    if (input.replyTo) {
+      const message = await this.prisma.message.findFirst({
+        where: {
+          id: input.replyTo,
+        },
+      });
+      if (!message) {
+        throw new BadRequestException(ErrorCode.MESSAGE_NOT_FOUND);
+      }
+    }
+
     // Validate content or attachments
     const hasContent = !!input.content?.trim();
-    const hasAttachments = !!(input.attachments && input.attachments.length > 0);
+    const hasAttachments = !!(
+      input.attachments && input.attachments.length > 0
+    );
     if (!hasContent && !hasAttachments) {
-      throw new BadRequestException(ErrorCode.MESSAGE_CONTENT_OR_ATTACHMENTS_REQUIRED);
+      throw new BadRequestException(
+        ErrorCode.MESSAGE_CONTENT_OR_ATTACHMENTS_REQUIRED,
+      );
     }
 
     // Convert Attachments to plain JSON
@@ -262,17 +279,24 @@ export class MessagesService {
       ? JSON.parse(JSON.stringify(input.attachments))
       : null;
 
-    const message = await this.prisma.message.create({
+    return await this.prisma.message.create({
       data: {
         senderId: input.senderId,
         receiverId: input.receiverId,
         groupId: input.groupId,
         type: input.type,
         content: input.content?.trim(),
-        replyToId: input.replyTo,
+        replyTo: input.replyTo,
         attachments: attachmentsJson,
       },
-      include: {
+      select: {
+        id: true,
+        type: true,
+        senderId: true,
+        content: true,
+        replyTo: true,
+        status: true,
+        createdAt: true,
         sender: {
           select: {
             id: true,
@@ -281,60 +305,8 @@ export class MessagesService {
             avatar: true,
           },
         },
-        receiver: {
-          select: {
-            id: true,
-            username: true,
-            fullName: true,
-            avatar: true,
-          },
-        },
-        seenBy: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                fullName: true,
-                avatar: true,
-              },
-            },
-          },
-        },
       },
     });
-
-    return {
-      id: message.id,
-      senderId: message.senderId,
-      receiverId: message.receiverId ?? undefined,
-      groupId: message.groupId ?? undefined,
-      content: message.content ?? undefined,
-      replyTo: message.replyToId ?? undefined,
-      attachments: Array.isArray(message.attachments)
-        ? (message.attachments as unknown as MessageAttachment[])
-        : undefined,
-      status: message.status,
-      createdAt: message.createdAt,
-      updatedAt: message.updatedAt,
-      sender: message.sender
-        ? {
-            id: message.sender.id,
-            username: message.sender.username,
-            fullName: message.sender.fullName ?? undefined,
-            avatar: message.sender.avatar ?? undefined,
-          }
-        : undefined,
-      seenBy: message.seenBy.map((seen: any) => {
-        const u = seen.user || seen;
-        return {
-          id: u.id || seen.userId,
-          username: u.username,
-          fullName: u.fullName,
-          avatar: u.avatar,
-        };
-      }),
-    };
   }
 
   async updateMessageStatus(messageId: string, status: MessageStatus) {
@@ -342,7 +314,6 @@ export class MessagesService {
       where: { id: messageId },
       data: { status },
     });
-    return { message: 'Message status updated successfully' };
   }
 
   async markAsSeen(senderId: string, receiverId: string) {
@@ -406,12 +377,22 @@ export class MessagesService {
   }
 
   // --- Group-Chat Support Methods ---
-  async findLastGroupMessage(groupId: string): Promise<MessageWithDetails | null> {
+  async findLastGroupMessage(
+    groupId: string,
+  ): Promise<MessageWithDetails | null> {
     const message = await this.prisma.message.findFirst({
       where: { groupId },
       orderBy: { createdAt: 'desc' },
       include: {
         sender: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+        receiver: {
           select: {
             id: true,
             username: true,
@@ -438,23 +419,28 @@ export class MessagesService {
 
     return {
       id: message.id,
+      type: message.type,
       senderId: message.senderId,
-      receiverId: message.receiverId ?? undefined,
-      groupId: message.groupId ?? undefined,
-      content: message.content ?? undefined,
-      replyTo: message.replyToId ?? undefined,
-      attachments: Array.isArray(message.attachments)
-        ? (message.attachments as unknown as MessageAttachment[])
-        : undefined,
-      status: message.status,
+      receiverId: message.receiverId ?? null,
+      groupId: message.groupId ?? null,
+      content: message.content ?? null,
+      replyTo: message.replyTo ?? null,
+      attachments:
+        (message.attachments as unknown as MessageAttachment[]) ?? null,
+      status: message.status ?? null,
       createdAt: message.createdAt,
-      updatedAt: message.updatedAt,
-      sender: message.sender as UserBasicInfo,
-      seenBy: message.seenBy.map((m) => m.user) ?? [],
-    } as MessageWithDetails;
+      sender: { ...message.sender, canChat: null },
+      receiver: message.receiver
+        ? { ...message.receiver, canChat: null }
+        : null,
+      seenBy: message.seenBy.map((m) => ({ ...m.user, canChat: null })),
+    };
   }
 
-  async countUnreadGroupMessages(groupId: string, userId: string): Promise<number> {
+  async countUnreadGroupMessages(
+    groupId: string,
+    userId: string,
+  ): Promise<number> {
     return this.prisma.message.count({
       where: {
         groupId,
@@ -472,6 +458,14 @@ export class MessagesService {
       orderBy: { createdAt: 'asc' },
       include: {
         sender: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+        receiver: {
           select: {
             id: true,
             username: true,
@@ -498,19 +492,20 @@ export class MessagesService {
       return {
         id: m.id,
         senderId: m.senderId,
-        receiverId: m.receiverId ?? undefined,
-        groupId: m.groupId ?? undefined,
-        content: m.content ?? undefined,
-        replyTo: m.replyToId ?? undefined,
+        receiverId: m.receiverId ?? null,
+        groupId: m.groupId ?? null,
+        content: m.content ?? null,
+        replyTo: m.replyTo ?? null,
+        type: m.type ?? MessageType.GROUP,
         attachments: Array.isArray(m.attachments)
           ? (m.attachments as unknown as MessageAttachment[])
-          : undefined,
+          : null,
         status: m.status,
         createdAt: m.createdAt,
-        updatedAt: m.updatedAt,
-        sender: m.sender as UserBasicInfo,
-        seenBy: m.seenBy.map((m) => m.user) ?? [],
-      } as MessageWithDetails;
+        sender: { ...m.sender, canChat: null },
+        receiver: m.receiver ? { ...m.receiver, canChat: null } : null,
+        seenBy: m.seenBy.map((m) => ({ ...m.user, canChat: null })) ?? [],
+      };
     });
   }
 
@@ -526,7 +521,7 @@ export class MessagesService {
     const privacy = await this.prisma.userPrivacySetting.findUnique({
       where: { userId: receiverId },
     });
-    const messageScope = privacy?.messageScope ?? 'EVERYONE';
+    const messageScope = privacy?.messageScope ?? VisibilityScope.EVERYONE;
 
     if (messageScope === VisibilityScope.EVERYONE) return true;
     if (messageScope === VisibilityScope.PRIVATE) return false;

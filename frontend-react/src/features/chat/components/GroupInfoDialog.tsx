@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 import { GroupEditDialog } from '@/features/chat/components/GroupEditDialog'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/shared/lib/api'
 import { useGroupMembersQuery } from '@/features/chat/api/groupService'
 import {
   useGroupInfoQuery,
@@ -182,13 +181,12 @@ export function GroupInfoDialog({
 
     try {
       await addMembersMutation.mutateAsync({ groupId, memberIds: ids })
-      toast.success(t('chat.membersAdded'))
       setSelectedToAdd([])
       setKeyword('')
       setResults([])
       onAddedMembers?.()
     } catch (e: any) {
-      toast.error(getErrorMessage(e, t('chat.addMembersFailed')))
+      // toast is already handled by useAddGroupMembersMutation
     }
   }
 
@@ -207,9 +205,7 @@ export function GroupInfoDialog({
           setConfirmConfig(prev => ({ ...prev, open: false }))
           onOpenChange(false)
           onLeftGroup?.()
-          toast.success(t('chat.groupDeleted'))
         } catch (e: any) {
-          toast.error(getErrorMessage(e, t('chat.groupDeleteFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -231,9 +227,7 @@ export function GroupInfoDialog({
           setConfirmConfig(prev => ({ ...prev, open: false }))
           onOpenChange(false)
           onLeftGroup?.()
-          toast.success(t('chat.leftGroup'))
         } catch (e: any) {
-          toast.error(getErrorMessage(e, t('chat.leaveGroupFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -252,10 +246,8 @@ export function GroupInfoDialog({
         try {
           setConfirmConfig(prev => ({ ...prev, isLoading: true }))
           await transferOwnershipMutation.mutateAsync({ groupId, newOwnerId: targetUserId })
-          toast.success(t('chat.transferOwnershipSuccess'))
           setConfirmConfig(prev => ({ ...prev, open: false }))
         } catch (e: any) {
-          toast.error(getErrorMessage(e, t('chat.transferOwnershipFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -278,10 +270,8 @@ export function GroupInfoDialog({
         try {
           setConfirmConfig(prev => ({ ...prev, isLoading: true }))
           await deleteMemberMutation.mutateAsync({ groupId, memberId })
-          toast.success(t('chat.memberRemoved'))
           setConfirmConfig(prev => ({ ...prev, open: false }))
         } catch (e: any) {
-          toast.error(getErrorMessage(e, t('chat.removeMemberFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -304,10 +294,8 @@ export function GroupInfoDialog({
         try {
           setConfirmConfig(prev => ({ ...prev, isLoading: true }))
           await changeRoleMutation.mutateAsync({ groupId, memberId, role: nextRole })
-          toast.success(t('chat.roleChanged'))
           setConfirmConfig(prev => ({ ...prev, open: false }))
         } catch (e: any) {
-          toast.error(getErrorMessage(e, t('chat.changeRoleFailed')))
           setConfirmConfig(prev => ({ ...prev, isLoading: false, open: false }))
         }
       }
@@ -317,21 +305,26 @@ export function GroupInfoDialog({
     if (!groupId) return
     try {
       await updateRolePermissionMutation.mutateAsync({ groupId, role, permissionId, isEnabled })
-      toast.success(t('chat.permissionsUpdated'))
       void infoQuery.refetch()
     } catch (e: any) {
-      toast.error(getErrorMessage(e, t('chat.updatePermissionsFailed')))
+      // toast is already handled
     }
   }
 
   const groupRolePermissionsMap = useMemo(() => {
-    const map: Record<string, { id: string, name: string }[]> = {}
-    const rps = (group as any)?.rolePermissions || []
+    const map: Record<string, { id: string }[]> = {}
+    const rps = group?.rolePermissions || []
     rps.forEach((rp: any) => {
       const r = rp.role
-      const p = rp.permission
+      const pId = rp.permissionId || rp.permission?.id
+      const isEnabled = rp.isEnabled !== false // Default to true if not specified, or explicitly check
+
       if (!map[r]) map[r] = []
-      if (p) map[r].push(p)
+      
+      // Only add to map if we have an ID and it is enabled
+      if (pId && isEnabled) {
+        map[r].push({ id: pId })
+      }
     })
     return map
   }, [group])
@@ -363,7 +356,7 @@ export function GroupInfoDialog({
 
   const groupName = group?.name || t('chat.group')
   const groupDesc = group?.description?.trim() ? group?.description : t('chat.noDescription')
-  const ownerId = (group?.owner as any)?.id as string | undefined
+  const ownerId = group?.owner?.id
 
   const isOwner = !!ownerId && ownerId === myId
 

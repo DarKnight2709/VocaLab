@@ -11,6 +11,7 @@ import type { MeResponse } from "@/shared/validations/AuthSchema";
 import { useLogoutMutation } from "@/features/auth/api/authService";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useUnreadCountQuery } from "@/features/notification/api/notificationService";
 
 interface MainHeaderProps {
   me: MeResponse | undefined | null;
@@ -61,6 +62,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   }
 
   const { theme, setTheme } = useTheme();
+  const { data: unreadCount = 0 } = useUnreadCountQuery();
 
   return (
     <>
@@ -106,6 +108,11 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               aria-label={t("common.notifications")}
             >
               <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-background">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </button>
             <button
               type="button"

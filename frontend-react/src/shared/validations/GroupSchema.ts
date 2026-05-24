@@ -42,7 +42,12 @@ export const GroupMemberSchema = z.object({
   joinedAt: z.string(),
   user: MemberUserSchema,
   permissions: z.array(z.string()).optional(),
-  message: z.string().optional(),
+});
+
+export const RolePermissionSchema = z.object({
+  role: z.enum(MemberRole),
+  permissionId: z.string(),
+  isEnabled: z.boolean(),
 });
 
 // 3. Schema Riêng Biệt cho Thông tin chi tiết Nhóm (Không liên quan đến List)
@@ -51,29 +56,32 @@ export const GroupInfoSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   avatar: z.string().nullable().optional(),
-  owner: MemberUserSchema.nullable().optional(),
+  owner: MemberUserSchema,
   members: z.array(GroupMemberSchema),
-  rolePermissions: z.array(z.any()).optional(),
-  isActive: z.boolean().optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-  message: z.string().optional(),
+  rolePermissions: z.array(RolePermissionSchema),
+  // isActive: z.boolean().optional(),
+  // createdAt: z.string().optional(),
+  // updatedAt: z.string().optional(),
+  // message: z.string().optional(),
 });
 
-export const GetGroupsResponseSchema = z.object({
-  groups: z.array(GroupItemSchema),
-  message: z.string().optional(),
+export const GetGroupsResponseSchema = z.array(GroupItemSchema);
+
+export const GetGroupInfoResponseSchema = GroupInfoSchema;
+
+export const GetGroupMembersResponseSchema = z.array(GroupMemberSchema);
+
+export const DeleteResponseSchema = z.object({
+  id: z.string(),
 });
 
-export const GetGroupInfoResponseSchema = z.object({
-  message: z.string().optional(),
-  group: GroupInfoSchema,
-});
-
-export const GetGroupMembersResponseSchema = z.object({
-  members: z.array(GroupMemberSchema),
-  message: z.string().optional(),
-});
+export const PermissionSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional().nullable(),
+  }),
+);
 
 // Schema cho tin nhắn nhóm
 export const GroupMessageItemSchema = z.object({
@@ -81,7 +89,9 @@ export const GroupMessageItemSchema = z.object({
   senderId: z.string(),
   sender: PopulatedSenderSchema.optional(),
   groupId: z.string(),
-  content: z.string(),
+  content: z.string().optional(),
+  type: z.literal(MessageType.GROUP),
+  replyTo: z.string().optional().nullable(),
   attachments: z
     .array(
       z.object({
@@ -92,16 +102,13 @@ export const GroupMessageItemSchema = z.object({
         mimeType: z.string().optional(),
       }),
     )
-    .optional(),
+    .optional()
+    .nullable(),
   createdAt: z.string(),
-  type: z.literal(MessageType.GROUP),
   seenBy: z.array(PopulatedSenderSchema).optional(),
 });
 
-export const GetGroupMessagesResponseSchema = z.object({
-  messages: z.array(GroupMessageItemSchema),
-  message: z.string().optional(),
-});
+export const GetGroupMessagesResponseSchema = z.array(GroupMessageItemSchema);
 
 export const SuccessResponseSchema = z.object({
   message: z.string().optional(),
@@ -116,13 +123,14 @@ export const getCreateGroupSchema = () =>
       .string()
       .min(1, i18n.t("validation.groupNameRequired"))
       .max(50, i18n.t("validation.groupNameMaxLength")),
-    description: z.string().max(200, i18n.t("validation.descriptionMaxLength")).optional(),
+    description: z
+      .string()
+      .max(200, i18n.t("validation.descriptionMaxLength"))
+      .optional(),
     members: z.array(z.string()).min(2, i18n.t("validation.selectMinMembers")),
   });
 
-export const UpdateGroupResponseSchema = z.object({
-  message: z.string(),
-});
+export const UpdateGroupResponseSchema = GroupInfoSchema;
 
 export type CreateGroupInput = z.infer<ReturnType<typeof getCreateGroupSchema>>;
 export type GroupInfo = z.infer<typeof GroupInfoSchema>;
