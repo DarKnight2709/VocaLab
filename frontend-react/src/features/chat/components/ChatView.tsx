@@ -28,6 +28,7 @@ import type {
   GroupItem,
   GroupMessageItem,
 } from "@/shared/validations/GroupSchema";
+import { useSocketStore } from "@/shared/stores/useSocketStore";
 
 export default function ChatView({
   me,
@@ -80,7 +81,9 @@ export default function ChatView({
   const filteredUsers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return allSidebarUsers;
-    return allSidebarUsers.filter((u) => `${u.fullName || ""}`.toLowerCase().includes(q));
+    return allSidebarUsers.filter((u) =>
+      `${u.fullName || ""}`.toLowerCase().includes(q),
+    );
   }, [allSidebarUsers, searchQuery]);
 
   // Nếu có search query thì lấy group theo search query, nếu không thì lấy tất cả group
@@ -142,6 +145,9 @@ export default function ChatView({
 
   // Khi chuyển sang tab groups thì invalid các query liên quan đến groups
   useEffect(() => {
+    if (activeTab === "users") {
+      void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
+    }
     if (activeTab === "groups") {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
     }
@@ -175,13 +181,21 @@ export default function ChatView({
     setSelectedUser(user);
     try {
       // Mark seen for 1-1 messages
-      socketRef.current?.emit("seen-message", { senderId: user.id });
+      socketRef.current?.emit(
+        "seen-message",
+        { senderId: user.id },
+        (status: any) => {
+          if (status?.status === "error" || status?.success === false) {
+            useSocketStore.getState().handleSocketError(status.message);
+          }
+        },
+      );
       void queryClient.invalidateQueries({
         queryKey: chatKeys.messages(user.id),
       });
       void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
     } catch (e: any) {
-      toast.error(getErrorMessage(e, t('chat.loadMessagesFailed')));
+      toast.error(getErrorMessage(e, t("chat.loadMessagesFailed")));
     }
   }
 
@@ -208,7 +222,7 @@ export default function ChatView({
         },
       );
     } catch (e: any) {
-      toast.error(getErrorMessage(e, t('chat.loadMessagesFailed')));
+      toast.error(getErrorMessage(e, t("chat.loadMessagesFailed")));
     }
   }
 
@@ -317,7 +331,7 @@ export default function ChatView({
             (prev) => (prev || []).filter((m) => m.id !== uploadingId),
           );
         }
-        toast.error(t('chat.uploadFilesFailed'));
+        toast.error(t("chat.uploadFilesFailed"));
         return;
       }
 
@@ -345,46 +359,53 @@ export default function ChatView({
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       socket.emit("group-typing-stop", { groupId });
 
-      socket.emit(
-        "send-group-message",
-        {
-          groupId,
-          content,
-          type: MessageType.GROUP,
-          replyTo: null,
-          attachments: finalAttachments,
-        },
-        (status: { success: boolean; message?: string }) => {
-          if (!status?.success) {
-            toast.error(status?.message || t('chat.sendMessageFailed'));
-            return;
-          }
-          setMessageText("");
-          queryClient.setQueryData<GroupMessageItem[]>(
-            groupKeys.messages(groupId),
-            (prev) => [
-              ...(prev || []),
-              {
-                id: `local-${Date.now()}`,
-                senderId: me!.id,
-                sender: {
-                  id: me!.id,
-                  username: me!.username,
-                  fullName: me!.fullName,
-                  avatar: me!.avatar,
-                },
-                groupId,
-                content: content || "",
-                attachments: finalAttachments,
-                createdAt: new Date().toISOString(),
-                type: MessageType.GROUP,
-                seenBy: [],
+      const messageData = {
+        groupId,
+        content,
+        type: MessageType.GROUP,
+        replyTo: null,
+        attachments: finalAttachments,
+      };
+
+      const handleGroupSuccess = (msgId: string) => {
+        setMessageText("");
+        queryClient.setQueryData<GroupMessageItem[]>(
+          groupKeys.messages(groupId),
+          (prev) => [
+            ...(prev || []),
+            {
+              id: msgId,
+              senderId: me!.id,
+              sender: {
+                id: me!.id,
+                username: me!.username,
+                fullName: me!.fullName,
+                avatar: me!.avatar,
               },
-            ],
-          );
-          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-        },
-      );
+              groupId,
+              content: content || "",
+              attachments: finalAttachments,
+              createdAt: new Date().toISOString(),
+              type: MessageType.GROUP,
+              seenBy: [],
+            },
+          ],
+        );
+        void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+      };
+
+      socket.emit("send-group-message", messageData, (status: any) => {
+        if (!status?.success) {
+          useSocketStore.getState().handleSocketError(status.message, () => {
+            const freshSocket = useSocketStore.getState().socket;
+            freshSocket?.emit("send-group-message", messageData, (retryStatus: any) => {
+              if (retryStatus?.success) handleGroupSuccess(`retry-${Date.now()}`);
+            });
+          });
+          return;
+        }
+        handleGroupSuccess(`local-${Date.now()}`);
+      });
       return;
     }
 
@@ -395,42 +416,49 @@ export default function ChatView({
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     socket.emit("typing-stop", { receiverId });
 
-    socket.emit(
-      "send-message",
-      {
-        receiverId,
-        content,
-        type: MessageType.DIRECT,
-        attachments: finalAttachments,
-      },
-      (status: { success: boolean; message?: string }) => {
-        if (!status?.success) {
-          toast.error(status?.message || t('chat.sendMessageFailed'));
-          return;
-        }
-        setMessageText("");
-        queryClient.setQueryData<ChatMessageItem[]>(
-          chatKeys.messages(receiverId),
-          (prev) => [
-            ...(prev || []),
-            {
-              id: `local-${Date.now()}`,
-              senderId: me!.id,
-              receiverId,
-              content: content || "",
-              attachments: finalAttachments,
-              createdAt: new Date().toISOString(),
-              type: MessageType.DIRECT,
-              isSeen: false,
-            },
-          ],
-        );
-        void queryClient.invalidateQueries({
-          queryKey: chatKeys.messages(receiverId),
+    const messageData = {
+      receiverId,
+      content,
+      type: MessageType.DIRECT,
+      attachments: finalAttachments,
+    };
+
+    const handleDirectSuccess = (msgId: string) => {
+      setMessageText("");
+      queryClient.setQueryData<ChatMessageItem[]>(
+        chatKeys.messages(receiverId),
+        (prev) => [
+          ...(prev || []),
+          {
+            id: msgId,
+            senderId: me!.id,
+            receiverId,
+            content: content || "",
+            attachments: finalAttachments,
+            createdAt: new Date().toISOString(),
+            type: MessageType.DIRECT,
+            isSeen: false,
+          },
+        ],
+      );
+      void queryClient.invalidateQueries({
+        queryKey: chatKeys.messages(receiverId),
+      });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
+    };
+
+    socket.emit("send-message", messageData, (status: any) => {
+      if (!status?.success) {
+        useSocketStore.getState().handleSocketError(status.message, () => {
+          const freshSocket = useSocketStore.getState().socket;
+          freshSocket?.emit("send-message", messageData, (retrySt: any) => {
+            if (retrySt?.success) handleDirectSuccess(`retry-${Date.now()}`);
+          });
         });
-        void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
-      },
-    );
+        return;
+      }
+      handleDirectSuccess(`local-${Date.now()}`);
+    });
   }
 
   function handleEmojiClick(emoji: string) {
@@ -479,55 +507,55 @@ export default function ChatView({
     return false;
   }, [selectedUser, selectedGroup, onlineIds, me]);
 
-//   function recallMessage(messageId: string) {
-//     const socket = socketRef.current;
-//     const content = messageText.trim();
-//     if (!socket || !content) return;
-// 
-//     if (selectedGroup?.id) {
-//       const groupId = selectedGroup.id;
-// 
-//       if (typingTimeoutRef.current) {
-//         clearTimeout(typingTimeoutRef.current);
-//       }
-//       socket.emit("group-typing-stop", { groupId });
-// 
-//       socket.emit(
-//         "send-group-message",
-//         {
-//           groupId,
-//           content,
-//           type: MessageType.GROUP,
-//           replyTo: null,
-//           fileUrl: null,
-//         },
-//         (status: { success: boolean; message?: string }) => {
-//           if (!status?.success) {
-//             toast.error(status?.message || t('chat.sendMessageFailed'));
-//             return;
-//           }
-//           setMessageText("");
-//           void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-//           void queryClient.invalidateQueries({
-//             queryKey: groupKeys.messages(groupId),
-//           });
-//         },
-//       );
-//       return;
-//     }
-// 
-//     socket.emit(
-//       "recall-message",
-//       { messageId },
-//       (status: { success: boolean; message?: string }) => {
-//         if (!status?.success) {
-//           toast.error(status?.message || t('chat.recallMessageFailed'));
-//           return;
-//         }
-//         queryClient.invalidateQueries({ queryKey: chatKeys.list() });
-//       },
-//     );
-//   }
+  //   function recallMessage(messageId: string) {
+  //     const socket = socketRef.current;
+  //     const content = messageText.trim();
+  //     if (!socket || !content) return;
+  //
+  //     if (selectedGroup?.id) {
+  //       const groupId = selectedGroup.id;
+  //
+  //       if (typingTimeoutRef.current) {
+  //         clearTimeout(typingTimeoutRef.current);
+  //       }
+  //       socket.emit("group-typing-stop", { groupId });
+  //
+  //       socket.emit(
+  //         "send-group-message",
+  //         {
+  //           groupId,
+  //           content,
+  //           type: MessageType.GROUP,
+  //           replyTo: null,
+  //           fileUrl: null,
+  //         },
+  //         (status: { success: boolean; message?: string }) => {
+  //           if (!status?.success) {
+  //             toast.error(status?.message || t('chat.sendMessageFailed'));
+  //             return;
+  //           }
+  //           setMessageText("");
+  //           void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+  //           void queryClient.invalidateQueries({
+  //             queryKey: groupKeys.messages(groupId),
+  //           });
+  //         },
+  //       );
+  //       return;
+  //     }
+  //
+  //     socket.emit(
+  //       "recall-message",
+  //       { messageId },
+  //       (status: { success: boolean; message?: string }) => {
+  //         if (!status?.success) {
+  //           toast.error(status?.message || t('chat.recallMessageFailed'));
+  //           return;
+  //         }
+  //         queryClient.invalidateQueries({ queryKey: chatKeys.list() });
+  //       },
+  //     );
+  //   }
 
   function handleBackToList() {
     // Don't leave group (like frontend) - keep joined to receive notifications
@@ -608,7 +636,7 @@ export default function ChatView({
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
                   <p className="text-lg text-muted-foreground">
-                    {t('chat.chooseToStart')}
+                    {t("chat.chooseToStart")}
                   </p>
                 </div>
               </div>
@@ -640,7 +668,7 @@ export default function ChatView({
                           selectedUser.id,
                           selectedUser.fullName ||
                             selectedUser.username ||
-                            t('chat.user'),
+                            t("chat.user"),
                           selectedUser.avatar || undefined,
                         )
                     : undefined

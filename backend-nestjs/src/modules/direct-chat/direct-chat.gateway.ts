@@ -149,18 +149,15 @@ export class DirectChatGateway
           senderId: user.id,
           recipientId: receiverId,
           content: savedMessage.content || undefined,
-          metadata: notificationMetadata
+          metadata: notificationMetadata,
         });
 
       // Emit to receiver
       this.server.to(receiverId).emit('receive-message', {
-        message: {
-          ...savedMessage,
-          attachments: attachments,
-          receiverId,
-          seenBy: []
-        },
-        notification: savedNotification,
+        ...savedMessage,
+        attachments: attachments,
+        receiverId,
+        seenBy: [],
       });
 
       return { success: true };

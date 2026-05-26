@@ -94,6 +94,7 @@ api.interceptors.response.use(
         );
 
         useAuthStore.getState().login(data.data);
+        useSocketStore.getState().connect(data.data.accessToken);
         processQueue(null, data.data.accessToken);
 
         originalRequest.headers["Authorization"] = "Bearer " + data.data.accessToken;

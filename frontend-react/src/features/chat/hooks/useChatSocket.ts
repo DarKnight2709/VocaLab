@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef } from "react";
 import type { Socket } from "socket.io-client";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
-import type { NotificationItem } from "@/shared/validations/NotificationSchema";
 import type { GroupItem, GroupMessageItem } from "@/shared/validations/GroupSchema";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "@/features/chat/api/chatService";
@@ -47,10 +46,15 @@ export function useChatSocket({
     selectedGroupRef.current = selectedGroup;
   }, [selectedGroup]);
 
+  // Subscribe reactively to socket changes in the store.
+  // This ensures that when handleSocketError refreshes the token and creates
+  // a new socket, this hook re-runs and re-binds all event listeners.
+  const storeSocket = useSocketStore((s) => s.socket);
+
   useEffect(() => {
-    const socket = useSocketStore.getState().socket;
-    if (!socket) return;
-    socketRef.current = socket;
+    if (!storeSocket) return;
+    socketRef.current = storeSocket;
+    const socket = storeSocket;
 
     // Hàm chủ động báo với server là mình đã sẵn sàng nhận dữ liệu
     const onConnect = () => {
@@ -90,14 +94,8 @@ export function useChatSocket({
       });
     });
 
-    socket.on("receive-message", (payload: {message: ChatMessageItem, notification: NotificationItem}) => {
+    socket.on("receive-message", (msg: ChatMessageItem) => {
       const openUser = selectedUserRef.current;
-      const msg = payload.message;
-      const noti = payload.notification;
-      // stop here to create the api to fetch notification.
-      // increase number of the notifications
-      // update the notifications I have in real time
-      // if (in then notification page, update page and the number on the bell icon) else just update the number on the bell icon
       const senderId = msg.senderId ?? msg.sender?.id;
       if (!senderId) return;
       queryClient.setQueryData<ChatMessageItem[]>(
@@ -139,15 +137,14 @@ export function useChatSocket({
 
     socket.on(
       "receive-group-message",
-      (payload: { message: GroupMessageItem; notification: NotificationItem }) => {
-        const msg = payload.message;
+      (msg: GroupMessageItem) => {
         const senderId = msg.senderId || msg.sender?.id;
 
         // If this message was sent by me, my UI already optimistic-updated and refetched it.
         if (senderId === myId) return;
 
         // Refresh group list for unread/lastMessage
-        void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+        // void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
 
         queryClient.setQueryData<GroupMessageItem[]>(
           groupKeys.messages(msg.groupId),
@@ -167,7 +164,7 @@ export function useChatSocket({
           }
         } else {
            // Nếu không trong group đang mở thì refresh để hiện unread
-           void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+           queryClient.invalidateQueries({ queryKey: groupKeys.list() });
         }
       },
     );
@@ -264,17 +261,17 @@ export function useChatSocket({
       socket.off("noti-offline");
       socket.off("receive-message");
       socket.off("receive-group-message");
-      socket.off("user-seen-message");
+      socket.off("seen-message");
+      socket.off("seen-group-message");
       socket.off("typing-start");
       socket.off("typing-stop");
       socket.off("group-typing-start");
       socket.off("group-typing-stop");
       socket.off("reload-groups");
-      socket.off("seen-message");
-      // do not force-disconnect here; AuthStore handles disconnect on logout
+      socketReadyRef.current = false;
       socketRef.current = null;
     };
-  }, [myId, queryClient, setOnlineIds, setTypingUsers, setGroupTypingText]);
+  }, [myId, storeSocket, queryClient, setOnlineIds, setTypingUsers, setGroupTypingText]);
 
   // Join all group rooms (like `frontend/src/pages/chat/group.module.js`)
   useEffect(() => {

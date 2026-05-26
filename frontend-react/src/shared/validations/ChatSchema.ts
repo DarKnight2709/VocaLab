@@ -50,7 +50,7 @@ export const ChatMessageItemSchema = z.object({
         mimeType: z.string().optional(),
       }),
     )
-    .optional(),
+    .optional().nullable(),
   createdAt: z.string(),
   seenBy: z.array(PopulatedSenderSchema).optional(),
 });

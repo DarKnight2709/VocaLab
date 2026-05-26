@@ -4,6 +4,7 @@ import { authLoader } from "../AuthLoader";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { useEffect } from "react";
 import { useAuthStore } from "../stores/authStore";
+import { useNotificationSocket } from "@/shared/hooks/useNotificationSocket";
 
 // Route Protector
 const AuthGuard = () => {
@@ -30,6 +31,7 @@ const AuthGuard = () => {
     );
   }
 
+  const { socketRef } = useNotificationSocket();
   // render các route con qua Outlet
   return <Outlet />;
 };

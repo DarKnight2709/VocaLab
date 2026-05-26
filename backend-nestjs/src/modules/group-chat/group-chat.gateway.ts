@@ -77,13 +77,10 @@ export class GroupChatGateway {
 
       // Emit to all group members with FULL sender information
       this.server.to(`group-${groupId}`).emit('receive-group-message', {
-        message: {
-          ...savedMessage,
-          attachments,
-          groupId,
-          seenBy: [],
-        },
-        notification: savedNotification,
+        ...savedMessage,
+        attachments,
+        groupId,
+        seenBy: [],
       });
 
       return { success: true };
