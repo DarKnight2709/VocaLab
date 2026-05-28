@@ -1,9 +1,12 @@
-import { Body, Controller, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Patch } from '@nestjs/common';
 import { SettingService } from './setting.service';
 import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto } from './dto/setting.dto';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { NotificationSettingDto, UpdateNotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsOnPostsDto, UpdateUpvotesDto, UpdateRepliesToCommentsDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
+
+import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 
 @ApiTags('settings')
 @Controller('settings')
@@ -55,5 +58,68 @@ export class SettingController {
     @Body() dto: UpdateFriendTabVisibilityDto,
   ): Promise<void> {
     await this.settingService.updateFriendTabVisibility(user.id, dto);
+  }
+  
+  @Get('notifications')
+  @ApiOperation({ summary: 'Get notification settings' })
+  async getSettings(
+    @CurrentUser() user: any,
+  ): Promise<ResponseInterceptor<NotificationSettingDto>> {
+    const result = await this.settingService.getSettings(user.id);
+    return { data: result };
+  }
+
+  @Patch('notifications/chat-messages')
+  @ApiOperation({ summary: 'Update chat messages notification setting' })
+  async updateChatMessages(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateChatMessagesDto,
+  ): Promise<void> {
+    await this.settingService.updateChatMessages(user.id, dto);
+  }
+
+  @Patch('notifications/comments-on-posts')
+  @ApiOperation({ summary: 'Update comments on posts notification setting' })
+  async updateCommentsOnPosts(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateCommentsOnPostsDto,
+  ): Promise<void> {
+    await this.settingService.updateCommentsOnPosts(user.id, dto);
+  }
+
+  @Patch('notifications/upvotes')
+  @ApiOperation({ summary: 'Update upvotes notification setting' })
+  async updateUpvotes(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateUpvotesDto,
+  ): Promise<void> {
+    await this.settingService.updateUpvotes(user.id, dto);
+  }
+
+  @Patch('notifications/replies-to-comments')
+  @ApiOperation({ summary: 'Update replies to comments notification setting' })
+  async updateRepliesToComments(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateRepliesToCommentsDto,
+  ): Promise<void> {
+    await this.settingService.updateRepliesToComments(user.id, dto);
+  }
+
+  @Patch('notifications/new-followers')
+  @ApiOperation({ summary: 'Update new followers notification setting' })
+  async updateNewFollowers(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateNewFollowersDto,
+  ): Promise<void> {
+    await this.settingService.updateNewFollowers(user.id, dto);
+  }
+
+  @Patch('notifications/activity-from-followed')
+  @ApiOperation({ summary: 'Update activity from followed notification setting' })
+  async updateActivityFromFollowed(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateActivityFromFollowedDto,
+  ): Promise<void> {
+    await this.settingService.updateActivityFromFollowed(user.id, dto);
   }
 }

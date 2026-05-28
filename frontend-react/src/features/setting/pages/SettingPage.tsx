@@ -29,7 +29,9 @@ import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { SetPasswordDialog } from "@/features/auth/components/SetPasswordDialog";
 import { TwoFactorAuthDialog } from "@/features/auth/components/TwoFactorAuthDialog";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useAllowFollowMutation, useUpdateMessageScopeMutation, useUpdateFollowersTabVisibilityMutation, useUpdateFollowingTabVisibilityMutation, useUpdateFriendTabVisibilityMutation } from "../api/settingService";
+import { useAllowFollowMutation, useUpdateMessageScopeMutation, useUpdateFollowersTabVisibilityMutation, useUpdateFollowingTabVisibilityMutation, useUpdateFriendTabVisibilityMutation, useUpdateChatMessagesMutation, useUpdateCommentsOnPostsMutation, useUpdateUpvotesMutation, useUpdateRepliesToCommentsMutation, useUpdateNewFollowersMutation, useUpdateActivityFromFollowedMutation, useNotificationSettingsQuery } from "../api/settingService";
+
+
 import type { ScopeVisibilityType } from "@/shared/enums/ScopeVisibility.enum";
 
 
@@ -89,8 +91,17 @@ export default function SettingPage() {
   const updateFollowersTabVisibilityMutation = useUpdateFollowersTabVisibilityMutation();
   const updateFollowingTabVisibilityMutation = useUpdateFollowingTabVisibilityMutation();
   const updateFriendTabVisibilityMutation = useUpdateFriendTabVisibilityMutation();
+  const updateChatMessagesMutation = useUpdateChatMessagesMutation();
+  const updateCommentsOnPostsMutation = useUpdateCommentsOnPostsMutation();
+  const updateUpvotesMutation = useUpdateUpvotesMutation();
+  const updateRepliesToCommentsMutation = useUpdateRepliesToCommentsMutation();
+  const updateNewFollowersMutation = useUpdateNewFollowersMutation();
+  const updateActivityFromFollowedMutation = useUpdateActivityFromFollowedMutation();
+
   const logout = useAuthStore((s) => s.logout);
   const disconnect = useSocketStore((s) => s.disconnect);
+  const { data: notificationSettings, isLoading: isLoadingNotifications } = useNotificationSettingsQuery();
+
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) =>
@@ -165,6 +176,55 @@ export default function SettingPage() {
       console.error("Update friend tab visibility error:", error);
     }
   };
+
+  const handleUpdateChatMessages = async (value: string) => {
+    try {
+      await updateChatMessagesMutation.mutateAsync(value);
+    } catch (error) {
+      console.error("Update chat messages error:", error);
+    }
+  };
+
+  const handleUpdateCommentsOnPosts = async (value: string) => {
+    try {
+      await updateCommentsOnPostsMutation.mutateAsync(value);
+    } catch (error) {
+      console.error("Update comments on posts error:", error);
+    }
+  };
+
+  const handleUpdateUpvotes = async (value: string) => {
+    try {
+      await updateUpvotesMutation.mutateAsync(value);
+    } catch (error) {
+      console.error("Update upvotes error:", error);
+    }
+  };
+
+  const handleUpdateRepliesToComments = async (value: string) => {
+    try {
+      await updateRepliesToCommentsMutation.mutateAsync(value);
+    } catch (error) {
+      console.error("Update replies to comments error:", error);
+    }
+  };
+
+  const handleUpdateNewFollowers = async (value: string) => {
+    try {
+      await updateNewFollowersMutation.mutateAsync(value);
+    } catch (error) {
+      console.error("Update new followers error:", error);
+    }
+  };
+
+  const handleUpdateActivityFromFollowed = async (value: string) => {
+    try {
+      await updateActivityFromFollowedMutation.mutateAsync(value);
+    } catch (error) {
+      console.error("Update activity from followed error:", error);
+    }
+  };
+
 
 
 
@@ -266,8 +326,19 @@ export default function SettingPage() {
                     <PreferencesSettingTab />
                   )}
                   {activeTab === SettingTab.NOTIFICATIONS && (
-                    <NotificationsSettingTab />
+                    <NotificationsSettingTab 
+                      settings={notificationSettings}
+                      isLoading={isLoadingNotifications}
+                      onUpdateChatMessages={handleUpdateChatMessages}
+                      onUpdateCommentsOnPosts={handleUpdateCommentsOnPosts}
+                      onUpdateUpvotes={handleUpdateUpvotes}
+                      onUpdateRepliesToComments={handleUpdateRepliesToComments}
+                      onUpdateNewFollowers={handleUpdateNewFollowers}
+                      onUpdateActivityFromFollowed={handleUpdateActivityFromFollowed}
+                    />
                   )}
+
+
                   {activeTab === SettingTab.LEARNING && <LearningSettingTab />}
                 </>
               ) : (

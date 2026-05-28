@@ -113,7 +113,17 @@ const API_ROUTES = {
     FOLLOWERS_TAB_VISIBILITY: "v1/settings/followers-tab-visibility",
     FOLLOWING_TAB_VISIBILITY: "v1/settings/following-tab-visibility",
     FRIEND_TAB_VISIBILITY: "v1/settings/friend-tab-visibility",
+    NOTIFICATION: {
+      BASE: "v1/settings/notifications",
+      CHAT_MESSAGES: "v1/settings/notifications/chat-messages",
+      COMMENTS_ON_POSTS: "v1/settings/notifications/comments-on-posts",
+      UPVOTES: "v1/settings/notifications/upvotes",
+      REPLIES_TO_COMMENTS: "v1/settings/notifications/replies-to-comments",
+      NEW_FOLLOWERS: "v1/settings/notifications/new-followers",
+      ACTIVITY_FROM_FOLLOWED: "v1/settings/notifications/activity-from-followed",
+    }
   },
+
   NOTIFICATION: {
     LIST: "v1/notifications",
     UNREAD_COUNT: "v1/notifications/unread-count",

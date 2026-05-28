@@ -265,6 +265,9 @@ export class UserService {
         privacySettings: {
           create: {},
         },
+        notificationSettings: {
+          create: {},
+        },
       },
       select: {
         id: true,

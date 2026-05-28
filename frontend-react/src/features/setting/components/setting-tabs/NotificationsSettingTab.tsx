@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Bell, Mail, BellOff, MessageSquare, Activity } from "lucide-react";
 import {
@@ -8,34 +8,96 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { NotificationChannel } from "@/shared/enums/NotificationChannel.enum";
 
-export default function NotificationsSettingTab() {
+interface NotificationsSettingTabProps {
+  settings?: any;
+  isLoading?: boolean;
+  onUpdateChatMessages: (value: string) => void;
+  onUpdateCommentsOnPosts: (value: string) => void;
+  onUpdateUpvotes: (value: string) => void;
+  onUpdateRepliesToComments: (value: string) => void;
+  onUpdateNewFollowers: (value: string) => void;
+  onUpdateActivityFromFollowed: (value: string) => void;
+}
+
+export default function NotificationsSettingTab({
+  settings,
+  onUpdateChatMessages,
+  onUpdateCommentsOnPosts,
+  onUpdateUpvotes,
+  onUpdateRepliesToComments,
+  onUpdateNewFollowers,
+  onUpdateActivityFromFollowed,
+}: NotificationsSettingTabProps) {
   const { t } = useTranslation();
-  
-  const [settings, setSettings] = useState({
-    chatMessages: "inbox",
-    commentsOnPosts: "inbox",
-    upvotesOnPosts: "off",
-    upvotesOnComments: "off",
-    repliesToComments: "inbox",
-    newFollowers: "inbox",
-    activityFromFollowed: "off"
-  });
+
+  /* ── 1. Local States for Notifications ── */
+  const [chatMessages, setChatMessages] = useState<string>(settings?.chatMessages ?? NotificationChannel.INBOX);
+  const [commentsOnPosts, setCommentsOnPosts] = useState<string>(settings?.commentsOnPosts ?? NotificationChannel.INBOX);
+  const [upvotes, setUpvotes] = useState<string>(settings?.upvotes ?? NotificationChannel.INBOX);
+  const [repliesToComments, setRepliesToComments] = useState<string>(settings?.repliesToComments ?? NotificationChannel.INBOX);
+  const [newFollowers, setNewFollowers] = useState<string>(settings?.newFollowers ?? NotificationChannel.INBOX);
+  const [activityFromFollowed, setActivityFromFollowed] = useState<string>(settings?.activityFromFollowed ?? NotificationChannel.INBOX);
+
+  /* ── 2. Sync Local State with Server Data ── */
+  useEffect(() => {
+    if (settings) {
+      if (settings.chatMessages) setChatMessages(settings.chatMessages);
+      if (settings.commentsOnPosts) setCommentsOnPosts(settings.commentsOnPosts);
+      if (settings.upvotes) setUpvotes(settings.upvotes);
+      if (settings.repliesToComments) setRepliesToComments(settings.repliesToComments);
+      if (settings.newFollowers) setNewFollowers(settings.newFollowers);
+      if (settings.activityFromFollowed) setActivityFromFollowed(settings.activityFromFollowed);
+    }
+  }, [settings]);
 
   const handleSettingChange = (key: string, value: string) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    switch (key) {
+      case "chatMessages":
+        setChatMessages(value);
+        onUpdateChatMessages(value);
+        break;
+      case "commentsOnPosts":
+        setCommentsOnPosts(value);
+        onUpdateCommentsOnPosts(value);
+        break;
+      case "upvotes":
+        setUpvotes(value);
+        onUpdateUpvotes(value);
+        break;
+      case "repliesToComments":
+        setRepliesToComments(value);
+        onUpdateRepliesToComments(value);
+        break;
+      case "newFollowers":
+        setNewFollowers(value);
+        onUpdateNewFollowers(value);
+        break;
+      case "activityFromFollowed":
+        setActivityFromFollowed(value);
+        onUpdateActivityFromFollowed(value);
+        break;
+    }
   };
 
-  const NotificationItem = ({ 
-    titleKey, 
-    descKey, 
+  const notificationStates = {
+    chatMessages,
+    commentsOnPosts,
+    upvotes,
+    repliesToComments,
+    newFollowers,
+    activityFromFollowed,
+  };
+
+  const NotificationItem = ({
+    titleKey,
+    descKey,
     settingKey,
-    hideEmail = false
-  }: { 
-    titleKey: string; 
-    descKey: string; 
-    settingKey: keyof typeof settings;
-    hideEmail?: boolean;
+  }: {
+    titleKey: string;
+    descKey: string;
+    settingKey: keyof typeof notificationStates;
   }) => (
     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
       <div className="flex-1 pr-4">
@@ -43,29 +105,27 @@ export default function NotificationsSettingTab() {
         <p className="text-sm text-muted-foreground">{t(descKey)}</p>
       </div>
       <div className="w-[180px]">
-        <Select 
-          value={settings[settingKey]} 
+        <Select
+          value={notificationStates[settingKey]}
           onValueChange={(val) => handleSettingChange(settingKey, val)}
         >
           <SelectTrigger className="bg-background">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {!hideEmail && (
-              <SelectItem value="email">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-blue-500" />
-                  <span>{t("settings.notifications.options.email")}</span>
-                </div>
-              </SelectItem>
-            )}
-            <SelectItem value="inbox">
+            <SelectItem value="EMAIL">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-blue-500" />
+                <span>{t("settings.notifications.options.email")}</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="INBOX">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-amber-500" />
                 <span>{t("settings.notifications.options.inbox")}</span>
               </div>
             </SelectItem>
-            <SelectItem value="off">
+            <SelectItem value="OFF">
               <div className="flex items-center gap-2">
                 <BellOff className="h-4 w-4 text-muted-foreground" />
                 <span>{t("settings.notifications.options.off")}</span>
@@ -79,14 +139,17 @@ export default function NotificationsSettingTab() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      
       <div className="space-y-4">
         <div className="flex items-center gap-2 pb-2 border-b">
           <Bell className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">{t("settings.notificationsTitle")}</h2>
+          <h2 className="text-xl font-semibold">
+            {t("settings.notificationsTitle")}
+          </h2>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">{t("settings.notificationsDescription")}</p>
-        
+        <p className="text-sm text-muted-foreground mb-6">
+          {t("settings.notificationsDescription")}
+        </p>
+
         <div className="space-y-6 mt-4">
           {/* Messages Section */}
           <section className="space-y-4">
@@ -95,11 +158,10 @@ export default function NotificationsSettingTab() {
               {t("settings.notifications.messages")}
             </h3>
             <div className="grid gap-4">
-              <NotificationItem 
-                titleKey="settings.notifications.chatMessages" 
-                descKey="settings.notifications.chatMessagesDesc" 
-                settingKey="chatMessages" 
-                hideEmail
+              <NotificationItem
+                titleKey="settings.notifications.chatMessages"
+                descKey="settings.notifications.chatMessagesDesc"
+                settingKey="chatMessages"
               />
             </div>
           </section>
@@ -111,35 +173,30 @@ export default function NotificationsSettingTab() {
               {t("settings.notifications.activity")}
             </h3>
             <div className="grid gap-4">
-              <NotificationItem 
-                titleKey="settings.notifications.commentsOnPosts" 
-                descKey="settings.notifications.commentsOnPostsDesc" 
-                settingKey="commentsOnPosts" 
+              <NotificationItem
+                titleKey="settings.notifications.commentsOnPosts"
+                descKey="settings.notifications.commentsOnPostsDesc"
+                settingKey="commentsOnPosts"
               />
-              <NotificationItem 
-                titleKey="settings.notifications.upvotesOnPosts" 
-                descKey="settings.notifications.upvotesOnPostsDesc" 
-                settingKey="upvotesOnPosts" 
+              <NotificationItem
+                titleKey="settings.notifications.upvotes"
+                descKey="settings.notifications.upvotesDesc"
+                settingKey="upvotes"
               />
-              <NotificationItem 
-                titleKey="settings.notifications.upvotesOnComments" 
-                descKey="settings.notifications.upvotesOnCommentsDesc" 
-                settingKey="upvotesOnComments" 
+              <NotificationItem
+                titleKey="settings.notifications.repliesToComments"
+                descKey="settings.notifications.repliesToCommentsDesc"
+                settingKey="repliesToComments"
               />
-              <NotificationItem 
-                titleKey="settings.notifications.repliesToComments" 
-                descKey="settings.notifications.repliesToCommentsDesc" 
-                settingKey="repliesToComments" 
+              <NotificationItem
+                titleKey="settings.notifications.newFollowers"
+                descKey="settings.notifications.newFollowersDesc"
+                settingKey="newFollowers"
               />
-              <NotificationItem 
-                titleKey="settings.notifications.newFollowers" 
-                descKey="settings.notifications.newFollowersDesc" 
-                settingKey="newFollowers" 
-              />
-              <NotificationItem 
-                titleKey="settings.notifications.activityFromFollowed" 
-                descKey="settings.notifications.activityFromFollowedDesc" 
-                settingKey="activityFromFollowed" 
+              <NotificationItem
+                titleKey="settings.notifications.activityFromFollowed"
+                descKey="settings.notifications.activityFromFollowedDesc"
+                settingKey="activityFromFollowed"
               />
             </div>
           </section>
@@ -148,3 +205,6 @@ export default function NotificationsSettingTab() {
     </div>
   );
 }
+
+
+

@@ -160,6 +160,9 @@ export class DirectChatGateway
         seenBy: [],
       });
 
+      // Emit dedicated notification event
+      this.server.to(receiverId).emit('receive-notification', savedNotification);
+
       return { success: true };
     } catch (error: any) {
       console.error('Send message error:', error);

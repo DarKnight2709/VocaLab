@@ -1,9 +1,14 @@
-import { api, getErrorMessage } from "@/shared/lib/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import i18n from "@/shared/i18n";
 import API_ROUTES from "@/shared/lib/api-routes";
 import type { ScopeVisibilityType } from "@/shared/enums/ScopeVisibility.enum";
+import { NotificationSettingSchema } from "@/shared/validations/SettingSchema";
+
+export const NOTIFICATION_KEYS = {
+  settings: () => ["notifications", "settings"] as const,
+};
 
 export const useAllowFollowMutation = () => {
   const qc = useQueryClient();
@@ -64,3 +69,91 @@ export const useUpdateMessageScopeMutation = () => {
     onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
   });
 };
+
+
+export function useNotificationSettingsQuery() {
+  return useQuery({
+    queryKey: NOTIFICATION_KEYS.settings(),
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.SETTING.NOTIFICATION.BASE),
+        NotificationSettingSchema
+      );
+      return result.data;
+    },
+  });
+}
+
+
+export const useUpdateChatMessagesMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (chatMessages: string) =>
+      api.patch(API_ROUTES.SETTING.NOTIFICATION.CHAT_MESSAGES, { chatMessages }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
+  });
+};
+
+export const useUpdateCommentsOnPostsMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (commentsOnPosts: string) =>
+      api.patch(API_ROUTES.SETTING.NOTIFICATION.COMMENTS_ON_POSTS, { commentsOnPosts }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
+  });
+};
+
+export const useUpdateUpvotesMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (upvotes: string) =>
+      api.patch(API_ROUTES.SETTING.NOTIFICATION.UPVOTES, { upvotes }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
+  });
+};
+
+export const useUpdateRepliesToCommentsMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (repliesToComments: string) =>
+      api.patch(API_ROUTES.SETTING.NOTIFICATION.REPLIES_TO_COMMENTS, { repliesToComments }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
+  });
+};
+
+export const useUpdateNewFollowersMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (newFollowers: string) =>
+      api.patch(API_ROUTES.SETTING.NOTIFICATION.NEW_FOLLOWERS, { newFollowers }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
+  });
+};
+
+export const useUpdateActivityFromFollowedMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (activityFromFollowed: string) =>
+      api.patch(API_ROUTES.SETTING.NOTIFICATION.ACTIVITY_FROM_FOLLOWED, { activityFromFollowed }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
+  });
+};
+

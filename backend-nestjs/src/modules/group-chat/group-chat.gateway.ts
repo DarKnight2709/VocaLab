@@ -21,6 +21,7 @@ import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendGroupMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PrismaService } from '@/core/database/prisma.service';
 
 @WebSocketGateway({
   cors: {
@@ -38,6 +39,7 @@ export class GroupChatGateway {
   server!: Server;
 
   constructor(
+    private prisma: PrismaService,
     private messagesService: MessagesService,
     @Inject(forwardRef(() => NotificationsService))
     private notificationsService: NotificationsService,
@@ -82,6 +84,24 @@ export class GroupChatGateway {
         groupId,
         seenBy: [],
       });
+
+      // Notify all group members about the new notification individually
+      // This ensures global listeners (useNotificationSocket) receive it even if not in the group room
+      // const members = await this.prisma.groupMember.findMany({
+      //   where: { groupId },
+      //   select: { userId: true },
+      // });
+
+      // members.forEach((member) => {
+      //   // Send to each member's private room
+      //   if (member.userId !== user.id) {
+      //     this.server.to(member.userId).emit('receive-notification', savedNotification);
+      //   }
+      // });
+
+      this.server
+        .to(`group-${groupId}`)
+        .emit('receive-notification', savedNotification);
 
       return { success: true };
     } catch (error: any) {
