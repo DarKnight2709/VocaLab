@@ -71,6 +71,8 @@ enum NotificationType {
   CHAT_DIRECT
   CHAT_GROUP
   SYSTEM
+  COMMENT
+  UPVOTE
 }
 
 enum NotificationChannel {

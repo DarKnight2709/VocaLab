@@ -33,7 +33,14 @@ export function NotificationItem({
       return notification.content || "System notification";
     }
 
-    const typePrefix = notification.type === NotificationType.CHAT_DIRECT ? "directMessage" : "groupMessage";
+    const typePrefix =
+      notification.type === NotificationType.CHAT_DIRECT
+        ? "directMessage"
+        : notification.type === NotificationType.COMMENT
+          ? notification.metadata?.parentCommentId
+            ? "reply"
+            : "comment"
+          : "groupMessage";
     let typeSuffix = "";
 
     if (hasReply && hasAttachment) {
@@ -58,6 +65,10 @@ export function NotificationItem({
       case NotificationType.CHAT_DIRECT:
       case NotificationType.CHAT_GROUP:
         return ROUTES.CHAT.url;
+      case NotificationType.COMMENT:
+        return notification.metadata?.blogId
+          ? ROUTES.BLOG_DETAIL.url.replace(":id", notification.metadata.blogId)
+          : ROUTES.BLOG.url;
       default:
         return "#";
     }

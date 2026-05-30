@@ -26,6 +26,18 @@ export interface SendGroupMessageJobData {
   attachments: MessageAttachmentDto[];
 }
 
+/**
+ * Data structure for the comment/reply notification email job
+ */
+export interface CommentNotificationJobData {
+  recipientEmail: string;
+  senderName: string;
+  activityType: string;
+  content: string;
+  postTitle?: string;
+  blogId?: string;
+}
+
 @Processor('email-notification')
 export class EmailProcessor extends WorkerHost {
   private readonly logger = new Logger(EmailProcessor.name);
@@ -58,6 +70,20 @@ export class EmailProcessor extends WorkerHost {
             data.groupName,
             data.content,
             data.attachments,
+          );
+          break;
+        }
+
+        case EmailJobNames.COMMENT_ON_POST_EMAIL:
+        case EmailJobNames.REPLY_ON_COMMENT_EMAIL: {
+          const data: CommentNotificationJobData = job.data;
+          await this.emailService.sendCommentNotificationEmail(
+            data.recipientEmail,
+            data.senderName,
+            data.activityType,
+            data.content,
+            data.postTitle,
+            data.blogId,
           );
           break;
         }

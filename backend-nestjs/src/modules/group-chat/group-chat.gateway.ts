@@ -30,7 +30,6 @@ import { PrismaService } from '@/core/database/prisma.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
-import { SendGroupMessageJobData } from '../notifications/email.processor';
 
 @WebSocketGateway({
   cors: {
@@ -127,7 +126,7 @@ export class GroupChatGateway {
               };
 
               const memberNotification =
-                await this.notificationsService.createChatNotification({
+                await this.notificationsService.createNotification({
                   type: NotificationType.CHAT_GROUP,
                   senderId: user.id,
                   recipientId: member.userId,

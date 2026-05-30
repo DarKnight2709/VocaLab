@@ -397,7 +397,44 @@
     "comments": "Bình luận",
     "writeComment": "Viết bình luận...",
     "lastEdited": "Chỉnh sửa lần cuối",
-    "edited": "Đã chỉnh sửa"
+    "edited": "Đã chỉnh sửa",
+    "commentDeleted": "Bình luận này đã bị xóa",
+    "hideReplies": "Ẩn phản hồi",
+    "viewReplies": "Xem {{count}} phản hồi",
+    "deleteComment": "Xóa bình luận",
+    "upvote": "Bình chọn lên",
+    "downvote": "Bình chọn xuống",
+    "reply": "Trả lời bình luận",
+    "page": "Trang",
+    "contentPlaceholder": "Bắt đầu viết nội dung bài viết của bạn...",
+    "coverPreviewAlt": "Xem trước ảnh bìa",
+    "postCreated": "Tạo bài viết thành công!",
+    "postCreateFailed": "Tạo bài viết thất bại",
+    "postUpdated": "Cập nhật bài viết thành công!",
+    "postUpdateFailed": "Cập nhật thất bại",
+    "postDeleted": "Xoá bài viết thành công!",
+    "postDeleteFailed": "Xoá thất bại",
+    "commentSentFailed": "Gửi bình luận thất bại",
+    "commentDeleteFailed": "Xoá bình luận thất bại",
+    "commentUpdateFailed": "Cập nhật bình luận thất bại",
+    "commentReplyFailed": "Trả lời bình luận thất bại",
+    "actionFailed": "Thao tác thất bại",
+    "editor": {
+      "bold": "Đậm",
+      "italic": "Nghiêng",
+      "underline": "Gạch chân",
+      "strike": "Gạch ngang",
+      "h1": "Tiêu đề 1",
+      "h2": "Tiêu đề 2",
+      "list": "Danh sách",
+      "orderedList": "Danh sách đánh số",
+      "alignLeft": "Căn trái",
+      "alignCenter": "Căn giữa",
+      "alignRight": "Căn phải",
+      "insertLink": "Chèn liên kết",
+      "insertImage": "Chèn ảnh",
+      "enterUrl": "Nhập URL:"
+    }
   },
   "vocabulary": {
     "title": "Từ vựng",
@@ -801,6 +838,8 @@
     "groupMessage": "<bold>{{sender}}</bold> đã gửi tin nhắn trong <bold>{{group}}</bold>",
     "groupMessageWithAttachment": "<bold>{{sender}}</bold> đã gửi {{count}} tệp đính kèm trong <bold>{{group}}</bold>",
     "groupMessageWithReply": "<bold>{{sender}}</bold> đã trả lời trong <bold>{{group}}</bold>",
-    "groupMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> đã trả lời bằng {{count}} tệp đính kèm trong <bold>{{group}}</bold>"
+    "groupMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> đã trả lời bằng {{count}} tệp đính kèm trong <bold>{{group}}</bold>",
+    "comment": "<bold>{{sender}}</bold> đã bình luận về bài viết của bạn",
+    "reply": "<bold>{{sender}}</bold> đã phản hồi bình luận của bạn"
   }
 }

@@ -1,13 +1,18 @@
 import { map } from 'rxjs/operators';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
-import { NotificationType } from '@prisma/client';
+import { NotificationChannel, NotificationType } from '@prisma/client';
 import {
   GetNotificationResponseDto,
   NotificationDto,
 } from './dto/notifications-response.dto';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { GroupChatService } from '../group-chat/group-chat.service';
+import { NotificationsGateway } from './notifications.gateway';
+import { SettingKey } from '@/common/enums/setting-key.enum';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { EmailJobNames } from '@/common/enums/email-job-names.enum';
 
 @Injectable()
 export class NotificationsService {
@@ -15,9 +20,11 @@ export class NotificationsService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => GroupChatService))
     private groupChatService: GroupChatService,
+    private notificationsGateway: NotificationsGateway,
+    @InjectQueue('email-notification') private readonly emailQueue: Queue,
   ) {}
 
-  async createChatNotification(
+  async createNotification(
     data: CreateNotificationDto,
   ): Promise<NotificationDto> {
     const isGroup = data.type === NotificationType.CHAT_GROUP;
@@ -51,7 +58,7 @@ export class NotificationsService {
         recipient: {
           select: {
             email: true,
-          }
+          },
         },
         group: {
           select: {
@@ -77,6 +84,109 @@ export class NotificationsService {
     };
   }
 
+  async notifyActivity(params: {
+    recipientId: string;
+    senderId: string;
+    type: NotificationType;
+    content: string;
+    metadata?: any;
+    settingKey: SettingKey;
+  }) {
+    const { recipientId, senderId, type, content, metadata, settingKey } =
+      params;
+
+    // Don't notify self
+    if (recipientId === senderId) return;
+
+    // Fetch recipient's notification settings
+    const recipient = await this.prisma.user.findUnique({
+      where: { id: recipientId },
+      select: {
+        email: true,
+        notificationSettings: true,
+      },
+    });
+    if (!recipient) return;
+
+    const channel =
+      recipient.notificationSettings?.[settingKey] ?? NotificationChannel.INBOX;
+
+    if (channel === NotificationChannel.OFF) return;
+
+    if (channel === NotificationChannel.INBOX) {
+      await this.handleInboxNotification({
+        recipientId,
+        senderId,
+        type,
+        content,
+        metadata,
+      });
+    } else if (channel === NotificationChannel.EMAIL && recipient.email) {
+      await this.handleEmailNotification(recipient.email, params);
+    }
+  }
+
+  private async handleInboxNotification(data: {
+    recipientId: string;
+    senderId: string;
+    type: NotificationType;
+    content: string;
+    metadata?: any;
+  }) {
+    const notification = await this.createNotification(data);
+    this.notificationsGateway.sendNotificationToUser(
+      data.recipientId,
+      notification,
+    );
+  }
+
+  private async handleEmailNotification(
+    recipientEmail: string,
+    params: {
+      senderId: string;
+      type: NotificationType;
+      content: string;
+      metadata?: any;
+    },
+  ) {
+    const { senderId, type, content, metadata } = params;
+
+    // Fetch sender and context data in parallel to save database roundtrip time
+    const [sender, blogContext] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: senderId },
+        select: { fullName: true, username: true },
+      }),
+      type === NotificationType.COMMENT && metadata?.blogId
+        ? this.prisma.blog.findUnique({
+            where: { id: metadata.blogId },
+            select: { title: true },
+          })
+        : null,
+    ]);
+
+    const senderName = sender?.fullName || sender?.username;
+    const { activityType, jobName } = this.getEmailDetails(type, metadata);
+
+    // Queue the email job
+    await this.emailQueue.add(
+      jobName,
+      {
+        recipientEmail,
+        senderName,
+        activityType,
+        content,
+        postTitle: blogContext?.title,
+        blogId: metadata?.blogId,
+      },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 1000 },
+        removeOnComplete: true,
+      },
+    );
+  }
+
   async getNotifications(
     userId: string,
     page: number = 1,
@@ -94,8 +204,8 @@ export class NotificationsService {
         where: {
           OR: [{ recipientId: userId }, { groupId: { in: groupIds } }],
           senderId: {
-            not: userId
-          }
+            not: userId,
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -112,7 +222,7 @@ export class NotificationsService {
           recipient: {
             select: {
               email: true,
-            }
+            },
           },
           group: {
             select: {
@@ -125,8 +235,8 @@ export class NotificationsService {
         where: {
           OR: [{ recipientId: userId }, { groupId: { in: groupIds } }],
           senderId: {
-            not: userId
-          }
+            not: userId,
+          },
         },
       }),
     ]);
@@ -151,7 +261,7 @@ export class NotificationsService {
       where: {
         OR: [{ recipientId: userId }, { groupId: { in: groupIds } }],
         senderId: {
-          not: userId
+          not: userId,
         },
         isRead: false,
       },
@@ -172,8 +282,8 @@ export class NotificationsService {
           isRead: false,
           OR: [{ recipientId: userId }, { groupId: { in: groupIds } }],
           senderId: {
-            not: userId
-          }
+            not: userId,
+          },
         },
         data: { isRead: true },
       });
@@ -186,10 +296,32 @@ export class NotificationsService {
         isRead: false,
         OR: [{ recipientId: userId }, { groupId: { in: groupIds } }],
         senderId: {
-          not: userId
-        }
+          not: userId,
+        },
       },
       data: { isRead: true },
     });
+  }
+
+  // Helpers
+
+  private getEmailDetails(type: NotificationType, metadata: any) {
+    if (type === NotificationType.COMMENT) {
+      const isReply = !!metadata?.parentCommentId;
+      return {
+        activityType: isReply
+          ? 'replied to your comment'
+          : 'commented on your post',
+        jobName: isReply
+          ? EmailJobNames.REPLY_ON_COMMENT_EMAIL
+          : EmailJobNames.COMMENT_ON_POST_EMAIL,
+      };
+    }
+
+    // Default fallback values
+    return {
+      activityType: 'active on VocaLab',
+      jobName: EmailJobNames.COMMENT_ON_POST_EMAIL,
+    };
   }
 }

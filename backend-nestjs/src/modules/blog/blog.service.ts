@@ -3,8 +3,9 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { VoteType } from '@prisma/client';
+import { VoteType, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreateBlogDto,
   UpdateBlogDto,
@@ -15,10 +16,14 @@ import {
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import { CreateBlogResponseDto, CreateCommentResponseDto, DeleteResponseDto, GetBlogByIdResponseDto, GetBlogsResponseDto, GetMyBlogsResponseDto, UpdateBlogResponseDto, UpdateCommentResponseDto } from './dto/blog-response.dto';
+import { SettingKey } from '@/common/enums/setting-key.enum';
 
 @Injectable()
 export class BlogService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   // ==================== BLOG CRUD ====================
 
@@ -330,6 +335,22 @@ export class BlogService {
         blogId,
       },
     });
+
+    // Notify blog author
+    if (blog.authorId !== userId) {
+      await this.notificationsService.notifyActivity({
+        recipientId: blog.authorId,
+        senderId: userId,
+        type: NotificationType.COMMENT,
+        content: dto.content,
+        metadata: {
+          blogId,
+          commentId: comment.id,
+        },
+        settingKey: SettingKey.COMMENTS,
+      });
+    }
+
     return comment;
   }
 
@@ -379,6 +400,9 @@ export class BlogService {
           deletedAt: null,
         },
       },
+      include: {
+        blog: true,
+      },
     });
 
     if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
@@ -391,6 +415,39 @@ export class BlogService {
         parentCommentId: comment.id,
       },
     });
+
+    // Notify parent comment author
+    if (comment.authorId !== userId) {
+      await this.notificationsService.notifyActivity({
+        recipientId: comment.authorId,
+        senderId: userId,
+        type: NotificationType.COMMENT,
+        content: dto.reply,
+        metadata: {
+          blogId: comment.blogId,
+          commentId: replyComment.id,
+          parentCommentId: comment.id,
+        },
+        settingKey: SettingKey.COMMENTS,
+      });
+    }
+
+    // Also notify blog author if they are not the sender and not the parent comment author
+    if (comment.blog.authorId !== userId && comment.blog.authorId !== comment.authorId) {
+      await this.notificationsService.notifyActivity({
+        recipientId: comment.blog.authorId,
+        senderId: userId,
+        type: NotificationType.COMMENT,
+        content: dto.reply,
+        metadata: {
+          blogId: comment.blogId,
+          commentId: replyComment.id,
+          parentCommentId: comment.id,
+        },
+        settingKey: SettingKey.COMMENTS,
+      });
+    }
+
     return replyComment;
   }
 

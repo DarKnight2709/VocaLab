@@ -188,4 +188,58 @@ export class EmailService {
       throw error;
     }
   }
+
+  /**
+   * Formats and delivers a notification email for comments and reply comments.
+   */
+  async sendCommentNotificationEmail(
+    to: string,
+    senderName: string,
+    activityType: string,
+    content: string,
+    postTitle?: string,
+    blogId?: string,
+  ): Promise<void> {
+    const from = this.configService.get('EMAIL_FROM');
+    const clientUrl = this.configService.get('CLIENT_URL');
+
+    try {
+      const subject = postTitle
+        ? `${senderName} ${activityType} on your post: ${postTitle}`
+        : `${senderName} ${activityType}`;
+
+      const viewUrl = blogId ? `${clientUrl}/blogs/${blogId}` : `${clientUrl}/blog`;
+
+      const mailOptions = {
+        from: `"VocaLab" <${from}>`,
+        to,
+        subject,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px;">
+            <h2 style="color: #333;">New activity on VocaLab</h2>
+            <p><strong>${senderName}</strong> ${activityType}${postTitle ? ` on <strong>${postTitle}</strong>` : ''}:</p>
+            <blockquote style="background: #fdfdfd; padding: 15px; border-left: 4px solid #4f46e5; margin: 15px 0; font-style: italic; color: #555;">
+              ${content}
+            </blockquote>
+            
+            <p style="margin-top: 25px;">
+              <a href="${viewUrl}" 
+                 style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                 View Activity
+              </a>
+            </p>
+          </div>
+        `,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Activity email successfully dispatched to ${to}`);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to send activity email notification to ${to}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
 }

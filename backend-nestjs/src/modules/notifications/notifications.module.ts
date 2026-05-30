@@ -6,6 +6,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { EmailService } from './email.service';
 import { EmailProcessor } from './email.processor';
 
+import { NotificationsGateway } from './notifications.gateway';
+
 @Module({
   imports: [
     // Register the specific queue name
@@ -15,7 +17,7 @@ import { EmailProcessor } from './email.processor';
     forwardRef(() => GroupChatModule),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService, EmailService, EmailProcessor],
-  exports: [NotificationsService, EmailService, BullModule],
+  providers: [NotificationsService, EmailService, EmailProcessor, NotificationsGateway],
+  exports: [NotificationsService, EmailService, BullModule, NotificationsGateway],
 })
 export class NotificationsModule {}

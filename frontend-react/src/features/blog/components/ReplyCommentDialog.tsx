@@ -70,7 +70,7 @@ export function ReplyCommentDialog(props: {
           <div className="space-y-2">
             <Input
               id="reply-comment-content"
-              placeholder={t("blog.replyPlaceholder").replace("{name}", comment.author.fullName)}
+              placeholder={t("blog.replyPlaceholder", { name: comment.author.fullName })}
               {...form.register("content")}
               autoComplete="content"
             />

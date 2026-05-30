@@ -7,7 +7,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseGuards, UsePipes, UseFilters, Inject } from '@nestjs/common';
+import { UseGuards, UsePipes, UseFilters } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
@@ -146,7 +146,7 @@ export class DirectChatGateway
         };
 
         const savedNotification =
-          await this.notificationsService.createChatNotification({
+          await this.notificationsService.createNotification({
             type: NotificationType.CHAT_DIRECT,
             senderId: user.id,
             recipientId: receiverId,
