@@ -14,9 +14,8 @@ interface NotificationsSettingTabProps {
   settings?: any;
   isLoading?: boolean;
   onUpdateChatMessages: (value: string) => void;
-  onUpdateCommentsOnPosts: (value: string) => void;
+  onUpdateComments: (value: string) => void;
   onUpdateUpvotes: (value: string) => void;
-  onUpdateRepliesToComments: (value: string) => void;
   onUpdateNewFollowers: (value: string) => void;
   onUpdateActivityFromFollowed: (value: string) => void;
 }
@@ -24,9 +23,8 @@ interface NotificationsSettingTabProps {
 export default function NotificationsSettingTab({
   settings,
   onUpdateChatMessages,
-  onUpdateCommentsOnPosts,
+  onUpdateComments,
   onUpdateUpvotes,
-  onUpdateRepliesToComments,
   onUpdateNewFollowers,
   onUpdateActivityFromFollowed,
 }: NotificationsSettingTabProps) {
@@ -34,9 +32,8 @@ export default function NotificationsSettingTab({
 
   /* ── 1. Local States for Notifications ── */
   const [chatMessages, setChatMessages] = useState<string>(settings?.chatMessages ?? NotificationChannel.INBOX);
-  const [commentsOnPosts, setCommentsOnPosts] = useState<string>(settings?.commentsOnPosts ?? NotificationChannel.INBOX);
+  const [comments, setComments] = useState<string>(settings?.comments ?? NotificationChannel.INBOX);
   const [upvotes, setUpvotes] = useState<string>(settings?.upvotes ?? NotificationChannel.INBOX);
-  const [repliesToComments, setRepliesToComments] = useState<string>(settings?.repliesToComments ?? NotificationChannel.INBOX);
   const [newFollowers, setNewFollowers] = useState<string>(settings?.newFollowers ?? NotificationChannel.INBOX);
   const [activityFromFollowed, setActivityFromFollowed] = useState<string>(settings?.activityFromFollowed ?? NotificationChannel.INBOX);
 
@@ -44,9 +41,8 @@ export default function NotificationsSettingTab({
   useEffect(() => {
     if (settings) {
       if (settings.chatMessages) setChatMessages(settings.chatMessages);
-      if (settings.commentsOnPosts) setCommentsOnPosts(settings.commentsOnPosts);
+      if (settings.comments) setComments(settings.comments);
       if (settings.upvotes) setUpvotes(settings.upvotes);
-      if (settings.repliesToComments) setRepliesToComments(settings.repliesToComments);
       if (settings.newFollowers) setNewFollowers(settings.newFollowers);
       if (settings.activityFromFollowed) setActivityFromFollowed(settings.activityFromFollowed);
     }
@@ -58,17 +54,13 @@ export default function NotificationsSettingTab({
         setChatMessages(value);
         onUpdateChatMessages(value);
         break;
-      case "commentsOnPosts":
-        setCommentsOnPosts(value);
-        onUpdateCommentsOnPosts(value);
+      case "comments":
+        setComments(value);
+        onUpdateComments(value);
         break;
       case "upvotes":
         setUpvotes(value);
         onUpdateUpvotes(value);
-        break;
-      case "repliesToComments":
-        setRepliesToComments(value);
-        onUpdateRepliesToComments(value);
         break;
       case "newFollowers":
         setNewFollowers(value);
@@ -83,9 +75,8 @@ export default function NotificationsSettingTab({
 
   const notificationStates = {
     chatMessages,
-    commentsOnPosts,
+    comments,
     upvotes,
-    repliesToComments,
     newFollowers,
     activityFromFollowed,
   };
@@ -174,19 +165,14 @@ export default function NotificationsSettingTab({
             </h3>
             <div className="grid gap-4">
               <NotificationItem
-                titleKey="settings.notifications.commentsOnPosts"
-                descKey="settings.notifications.commentsOnPostsDesc"
-                settingKey="commentsOnPosts"
+                titleKey="settings.notifications.comments"
+                descKey="settings.notifications.commentsDesc"
+                settingKey="comments"
               />
               <NotificationItem
                 titleKey="settings.notifications.upvotes"
                 descKey="settings.notifications.upvotesDesc"
                 settingKey="upvotes"
-              />
-              <NotificationItem
-                titleKey="settings.notifications.repliesToComments"
-                descKey="settings.notifications.repliesToCommentsDesc"
-                settingKey="repliesToComments"
               />
               <NotificationItem
                 titleKey="settings.notifications.newFollowers"

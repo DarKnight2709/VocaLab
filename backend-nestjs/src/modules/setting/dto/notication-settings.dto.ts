@@ -12,19 +12,13 @@ export class UpdateNotificationSettingDto {
   @ApiPropertyOptional({ enum: NotificationChannel })
   @IsEnum(NotificationChannel)
   @IsOptional()
-  commentsOnPosts?: NotificationChannel;
+  comments?: NotificationChannel;
 
   @ApiPropertyOptional({ enum: NotificationChannel })
   @IsEnum(NotificationChannel)
   @IsOptional()
   upvotes?: NotificationChannel;
 
-  @ApiPropertyOptional({ enum: NotificationChannel })
-  @IsEnum(NotificationChannel)
-  @IsOptional()
-  repliesToComments?: NotificationChannel;
-
-  @ApiPropertyOptional({ enum: NotificationChannel })
   @IsEnum(NotificationChannel)
   @IsOptional()
   newFollowers?: NotificationChannel;
@@ -42,11 +36,11 @@ export class UpdateChatMessagesDto {
   chatMessages!: NotificationChannel;
 }
 
-export class UpdateCommentsOnPostsDto {
+export class UpdateCommentsDto {
   @ApiProperty({ enum: NotificationChannel })
   @IsEnum(NotificationChannel)
   @IsNotEmpty()
-  commentsOnPosts!: NotificationChannel;
+  comments!: NotificationChannel;
 }
 
 export class UpdateUpvotesDto {
@@ -56,12 +50,7 @@ export class UpdateUpvotesDto {
   upvotes!: NotificationChannel;
 }
 
-export class UpdateRepliesToCommentsDto {
-  @ApiProperty({ enum: NotificationChannel })
-  @IsEnum(NotificationChannel)
-  @IsNotEmpty()
-  repliesToComments!: NotificationChannel;
-}
+
 
 export class UpdateNewFollowersDto {
   @ApiProperty({ enum: NotificationChannel })
@@ -83,13 +72,10 @@ export class NotificationSettingDto {
   chatMessages!: NotificationChannel;
 
   @ApiProperty({ enum: NotificationChannel })
-  commentsOnPosts!: NotificationChannel;
+  comments!: NotificationChannel;
 
   @ApiProperty({ enum: NotificationChannel })
   upvotes!: NotificationChannel;
-
-  @ApiProperty({ enum: NotificationChannel })
-  repliesToComments!: NotificationChannel;
 
   @ApiProperty({ enum: NotificationChannel })
   newFollowers!: NotificationChannel;

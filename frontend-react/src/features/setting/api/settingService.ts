@@ -97,11 +97,11 @@ export const useUpdateChatMessagesMutation = () => {
   });
 };
 
-export const useUpdateCommentsOnPostsMutation = () => {
+export const useUpdateCommentsMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (commentsOnPosts: string) =>
-      api.patch(API_ROUTES.SETTING.NOTIFICATION.COMMENTS_ON_POSTS, { commentsOnPosts }),
+    mutationFn: (comments: string) =>
+      api.patch(API_ROUTES.SETTING.NOTIFICATION.COMMENTS, { comments }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
     },
@@ -121,17 +121,7 @@ export const useUpdateUpvotesMutation = () => {
   });
 };
 
-export const useUpdateRepliesToCommentsMutation = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (repliesToComments: string) =>
-      api.patch(API_ROUTES.SETTING.NOTIFICATION.REPLIES_TO_COMMENTS, { repliesToComments }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: NOTIFICATION_KEYS.settings() });
-    },
-    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
-  });
-};
+
 
 export const useUpdateNewFollowersMutation = () => {
   const qc = useQueryClient();

@@ -29,7 +29,7 @@ import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { SetPasswordDialog } from "@/features/auth/components/SetPasswordDialog";
 import { TwoFactorAuthDialog } from "@/features/auth/components/TwoFactorAuthDialog";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useAllowFollowMutation, useUpdateMessageScopeMutation, useUpdateFollowersTabVisibilityMutation, useUpdateFollowingTabVisibilityMutation, useUpdateFriendTabVisibilityMutation, useUpdateChatMessagesMutation, useUpdateCommentsOnPostsMutation, useUpdateUpvotesMutation, useUpdateRepliesToCommentsMutation, useUpdateNewFollowersMutation, useUpdateActivityFromFollowedMutation, useNotificationSettingsQuery } from "../api/settingService";
+import { useAllowFollowMutation, useUpdateMessageScopeMutation, useUpdateFollowersTabVisibilityMutation, useUpdateFollowingTabVisibilityMutation, useUpdateFriendTabVisibilityMutation, useUpdateChatMessagesMutation, useUpdateCommentsMutation, useUpdateUpvotesMutation, useUpdateNewFollowersMutation, useUpdateActivityFromFollowedMutation, useNotificationSettingsQuery } from "../api/settingService";
 
 
 import type { ScopeVisibilityType } from "@/shared/enums/ScopeVisibility.enum";
@@ -92,9 +92,8 @@ export default function SettingPage() {
   const updateFollowingTabVisibilityMutation = useUpdateFollowingTabVisibilityMutation();
   const updateFriendTabVisibilityMutation = useUpdateFriendTabVisibilityMutation();
   const updateChatMessagesMutation = useUpdateChatMessagesMutation();
-  const updateCommentsOnPostsMutation = useUpdateCommentsOnPostsMutation();
+  const updateCommentsMutation = useUpdateCommentsMutation();
   const updateUpvotesMutation = useUpdateUpvotesMutation();
-  const updateRepliesToCommentsMutation = useUpdateRepliesToCommentsMutation();
   const updateNewFollowersMutation = useUpdateNewFollowersMutation();
   const updateActivityFromFollowedMutation = useUpdateActivityFromFollowedMutation();
 
@@ -185,11 +184,11 @@ export default function SettingPage() {
     }
   };
 
-  const handleUpdateCommentsOnPosts = async (value: string) => {
+  const handleUpdateComments = async (value: string) => {
     try {
-      await updateCommentsOnPostsMutation.mutateAsync(value);
+      await updateCommentsMutation.mutateAsync(value);
     } catch (error) {
-      console.error("Update comments on posts error:", error);
+      console.error("Update comments error:", error);
     }
   };
 
@@ -198,14 +197,6 @@ export default function SettingPage() {
       await updateUpvotesMutation.mutateAsync(value);
     } catch (error) {
       console.error("Update upvotes error:", error);
-    }
-  };
-
-  const handleUpdateRepliesToComments = async (value: string) => {
-    try {
-      await updateRepliesToCommentsMutation.mutateAsync(value);
-    } catch (error) {
-      console.error("Update replies to comments error:", error);
     }
   };
 
@@ -330,9 +321,8 @@ export default function SettingPage() {
                       settings={notificationSettings}
                       isLoading={isLoadingNotifications}
                       onUpdateChatMessages={handleUpdateChatMessages}
-                      onUpdateCommentsOnPosts={handleUpdateCommentsOnPosts}
+                      onUpdateComments={handleUpdateComments}
                       onUpdateUpvotes={handleUpdateUpvotes}
-                      onUpdateRepliesToComments={handleUpdateRepliesToComments}
                       onUpdateNewFollowers={handleUpdateNewFollowers}
                       onUpdateActivityFromFollowed={handleUpdateActivityFromFollowed}
                     />

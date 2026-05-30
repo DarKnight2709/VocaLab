@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto } from './dto/setting.dto';
 import { ErrorCode } from '@/common/enums/error-code.enum';
-import { NotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsOnPostsDto, UpdateUpvotesDto, UpdateRepliesToCommentsDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
+import { NotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsDto, UpdateUpvotesDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
 
 
 @Injectable()
@@ -111,7 +111,7 @@ export class SettingService {
     });
   }
 
-  async updateCommentsOnPosts(userId: string, dto: UpdateCommentsOnPostsDto): Promise<void> {
+  async updateComments(userId: string, dto: UpdateCommentsDto): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -120,10 +120,10 @@ export class SettingService {
     }
     await this.prisma.notificationSetting.upsert({
       where: { userId },
-      update: { commentsOnPosts: dto.commentsOnPosts },
+      update: { comments: dto.comments },
       create: {
         userId,
-        commentsOnPosts: dto.commentsOnPosts,
+        comments: dto.comments,
       },
     });
   }
@@ -145,22 +145,7 @@ export class SettingService {
     });
   }
 
-  async updateRepliesToComments(userId: string, dto: UpdateRepliesToCommentsDto): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.notificationSetting.upsert({
-      where: { userId },
-      update: { repliesToComments: dto.repliesToComments },
-      create: {
-        userId,
-        repliesToComments: dto.repliesToComments,
-      },
-    });
-  }
+
 
   async updateNewFollowers(userId: string, dto: UpdateNewFollowersDto): Promise<void> {
     const user = await this.prisma.user.findUnique({
@@ -211,9 +196,8 @@ export class SettingService {
 
     return {
       chatMessages: settings.chatMessages,
-      commentsOnPosts: settings.commentsOnPosts,
+      comments: (settings as any).comments,
       upvotes: settings.upvotes,
-      repliesToComments: settings.repliesToComments,
       newFollowers: settings.newFollowers,
       activityFromFollowed: settings.activityFromFollowed,
       updatedAt: settings.updatedAt,

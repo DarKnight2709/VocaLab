@@ -509,9 +509,8 @@ model NotificationSetting {
   id                   String              @id @default(uuid())
   userId               String              @unique
   chatMessages         NotificationChannel @default(INBOX)
-  commentsOnPosts      NotificationChannel @default(INBOX)
+  comments             NotificationChannel @default(INBOX)
   upvotes              NotificationChannel @default(INBOX)
-  repliesToComments    NotificationChannel @default(INBOX)
   newFollowers         NotificationChannel @default(INBOX)
   activityFromFollowed NotificationChannel @default(INBOX)
   updatedAt            DateTime            @updatedAt

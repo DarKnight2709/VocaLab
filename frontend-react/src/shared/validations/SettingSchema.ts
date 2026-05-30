@@ -1,13 +1,12 @@
 import { z } from "zod";
-import { NotificationType } from "../enums/NotificationType.enum";
+import { NotificationChannel } from "../enums/NotificationChannel.enum";
 
-export const NotificationChannelEnum = z.nativeEnum(NotificationType);
+export const NotificationChannelEnum = z.nativeEnum(NotificationChannel);
 
 export const NotificationSettingSchema = z.object({
   chatMessages: NotificationChannelEnum,
-  commentsOnPosts: NotificationChannelEnum,
+  comments: NotificationChannelEnum,
   upvotes: NotificationChannelEnum,
-  repliesToComments: NotificationChannelEnum,
   newFollowers: NotificationChannelEnum,
   activityFromFollowed: NotificationChannelEnum,
   updatedAt: z.string(),

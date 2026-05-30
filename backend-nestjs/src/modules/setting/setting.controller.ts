@@ -4,7 +4,7 @@ import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibili
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { NotificationSettingDto, UpdateNotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsOnPostsDto, UpdateUpvotesDto, UpdateRepliesToCommentsDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
+import { NotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsDto, UpdateUpvotesDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
 
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 
@@ -78,13 +78,13 @@ export class SettingController {
     await this.settingService.updateChatMessages(user.id, dto);
   }
 
-  @Patch('notifications/comments-on-posts')
-  @ApiOperation({ summary: 'Update comments on posts notification setting' })
-  async updateCommentsOnPosts(
+  @Patch('notifications/comments')
+  @ApiOperation({ summary: 'Update comments notification setting' })
+  async updateComments(
     @CurrentUser() user: any,
-    @Body() dto: UpdateCommentsOnPostsDto,
+    @Body() dto: UpdateCommentsDto,
   ): Promise<void> {
-    await this.settingService.updateCommentsOnPosts(user.id, dto);
+    await this.settingService.updateComments(user.id, dto);
   }
 
   @Patch('notifications/upvotes')
@@ -96,14 +96,7 @@ export class SettingController {
     await this.settingService.updateUpvotes(user.id, dto);
   }
 
-  @Patch('notifications/replies-to-comments')
-  @ApiOperation({ summary: 'Update replies to comments notification setting' })
-  async updateRepliesToComments(
-    @CurrentUser() user: any,
-    @Body() dto: UpdateRepliesToCommentsDto,
-  ): Promise<void> {
-    await this.settingService.updateRepliesToComments(user.id, dto);
-  }
+
 
   @Patch('notifications/new-followers')
   @ApiOperation({ summary: 'Update new followers notification setting' })

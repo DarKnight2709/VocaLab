@@ -116,9 +116,8 @@ const API_ROUTES = {
     NOTIFICATION: {
       BASE: "v1/settings/notifications",
       CHAT_MESSAGES: "v1/settings/notifications/chat-messages",
-      COMMENTS_ON_POSTS: "v1/settings/notifications/comments-on-posts",
+      COMMENTS: "v1/settings/notifications/comments",
       UPVOTES: "v1/settings/notifications/upvotes",
-      REPLIES_TO_COMMENTS: "v1/settings/notifications/replies-to-comments",
       NEW_FOLLOWERS: "v1/settings/notifications/new-followers",
       ACTIVITY_FROM_FOLLOWED: "v1/settings/notifications/activity-from-followed",
     }
