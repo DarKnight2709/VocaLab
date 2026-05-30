@@ -120,6 +120,31 @@ export class EnvironmentValidation {
   @IsNumber()
   @Transform(({ value }) => (value ? parseInt(value, 10) : 0))
   REDIS_DB: number = 0;
+
+  // Email
+  @IsString()
+  @Transform(({ value }) => value || 'smtp.mailtrap.io')
+  EMAIL_HOST: string = 'smtp.mailtrap.io';
+
+  @IsNumber()
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 2525))
+  EMAIL_PORT: number = 2525;
+
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  EMAIL_SECURE: boolean = false;
+
+  @IsString()
+  @Transform(({ value }) => value || '')
+  EMAIL_USER: string = '';
+
+  @IsString()
+  @Transform(({ value }) => value || '')
+  EMAIL_PASS: string = '';
+
+  @IsString()
+  @Transform(({ value }) => value || 'noreply@vocalab.com')
+  EMAIL_FROM: string = 'noreply@vocalab.com';
 }
 
 export function validateConfig(config: Record<string, unknown>) {

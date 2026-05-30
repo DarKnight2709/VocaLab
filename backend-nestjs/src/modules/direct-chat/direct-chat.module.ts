@@ -6,7 +6,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [MessagesModule, UsersModule, NotificationsModule],
-  controllers: [], 
+  controllers: [],
   providers: [DirectChatGateway],
   exports: [DirectChatGateway],
 })

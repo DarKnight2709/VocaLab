@@ -21,6 +21,8 @@ import { UploadModule } from './modules/upload/upload.module';
 import helmet from 'helmet';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SettingModule } from './modules/setting/setting.module';
+import { BullModule } from '@nestjs/bullmq';
+import { ConfigService } from './common/services/config.service';
 
 @Module({
   imports: [
@@ -36,6 +38,16 @@ import { SettingModule } from './modules/setting/setting.module';
     UploadModule,
     ScheduleModule.forRoot(),
     SettingModule,
+    // tell BullMQ how to connect to Redis
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST'),
+          port: Number(configService.get('REDIS_PORT')),
+        },
+      }),
+    }),
   ],
   controllers: [],
   providers: [

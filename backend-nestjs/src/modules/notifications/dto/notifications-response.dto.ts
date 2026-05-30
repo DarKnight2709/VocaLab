@@ -15,6 +15,11 @@ export class NotificationSenderDto {
   avatar!: string | null;
 }
 
+export class NotificationRecipientDto {
+  @ApiProperty()
+  email!: string;
+}
+
 export class NotificationDto {
   @ApiProperty()
   id!: string;
@@ -52,6 +57,9 @@ export class NotificationDto {
 
   @ApiProperty({ type: NotificationSenderDto, nullable: true })
   sender!: NotificationSenderDto | null;
+
+  @ApiProperty({ type: NotificationRecipientDto, nullable: true })
+  recipient!: NotificationRecipientDto | null;
 }
 
 export class NotificationMetaDto {

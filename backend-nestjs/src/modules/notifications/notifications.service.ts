@@ -48,6 +48,11 @@ export class NotificationsService {
             avatar: true,
           },
         },
+        recipient: {
+          select: {
+            email: true,
+          }
+        },
         group: {
           select: {
             name: true,
@@ -68,6 +73,7 @@ export class NotificationsService {
       isRead: notification.isRead,
       createdAt: notification.createdAt,
       sender: notification.sender,
+      recipient: notification.recipient,
     };
   }
 
@@ -102,6 +108,11 @@ export class NotificationsService {
               fullName: true,
               avatar: true,
             },
+          },
+          recipient: {
+            select: {
+              email: true,
+            }
           },
           group: {
             select: {

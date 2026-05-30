@@ -12,11 +12,15 @@ import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
 import { MessagesService } from '../messages/messages.service';
-import { MessageType, NotificationType } from '@prisma/client';
+import { MessageType, NotificationType, NotificationChannel } from '@prisma/client';
 import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendDirectMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 import { NotificationsService } from '../notifications/notifications.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { EmailJobNames } from '@/common/enums/email-job-names.enum';
+import { PrismaService } from '@/core/database/prisma.service';
 
 @WebSocketGateway({
   cors: {
@@ -41,21 +45,17 @@ export class DirectChatGateway
   constructor(
     private messagesService: MessagesService,
     private notificationsService: NotificationsService,
+    private prisma: PrismaService,
+    @InjectQueue('email-notification') private readonly emailQueue: Queue,
   ) {}
 
   handleConnection(client: Socket) {
-    // Note: We can't use Guard here, and client.user might not be set yet.
-    // If the client refreshes, this is called for the new socket.
     console.log(`[Socket] New connection: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
     const user = (client as any).user;
     const socketId = client.id;
-
-    console.log(`[Socket] Disconnected: ${socketId}`, {
-      userId: user?.id || 'undefined',
-    });
 
     if (!user) return;
 
@@ -64,15 +64,8 @@ export class DirectChatGateway
 
     if (socketSet) {
       socketSet.delete(socketId);
-      console.log(
-        `[Socket] User ${userId} removed socket ${socketId}. Remaining: ${socketSet.size}`,
-      );
-
       if (socketSet.size === 0) {
         this.onlineUsers.delete(userId);
-        console.log(
-          `[Socket] User ${userId} completely offline. Broadcasting noti-offline.`,
-        );
         this.server.emit('noti-offline', { id: userId });
       }
     }
@@ -92,25 +85,11 @@ export class DirectChatGateway
       this.onlineUsers.set(userId, socketSet);
     }
 
-    const isAlreadyConnected = socketSet.has(socketId);
-    const isFirstOverallConnection = socketSet.size === 0;
-
-    if (!isAlreadyConnected) {
+    if (!socketSet.has(socketId)) {
       socketSet.add(socketId);
-      console.log(
-        `[Socket] User ${userId} added connection ${socketId}. Total: ${socketSet.size}`,
-      );
-
-      if (isFirstOverallConnection) {
-        console.log(
-          `[Socket] User ${userId} first connection. Broadcasting noti-online.`,
-        );
+      if (socketSet.size === 1) {
         this.server.emit('noti-online', { id: userId });
       }
-    } else {
-      console.log(
-        `[Socket] User ${userId} re-emitted entering on existing socket ${socketId}`,
-      );
     }
 
     client.emit('noti-onlineList-toMe', Array.from(this.onlineUsers.keys()));
@@ -123,9 +102,7 @@ export class DirectChatGateway
     @MessageBody() payload: SendDirectMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
-    console.log('Send message:', payload);
     try {
-      // payload đã được validate bởi WsValidationPipe
       const { content, receiverId, replyTo, attachments } = payload;
 
       const savedMessage = await this.messagesService.sendMessage({
@@ -136,32 +113,69 @@ export class DirectChatGateway
         replyTo,
         attachments,
       });
-      console.log('Message sent:', savedMessage);
 
-      // create a notification
-      const notificationMetadata = {
-        replyTo: savedMessage.replyTo,
-        attachmentsCount: attachments?.length || 0,
-      };
-      const savedNotification =
-        await this.notificationsService.createChatNotification({
-          type: NotificationType.CHAT_DIRECT,
-          senderId: user.id,
-          recipientId: receiverId,
-          content: savedMessage.content || undefined,
-          metadata: notificationMetadata,
-        });
-
-      // Emit to receiver
       this.server.to(receiverId).emit('receive-message', {
         ...savedMessage,
-        attachments: attachments,
+        attachments,
         receiverId,
         seenBy: [],
       });
 
-      // Emit dedicated notification event
-      this.server.to(receiverId).emit('receive-notification', savedNotification);
+      // 1. Fetch receiver's notification settings
+      const recipientData = await this.prisma.user.findUnique({
+        where: { id: receiverId },
+        select: {
+          email: true,
+          notificationSettings: {
+            select: {
+              chatMessages: true,
+            },
+          },
+        },
+      });
+
+      const channel =
+        recipientData?.notificationSettings?.chatMessages ||
+        NotificationChannel.INBOX;
+
+      if (channel === NotificationChannel.INBOX) {
+        // Option 1: INBOX
+        const notificationMetadata = {
+          replyTo: savedMessage.replyTo,
+          attachmentsCount: attachments?.length || 0,
+        };
+
+        const savedNotification =
+          await this.notificationsService.createChatNotification({
+            type: NotificationType.CHAT_DIRECT,
+            senderId: user.id,
+            recipientId: receiverId,
+            content: savedMessage.content || undefined,
+            metadata: notificationMetadata,
+          });
+
+        this.server
+          .to(receiverId)
+          .emit('receive-notification', savedNotification);
+      } else if (channel === NotificationChannel.EMAIL) {
+        // Option 2: EMAIL
+        if (recipientData?.email) {
+          await this.emailQueue.add(
+            EmailJobNames.SEND_DIRECT_MESSAGE_EMAIL,
+            {
+              recipientEmail: recipientData.email,
+              senderName: user.fullName || user.username,
+              content: savedMessage.content,
+              attachments,
+            },
+            {
+              attempts: 3,
+              backoff: { type: 'exponential', delay: 1000 },
+              removeOnComplete: true,
+            },
+          );
+        }
+      }
 
       return { success: true };
     } catch (error: any) {
@@ -188,7 +202,6 @@ export class DirectChatGateway
           viewer: user,
         });
       }
-      // khi trả về true tự động callback lúc emit sẽ được gọi với giá trị trả về response là {success: true}
       return { success: true };
     } catch (error: any) {
       console.error('Error marking seen:', error);
@@ -198,7 +211,6 @@ export class DirectChatGateway
 
   @SubscribeMessage('typing-start')
   handleTypingStart(@SocketUser() user: any, @MessageBody() payload: any) {
-    console.log('Typing start:', payload);
     const { receiverId } = payload;
     if (!receiverId) return;
 
@@ -217,8 +229,6 @@ export class DirectChatGateway
       senderId: user.id,
     });
   }
-
-  // ─── Voice Call Signaling ─────────────────────────────────────
 
   @SubscribeMessage('call-user')
   handleCallUser(@SocketUser() user: any, @MessageBody() payload: any) {
