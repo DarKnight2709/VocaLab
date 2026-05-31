@@ -26,6 +26,7 @@ import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendGroupMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { PrismaService } from '@/core/database/prisma.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -53,6 +54,7 @@ export class GroupChatGateway {
     private messagesService: MessagesService,
     @Inject(forwardRef(() => NotificationsService))
     private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway,
     @InjectQueue('email-notification') private emailQueue: Queue,
   ) {}
 
@@ -135,9 +137,10 @@ export class GroupChatGateway {
                   metadata: notificationMetadata,
                 });
 
-              this.server
-                .to(member.userId)
-                .emit('receive-notification', memberNotification);
+              this.notificationsGateway.sendNotificationToUser(
+                member.userId,
+                memberNotification,
+              );
             }
 
             // CHANNEL: EMAIL

@@ -17,6 +17,7 @@ import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendDirectMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
@@ -45,6 +46,7 @@ export class DirectChatGateway
   constructor(
     private messagesService: MessagesService,
     private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway,
     private prisma: PrismaService,
     @InjectQueue('email-notification') private readonly emailQueue: Queue,
   ) {}
@@ -154,9 +156,10 @@ export class DirectChatGateway
             metadata: notificationMetadata,
           });
 
-        this.server
-          .to(receiverId)
-          .emit('receive-notification', savedNotification);
+        this.notificationsGateway.sendNotificationToUser(
+          receiverId,
+          savedNotification,
+        );
       } else if (channel === NotificationChannel.EMAIL) {
         // Option 2: EMAIL
         if (recipientData?.email) {

@@ -1,14 +1,16 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { UseFilters, UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { NotificationDto } from './dto/notifications-response.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
+import { SocketUser } from '@/common/decorators/socket-user.decorator';
 
 @WebSocketGateway({
   cors: {
@@ -21,27 +23,55 @@ import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 })
 @UseGuards(SocketAuthGuard)
 @UseFilters(new WsExceptionFilter())
-export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationsGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
-  handleConnection(client: Socket) {
-    const user = (client as any).user;
-    if (user) {
-      client.join(user.id);
-      console.log(`[NotificationsGateway] User ${user.id} joined room`);
+  private onlineUsers = new Map<string, Set<string>>();
+
+  @SubscribeMessage('entering')
+  handleEntering(@SocketUser() user: any, @ConnectedSocket() client: Socket) {
+    if (!user) return;
+
+    const userId = user.id;
+    const socketId = client.id;
+    client.join(userId);
+
+    let socketSet = this.onlineUsers.get(userId);
+    if (!socketSet) {
+      socketSet = new Set<string>();
+      this.onlineUsers.set(userId, socketSet);
     }
+    socketSet.add(socketId);
+    
+    console.log(`[NotificationsGateway] User ${userId} is online (${socketSet.size} sockets)`);
   }
 
   handleDisconnect(client: Socket) {
+    // Note: client.user might be available if the socket was authenticated
     const user = (client as any).user;
     if (user) {
-      client.leave(user.id);
-      console.log(`[NotificationsGateway] User ${user.id} left room`);
+      const userId = user.id;
+      const socketId = client.id;
+      const socketSet = this.onlineUsers.get(userId);
+
+      if (socketSet) {
+        socketSet.delete(socketId);
+        if (socketSet.size === 0) {
+          this.onlineUsers.delete(userId);
+          console.log(`[NotificationsGateway] User ${userId} is offline`);
+        }
+      }
     }
   }
 
+  isUserOnline(userId: string): boolean {
+    return this.onlineUsers.has(userId);
+  }
+
   sendNotificationToUser(recipientId: string, notification: NotificationDto) {
-    this.server.to(recipientId).emit('receive-notification', notification);
+    if (this.isUserOnline(recipientId)) {
+      this.server.to(recipientId).emit('receive-notification', notification);
+    }
   }
 }
