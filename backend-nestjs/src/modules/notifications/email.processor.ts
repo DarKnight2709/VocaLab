@@ -32,6 +32,7 @@ export interface SendGroupMessageJobData {
 export interface CommentNotificationJobData {
   recipientEmail: string;
   senderName: string;
+  senderUsername?: string;
   activityType: string;
   content: string;
   postTitle?: string;
@@ -86,6 +87,18 @@ export class EmailProcessor extends WorkerHost {
             data.content,
             data.postTitle,
             data.blogId,
+            data.senderUsername,
+          );
+          break;
+        }
+
+        case EmailJobNames.NEW_FOLLOWER_EMAIL: {
+          const data: CommentNotificationJobData = job.data;
+          await this.emailService.sendFollowNotificationEmail(
+            data.recipientEmail,
+            data.senderName,
+            data.activityType,
+            data.senderUsername,
           );
           break;
         }

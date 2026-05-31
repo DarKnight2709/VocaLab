@@ -44,7 +44,9 @@ export function NotificationItem({
             ? notification.metadata?.commentId
               ? "upvoteComment"
               : "upvotePost"
-            : "groupMessage";
+            : notification.type === NotificationType.FOLLOW
+              ? "follow"
+              : "groupMessage";
     let typeSuffix = "";
 
     if (hasReply && hasAttachment) {
@@ -74,6 +76,8 @@ export function NotificationItem({
         return notification.metadata?.blogId
           ? ROUTES.BLOG_DETAIL.url.replace(":id", notification.metadata.blogId)
           : ROUTES.BLOG.url;
+      case NotificationType.FOLLOW:
+        return ROUTES.PROFILE.url.replace(":username", notification.sender?.username || "");
       default:
         return "#";
     }

@@ -1,7 +1,9 @@
 import {
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
+  forwardRef,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
@@ -34,6 +36,9 @@ import {
 import { Follow, VisibilityScope } from '@prisma/client';
 import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
 import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '@prisma/client';
+import { SettingKey } from '@/common/enums/setting-key.enum';
 
 interface MappedUserTarget {
   id: string;
@@ -52,6 +57,8 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findById(id: string): Promise<PublicUser | null> {
@@ -654,19 +661,35 @@ export class UserService {
       throw new ForbiddenException(ErrorCode.FOLLOW_ACCESS_DENIED);
     }
 
-    await this.prisma.follow.upsert({
+    const existingFollow = await this.prisma.follow.findUnique({
       where: {
         followerId_followingId: {
           followerId: currentUserId,
           followingId: targetUserId,
         },
       },
-      create: {
+    });
+
+    if (existingFollow) {
+      return { id: targetUserId };
+    }
+
+    await this.prisma.follow.create({
+      data: {
         followerId: currentUserId,
         followingId: targetUserId,
       },
-      update: {}, // Nếu đã follow rồi thì không làm gì cả
     });
+
+    // Notify target user
+    await this.notificationsService.notifyActivity({
+      recipientId: targetUserId,
+      senderId: currentUserId,
+      type: NotificationType.FOLLOW,
+      content: '',
+      settingKey: SettingKey.NEW_FOLLOWERS,
+    });
+
     return {
       id: targetUserId,
     };

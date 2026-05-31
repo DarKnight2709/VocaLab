@@ -842,6 +842,7 @@
     "comment": "<bold>{{sender}}</bold> đã bình luận về bài viết của bạn",
     "reply": "<bold>{{sender}}</bold> đã phản hồi bình luận của bạn",
     "upvotePost": "<bold>{{sender}}</bold> đã thích bài viết của bạn",
-    "upvoteComment": "<bold>{{sender}}</bold> đã thích bình luận của bạn"
+    "upvoteComment": "<bold>{{sender}}</bold> đã thích bình luận của bạn",
+    "follow": "<bold>{{sender}}</bold> đã bắt đầu theo dõi bạn"
   }
 }

@@ -199,6 +199,7 @@ export class EmailService {
     content: string,
     postTitle?: string,
     blogId?: string,
+    senderUsername?: string,
   ): Promise<void> {
     const from = this.configService.get('EMAIL_FROM');
     const clientUrl = this.configService.get('CLIENT_URL');
@@ -208,7 +209,11 @@ export class EmailService {
         ? `${senderName} ${activityType} on your post: ${postTitle}`
         : `${senderName} ${activityType}`;
 
-      const viewUrl = blogId ? `${clientUrl}/blogs/${blogId}` : `${clientUrl}/blog`;
+      const viewUrl = blogId 
+        ? `${clientUrl}/blogs/${blogId}` 
+        : senderUsername
+          ? `${clientUrl}/profile/${senderUsername}`
+          : `${clientUrl}/blog`;
 
       const mailOptions = {
         from: `"VocaLab" <${from}>`,
@@ -237,6 +242,49 @@ export class EmailService {
     } catch (error: any) {
       this.logger.error(
         `Failed to send activity email notification to ${to}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Formats and delivers a notification email when a new follower is gained.
+   */
+  async sendFollowNotificationEmail(
+    to: string,
+    senderName: string,
+    activityType: string,
+    senderUsername?: string,
+  ): Promise<void> {
+    const from = this.configService.get('EMAIL_FROM');
+    const clientUrl = this.configService.get('CLIENT_URL');
+
+    try {
+      const mailOptions = {
+        from: `"VocaLab" <${from}>`,
+        to,
+        subject: `${senderName} ${activityType}`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px;">
+            <h2 style="color: #333;">New follower on VocaLab</h2>
+            <p><strong>${senderName}</strong> ${activityType}!</p>
+            
+            <p style="margin-top: 25px;">
+              <a href="${clientUrl}/profile/${senderUsername || senderName}" 
+                 style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                 View Profile
+              </a>
+            </p>
+          </div>
+        `,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Follow email successfully dispatched to ${to}`);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to send follow email notification to ${to}`,
         error.stack,
       );
       throw error;

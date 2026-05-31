@@ -73,6 +73,7 @@ enum NotificationType {
   SYSTEM
   COMMENT
   UPVOTE
+  FOLLOW
 }
 
 enum NotificationChannel {

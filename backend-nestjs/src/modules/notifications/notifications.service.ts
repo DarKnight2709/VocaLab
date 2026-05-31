@@ -174,6 +174,7 @@ export class NotificationsService {
       {
         recipientEmail,
         senderName,
+        senderUsername: sender?.username,
         activityType,
         content,
         postTitle: blogContext?.title,
@@ -327,6 +328,13 @@ export class NotificationsService {
         jobName: isCommentVote
           ? EmailJobNames.UPVOTE_ON_COMMENT_EMAIL
           : EmailJobNames.UPVOTE_ON_POST_EMAIL,
+      };
+    }
+
+    if (type === NotificationType.FOLLOW) {
+      return {
+        activityType: 'started following you',
+        jobName: EmailJobNames.NEW_FOLLOWER_EMAIL,
       };
     }
 

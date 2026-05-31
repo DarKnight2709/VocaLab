@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { UserService } from '../users/users.service';
 import { MessageStatus, MessageType, VisibilityScope } from '@prisma/client';
@@ -26,6 +26,7 @@ export interface SendMessageInput {
 export class MessagesService {
   constructor(
     private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
   ) {}
 
