@@ -157,7 +157,7 @@ export class NotificationsService {
         where: { id: senderId },
         select: { fullName: true, username: true },
       }),
-      type === NotificationType.COMMENT && metadata?.blogId
+      (type === NotificationType.COMMENT || type === NotificationType.UPVOTE) && metadata?.blogId
         ? this.prisma.blog.findUnique({
             where: { id: metadata.blogId },
             select: { title: true },
@@ -315,6 +315,18 @@ export class NotificationsService {
         jobName: isReply
           ? EmailJobNames.REPLY_ON_COMMENT_EMAIL
           : EmailJobNames.COMMENT_ON_POST_EMAIL,
+      };
+    }
+
+    if (type === NotificationType.UPVOTE) {
+      const isCommentVote = !!metadata?.commentId;
+      return {
+        activityType: isCommentVote
+          ? 'liked your comment'
+          : 'liked your post',
+        jobName: isCommentVote
+          ? EmailJobNames.UPVOTE_ON_COMMENT_EMAIL
+          : EmailJobNames.UPVOTE_ON_POST_EMAIL,
       };
     }
 

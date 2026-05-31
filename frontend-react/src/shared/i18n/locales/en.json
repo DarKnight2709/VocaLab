@@ -843,7 +843,9 @@
     "groupMessageWithReply": "<bold>{{sender}}</bold> replied in <bold>{{group}}</bold>",
     "groupMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> replied with {{count}} attachment(s) in <bold>{{group}}</bold>",
     "comment": "<bold>{{sender}}</bold> commented on your thread",
-    "reply": "<bold>{{sender}}</bold> replied to your comment"
+    "reply": "<bold>{{sender}}</bold> replied to your comment",
+    "upvotePost": "<bold>{{sender}}</bold> liked your post",
+    "upvoteComment": "<bold>{{sender}}</bold> liked your comment"
   },
   "upload": {
     "uploadFailed": "Upload failed",

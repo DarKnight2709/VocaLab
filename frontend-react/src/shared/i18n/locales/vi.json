@@ -840,6 +840,8 @@
     "groupMessageWithReply": "<bold>{{sender}}</bold> đã trả lời trong <bold>{{group}}</bold>",
     "groupMessageWithReplyAndAttachment": "<bold>{{sender}}</bold> đã trả lời bằng {{count}} tệp đính kèm trong <bold>{{group}}</bold>",
     "comment": "<bold>{{sender}}</bold> đã bình luận về bài viết của bạn",
-    "reply": "<bold>{{sender}}</bold> đã phản hồi bình luận của bạn"
+    "reply": "<bold>{{sender}}</bold> đã phản hồi bình luận của bạn",
+    "upvotePost": "<bold>{{sender}}</bold> đã thích bài viết của bạn",
+    "upvoteComment": "<bold>{{sender}}</bold> đã thích bình luận của bạn"
   }
 }

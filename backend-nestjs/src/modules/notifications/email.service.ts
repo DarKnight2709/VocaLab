@@ -190,9 +190,9 @@ export class EmailService {
   }
 
   /**
-   * Formats and delivers a notification email for comments and reply comments.
+   * Formats and delivers a notification email for blog activities (comments, replies, upvotes).
    */
-  async sendCommentNotificationEmail(
+  async sendActivityNotificationEmail(
     to: string,
     senderName: string,
     activityType: string,

@@ -277,6 +277,8 @@ export class BlogService {
       },
     });
 
+    let shouldNotify = false;
+
     if (userVote) {
       // có rồi thì thì update
       // nếu mà trùng với type thì xóa còn khác type thì update
@@ -301,6 +303,7 @@ export class BlogService {
             type,
           },
         });
+        if (type === VoteType.UPVOTE) shouldNotify = true;
       }
     } else {
       // chưa có thì tạo
@@ -310,6 +313,21 @@ export class BlogService {
           blogId,
           type,
         },
+      });
+      if (type === VoteType.UPVOTE) shouldNotify = true;
+    }
+
+    // Notify blog author about the upvote
+    if (shouldNotify && blog.authorId !== userId) {
+      await this.notificationsService.notifyActivity({
+        recipientId: blog.authorId,
+        senderId: userId,
+        type: NotificationType.UPVOTE,
+        content: blog.title,
+        metadata: {
+          blogId,
+        },
+        settingKey: SettingKey.UPVOTES,
       });
     }
   }
@@ -470,6 +488,8 @@ export class BlogService {
       },
     });
 
+    let shouldNotify = false;
+
     if (userVote) {
       if (type === userVote.type) {
         await this.prisma.commentVote.delete({
@@ -492,6 +512,7 @@ export class BlogService {
             type,
           },
         });
+        if (type === VoteType.UPVOTE) shouldNotify = true;
       }
     } else {
       await this.prisma.commentVote.create({
@@ -500,6 +521,22 @@ export class BlogService {
           commentId,
           type,
         },
+      });
+      if (type === VoteType.UPVOTE) shouldNotify = true;
+    }
+
+    // Notify comment author about the upvote
+    if (shouldNotify && comment.authorId !== userId) {
+      await this.notificationsService.notifyActivity({
+        recipientId: comment.authorId,
+        senderId: userId,
+        type: NotificationType.UPVOTE,
+        content: comment.content,
+        metadata: {
+          blogId: comment.blogId,
+          commentId: comment.id,
+        },
+        settingKey: SettingKey.UPVOTES,
       });
     }
   }

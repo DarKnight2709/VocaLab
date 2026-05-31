@@ -6,4 +6,6 @@ export enum EmailJobNames {
   SEND_GROUP_MESSAGE_EMAIL = 'send-group-message-email',
   COMMENT_ON_POST_EMAIL = 'comment-on-post-email',
   REPLY_ON_COMMENT_EMAIL = 'reply-on-comment-email',
+  UPVOTE_ON_POST_EMAIL = 'upvote-on-post-email',
+  UPVOTE_ON_COMMENT_EMAIL = 'upvote-on-comment-email',
 }

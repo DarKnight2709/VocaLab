@@ -40,7 +40,11 @@ export function NotificationItem({
           ? notification.metadata?.parentCommentId
             ? "reply"
             : "comment"
-          : "groupMessage";
+          : notification.type === NotificationType.UPVOTE
+            ? notification.metadata?.commentId
+              ? "upvoteComment"
+              : "upvotePost"
+            : "groupMessage";
     let typeSuffix = "";
 
     if (hasReply && hasAttachment) {
@@ -66,6 +70,7 @@ export function NotificationItem({
       case NotificationType.CHAT_GROUP:
         return ROUTES.CHAT.url;
       case NotificationType.COMMENT:
+      case NotificationType.UPVOTE:
         return notification.metadata?.blogId
           ? ROUTES.BLOG_DETAIL.url.replace(":id", notification.metadata.blogId)
           : ROUTES.BLOG.url;

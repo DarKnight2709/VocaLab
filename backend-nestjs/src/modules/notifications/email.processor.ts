@@ -75,9 +75,11 @@ export class EmailProcessor extends WorkerHost {
         }
 
         case EmailJobNames.COMMENT_ON_POST_EMAIL:
-        case EmailJobNames.REPLY_ON_COMMENT_EMAIL: {
+        case EmailJobNames.REPLY_ON_COMMENT_EMAIL:
+        case EmailJobNames.UPVOTE_ON_POST_EMAIL:
+        case EmailJobNames.UPVOTE_ON_COMMENT_EMAIL: {
           const data: CommentNotificationJobData = job.data;
-          await this.emailService.sendCommentNotificationEmail(
+          await this.emailService.sendActivityNotificationEmail(
             data.recipientEmail,
             data.senderName,
             data.activityType,
