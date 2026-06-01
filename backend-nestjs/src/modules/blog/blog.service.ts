@@ -216,6 +216,30 @@ export class BlogService {
       },
     });
 
+    // Notify followers if post is public
+    if (blog.isPublic) {
+      const followers = await this.prisma.follow.findMany({
+        where: { followingId: userId },
+        select: { followerId: true },
+      });
+
+      // Send notifications to all followers
+      // Note: In a production app with many followers, this should be handled by a background worker/queue
+      for (const follow of followers) {
+        this.notificationsService.notifyActivity({
+          recipientId: follow.followerId,
+          senderId: userId,
+          type: NotificationType.NEW_BLOG_POST,
+          content: blog.excerpt || blog.title,
+          metadata: {
+            blogId: blog.id,
+            blogTitle: blog.title,
+          },
+          settingKey: SettingKey.ACTIVITY_FROM_FOLLOWED,
+        });
+      }
+    }
+
     return blog;
   }
 

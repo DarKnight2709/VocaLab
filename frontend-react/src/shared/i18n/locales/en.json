@@ -846,7 +846,8 @@
     "reply": "<bold>{{sender}}</bold> replied to your comment",
     "upvotePost": "<bold>{{sender}}</bold> liked your post",
     "upvoteComment": "<bold>{{sender}}</bold> liked your comment",
-    "follow": "<bold>{{sender}}</bold> started following you"
+    "follow": "<bold>{{sender}}</bold> started following you",
+    "newPost": "<bold>{{sender}}</bold> published a new post"
   },
   "upload": {
     "uploadFailed": "Upload failed",

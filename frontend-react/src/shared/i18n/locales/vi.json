@@ -843,6 +843,7 @@
     "reply": "<bold>{{sender}}</bold> đã phản hồi bình luận của bạn",
     "upvotePost": "<bold>{{sender}}</bold> đã thích bài viết của bạn",
     "upvoteComment": "<bold>{{sender}}</bold> đã thích bình luận của bạn",
-    "follow": "<bold>{{sender}}</bold> đã bắt đầu theo dõi bạn"
+    "follow": "<bold>{{sender}}</bold> đã bắt đầu theo dõi bạn",
+    "newPost": "<bold>{{sender}}</bold> đã đăng bài viết mới"
   }
 }

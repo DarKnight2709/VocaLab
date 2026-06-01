@@ -205,9 +205,20 @@ export class EmailService {
     const clientUrl = this.configService.get('CLIENT_URL');
 
     try {
-      const subject = postTitle
-        ? `${senderName} ${activityType} on your post: ${postTitle}`
-        : `${senderName} ${activityType}`;
+      const isNewPost = activityType === 'posted new content';
+      const subject = isNewPost
+        ? `${senderName} published a new post: ${postTitle}`
+        : postTitle
+          ? `${senderName} ${activityType} on your post: ${postTitle}`
+          : `${senderName} ${activityType}`;
+
+      const title = isNewPost
+        ? 'New post from someone you follow'
+        : 'New activity on VocaLab';
+
+      const bodyPrefix = isNewPost
+        ? `<strong>${senderName}</strong> published a new post`
+        : `<strong>${senderName}</strong> ${activityType}${postTitle ? ` on <strong>${postTitle}</strong>` : ''}`;
 
       const viewUrl = blogId 
         ? `${clientUrl}/blogs/${blogId}` 
@@ -221,8 +232,8 @@ export class EmailService {
         subject,
         html: `
           <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px;">
-            <h2 style="color: #333;">New activity on VocaLab</h2>
-            <p><strong>${senderName}</strong> ${activityType}${postTitle ? ` on <strong>${postTitle}</strong>` : ''}:</p>
+            <h2 style="color: #333;">${title}</h2>
+            <p>${bodyPrefix}:</p>
             <blockquote style="background: #fdfdfd; padding: 15px; border-left: 4px solid #4f46e5; margin: 15px 0; font-style: italic; color: #555;">
               ${content}
             </blockquote>

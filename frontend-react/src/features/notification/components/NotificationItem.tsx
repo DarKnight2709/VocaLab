@@ -46,7 +46,9 @@ export function NotificationItem({
               : "upvotePost"
             : notification.type === NotificationType.FOLLOW
               ? "follow"
-              : "groupMessage";
+              : notification.type === NotificationType.NEW_BLOG_POST
+                ? "newPost"
+                : "groupMessage";
     let typeSuffix = "";
 
     if (hasReply && hasAttachment) {
@@ -73,6 +75,7 @@ export function NotificationItem({
         return ROUTES.CHAT.url;
       case NotificationType.COMMENT:
       case NotificationType.UPVOTE:
+      case NotificationType.NEW_BLOG_POST:
         return notification.metadata?.blogId
           ? ROUTES.BLOG_DETAIL.url.replace(":id", notification.metadata.blogId)
           : ROUTES.BLOG.url;

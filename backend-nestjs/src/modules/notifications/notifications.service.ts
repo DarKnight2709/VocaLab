@@ -157,7 +157,10 @@ export class NotificationsService {
         where: { id: senderId },
         select: { fullName: true, username: true },
       }),
-      (type === NotificationType.COMMENT || type === NotificationType.UPVOTE) && metadata?.blogId
+      (type === NotificationType.COMMENT ||
+        type === NotificationType.UPVOTE ||
+        type === NotificationType.NEW_BLOG_POST) &&
+      metadata?.blogId
         ? this.prisma.blog.findUnique({
             where: { id: metadata.blogId },
             select: { title: true },
@@ -335,6 +338,13 @@ export class NotificationsService {
       return {
         activityType: 'started following you',
         jobName: EmailJobNames.NEW_FOLLOWER_EMAIL,
+      };
+    }
+
+    if (type === NotificationType.NEW_BLOG_POST) {
+      return {
+        activityType: 'posted new content',
+        jobName: EmailJobNames.NEW_BLOG_POST_EMAIL,
       };
     }
 

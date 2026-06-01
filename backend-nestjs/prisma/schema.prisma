@@ -74,6 +74,7 @@ enum NotificationType {
   COMMENT
   UPVOTE
   FOLLOW
+  NEW_BLOG_POST
 }
 
 enum NotificationChannel {

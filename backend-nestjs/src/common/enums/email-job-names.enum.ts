@@ -9,4 +9,5 @@ export enum EmailJobNames {
   UPVOTE_ON_POST_EMAIL = 'upvote-on-post-email',
   UPVOTE_ON_COMMENT_EMAIL = 'upvote-on-comment-email',
   NEW_FOLLOWER_EMAIL = 'new-follower-email',
+  NEW_BLOG_POST_EMAIL = 'new-blog-post-email',
 }

@@ -5,6 +5,7 @@ export const NotificationType = {
   COMMENT: "COMMENT",
   UPVOTE: "UPVOTE",
   FOLLOW: "FOLLOW",
+  NEW_BLOG_POST: "NEW_BLOG_POST",
 } as const;
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
