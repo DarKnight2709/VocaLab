@@ -126,6 +126,7 @@ model User {
   sentNotifications     Notification[] @relation("NotificationSender")
 
   notificationSettings NotificationSetting?
+  reminders            Reminder[]
 
   @@map("users")
 }
@@ -545,4 +546,44 @@ model Notification {
   @@index([recipientId, isRead])
   @@index([createdAt(sort: Desc)])
   @@map("notifications")
+}
+
+enum ReminderType {
+  ON_THE_HOUR
+  EVERY_5_MINUTES
+  EVERY_10_MINUTES
+  EVERY_15_MINUTES
+  EVERY_30_MINUTES
+  EVERY_HOUR
+  EVERY_2_HOURS
+  EVERY_3_HOURS
+  EVERY_4_HOURS
+  EVERY_6_HOURS
+  EVERY_8_HOURS
+}
+
+model Reminder {
+  id          String       @id @default(uuid())
+  userId      String
+  title       String
+  type        ReminderType
+  isEnabled   Boolean      @default(true)
+  
+  // Example: 08:30 = (8 * 60) + 30 = 510
+  triggerTime Int?        
+  startTime   Int?        
+  endTime     Int?        
+  
+  // Array of days (0 = Sunday, 6 = Saturday)
+  daysOfWeek  Int[]        
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isEnabled])
+  @@map("reminders")
 }

@@ -1,0 +1,15 @@
+export const ReminderType = {
+  ON_THE_HOUR: "ON_THE_HOUR",
+  EVERY_5_MINUTES: "EVERY_5_MINUTES",
+  EVERY_10_MINUTES: "EVERY_10_MINUTES",
+  EVERY_15_MINUTES: "EVERY_15_MINUTES",
+  EVERY_30_MINUTES: "EVERY_30_MINUTES",
+  EVERY_HOUR: "EVERY_HOUR",
+  EVERY_2_HOURS: "EVERY_2_HOURS",
+  EVERY_3_HOURS: "EVERY_3_HOURS",
+  EVERY_4_HOURS: "EVERY_4_HOURS",
+  EVERY_6_HOURS: "EVERY_6_HOURS",
+  EVERY_8_HOURS: "EVERY_8_HOURS",
+} as const;
+
+export type ReminderType = (typeof ReminderType)[keyof typeof ReminderType];

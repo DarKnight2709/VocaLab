@@ -1,11 +1,12 @@
-import { Body, Controller, Get, Patch } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Patch, Query } from '@nestjs/common';
 import { SettingService } from './setting.service';
 import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto } from './dto/setting.dto';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { NotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsDto, UpdateUpvotesDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
-
+import { CreateReminderDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/learning-setting.dto';
+import { Post, Delete, Param } from '@nestjs/common';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 
 @ApiTags('settings')
@@ -114,5 +115,67 @@ export class SettingController {
     @Body() dto: UpdateActivityFromFollowedDto,
   ): Promise<void> {
     await this.settingService.updateActivityFromFollowed(user.id, dto);
+  }
+
+  // Reminders
+  @Get('reminders')
+  @ApiOperation({ summary: 'Get user reminders' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  async getReminders(@CurrentUser() user: any,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search?: string,): Promise<ResponseInterceptor<ReminderListResponseDto>> {
+    const result = await this.settingService.getReminders(user.id, page, limit, search);
+    return {
+      data: result
+    }
+  }
+
+  @Post('reminders')
+  @ApiOperation({ summary: 'Create a reminder' })
+  async createReminder(
+    @CurrentUser() user: any,
+    @Body() dto: CreateReminderDto,
+  ): Promise<ResponseInterceptor<ReminderResponseDto>> {
+    const result = await this.settingService.createReminder(user.id, dto);
+    return {
+      data: result
+    }
+  }
+
+  @Patch('reminders/:id')
+  @ApiOperation({ summary: 'Update a reminder' })
+  async updateReminder(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: CreateReminderDto,
+  ): Promise<ResponseInterceptor<ReminderResponseDto>> {
+    const result = await this.settingService.updateReminder(user.id, id, dto);
+    return {
+      data: result
+    }
+  }
+
+  @Patch('reminders/:id/toggle')
+  @ApiOperation({ summary: 'Toggle a reminder' })
+  async toggleReminder(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.settingService.toggleReminder(user.id, id);
+  }
+
+  @Delete('reminders/:id')
+  @ApiOperation({ summary: 'Delete a reminder' })
+  async deleteReminder(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<ResponseInterceptor<ReminderDeleteResponseDto>> {
+    const result = await this.settingService.deleteReminder(user.id, id);
+    return {
+      data: result
+    }
   }
 }

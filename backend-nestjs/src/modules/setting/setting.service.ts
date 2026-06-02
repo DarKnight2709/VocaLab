@@ -1,15 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
-import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto } from './dto/setting.dto';
+import {
+  UpdateAllowFollowDto,
+  UpdateMessageScopeDto,
+  UpdateFollowersTabVisibilityDto,
+  UpdateFollowingTabVisibilityDto,
+  UpdateFriendTabVisibilityDto,
+} from './dto/setting.dto';
 import { ErrorCode } from '@/common/enums/error-code.enum';
-import { NotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsDto, UpdateUpvotesDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
-
+import {
+  NotificationSettingDto,
+  UpdateChatMessagesDto,
+  UpdateCommentsDto,
+  UpdateUpvotesDto,
+  UpdateNewFollowersDto,
+  UpdateActivityFromFollowedDto,
+} from './dto/notication-settings.dto';
+import { CreateReminderDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/learning-setting.dto';
 
 @Injectable()
 export class SettingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async updateAllowFollow(userId: string, dto: UpdateAllowFollowDto): Promise<void> {
+  async updateAllowFollow(
+    userId: string,
+    dto: UpdateAllowFollowDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -26,7 +42,10 @@ export class SettingService {
     });
   }
 
-  async updateMessageScope(userId: string, dto: UpdateMessageScopeDto): Promise<void> {
+  async updateMessageScope(
+    userId: string,
+    dto: UpdateMessageScopeDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -43,7 +62,10 @@ export class SettingService {
     });
   }
 
-  async updateFollowersTabVisibility(userId: string, dto: UpdateFollowersTabVisibilityDto): Promise<void> {
+  async updateFollowersTabVisibility(
+    userId: string,
+    dto: UpdateFollowersTabVisibilityDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -60,7 +82,10 @@ export class SettingService {
     });
   }
 
-  async updateFollowingTabVisibility(userId: string, dto: UpdateFollowingTabVisibilityDto): Promise<void> {
+  async updateFollowingTabVisibility(
+    userId: string,
+    dto: UpdateFollowingTabVisibilityDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -77,7 +102,10 @@ export class SettingService {
     });
   }
 
-  async updateFriendTabVisibility(userId: string, dto: UpdateFriendTabVisibilityDto): Promise<void> {
+  async updateFriendTabVisibility(
+    userId: string,
+    dto: UpdateFriendTabVisibilityDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -94,7 +122,10 @@ export class SettingService {
     });
   }
 
-  async updateChatMessages(userId: string, dto: UpdateChatMessagesDto): Promise<void> {
+  async updateChatMessages(
+    userId: string,
+    dto: UpdateChatMessagesDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -145,9 +176,10 @@ export class SettingService {
     });
   }
 
-
-
-  async updateNewFollowers(userId: string, dto: UpdateNewFollowersDto): Promise<void> {
+  async updateNewFollowers(
+    userId: string,
+    dto: UpdateNewFollowersDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -164,7 +196,10 @@ export class SettingService {
     });
   }
 
-  async updateActivityFromFollowed(userId: string, dto: UpdateActivityFromFollowedDto): Promise<void> {
+  async updateActivityFromFollowed(
+    userId: string,
+    dto: UpdateActivityFromFollowedDto,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -181,8 +216,6 @@ export class SettingService {
     });
   }
 
-
-  
   async getSettings(userId: string): Promise<NotificationSettingDto> {
     let settings = await this.prisma.notificationSetting.findUnique({
       where: { userId },
@@ -202,5 +235,120 @@ export class SettingService {
       activityFromFollowed: settings.activityFromFollowed,
       updatedAt: settings.updatedAt,
     };
+  }
+
+  // Reminders
+  async getReminders(
+    userId: string,
+    page = 1,
+    limit = 10,
+    search?: string,
+  ): Promise<ReminderListResponseDto> {
+    const skip = (page - 1) * limit;
+    const where: any = {
+      userId,
+      deletedAt: null,
+    };
+    if (search) {
+      where.title = { contains: search, mode: 'insensitive' };
+    }
+    const [reminders, total] = await Promise.all([
+      this.prisma.reminder.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          isEnabled: true,
+          triggerTime: true,
+          startTime: true,
+          endTime: true,
+          daysOfWeek: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.reminder.count({ where }),
+    ]);
+    return {
+      reminders,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async createReminder(
+    userId: string,
+    dto: CreateReminderDto,
+  ): Promise<ReminderResponseDto> {
+    const createdReminder = await this.prisma.reminder.create({
+      data: {
+        ...dto,
+        userId,
+      },
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        isEnabled: true,
+        triggerTime: true,
+        startTime: true,
+        endTime: true,
+        daysOfWeek: true,
+        createdAt: true,
+      },
+    });
+    return createdReminder;
+  }
+
+  async updateReminder(
+    userId: string,
+    id: string,
+    dto: CreateReminderDto,
+  ): Promise<ReminderResponseDto> {
+    const updatedReminder = await this.prisma.reminder.update({
+      where: { id, userId },
+      data: dto,
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        isEnabled: true,
+        triggerTime: true,
+        startTime: true,
+        endTime: true,
+        daysOfWeek: true,
+        createdAt: true,
+      },
+    });
+    return updatedReminder;
+  }
+
+  async toggleReminder(userId: string, id: string): Promise<void> {
+    const reminder = await this.prisma.reminder.findUnique({
+      where: { id, userId },
+    });
+    if (!reminder) return;
+
+    await this.prisma.reminder.update({
+      where: { id, userId },
+      data: { isEnabled: !reminder.isEnabled },
+    });
+  }
+
+  async deleteReminder(
+    userId: string,
+    id: string,
+  ): Promise<ReminderDeleteResponseDto> {
+    const deletedReminder = await this.prisma.reminder.delete({
+      where: { id, userId },
+    });
+    return { id: deletedReminder.id };
   }
 }

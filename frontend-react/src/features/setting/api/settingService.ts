@@ -4,10 +4,20 @@ import { toast } from "sonner";
 import i18n from "@/shared/i18n";
 import API_ROUTES from "@/shared/lib/api-routes";
 import type { ScopeVisibilityType } from "@/shared/enums/ScopeVisibility.enum";
-import { NotificationSettingSchema } from "@/shared/validations/SettingSchema";
+import { 
+  NotificationSettingSchema, 
+  ReminderListResponseSchema,
+  ReminderResponseSchema,
+  ReminderDeleteResponseSchema
+} from "@/shared/validations/SettingSchema";
 
 export const NOTIFICATION_KEYS = {
   settings: () => ["notifications", "settings"] as const,
+};
+
+export const REMINDER_KEYS = {
+  all: () => ["reminders"] as const,
+  list: (params?: object) => ["reminders", "list", params] as const,
 };
 
 export const useAllowFollowMutation = () => {
@@ -147,3 +157,82 @@ export const useUpdateActivityFromFollowedMutation = () => {
   });
 };
 
+
+// Reminders
+export function useRemindersQuery(page = 1, limit = 12, search = "") {
+  return useQuery({
+    queryKey: REMINDER_KEYS.list({ page, limit, search }),
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.SETTING.REMINDER.BASE, { params: { page, limit, search } }),
+        ReminderListResponseSchema
+      );
+      return result.data;
+    },
+  });
+}
+
+export const useCreateReminderMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const result = await fetchWithSchema(
+        api.post(API_ROUTES.SETTING.REMINDER.BASE, data),
+        ReminderResponseSchema
+      );
+      return result.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: REMINDER_KEYS.all() });
+      toast.success(i18n.t("settings.reminder.createSuccess"));
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("settings.reminder.createFailed"))),
+  });
+};
+
+export const useUpdateReminderMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: any) => {
+      const result = await fetchWithSchema(
+        api.patch(API_ROUTES.SETTING.REMINDER.BY_ID(id), data),
+        ReminderResponseSchema
+      );
+      return result.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: REMINDER_KEYS.all() });
+      toast.success(i18n.t("settings.reminder.updateSuccess"));
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("settings.reminder.updateFailed"))),
+  });
+};
+
+export const useToggleReminderMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.patch(API_ROUTES.SETTING.REMINDER.TOGGLE(id)),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: REMINDER_KEYS.all() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("settings.reminder.updateFailed"))),
+  });
+};
+
+export const useDeleteReminderMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await fetchWithSchema(
+        api.delete(API_ROUTES.SETTING.REMINDER.BY_ID(id)),
+        ReminderDeleteResponseSchema
+      );
+      return result.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: REMINDER_KEYS.all() });
+      toast.success(i18n.t("settings.reminder.deleteSuccess"));
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("settings.reminder.deleteFailed"))),
+  });
+};

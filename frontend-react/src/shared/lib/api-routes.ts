@@ -120,6 +120,11 @@ const API_ROUTES = {
       UPVOTES: "v1/settings/notifications/upvotes",
       NEW_FOLLOWERS: "v1/settings/notifications/new-followers",
       ACTIVITY_FROM_FOLLOWED: "v1/settings/notifications/activity-from-followed",
+    },
+    REMINDER: {
+      BASE: "v1/settings/reminders",
+      BY_ID: (id: string) => `v1/settings/reminders/${id}`,
+      TOGGLE: (id: string) => `v1/settings/reminders/${id}/toggle`,
     }
   },
 
