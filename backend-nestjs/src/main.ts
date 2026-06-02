@@ -20,7 +20,9 @@ async function bootstrap() {
 
 
   // Set global prefix and versioning (/api/v1)
-  app.setGlobalPrefix(API_PREFIX);
+  app.setGlobalPrefix(API_PREFIX, {
+    exclude: ['queues'],
+  });
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: String(API_DEFAULT_VERSION),

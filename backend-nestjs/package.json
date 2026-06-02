@@ -25,6 +25,9 @@
     "prisma:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@bull-board/api": "^7.1.5",
+    "@bull-board/express": "^7.1.5",
+    "@bull-board/nestjs": "^7.1.5",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.0.1",

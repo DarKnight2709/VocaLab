@@ -7,6 +7,8 @@ import { EmailService } from './email.service';
 import { EmailProcessor } from './email.processor';
 
 import { NotificationsGateway } from './notifications.gateway';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 
 @Module({
   imports: [
@@ -14,10 +16,24 @@ import { NotificationsGateway } from './notifications.gateway';
     BullModule.registerQueue({
       name: 'email-notification',
     }),
+    BullBoardModule.forFeature({
+      name: 'email-notification',
+      adapter: BullMQAdapter,
+    }),
     forwardRef(() => GroupChatModule),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService, EmailService, EmailProcessor, NotificationsGateway],
-  exports: [NotificationsService, EmailService, BullModule, NotificationsGateway],
+  providers: [
+    NotificationsService,
+    EmailService,
+    EmailProcessor,
+    NotificationsGateway,
+  ],
+  exports: [
+    NotificationsService,
+    EmailService,
+    BullModule,
+    NotificationsGateway,
+  ],
 })
 export class NotificationsModule {}

@@ -23,6 +23,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { SettingModule } from './modules/setting/setting.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigService } from './common/services/config.service';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { ExpressAdapter } from '@bull-board/express';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+
+
 
 @Module({
   imports: [
@@ -38,6 +43,7 @@ import { ConfigService } from './common/services/config.service';
     UploadModule,
     ScheduleModule.forRoot(),
     SettingModule,
+    NotificationsModule,
     // tell BullMQ how to connect to Redis
     BullModule.forRootAsync({
       inject: [ConfigService],
@@ -47,6 +53,10 @@ import { ConfigService } from './common/services/config.service';
           port: Number(configService.get('REDIS_PORT')),
         },
       }),
+    }),
+    BullBoardModule.forRoot({
+      route: '/queues', // The path where you can access the UI
+      adapter: ExpressAdapter,
     }),
   ],
   controllers: [],
