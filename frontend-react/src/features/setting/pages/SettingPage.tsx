@@ -12,15 +12,10 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useMeQuery, useUpdateTwoFactorAuthMutation, useDisableTwoFactorAuthMutation } from "@/features/auth/api/authService";
-import AccountSettingTab from "../components/setting-tabs/AccountSettingTab";
-import PrivacySettingTab from "../components/setting-tabs/PrivacySettingTab";
-import PreferencesSettingTab from "../components/setting-tabs/PreferencesSettingTab";
-import NotificationsSettingTab from "../components/setting-tabs/NotificationsSettingTab";
-import LearningSettingTab from "../components/setting-tabs/LearningSettingTab";
 import { EditProfileDialog } from "@/features/auth/components/EditProfileDialog";
 import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordDialog";
 import { UserSocialDialog } from "../components/UserSocialDialog";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation, Outlet, Link } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useDeleteAccountMutation } from "@/features/user/api/userService";
@@ -29,11 +24,45 @@ import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { SetPasswordDialog } from "@/features/auth/components/SetPasswordDialog";
 import { TwoFactorAuthDialog } from "@/features/auth/components/TwoFactorAuthDialog";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useAllowFollowMutation, useUpdateMessageScopeMutation, useUpdateFollowersTabVisibilityMutation, useUpdateFollowingTabVisibilityMutation, useUpdateFriendTabVisibilityMutation, useUpdateChatMessagesMutation, useUpdateCommentsMutation, useUpdateUpvotesMutation, useUpdateNewFollowersMutation, useUpdateActivityFromFollowedMutation, useNotificationSettingsQuery } from "../api/settingService";
+import { 
+  useAllowFollowMutation, 
+  useUpdateMessageScopeMutation, 
+  useUpdateFollowersTabVisibilityMutation, 
+  useUpdateFollowingTabVisibilityMutation, 
+  useUpdateFriendTabVisibilityMutation, 
+  useUpdateChatMessagesMutation, 
+  useUpdateCommentsMutation, 
+  useUpdateUpvotesMutation, 
+  useUpdateNewFollowersMutation, 
+  useUpdateActivityFromFollowedMutation, 
+  useNotificationSettingsQuery 
+} from "../api/settingService";
 
 
 import type { ScopeVisibilityType } from "@/shared/enums/ScopeVisibility.enum";
 
+
+export interface SettingContext {
+  me: any;
+  onEditProfile: () => void;
+  onChangePassword: () => void;
+  onSocialLinks: () => void;
+  onDeleteAccount: () => void;
+  onSetPassword: () => void;
+  onSetTwoFactorAuth: () => void;
+  onAllowFollow: (allowFollow: boolean) => void;
+  onUpdateMessageScope: (scope: any) => void;
+  onUpdateFollowersTabVisibility: (scope: any) => void;
+  onUpdateFollowingTabVisibility: (scope: any) => void;
+  onUpdateFriendTabVisibility: (scope: any) => void;
+  notificationSettings: any;
+  isLoadingNotifications: boolean;
+  onUpdateChatMessages: (val: string) => void;
+  onUpdateComments: (val: string) => void;
+  onUpdateUpvotes: (val: string) => void;
+  onUpdateNewFollowers: (val: string) => void;
+  onUpdateActivityFromFollowed: (val: string) => void;
+}
 
 export default function SettingPage() {
   const { t } = useTranslation();
@@ -64,7 +93,9 @@ export default function SettingPage() {
     [t],
   );
 
-  const [activeTab, setActiveTab] = useState<SettingTab>(SettingTab.ACCCOUNT);
+  const location = useLocation();
+  const currentTab = location.pathname.split("/").pop() || "account";
+
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
     "general",
     "security",
@@ -257,11 +288,13 @@ export default function SettingPage() {
                       <div className="mt-1 space-y-1">
                         {group.items.map((tab) => {
                           const Icon = tab.icon;
-                          const isActive = activeTab === tab.key;
+                          const isActive = currentTab === tab.key;
+                          const path = `${ROUTES.ME_SETTING.url}/${tab.key}`;
+                          
                           return (
-                            <button
+                            <Link
                               key={tab.key}
-                              onClick={() => setActiveTab(tab.key)}
+                              to={path}
                               className={[
                                 "flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all",
                                 isActive
@@ -276,7 +309,7 @@ export default function SettingPage() {
                                 ].join(" ")}
                               />
                               {tab.label}
-                            </button>
+                            </Link>
                           );
                         })}
                       </div>
@@ -287,50 +320,30 @@ export default function SettingPage() {
             </nav>
           </aside>
 
-          {/* Content Right */}
           <main className="flex-1 min-h-150">
             <div className="bg-card rounded-xl border p-6 shadow-sm">
               {me?.id ? (
-                <>
-                  {activeTab === SettingTab.ACCCOUNT && (
-                    <AccountSettingTab
-                      onEditProfile={() => setProfileOpen(true)}
-                      onChangePassword={() => setChangePasswordOpen(true)}
-                      onSocialLinks={() => setSocialOpen(true)}
-                      onDeleteAccount={() => setDeleteOpen(true)}
-                      onSetPassword={() => setSetPasswordOpen(true)}
-                      onSetTwoFactorAuth={handleTwoFactorAuthToggle}
-                      me={me}
-                    />
-                  )}
-                  {activeTab === SettingTab.PRIVACY && (
-                    <PrivacySettingTab
-                      onAllowFollow={handleAllowFollowToggle}
-                      onUpdateMessageScope={handleUpdateMessageScope}
-                      onUpdateFollowersTabVisibility={handleUpdateFollowersTabVisibility}
-                      onUpdateFollowingTabVisibility={handleUpdateFollowingTabVisibility}
-                      onUpdateFriendTabVisibility={handleUpdateFriendTabVisibility}
-                      me={me}
-                    />
-                  )}
-                  {activeTab === SettingTab.PREFERENCES && (
-                    <PreferencesSettingTab />
-                  )}
-                  {activeTab === SettingTab.NOTIFICATIONS && (
-                    <NotificationsSettingTab 
-                      settings={notificationSettings}
-                      isLoading={isLoadingNotifications}
-                      onUpdateChatMessages={handleUpdateChatMessages}
-                      onUpdateComments={handleUpdateComments}
-                      onUpdateUpvotes={handleUpdateUpvotes}
-                      onUpdateNewFollowers={handleUpdateNewFollowers}
-                      onUpdateActivityFromFollowed={handleUpdateActivityFromFollowed}
-                    />
-                  )}
-
-
-                  {activeTab === SettingTab.LEARNING && <LearningSettingTab />}
-                </>
+                <Outlet context={{
+                  me,
+                  onEditProfile: () => setProfileOpen(true),
+                  onChangePassword: () => setChangePasswordOpen(true),
+                  onSocialLinks: () => setSocialOpen(true),
+                  onDeleteAccount: () => setDeleteOpen(true),
+                  onSetPassword: () => setSetPasswordOpen(true),
+                  onSetTwoFactorAuth: handleTwoFactorAuthToggle,
+                  onAllowFollow: handleAllowFollowToggle,
+                  onUpdateMessageScope: handleUpdateMessageScope,
+                  onUpdateFollowersTabVisibility: handleUpdateFollowersTabVisibility,
+                  onUpdateFollowingTabVisibility: handleUpdateFollowingTabVisibility,
+                  onUpdateFriendTabVisibility: handleUpdateFriendTabVisibility,
+                  notificationSettings,
+                  isLoadingNotifications,
+                  onUpdateChatMessages: handleUpdateChatMessages,
+                  onUpdateComments: handleUpdateComments,
+                  onUpdateUpvotes: handleUpdateUpvotes,
+                  onUpdateNewFollowers: handleUpdateNewFollowers,
+                  onUpdateActivityFromFollowed: handleUpdateActivityFromFollowed,
+                }} />
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">

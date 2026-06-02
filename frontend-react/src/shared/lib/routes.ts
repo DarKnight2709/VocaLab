@@ -59,6 +59,26 @@ const ROUTES = {
     title: "Settings",
     url: "/setting/me",
   },
+  ME_SETTING_ACCOUNT: {
+    title: "Account Settings",
+    url: "/setting/me/account",
+  },
+  ME_SETTING_PREFERENCES: {
+    title: "Preferences",
+    url: "/setting/me/preferences",
+  },
+  ME_SETTING_PRIVACY: {
+    title: "Privacy Settings",
+    url: "/setting/me/privacy",
+  },
+  ME_SETTING_NOTIFICATIONS: {
+    title: "Notification Settings",
+    url: "/setting/me/notifications",
+  },
+  ME_SETTING_LEARNING: {
+    title: "Learning Settings",
+    url: "/setting/me/learning",
+  },
   ME_NOTIFICATION: {
     title: "Notifications",
     url: "/notification/me",

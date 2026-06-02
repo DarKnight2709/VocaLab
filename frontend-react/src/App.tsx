@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { Toaster } from "sonner";
 import { ReactQueryProvider } from "@/shared/components/ReactQueryProvider";
 import AuthGuard from "@/features/auth/components/AuthGuard";
@@ -24,6 +24,11 @@ import CardTypePreviewPage from "./features/vocabulary/pages/CardTypePreviewPage
 import ChatPage from "./features/chat/pages/ChatPage";
 import SearchPage from "./features/search/pages/SearchPage";
 import NotificationPage from "./features/notification/pages/NotificationPage";
+import AccountSettingPage from "./features/setting/pages/AccountSettingPage";
+import PrivacySettingPage from "./features/setting/pages/PrivacySettingPage";
+import NotificationsSettingPage from "./features/setting/pages/NotificationsSettingPage";
+import LearningSettingTab from "./features/setting/components/setting-tabs/LearningSettingTab";
+import PreferencesSettingTab from "./features/setting/components/setting-tabs/PreferencesSettingTab";
 import { ThemeProvider, useTheme } from "./shared/components/ThemeProvider";
 import TwoFactorAuthGuard from "./features/auth/components/TwoFactorAuthGuard";
 import TwoFactorAuthPage from "./features/auth/pages/TwoFactorAuthPage";
@@ -65,7 +70,18 @@ const router = createBrowserRouter([
           { path: ROUTES.CHAT.url, element: <ChatPage /> },
           { path: ROUTES.SEARCH.url, element: <SearchPage /> },
           { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
-          { path: ROUTES.ME_SETTING.url, element: <SettingPage /> },
+          { 
+            path: ROUTES.ME_SETTING.url, 
+            element: <SettingPage />,
+            children: [
+              { index: true, element: <Navigate to={ROUTES.ME_SETTING_ACCOUNT.url} replace /> },
+              { path: ROUTES.ME_SETTING_ACCOUNT.url, element: <AccountSettingPage /> },
+              { path: ROUTES.ME_SETTING_PREFERENCES.url, element: <PreferencesSettingTab /> },
+              { path: ROUTES.ME_SETTING_PRIVACY.url, element: <PrivacySettingPage /> },
+              { path: ROUTES.ME_SETTING_NOTIFICATIONS.url, element: <NotificationsSettingPage /> },
+              { path: ROUTES.ME_SETTING_LEARNING.url, element: <LearningSettingTab /> },
+            ]
+          },
           { path: ROUTES.ME_NOTIFICATION.url, element: <NotificationPage /> }
         ],
       },
