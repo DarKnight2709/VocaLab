@@ -91,6 +91,7 @@
     },
     "reminder": {
       "reminders": "Nhắc nhở",
+      "reminderDescription": "Lên lịch nhắc nhở để duy trì thói quen học tập hàng ngày.",
       "types": {
         "ON_THE_HOUR": "Đúng giờ",
         "EVERY_5_MINUTES": "Mỗi 5 phút",
@@ -105,7 +106,7 @@
         "EVERY_8_HOURS": "Mỗi 8 giờ"
       },
       "title": "Tiêu đề",
-      "description": "Lên lịch nhắc nhở để duy trì thói quen học tập hàng ngày.",
+      "description": "Mô tả",
       "addReminder": "Thêm nhắc nhở",
       "noReminders": "Bạn chưa có nhắc nhở nào.",
       "createSuccess": "Đã tạo nhắc nhở thành công",
@@ -124,7 +125,9 @@
       "daysShort": ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
       "never": "Không bao giờ",
       "editReminder": "Chỉnh sửa nhắc nhở",
-      "update": "Cập nhật"
+      "update": "Cập nhật",
+      "allowBrowserNotifications": "Vui lòng cho phép thông báo trong trình duyệt để bật lời nhắc.",
+      "desktopNotificationRemind": "Đảm bảo bật thông báo trên máy tính để nhận lời nhắc ngay cả khi bạn không truy cập trang web."
     },
     "light": "Sáng",
     "dark": "Tối",

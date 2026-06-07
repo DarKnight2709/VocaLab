@@ -1,9 +1,12 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { EmailService } from './email.service';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
-import { MessageAttachmentDto } from '../messages/dto/messages.dto';
+import { MessageAttachmentDto } from '../../messages/dto/messages.dto';
+import { ReminderJobNames } from '@/common/enums/reminder-job-names';
+import { ReminderService } from '../services/reminder.service';
+import { PrismaService } from '@/core/database/prisma.service';
+import { EmailService } from '../services/email.service';
 
 /**
  * Data structure for the direct message email job
@@ -39,11 +42,15 @@ export interface CommentNotificationJobData {
   blogId?: string;
 }
 
-@Processor('email-notification')
-export class EmailProcessor extends WorkerHost {
-  private readonly logger = new Logger(EmailProcessor.name);
+@Processor('email-notification', { concurrency: 20})
+export class EmailNotificationWorker extends WorkerHost {
+  private readonly logger = new Logger(EmailNotificationWorker.name);
 
-  constructor(private readonly emailService: EmailService) {
+  constructor(
+    private readonly emailService: EmailService,
+    private readonly reminderService: ReminderService,
+    private readonly prisma: PrismaService,
+  ) {
     super();
   }
 
@@ -103,12 +110,14 @@ export class EmailProcessor extends WorkerHost {
           );
           break;
         }
-
         default:
           this.logger.warn(`Unknown job name: ${job.name}`);
       }
     } catch (error: any) {
-      this.logger.error(`Failed to process job ${job.id} (${job.name}): ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to process job ${job.id} (${job.name}): ${error.message}`,
+        error.stack,
+      );
       throw error; // Rethrow to allow BullMQ to handle retries
     }
   }

@@ -133,6 +133,11 @@ const API_ROUTES = {
     UNREAD_COUNT: "v1/notifications/unread-count",
     MARK_READ: (id?: string) => id ? `v1/notifications/read/${id}` : `v1/notifications/read`,
   },
+
+  DEVICES: {
+    REGISTER: "v1/devices/register",
+    UNREGISTER: "v1/devices/unregister",
+  },
 };
 
 export default API_ROUTES;

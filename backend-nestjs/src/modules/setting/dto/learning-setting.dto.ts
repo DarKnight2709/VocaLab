@@ -15,6 +15,11 @@ export class CreateReminderDto {
   @IsString()
   title!: string;
 
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @ApiProperty({ enum: ReminderType })
   @IsEnum(ReminderType)
   type!: ReminderType;
@@ -54,6 +59,9 @@ export class ReminderResponseDto {
 
   @ApiProperty()
   title!: string;
+
+  @ApiProperty()
+  description!: string | null;
 
   @ApiProperty({ enum: ReminderType })
   type!: ReminderType;

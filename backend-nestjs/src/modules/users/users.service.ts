@@ -35,10 +35,9 @@ import {
 } from './dto/users-response.dto';
 import { Follow, VisibilityScope } from '@prisma/client';
 import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
-import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
-import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@prisma/client';
 import { SettingKey } from '@/common/enums/setting-key.enum';
+import { NotificationsService } from '../notifications/services/notifications.service';
 
 interface MappedUserTarget {
   id: string;

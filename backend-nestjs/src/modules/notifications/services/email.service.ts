@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@/common/services/config.service';
-import { MessageAttachmentDto } from '../messages/dto/messages.dto';
+import { MessageAttachmentDto } from '@/modules/messages/dto/messages.dto';
 
 @Injectable()
 export class EmailService {

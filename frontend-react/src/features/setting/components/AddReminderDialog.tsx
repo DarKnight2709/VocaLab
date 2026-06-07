@@ -35,6 +35,7 @@ export function AddReminderDialog({ open, onOpenChange, initialData }: AddRemind
   const updateMutation = useUpdateReminderMutation();
 
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [type, setType] = useState<ReminderType>(ReminderType.ON_THE_HOUR);
   const [triggerTime, setTriggerTime] = useState("08:00");
   const [startTime, setStartTime] = useState("08:00");
@@ -46,6 +47,7 @@ export function AddReminderDialog({ open, onOpenChange, initialData }: AddRemind
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title);
+      setDescription(initialData.description || "");
       setType(initialData.type as ReminderType);
       setTriggerTime(minutesToTime(initialData.triggerTime));
       setStartTime(minutesToTime(initialData.startTime));
@@ -61,6 +63,7 @@ export function AddReminderDialog({ open, onOpenChange, initialData }: AddRemind
     
     const data = {
       title,
+      description,
       type,
       triggerTime: timeToMinutes(triggerTime),
       startTime: timeToMinutes(startTime),
@@ -113,6 +116,16 @@ export function AddReminderDialog({ open, onOpenChange, initialData }: AddRemind
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Daily Practice"
                 required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description" className="font-normal text-muted-foreground">{t("settings.reminder.description")}</Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. Time to practice your words"
               />
             </div>
             

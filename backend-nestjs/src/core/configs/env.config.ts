@@ -145,6 +145,9 @@ export class EnvironmentValidation {
   @IsString()
   @Transform(({ value }) => value || 'noreply@vocalab.com')
   EMAIL_FROM: string = 'noreply@vocalab.com';
+
+  @IsString()
+  FIREBASE_SERVICE_ACCOUNT!: string;
 }
 
 export function validateConfig(config: Record<string, unknown>) {

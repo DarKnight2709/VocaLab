@@ -18,6 +18,7 @@ export type NotificationSetting = z.infer<typeof NotificationSettingSchema>;
 export const ReminderSchema = z.object({
   id: z.string(),
   title: z.string(),
+  description: z.string().nullable(),
   type: z.string(),
   isEnabled: z.boolean(),
   triggerTime: z.number().nullable(),

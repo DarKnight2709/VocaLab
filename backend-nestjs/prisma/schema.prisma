@@ -127,6 +127,7 @@ model User {
 
   notificationSettings NotificationSetting?
   reminders            Reminder[]
+  devices              UserDevice[]
 
   @@map("users")
 }
@@ -566,6 +567,7 @@ model Reminder {
   id          String       @id @default(uuid())
   userId      String
   title       String
+  description String?
   type        ReminderType
   isEnabled   Boolean      @default(true)
   
@@ -575,7 +577,9 @@ model Reminder {
   endTime     Int?        
   
   // Array of days (0 = Sunday, 6 = Saturday)
-  daysOfWeek  Int[]        
+  daysOfWeek  Int[]   
+
+  schedulerId String       @unique
 
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -586,4 +590,16 @@ model Reminder {
   @@index([userId])
   @@index([isEnabled])
   @@map("reminders")
+}
+
+model UserDevice {
+  id        String   @id @default(uuid())
+  userId    String
+  fcmToken  String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_devices")
 }

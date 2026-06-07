@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "@/shared/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import envConfig from "@/shared/config/envConfig";
+
 
 type GifPickerProps = {
   onSelect: (url: string, title?: string) => void;
 };
 
 // Read API key from environment variables, fallback to empty to avoid crashing (but it will fail API calls)
-const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || "";
+const GIPHY_API_KEY = envConfig.VITE_GIPHY_API_KEY || "";
 
 export function GifPicker({ onSelect }: GifPickerProps) {
   const { t } = useTranslation();

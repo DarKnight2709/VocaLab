@@ -2,17 +2,15 @@ import { map } from 'rxjs/operators';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { NotificationChannel, NotificationType } from '@prisma/client';
-import {
-  GetNotificationResponseDto,
-  NotificationDto,
-} from './dto/notifications-response.dto';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { GroupChatService } from '../group-chat/group-chat.service';
-import { NotificationsGateway } from './notifications.gateway';
+
 import { SettingKey } from '@/common/enums/setting-key.enum';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
+import { GetNotificationResponseDto, NotificationDto } from '../dto/notifications-response.dto';
+import { GroupChatService } from '@/modules/group-chat/group-chat.service';
+import { NotificationsGateway } from '../notifications.gateway';
+import { CreateNotificationDto } from '../dto/create-notification.dto';
 
 @Injectable()
 export class NotificationsService {

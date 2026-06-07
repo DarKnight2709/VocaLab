@@ -25,12 +25,12 @@ import {
 import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendGroupMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
-import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { PrismaService } from '@/core/database/prisma.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
+import { NotificationsService } from '../notifications/services/notifications.service';
 
 @WebSocketGateway({
   cors: {

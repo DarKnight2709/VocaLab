@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import {
   UpdateAllowFollowDto,
@@ -16,69 +20,49 @@ import {
   UpdateNewFollowersDto,
   UpdateActivityFromFollowedDto,
 } from './dto/notication-settings.dto';
-import { CreateReminderDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/learning-setting.dto';
+import {
+  CreateReminderDto,
+  ReminderDeleteResponseDto,
+  ReminderListResponseDto,
+  ReminderResponseDto,
+} from './dto/learning-setting.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { ReminderJobNames } from '@/common/enums/reminder-job-names';
+import { Reminder, ReminderType } from '@prisma/client';
+import { minutesToTime } from '@/common/utils/convertTime';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class SettingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @InjectQueue('reminder-notification')
+    private readonly reminderNotificationQueue: Queue,
+  ) {}
+
+  // --- PRIVACY SETTINGS (Optimized DB hits) ---
 
   async updateAllowFollow(
     userId: string,
     dto: UpdateAllowFollowDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.userPrivacySetting.upsert({
-      where: { userId },
-      update: { allowFollow: dto.allowFollow },
-      create: {
-        userId,
-        allowFollow: dto.allowFollow,
-      },
-    });
+    await this.handlePrivacyUpsert(userId, { allowFollow: dto.allowFollow });
   }
 
   async updateMessageScope(
     userId: string,
     dto: UpdateMessageScopeDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.userPrivacySetting.upsert({
-      where: { userId },
-      update: { messageScope: dto.messageScope },
-      create: {
-        userId,
-        messageScope: dto.messageScope,
-      },
-    });
+    await this.handlePrivacyUpsert(userId, { messageScope: dto.messageScope });
   }
 
   async updateFollowersTabVisibility(
     userId: string,
     dto: UpdateFollowersTabVisibilityDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.userPrivacySetting.upsert({
-      where: { userId },
-      update: { followersTabVisibility: dto.followersTabVisibility },
-      create: {
-        userId,
-        followersTabVisibility: dto.followersTabVisibility,
-      },
+    await this.handlePrivacyUpsert(userId, {
+      followersTabVisibility: dto.followersTabVisibility,
     });
   }
 
@@ -86,19 +70,8 @@ export class SettingService {
     userId: string,
     dto: UpdateFollowingTabVisibilityDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.userPrivacySetting.upsert({
-      where: { userId },
-      update: { followingTabVisibility: dto.followingTabVisibility },
-      create: {
-        userId,
-        followingTabVisibility: dto.followingTabVisibility,
-      },
+    await this.handlePrivacyUpsert(userId, {
+      followingTabVisibility: dto.followingTabVisibility,
     });
   }
 
@@ -106,93 +79,52 @@ export class SettingService {
     userId: string,
     dto: UpdateFriendTabVisibilityDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.userPrivacySetting.upsert({
-      where: { userId },
-      update: { friendTabVisibility: dto.friendTabVisibility },
-      create: {
-        userId,
-        friendTabVisibility: dto.friendTabVisibility,
-      },
+    await this.handlePrivacyUpsert(userId, {
+      friendTabVisibility: dto.friendTabVisibility,
     });
   }
+
+  private async handlePrivacyUpsert(
+    userId: string,
+    data: Record<string, any>,
+  ): Promise<void> {
+    try {
+      await this.prisma.userPrivacySetting.upsert({
+        where: { userId },
+        update: data,
+        create: { userId, ...data },
+      });
+    } catch (error) {
+      // Catch foreign key failures if user doesn't exist
+      throw new BadRequestException(ErrorCode.USER_NOT_FOUND);
+    }
+  }
+
+  // --- NOTIFICATION SETTINGS ---
 
   async updateChatMessages(
     userId: string,
     dto: UpdateChatMessagesDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.notificationSetting.upsert({
-      where: { userId },
-      update: { chatMessages: dto.chatMessages },
-      create: {
-        userId,
-        chatMessages: dto.chatMessages,
-      },
+    await this.handleNotificationUpsert(userId, {
+      chatMessages: dto.chatMessages,
     });
   }
 
   async updateComments(userId: string, dto: UpdateCommentsDto): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.notificationSetting.upsert({
-      where: { userId },
-      update: { comments: dto.comments },
-      create: {
-        userId,
-        comments: dto.comments,
-      },
-    });
+    await this.handleNotificationUpsert(userId, { comments: dto.comments });
   }
 
   async updateUpvotes(userId: string, dto: UpdateUpvotesDto): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.notificationSetting.upsert({
-      where: { userId },
-      update: { upvotes: dto.upvotes },
-      create: {
-        userId,
-        upvotes: dto.upvotes,
-      },
-    });
+    await this.handleNotificationUpsert(userId, { upvotes: dto.upvotes });
   }
 
   async updateNewFollowers(
     userId: string,
     dto: UpdateNewFollowersDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.notificationSetting.upsert({
-      where: { userId },
-      update: { newFollowers: dto.newFollowers },
-      create: {
-        userId,
-        newFollowers: dto.newFollowers,
-      },
+    await this.handleNotificationUpsert(userId, {
+      newFollowers: dto.newFollowers,
     });
   }
 
@@ -200,32 +132,32 @@ export class SettingService {
     userId: string,
     dto: UpdateActivityFromFollowedDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new Error(ErrorCode.USER_NOT_FOUND);
-    }
-    await this.prisma.notificationSetting.upsert({
-      where: { userId },
-      update: { activityFromFollowed: dto.activityFromFollowed },
-      create: {
-        userId,
-        activityFromFollowed: dto.activityFromFollowed,
-      },
+    await this.handleNotificationUpsert(userId, {
+      activityFromFollowed: dto.activityFromFollowed,
     });
   }
 
-  async getSettings(userId: string): Promise<NotificationSettingDto> {
-    let settings = await this.prisma.notificationSetting.findUnique({
-      where: { userId },
-    });
-
-    if (!settings) {
-      settings = await this.prisma.notificationSetting.create({
-        data: { userId },
+  private async handleNotificationUpsert(
+    userId: string,
+    data: Record<string, any>,
+  ): Promise<void> {
+    try {
+      await this.prisma.notificationSetting.upsert({
+        where: { userId },
+        update: data,
+        create: { userId, ...data },
       });
+    } catch (error) {
+      throw new BadRequestException(ErrorCode.USER_NOT_FOUND);
     }
+  }
+
+  async getSettings(userId: string): Promise<NotificationSettingDto> {
+    const settings = await this.prisma.notificationSetting.upsert({
+      where: { userId },
+      update: {}, // single-query get-or-create pattern
+      create: { userId },
+    });
 
     return {
       chatMessages: settings.chatMessages,
@@ -237,7 +169,8 @@ export class SettingService {
     };
   }
 
-  // Reminders
+  // --- REMINDERS MANAGEMENT ---
+
   async getReminders(
     userId: string,
     page = 1,
@@ -245,13 +178,12 @@ export class SettingService {
     search?: string,
   ): Promise<ReminderListResponseDto> {
     const skip = (page - 1) * limit;
-    const where: any = {
-      userId,
-      deletedAt: null,
-    };
+    const where: any = { userId, deletedAt: null };
+
     if (search) {
       where.title = { contains: search, mode: 'insensitive' };
     }
+
     const [reminders, total] = await Promise.all([
       this.prisma.reminder.findMany({
         where,
@@ -261,6 +193,7 @@ export class SettingService {
         select: {
           id: true,
           title: true,
+          description: true,
           type: true,
           isEnabled: true,
           triggerTime: true,
@@ -272,6 +205,7 @@ export class SettingService {
       }),
       this.prisma.reminder.count({ where }),
     ]);
+
     return {
       reminders,
       meta: {
@@ -287,23 +221,34 @@ export class SettingService {
     userId: string,
     dto: CreateReminderDto,
   ): Promise<ReminderResponseDto> {
+    const reminderId = randomUUID();
+    const schedulerId = `reminder-cron:${userId}:${reminderId}`;
+
     const createdReminder = await this.prisma.reminder.create({
       data: {
+        id: reminderId,
         ...dto,
         userId,
+        schedulerId,
       },
       select: {
         id: true,
         title: true,
+        description: true,
         type: true,
         isEnabled: true,
         triggerTime: true,
+        schedulerId: true,
         startTime: true,
         endTime: true,
         daysOfWeek: true,
         createdAt: true,
       },
     });
+
+    if (createdReminder.isEnabled) {
+      await this.addJobToReminderNotificationQueue(createdReminder, userId);
+    }
     return createdReminder;
   }
 
@@ -312,21 +257,40 @@ export class SettingService {
     id: string,
     dto: CreateReminderDto,
   ): Promise<ReminderResponseDto> {
+    const existingReminder = await this.prisma.reminder.findUnique({
+      where: { id, userId },
+    });
+
+    if (!existingReminder) {
+      throw new NotFoundException(ErrorCode.REMINDER_NOT_FOUND);
+    }
+
     const updatedReminder = await this.prisma.reminder.update({
       where: { id, userId },
       data: dto,
       select: {
         id: true,
         title: true,
+        description: true,
         type: true,
         isEnabled: true,
         triggerTime: true,
         startTime: true,
+        schedulerId: true,
         endTime: true,
         daysOfWeek: true,
         createdAt: true,
       },
     });
+
+    if (updatedReminder.isEnabled) {
+      await this.addJobToReminderNotificationQueue(updatedReminder, userId);
+    } else {
+      await this.reminderNotificationQueue.removeJobScheduler(
+        updatedReminder.schedulerId,
+      );
+    }
+
     return updatedReminder;
   }
 
@@ -334,21 +298,102 @@ export class SettingService {
     const reminder = await this.prisma.reminder.findUnique({
       where: { id, userId },
     });
-    if (!reminder) return;
+    if (!reminder) throw new NotFoundException(ErrorCode.REMINDER_NOT_FOUND);
 
-    await this.prisma.reminder.update({
+    const nextState = !reminder.isEnabled;
+
+    const updatedReminder = await this.prisma.reminder.update({
       where: { id, userId },
-      data: { isEnabled: !reminder.isEnabled },
+      data: { isEnabled: nextState },
     });
+
+    if (nextState) {
+      // FIX: Passing updatedReminder instead of stale reminder configuration
+      await this.addJobToReminderNotificationQueue(updatedReminder, userId);
+    } else {
+      await this.reminderNotificationQueue.removeJobScheduler(
+        reminder.schedulerId,
+      );
+    }
   }
 
   async deleteReminder(
     userId: string,
     id: string,
   ): Promise<ReminderDeleteResponseDto> {
-    const deletedReminder = await this.prisma.reminder.delete({
+    const reminder = await this.prisma.reminder.findUnique({
       where: { id, userId },
     });
-    return { id: deletedReminder.id };
+
+    if (!reminder) {
+      throw new NotFoundException(ErrorCode.REMINDER_NOT_FOUND);
+    }
+
+    await this.reminderNotificationQueue.removeJobScheduler(
+      reminder.schedulerId,
+    );
+    await this.prisma.reminder.delete({ where: { id, userId } });
+
+    return { id };
+  }
+
+  // --- HELPERS ---
+
+  private createCronPattern(
+    reminder: Omit<Reminder, 'updatedAt' | 'deletedAt' | 'user' | 'userId'>,
+    isOneTheHourReminder: boolean,
+  ): string {
+    const days = reminder.daysOfWeek.join(',');
+
+    if (isOneTheHourReminder) {
+      const [hour, minute] = minutesToTime(reminder.triggerTime).split(':');
+      // FIX: Parse integer values to safely remove leading zeros ("05" -> 5)
+      return `${Number(minute)} ${Number(hour)} * * ${days}`;
+    }
+
+    const [startHour] = minutesToTime(reminder.startTime).split(':');
+    const [endHour] = minutesToTime(reminder.endTime).split(':');
+    const intervalTime = reminder.type.split('_');
+    const type = intervalTime[intervalTime.length - 1];
+    const value =
+      type === 'HOUR' ? 1 : Number(intervalTime[intervalTime.length - 2]);
+
+    const range = `${Number(startHour)}-${Number(endHour)}`;
+
+    if (type === 'HOURS' || type === 'HOUR') {
+      return `0 */${value} ${range} * * ${days}`;
+    }
+    return `*/${value} ${range} * * ${days}`;
+  }
+
+  private async addJobToReminderNotificationQueue(
+    reminder: Omit<Reminder, 'updatedAt' | 'deletedAt' | 'user' | 'userId'>,
+    userId: string,
+  ): Promise<void> {
+    const isOneTheHourReminder = reminder.type === ReminderType.ON_THE_HOUR;
+    const cronPattern = this.createCronPattern(reminder, isOneTheHourReminder);
+
+    await this.reminderNotificationQueue.upsertJobScheduler(
+      reminder.schedulerId,
+      { pattern: cronPattern },
+      {
+        name: ReminderJobNames.REMINDER_VIA_WEB_PUSH_NOTIFICATION,
+        data: {
+          title: reminder.title,
+          description: reminder.description,
+          reminderId: reminder.id,
+          userId,
+          startTime: reminder.startTime,
+          endTime: reminder.endTime,
+          isOneTheHourReminder,
+        },
+        opts: {
+          backoff: 3,
+          attempts: 5,
+          removeOnComplete: { count: 10, age: 24 * 3600 },
+          removeOnFail: { count: 50 },
+        },
+      },
+    );
   }
 }

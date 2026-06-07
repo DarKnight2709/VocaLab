@@ -26,6 +26,7 @@ import { ConfigService } from './common/services/config.service';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { DevicesModule } from './modules/devices/devices.module';
 
 
 
@@ -44,6 +45,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ScheduleModule.forRoot(),
     SettingModule,
     NotificationsModule,
+    DevicesModule,
     // tell BullMQ how to connect to Redis
     BullModule.forRootAsync({
       inject: [ConfigService],

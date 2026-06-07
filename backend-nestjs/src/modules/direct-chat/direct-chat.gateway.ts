@@ -16,12 +16,12 @@ import { MessageType, NotificationType, NotificationChannel } from '@prisma/clie
 import { WsValidationPipe } from '@/common/pipes/ws-validation.pipe';
 import { SendDirectMessageDto } from '../messages/dto/messages.dto';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
-import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
 import { PrismaService } from '@/core/database/prisma.service';
+import { NotificationsService } from '../notifications/services/notifications.service';
 
 @WebSocketGateway({
   cors: {

@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { VoteType, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreateBlogDto,
   UpdateBlogDto,
@@ -17,6 +16,7 @@ import { mapVoteScore } from '@/common/utils/vote.utils';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import { CreateBlogResponseDto, CreateCommentResponseDto, DeleteResponseDto, GetBlogByIdResponseDto, GetBlogsResponseDto, GetMyBlogsResponseDto, UpdateBlogResponseDto, UpdateCommentResponseDto } from './dto/blog-response.dto';
 import { SettingKey } from '@/common/enums/setting-key.enum';
+import { NotificationsService } from '../notifications/services/notifications.service';
 
 @Injectable()
 export class BlogService {

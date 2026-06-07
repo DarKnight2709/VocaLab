@@ -7,11 +7,11 @@ import {
   DefaultValuePipe,
   ParseIntPipe,
 } from '@nestjs/common';
-import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import { GetNotificationResponseDto } from './dto/notifications-response.dto';
+import { NotificationsService } from './services/notifications.service';
 
 @Controller('notifications')
 export class NotificationsController {

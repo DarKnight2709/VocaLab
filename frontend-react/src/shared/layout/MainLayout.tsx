@@ -3,10 +3,13 @@ import LoadingSpinner from "@/shared/components/LoadingSpinner";
 import LeftSidebar from "@/shared/components/main-components/LeftSidebar";
 import MainHeader from "@/shared/components/main-components/MainHeader";
 import MainOutlet from "@/shared/components/main-components/MainOutlet";
+import { useFcmToken } from "@/features/notification/hooks/usePushNotifications";
 import { useState } from "react";
 
 export default function MainLayout() {
   const { isLoading, isPending, data: me } = useMeQuery();
+  // Initialize FCM globally so foreground messages are received on all pages
+  useFcmToken();
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true);
 
   if (isLoading || isPending) {

@@ -91,6 +91,7 @@
     },
     "reminder": {
       "reminders": "Reminders",
+      "reminderDescription": "Schedule reminders to keep your learning consistent.",
       "types": {
         "ON_THE_HOUR": "On the hour",
         "EVERY_5_MINUTES": "Every 5 minutes",
@@ -105,7 +106,7 @@
         "EVERY_8_HOURS": "Every 8 hours"
       },
       "title": "Title",
-      "description": "Schedule reminders to keep your learning consistent.",
+      "description": "Description",
       "addReminder": "Add Reminder",
       "noReminders": "You haven't added any reminders yet.",
       "createSuccess": "Reminder created successfully",
@@ -124,7 +125,9 @@
       "daysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       "never": "Never",
       "editReminder": "Edit Reminder",
-      "update": "Update"
+      "update": "Update",
+      "allowBrowserNotifications": "Please allow notifications in your browser to enable reminders.",
+      "desktopNotificationRemind": "Make sure to turn on desktop notifications to receive reminders even when you are not on the website."
     },
     "light": "Light",
     "dark": "Dark",

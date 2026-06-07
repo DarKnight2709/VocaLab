@@ -42,9 +42,10 @@ async function bootstrap() {
     await app.listen(PORT);
     Logger.log(`Server is running on ${API_URL}`, 'Bootstrap');
 
-    if(swaggerEnabled) {
-      Logger.log(`Swager is running on ${swaggerUrl}`, 'Bootstrap')
+    if (swaggerEnabled) {
+      Logger.log(`Swagger is running on ${swaggerUrl}`, 'Bootstrap');
     }
+    Logger.log(`Bull Board is running on ${API_URL}/queues`, 'Bootstrap');
   } catch (error) {
     Logger.error(error, 'Bootstrap');
     process.exit(1);
