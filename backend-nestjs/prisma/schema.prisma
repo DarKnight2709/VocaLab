@@ -129,6 +129,9 @@ model User {
   reminders            Reminder[]
   devices              UserDevice[]
 
+  learningSetting      LearningSetting?
+  dailyProgress        DailyProgress[]
+
   @@map("users")
 }
 
@@ -525,6 +528,38 @@ model NotificationSetting {
 
   @@map("notification_settings")
 }
+
+model LearningSetting {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  dailyGoalMinutes   Int      @default(15) // e.g., 5, 15, 30, 60 minutes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("learning_settings")
+}
+
+model DailyProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  date        String  
+  secondsStudied     Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@unique([userId, date])
+  @@map("daily_progress")
+}
+
 
 model Notification {
   id          String           @id @default(uuid())

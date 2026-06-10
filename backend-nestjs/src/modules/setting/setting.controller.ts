@@ -5,7 +5,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { NotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsDto, UpdateUpvotesDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
-import { CreateReminderDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/learning-setting.dto';
+import { CreateReminderDto, DailyGoalResponseDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto, UpdateDailyGoalDto } from './dto/learning-setting.dto';
 import { Post, Delete, Param } from '@nestjs/common';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 
@@ -174,6 +174,25 @@ export class SettingController {
     @Param('id') id: string,
   ): Promise<ResponseInterceptor<ReminderDeleteResponseDto>> {
     const result = await this.settingService.deleteReminder(user.id, id);
+    return {
+      data: result
+    }
+  }
+
+  @Get('daily-goal')
+  @ApiOperation({ summary: 'Get user daily goals' })
+  async getDailyProgress(@CurrentUser() user: any): Promise<ResponseInterceptor<DailyGoalResponseDto>> {
+    const result = await this.settingService.getDailyGoal(user.id);
+    return {
+      data: result
+    }
+  }
+
+  @Patch('daily-goal')
+  @ApiOperation({ summary: 'Update user daily goals' })
+  async updateDailyProgress(@CurrentUser() user: any,
+    @Body() updateDto: UpdateDailyGoalDto): Promise<ResponseInterceptor<DailyGoalResponseDto>> {
+    const result = await this.settingService.updateDailyGoal(user.id, updateDto);
     return {
       data: result
     }

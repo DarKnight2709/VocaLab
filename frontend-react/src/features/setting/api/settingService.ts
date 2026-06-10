@@ -8,7 +8,8 @@ import {
   NotificationSettingSchema, 
   ReminderListResponseSchema,
   ReminderResponseSchema,
-  ReminderDeleteResponseSchema
+  ReminderDeleteResponseSchema,
+  DailyGoalResponseSchema
 } from "@/shared/validations/SettingSchema";
 
 export const NOTIFICATION_KEYS = {
@@ -18,6 +19,10 @@ export const NOTIFICATION_KEYS = {
 export const REMINDER_KEYS = {
   all: () => ["reminders"] as const,
   list: (params?: object) => ["reminders", "list", params] as const,
+};
+
+export const DAILY_GOAL_KEYS = {
+  detail: () => ["daily-goal"] as const,
 };
 
 export const useAllowFollowMutation = () => {
@@ -234,5 +239,36 @@ export const useDeleteReminderMutation = () => {
       toast.success(i18n.t("settings.reminder.deleteSuccess"));
     },
     onError: (err) => toast.error(getErrorMessage(err, i18n.t("settings.reminder.deleteFailed"))),
+  });
+};
+
+export function useDailyGoalQuery() {
+  return useQuery({
+    queryKey: DAILY_GOAL_KEYS.detail(),
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.SETTING.DAILY_GOAL),
+        DailyGoalResponseSchema
+      );
+      return result.data;
+    },
+  });
+}
+
+export const useUpdateDailyGoalMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dailyGoalMinutes: number) => {
+      const result = await fetchWithSchema(
+        api.patch(API_ROUTES.SETTING.DAILY_GOAL, { dailyGoalMinutes }),
+        DailyGoalResponseSchema
+      );
+      return result.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: DAILY_GOAL_KEYS.detail() });
+      toast.success(i18n.t("settings.dailyGoal.updateSuccess"));
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
   });
 };

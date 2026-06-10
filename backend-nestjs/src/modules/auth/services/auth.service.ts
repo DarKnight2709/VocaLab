@@ -352,6 +352,12 @@ export class AuthService {
           privacySettings: {
             create: {},
           },
+          notificationSettings: {
+            create: {},
+          },
+          learningSetting: {
+            create: {},
+          },
         },
         select: {
           id: true,

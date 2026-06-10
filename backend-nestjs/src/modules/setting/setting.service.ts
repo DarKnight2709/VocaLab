@@ -22,9 +22,11 @@ import {
 } from './dto/notication-settings.dto';
 import {
   CreateReminderDto,
+  DailyGoalResponseDto,
   ReminderDeleteResponseDto,
   ReminderListResponseDto,
   ReminderResponseDto,
+  UpdateDailyGoalDto,
 } from './dto/learning-setting.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -412,5 +414,54 @@ export class SettingService {
         },
       },
     );
+  }
+
+  async getDailyGoal(userId: string): Promise<DailyGoalResponseDto> {
+    const dailyGoal = await this.prisma.learningSetting.findUnique({
+      where: {
+        userId
+      },
+      select: {
+        id: true,
+        dailyGoalMinutes: true,
+      }
+    })
+
+    if(!dailyGoal) {
+      throw new NotFoundException(ErrorCode.DAILY_GOAL_NOT_FOUND);
+    }
+
+    return dailyGoal;
+  }
+
+  async updateDailyGoal(userId: string, updateDto: UpdateDailyGoalDto): Promise<DailyGoalResponseDto> {
+    const dailyGoal = await this.prisma.learningSetting.findUnique({
+      where: {
+        userId
+      },
+      select: {
+        id: true,
+        dailyGoalMinutes: true,
+      }
+    })
+
+    if(!dailyGoal) {
+      throw new NotFoundException(ErrorCode.DAILY_GOAL_NOT_FOUND);
+    }
+
+    const updatedDailyGoal = await this.prisma.learningSetting.update({
+      where: {
+        id: dailyGoal.id
+      },
+      data: {
+        dailyGoalMinutes: updateDto.dailyGoalMinutes
+      },
+      select: {
+        id: true,
+        dailyGoalMinutes: true,
+      }
+    })
+
+    return updatedDailyGoal;
   }
 }

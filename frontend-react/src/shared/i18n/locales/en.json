@@ -129,6 +129,13 @@
       "allowBrowserNotifications": "Please allow notifications in your browser to enable reminders.",
       "desktopNotificationRemind": "Make sure to turn on desktop notifications to receive reminders even when you are not on the website."
     },
+    "dailyGoal": {
+      "title": "Daily Goal",
+      "description": "How much time can you commit to learning each day?",
+      "select": "Choose goal",
+      "updateSuccess": "Daily goal updated successfully",
+      "minutes": "mins"
+    },
     "light": "Light",
     "dark": "Dark",
     "brightAndFresh": "Bright & Fresh",

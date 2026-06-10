@@ -47,3 +47,11 @@ export const ReminderResponseSchema = ReminderSchema;
 
 export type Reminder = z.infer<typeof ReminderSchema>;
 export type ReminderListResponse = z.infer<typeof ReminderListResponseSchema>;
+
+// Daily Goal
+export const DailyGoalResponseSchema = z.object({
+  id: z.string(),
+  dailyGoalMinutes: z.number(),
+});
+
+export type DailyGoalResponse = z.infer<typeof DailyGoalResponseSchema>;

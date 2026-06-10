@@ -129,6 +129,13 @@
       "allowBrowserNotifications": "Vui lòng cho phép thông báo trong trình duyệt để bật lời nhắc.",
       "desktopNotificationRemind": "Đảm bảo bật thông báo trên máy tính để nhận lời nhắc ngay cả khi bạn không truy cập trang web."
     },
+    "dailyGoal": {
+      "title": "Mục tiêu hàng ngày",
+      "description": "Bạn có thể cam kết học bao nhiêu thời gian mỗi ngày?",
+      "select": "Chọn mục tiêu",
+      "updateSuccess": "Đã cập nhật mục tiêu hàng ngày thành công",
+      "minutes": "mins"
+    },
     "light": "Sáng",
     "dark": "Tối",
     "brightAndFresh": "Sáng sủa & Tươi mới",

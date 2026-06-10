@@ -16,9 +16,18 @@
   import { Switch } from "@/shared/components/ui/switch";
   import { Button } from "@/shared/components/ui/button";
   import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/shared/components/ui/select";
+  import {
     useRemindersQuery,
     useToggleReminderMutation,
     useDeleteReminderMutation,
+    useDailyGoalQuery,
+    useUpdateDailyGoalMutation,
   } from "../../api/settingService";
   import type { Reminder } from "@/shared/validations/SettingSchema";
   import { AddReminderDialog } from "../AddReminderDialog";
@@ -36,6 +45,9 @@
 
     const toggleMutation = useToggleReminderMutation();
     const deleteMutation = useDeleteReminderMutation();
+
+    const { data: dailyGoalData, isLoading: dailyGoalLoading } = useDailyGoalQuery();
+    const updateDailyGoalMutation = useUpdateDailyGoalMutation();
 
     const fcmToken = useFcmStore((state) => state.fcmToken);
 
@@ -72,6 +84,38 @@
             {t("settings.learningDescription")}
           </p>
         </div>
+
+        {/* Daily Goal Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-sm">
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-medium leading-none">
+                {t("settings.dailyGoal.title")}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {t("settings.dailyGoal.description")}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Select
+                value={dailyGoalData?.dailyGoalMinutes?.toString() || "15"}
+                onValueChange={(val) => updateDailyGoalMutation.mutate(parseInt(val))}
+                disabled={dailyGoalLoading || updateDailyGoalMutation.isPending}
+              >
+                <SelectTrigger className="w-[140px] h-9">
+                  <SelectValue placeholder={t("settings.dailyGoal.select")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 {t("settings.dailyGoal.minutes")}</SelectItem>
+                  <SelectItem value="15">15 {t("settings.dailyGoal.minutes")}</SelectItem>
+                  <SelectItem value="30">30 {t("settings.dailyGoal.minutes")}</SelectItem>
+                  <SelectItem value="60">60 {t("settings.dailyGoal.minutes")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </section>
 
         {/* Push Notification Guidance */}
         <div

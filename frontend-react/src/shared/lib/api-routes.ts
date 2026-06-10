@@ -125,7 +125,8 @@ const API_ROUTES = {
       BASE: "v1/settings/reminders",
       BY_ID: (id: string) => `v1/settings/reminders/${id}`,
       TOGGLE: (id: string) => `v1/settings/reminders/${id}/toggle`,
-    }
+    },
+    DAILY_GOAL: "v1/settings/daily-goal",
   },
 
   NOTIFICATION: {

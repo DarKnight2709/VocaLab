@@ -111,3 +111,20 @@ export class ReminderDeleteResponseDto {
   @ApiProperty()
   id!: string;
 }
+
+
+export class UpdateDailyGoalDto {
+  @ApiProperty({ example: 30 })
+  @IsInt()
+  @Min(5)
+  @Max(60)
+  dailyGoalMinutes!: number;
+}
+
+export class DailyGoalResponseDto {
+  @ApiProperty()
+  id!: string;
+  
+  @ApiProperty()
+  dailyGoalMinutes!: number;
+}

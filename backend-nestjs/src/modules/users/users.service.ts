@@ -274,6 +274,9 @@ export class UserService {
         notificationSettings: {
           create: {},
         },
+        learningSetting: {
+          create: {},
+        }
       },
       select: {
         id: true,
