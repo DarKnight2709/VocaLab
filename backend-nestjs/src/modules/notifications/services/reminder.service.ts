@@ -9,7 +9,7 @@ export class ReminderService {
 
   constructor(
     private readonly prisma: PrismaService,
-    @Inject('FIREBASE_ADMIN') private readonly firebaseAdmin: any,
+    @Inject('FIREBASE_ADMIN') private readonly firebaseAdmin: admin.app.App,
   ) {}
 
   async sendWebPushNotification(data: ReminderJobData): Promise<void> {
@@ -35,9 +35,14 @@ export class ReminderService {
         },
       });
 
+      if (!this.firebaseAdmin) {
+        this.logger.error('Firebase Admin instance is not available');
+        return;
+      }
+
       for (const device of devices) {
         try {
-          await admin.messaging().send({
+          await this.firebaseAdmin.messaging().send({
             token: device.fcmToken,
             notification: {
               title: data.title,
@@ -49,14 +54,38 @@ export class ReminderService {
           });
           this.logger.log(`Web push notification sent to device ${device.id}`);
         } catch (error: any) {
-          this.logger.error(`Failed to send web push notification to device ${device.id}`, error.stack);
+          this.logger.error(
+            `Failed to send web push notification to device ${device.id}`,
+          );
+          this.logger.error(`Error details: ${error.message}`);
+
+          const isInvalidToken =
+            error.code === 'messaging/registration-token-not-registered' ||
+            error.message?.includes('Requested entity was not found');
+
+          if (isInvalidToken) {
+            this.logger.warn(
+              `Token is expired or invalid. Removing device token from database...`,
+            );
+
+            await this.prisma.userDevice.deleteMany({
+              where: {
+                fcmToken: device.fcmToken,
+              },
+            });
+
+            this.logger.log(
+              `Successfully removed stale token for user ${data.userId}`,
+            );
+          }
         }
       }
-
-      this.logger.log(`Email successfully dispatched to`);
-    } catch (error: any) {
-      this.logger.error(`Failed to send email notification to `, error.stack);
-      throw error;
+    } catch (globalError: any) {
+      this.logger.error(
+        `Critical error encountered in sendWebPushNotification process`,
+        globalError.stack,
+      );
+      throw globalError;
     }
   }
 }

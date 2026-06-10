@@ -15,16 +15,44 @@ interface FcmState {
   fcmToken: string | null;
   permissionStatus: NotificationPermission;
   setToken: (token: string | null) => void;
+  revokeToken: (authToken?: string) => Promise<boolean>;
   setPermission: (status: NotificationPermission) => void;
 }
 
-export const useFcmStore = create<FcmState>((set) => ({
+// ── Standalone API Calls (Keeps store actions clean) 
+
+const unregisterTokenOnBackend = (token: string, authToken?: string) => {
+  const config: any = { data: { fcmToken: token } };
+  if (authToken) {
+    config.headers = { Authorization: `Bearer ${authToken}` };
+  }
+  return api.delete(API_ROUTES.DEVICES.UNREGISTER, config);
+};
+
+export const useFcmStore = create<FcmState>((set, get) => ({
   fcmToken: null,
-  permissionStatus: typeof window !== "undefined" ? Notification.permission : "default",
+  permissionStatus:
+    typeof window !== "undefined" ? Notification.permission : "default",
   setToken: (token) => set({ fcmToken: token }),
+  revokeToken: async (authToken?: string) => {
+    try {
+      // Use standard getToken to grab current token reference or use stored state
+      const tokenToDelete =
+        get().fcmToken || (await getToken(messaging).catch(() => null));
+      if (!tokenToDelete) return true;
+
+      await unregisterTokenOnBackend(tokenToDelete, authToken);
+      await deleteToken(messaging);
+
+      set({ fcmToken: null });
+      return true;
+    } catch (error) {
+      console.error("Failed to revoke token:", error);
+      return false;
+    }
+  },
   setPermission: (status) => set({ permissionStatus: status }),
 }));
-
 
 // ── Helper functions ──────────────────────────────────────────
 
@@ -39,6 +67,7 @@ const fetchToken = async (mutateAsync: (variables: string) => Promise<any>) => {
     vapidKey: envConfig.VITE_FIREBASE_VAPID_KEY,
     serviceWorkerRegistration: swRegistration,
   });
+  console.log(fcmToken);
 
   if (fcmToken) {
     await mutateAsync(fcmToken);
@@ -73,7 +102,6 @@ const getNotificationPermissionAndFcmToken = async (
   return null;
 };
 
-
 // ── Main Setup Hook (Only Call in MainLayout) ───────────────
 export const useFcmToken = () => {
   const setToken = useFcmStore((state) => state.setToken);
@@ -87,37 +115,14 @@ export const useFcmToken = () => {
     },
   });
 
-  const { mutateAsync: unregisterTokenMutation } = useMutation({
-    mutationFn: (token: string) =>
-      api.delete(API_ROUTES.DEVICES.UNREGISTER, { data: { fcmToken: token } }),
-    onError: (error) => {
-      toast.error(getErrorMessage(error, i18n.t("common.actionFailed")));
-    },
-  });
-
   const requestPermission = async (): Promise<void> => {
     try {
-      const token = await getNotificationPermissionAndFcmToken(saveTokenMutation);
+      const token =
+        await getNotificationPermissionAndFcmToken(saveTokenMutation);
       setToken(token);
       setPermission(Notification.permission);
     } catch (error) {
       console.error("An error occurred while retrieving token:", error);
-    }
-  };
-
-  const revokeToken = async (): Promise<boolean> => {
-    try {
-      const tokenToDelete = await getToken(messaging);
-      if (!tokenToDelete) return true;
-
-      await unregisterTokenMutation(tokenToDelete);
-      await deleteToken(messaging);
-
-      setToken(null);
-      return true;
-    } catch (error) {
-      console.error("Failed to revoke token:", error);
-      return false;
     }
   };
 
@@ -134,5 +139,5 @@ export const useFcmToken = () => {
     return () => unsubscribe();
   }, []);
 
-  return { requestPermission, revokeToken };
+  return { requestPermission };
 };

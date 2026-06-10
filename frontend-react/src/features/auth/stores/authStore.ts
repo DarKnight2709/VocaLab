@@ -7,6 +7,7 @@ import type {
 import { decodeToken } from "@/shared/lib/jwt";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
+import { useFcmStore } from "@/features/notification/hooks/usePushNotifications";
 import type { JwtPayload } from "jwt-decode";
 import i18n from "@/shared/i18n";
 
@@ -85,6 +86,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        const token = get().authToken?.accessToken;
+        useFcmStore.getState().revokeToken(token).catch(console.error);
         get().clearAuthState();
         useSocketStore.getState().disconnect();
       },

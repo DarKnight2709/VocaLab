@@ -265,9 +265,26 @@ export class SettingService {
       throw new NotFoundException(ErrorCode.REMINDER_NOT_FOUND);
     }
 
+    const isOneTheHourReminder = dto.type === ReminderType.ON_THE_HOUR;
+
+    if(!isOneTheHourReminder) {
+      if(!dto.startTime || !dto.endTime){
+        throw new BadRequestException(ErrorCode.REMINDER_LACK_TIME_FIELDS);
+      }
+    } else {
+      if(!dto.triggerTime){
+        throw new BadRequestException(ErrorCode.REMINDER_LACK_TIME_FIELDS);
+      }
+    }
+
     const updatedReminder = await this.prisma.reminder.update({
       where: { id, userId },
-      data: dto,
+      data: {
+        ...dto,
+        triggerTime: isOneTheHourReminder ? dto.triggerTime : null,
+        startTime: !isOneTheHourReminder ? dto.startTime : null,
+        endTime: !isOneTheHourReminder ? dto.endTime : null,
+      },
       select: {
         id: true,
         title: true,
@@ -308,7 +325,6 @@ export class SettingService {
     });
 
     if (nextState) {
-      // FIX: Passing updatedReminder instead of stale reminder configuration
       await this.addJobToReminderNotificationQueue(updatedReminder, userId);
     } else {
       await this.reminderNotificationQueue.removeJobScheduler(
@@ -383,8 +399,9 @@ export class SettingService {
           description: reminder.description,
           reminderId: reminder.id,
           userId,
-          startTime: reminder.startTime,
-          endTime: reminder.endTime,
+          triggerTime: isOneTheHourReminder ? reminder.triggerTime : null,
+          startTime: !isOneTheHourReminder ? reminder.startTime : null,
+          endTime: !isOneTheHourReminder ? reminder.endTime : null,
           isOneTheHourReminder,
         },
         opts: {

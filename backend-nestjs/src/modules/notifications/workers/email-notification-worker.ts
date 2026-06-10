@@ -48,8 +48,6 @@ export class EmailNotificationWorker extends WorkerHost {
 
   constructor(
     private readonly emailService: EmailService,
-    private readonly reminderService: ReminderService,
-    private readonly prisma: PrismaService,
   ) {
     super();
   }
