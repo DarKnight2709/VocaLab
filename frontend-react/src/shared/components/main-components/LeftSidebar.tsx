@@ -5,6 +5,7 @@ import {
   BookMarked,
   MessageCircle,
   PenSquare,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import ROUTES from "@/shared/lib/routes";
 import { useTranslation } from "@/shared/hooks/useTranslation";
@@ -15,7 +16,12 @@ export default function LeftSidebar() {
   const navItems = [
     { label: t("common.home"), url: ROUTES.HOME.url, icon: Home },
     { label: t("common.grammar"), url: ROUTES.GRAMMAR.url, icon: BookOpen },
-    { label: t("common.vocabulary"), url: ROUTES.VOCABULARY.url, icon: BookMarked },
+    {
+      label: t("common.vocabulary"),
+      url: ROUTES.VOCABULARY.url,
+      icon: BookMarked,
+    },
+    { label: t("common.stats"), url: ROUTES.STATS.url, icon: ChartNoAxesCombined },
     { label: t("common.messages"), url: ROUTES.CHAT.url, icon: MessageCircle },
     { label: t("common.blog"), url: ROUTES.BLOG.url, icon: PenSquare },
   ];

@@ -18,7 +18,6 @@ import type { UserItem } from "@/shared/validations/ChatSchema";
 import {
   getCreateGroupSchema,
   type CreateGroupInput,
-  type GroupItem,
 } from "@/shared/validations/GroupSchema";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 

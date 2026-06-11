@@ -36,6 +36,7 @@ import { twoFactorAuthLoader } from "./features/auth/TwoFactorAuthLoader";
 import { useEffect } from "react";
 import { useTranslation } from "./shared/hooks/useTranslation";
 import { StudyLayout } from "./shared/layout/StudyLayout";
+import StatsPage from "./features/stats/pages/StatsPage";
 
 const router = createBrowserRouter([
   {
@@ -51,6 +52,7 @@ const router = createBrowserRouter([
           { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
           { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
           { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
+          { path: ROUTES.STATS.url, element: <StatsPage /> },
           {
             element: <StudyLayout />,
             children: [

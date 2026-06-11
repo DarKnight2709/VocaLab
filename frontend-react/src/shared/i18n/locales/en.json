@@ -150,6 +150,7 @@
     "download": "Download",
     "grammar": "Grammar",
     "vocabulary": "Vocabulary",
+    "stats": "Stats",
     "messages": "Messages",
     "blog": "Blog",
     "view": "View",
@@ -900,5 +901,28 @@
   "upload": {
     "uploadFailed": "Upload failed",
     "uploadImageFailed": "Image upload failed"
+  },
+  "stats": {
+    "today": "Today",
+    "min": "min",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "weeksAgo": "{{count}} week ago",
+    "weeksAgo_plural": "{{count}} weeks ago",
+    "weeksAhead": "{{count}} week ahead",
+    "weeksAhead_plural": "{{count}} weeks ahead",
+    "studyTime": "Study Time",
+    "dailyGoal": "Daily goal",
+    "changeDailyGoal": "Change daily goal",
+    "weeklyAverage": "Weekly average",
+    "days": {
+      "Mon": "Mon",
+      "Tue": "Tue",
+      "Wed": "Wed",
+      "Thu": "Thu",
+      "Fri": "Fri",
+      "Sat": "Sat",
+      "Sun": "Sun"
+    }
   }
 }

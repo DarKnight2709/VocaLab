@@ -144,6 +144,7 @@ const API_ROUTES = {
   },
   PROGRESS: {
     HEARTBEAT: "v1/progress/heartbeat",
+    STATS: "v1/progress/stats",
   },
 };
 

@@ -95,6 +95,10 @@ const ROUTES = {
     title: "Profile",
     url: "/profile/:username",
   },
+  STATS: {
+    title: "Statistics",
+    url: "/stats",
+  },
 };
 
 export default ROUTES;

@@ -31,7 +31,7 @@ const AuthGuard = () => {
     );
   }
 
-  const { socketRef } = useNotificationSocket();
+  useNotificationSocket();
   // render các route con qua Outlet
   return <Outlet />;
 };

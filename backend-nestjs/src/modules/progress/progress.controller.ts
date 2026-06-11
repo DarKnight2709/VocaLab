@@ -1,10 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ProgressService } from './progress.service';
 import { HeartbeatDto } from './dto/heartbeat.dto';
+import { StatsResponseDto } from './dto/stats-response.dto';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
-
+import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 @ApiTags('progress')
 @Controller('progress')
 @IsProtected()
@@ -19,5 +20,17 @@ export class ProgressController {
     @Body() dto: HeartbeatDto,
   ): Promise<void> {
     await this.progressService.handleHeartbeat(user.id, dto.seconds);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get study stats' })
+  async getStats(
+    @CurrentUser() user: any,
+    @Query('weekOffset') weekOffset?: string,
+  ): Promise<ResponseInterceptor<StatsResponseDto>> {
+    const result = await this.progressService.getStats(user.id, parseInt(weekOffset ?? '0', 10) || 0);
+    return {
+      data: result
+    }
   }
 }
