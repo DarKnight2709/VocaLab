@@ -123,7 +123,7 @@ export default function VocabularyAddCardPage() {
         <Breadcrumb 
           items={[
             { label: t("vocabulary.title"), href: "/vocabulary" },
-            { label: isColLoading ? t("vocabulary.loading") : colData?.collection.name || t("vocabulary.collectionsTitle"), href: `/vocabulary/${collectionId}` },
+            { label: isColLoading ? t("vocabulary.loading") : colData?.name || t("vocabulary.collectionsTitle"), href: `/vocabulary/${collectionId}` },
             { label: t("vocabulary.createCard") }
           ]} 
         />

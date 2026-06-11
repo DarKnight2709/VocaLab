@@ -22,7 +22,8 @@ const API_ROUTES = {
     UPLOAD_AVATAR: "v1/users/upload-avatar",
     GET_USERS: "v1/users/all",
     BY_USERNAME: (username: string) => `v1/users/by-username/${username}`,
-    getContentBy: (userId: string, type: ContentTab) => `v1/users/${userId}/${type}`,
+    getContentBy: (userId: string, type: ContentTab) =>
+      `v1/users/${userId}/${type}`,
     BLOCK_USER: (userId: string) => `v1/users/${userId}/block`,
     GET_BLOCKED_USERS: (userId: string) => `v1/users/${userId}/blocked`,
     UNBLOCK_USER: (userId: string) => `v1/users/${userId}/unblock`,
@@ -74,7 +75,7 @@ const API_ROUTES = {
     EDIT_COMMENT: (commentId: string) => `v1/blogs/comments/${commentId}`,
     REPLY_COMMENT: (commentId: string) =>
       `v1/blogs/comments/${commentId}/reply`,
-    VOTE_COMMENT: (commentId: string) => `v1/blogs/comments/${commentId}/vote`
+    VOTE_COMMENT: (commentId: string) => `v1/blogs/comments/${commentId}/vote`,
   },
   GRAMMAR: {
     LIST: "v1/grammar",
@@ -119,7 +120,8 @@ const API_ROUTES = {
       COMMENTS: "v1/settings/notifications/comments",
       UPVOTES: "v1/settings/notifications/upvotes",
       NEW_FOLLOWERS: "v1/settings/notifications/new-followers",
-      ACTIVITY_FROM_FOLLOWED: "v1/settings/notifications/activity-from-followed",
+      ACTIVITY_FROM_FOLLOWED:
+        "v1/settings/notifications/activity-from-followed",
     },
     REMINDER: {
       BASE: "v1/settings/reminders",
@@ -132,12 +134,16 @@ const API_ROUTES = {
   NOTIFICATION: {
     LIST: "v1/notifications",
     UNREAD_COUNT: "v1/notifications/unread-count",
-    MARK_READ: (id?: string) => id ? `v1/notifications/read/${id}` : `v1/notifications/read`,
+    MARK_READ: (id?: string) =>
+      id ? `v1/notifications/read/${id}` : `v1/notifications/read`,
   },
 
   DEVICES: {
     REGISTER: "v1/devices/register",
     UNREGISTER: "v1/devices/unregister",
+  },
+  PROGRESS: {
+    HEARTBEAT: "v1/progress/heartbeat",
   },
 };
 

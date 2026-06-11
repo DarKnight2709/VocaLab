@@ -27,6 +27,7 @@ import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DevicesModule } from './modules/devices/devices.module';
+import { ProgressModule } from './modules/progress/progress.module';
 
 
 
@@ -46,6 +47,7 @@ import { DevicesModule } from './modules/devices/devices.module';
     SettingModule,
     NotificationsModule,
     DevicesModule,
+    ProgressModule,
     // tell BullMQ how to connect to Redis
     BullModule.forRootAsync({
       inject: [ConfigService],

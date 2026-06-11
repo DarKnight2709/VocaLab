@@ -106,7 +106,7 @@ export const useCollectionDetailQuery = (id: string | null) =>
   });
 
 export const useCollectionCardsQuery = (id: string | null) =>
-  useQuery<{ collection: VocabCollectionDetail }>({
+  useQuery({
     queryKey: ["card-collection-cards", id],
     queryFn: async () => {
       const res = await api.get(API_ROUTES.VOCABULARY.COLLECTION_CARDS(id!));

@@ -59,8 +59,8 @@ export default function VocabularyCollectionPage() {
   };
 
   const cards: CardItem[] = useMemo(
-    () => data?.collection.cards ?? [],
-    [data?.collection.cards],
+    () => data?.cards ?? [],
+    [data?.cards],
   );
 
   const CardFace = ({ 
@@ -121,17 +121,17 @@ export default function VocabularyCollectionPage() {
         <Breadcrumb 
           items={[
             { label: t("vocabulary.title"), href: "/vocabulary" },
-            { label: isLoading ? t("vocabulary.loading") : data?.collection.name || t("vocabulary.collectionsTitle") }
+            { label: isLoading ? t("vocabulary.loading") : data?.name || t("vocabulary.collectionsTitle") }
           ]} 
         />
 
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl font-bold truncate">
-              {isLoading ? t("vocabulary.loading") : data?.collection.name}
+              {isLoading ? t("vocabulary.loading") : data?.name}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {isLoading ? "" : data?.collection.description}
+              {isLoading ? "" : data?.description}
             </p>
             <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
               <Layers className="h-4 w-4" />

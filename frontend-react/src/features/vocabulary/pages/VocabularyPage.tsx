@@ -184,12 +184,14 @@ export default function VocabularyPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="h-full overflow-y-auto p-6 relative">
       <div className="max-w-6xl mx-auto">
         <Breadcrumb items={[{ label: t("vocabulary.title") }]} />
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">{t("vocabulary.collectionsTitle")}</h1>
+            <h1 className="text-2xl font-bold">
+              {t("vocabulary.collectionsTitle")}
+            </h1>
             <p className="text-muted-foreground text-sm mt-1">
               {t("vocabulary.collectionsDesc")}
             </p>
@@ -213,7 +215,7 @@ export default function VocabularyPage() {
             </Button>
 
             <Button
-              onClick={() => navigate('/vocabulary/card-types')}
+              onClick={() => navigate("/vocabulary/card-types")}
               variant="outline"
               className="gap-2"
             >
@@ -291,7 +293,8 @@ export default function VocabularyPage() {
                         }}
                         className="gap-2"
                       >
-                        <Download className="h-4 w-4" /> {t("vocabulary.exportCsv")}
+                        <Download className="h-4 w-4" />{" "}
+                        {t("vocabulary.exportCsv")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -308,7 +311,9 @@ export default function VocabularyPage() {
 
                 <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
                   <Layers className="h-4 w-4" />
-                  <span>{col._count?.cards ?? 0} {t("vocabulary.cards")}</span>
+                  <span>
+                    {col._count?.cards ?? 0} {t("vocabulary.cards")}
+                  </span>
                 </div>
               </div>
             ))}
@@ -394,10 +399,7 @@ export default function VocabularyPage() {
         </DialogContent>
       </Dialog>
 
-      <ImportVocabularyDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-      />
+      <ImportVocabularyDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <ConfirmDeleteDialog
         open={deleteConfirmOpen}

@@ -35,6 +35,7 @@ import TwoFactorAuthPage from "./features/auth/pages/TwoFactorAuthPage";
 import { twoFactorAuthLoader } from "./features/auth/TwoFactorAuthLoader";
 import { useEffect } from "react";
 import { useTranslation } from "./shared/hooks/useTranslation";
+import { StudyLayout } from "./shared/layout/StudyLayout";
 
 const router = createBrowserRouter([
   {
@@ -50,39 +51,64 @@ const router = createBrowserRouter([
           { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
           { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
           { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
-          { path: ROUTES.VOCABULARY.url, element: <VocabularyPage /> },
           {
-            path: ROUTES.VOCABULARY_COLLECTION.url,
-            element: <VocabularyCollectionPage />,
-          },
-          {
-            path: ROUTES.VOCABULARY_ADD_CARD.url,
-            element: <VocabularyAddCardPage />,
-          },
-          {
-            path: ROUTES.VOCABULARY_CARD_TYPES.url,
-            element: <CardTypeManagementPage />,
-          },
-          {
-            path: ROUTES.VOCABULARY_CARD_TYPE_PREVIEW.url,
-            element: <CardTypePreviewPage />,
+            element: <StudyLayout />,
+            children: [
+              { path: ROUTES.VOCABULARY.url, element: <VocabularyPage /> },
+              {
+                path: ROUTES.VOCABULARY_COLLECTION.url,
+                element: <VocabularyCollectionPage />,
+              },
+              {
+                path: ROUTES.VOCABULARY_ADD_CARD.url,
+                element: <VocabularyAddCardPage />,
+              },
+              {
+                path: ROUTES.VOCABULARY_CARD_TYPES.url,
+                element: <CardTypeManagementPage />,
+              },
+              {
+                path: ROUTES.VOCABULARY_CARD_TYPE_PREVIEW.url,
+                element: <CardTypePreviewPage />,
+              },
+            ],
           },
           { path: ROUTES.CHAT.url, element: <ChatPage /> },
           { path: ROUTES.SEARCH.url, element: <SearchPage /> },
           { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
-          { 
-            path: ROUTES.ME_SETTING.url, 
+          {
+            path: ROUTES.ME_SETTING.url,
             element: <SettingPage />,
             children: [
-              { index: true, element: <Navigate to={ROUTES.ME_SETTING_ACCOUNT.url} replace /> },
-              { path: ROUTES.ME_SETTING_ACCOUNT.url, element: <AccountSettingPage /> },
-              { path: ROUTES.ME_SETTING_PREFERENCES.url, element: <PreferencesSettingTab /> },
-              { path: ROUTES.ME_SETTING_PRIVACY.url, element: <PrivacySettingPage /> },
-              { path: ROUTES.ME_SETTING_NOTIFICATIONS.url, element: <NotificationsSettingPage /> },
-              { path: ROUTES.ME_SETTING_LEARNING.url, element: <LearningSettingTab /> },
-            ]
+              {
+                index: true,
+                element: (
+                  <Navigate to={ROUTES.ME_SETTING_ACCOUNT.url} replace />
+                ),
+              },
+              {
+                path: ROUTES.ME_SETTING_ACCOUNT.url,
+                element: <AccountSettingPage />,
+              },
+              {
+                path: ROUTES.ME_SETTING_PREFERENCES.url,
+                element: <PreferencesSettingTab />,
+              },
+              {
+                path: ROUTES.ME_SETTING_PRIVACY.url,
+                element: <PrivacySettingPage />,
+              },
+              {
+                path: ROUTES.ME_SETTING_NOTIFICATIONS.url,
+                element: <NotificationsSettingPage />,
+              },
+              {
+                path: ROUTES.ME_SETTING_LEARNING.url,
+                element: <LearningSettingTab />,
+              },
+            ],
           },
-          { path: ROUTES.ME_NOTIFICATION.url, element: <NotificationPage /> }
+          { path: ROUTES.ME_NOTIFICATION.url, element: <NotificationPage /> },
         ],
       },
     ],
@@ -126,7 +152,6 @@ const router = createBrowserRouter([
     ),
   },
 ]);
-
 
 function ThemedToaster() {
   const { theme } = useTheme();
