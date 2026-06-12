@@ -57,7 +57,7 @@ export default function VocabularyAddCardPage() {
       return;
     }
 
-    const sortedFields = [...selectedType.fields].sort((a, b) => b.order - a.order);
+    const sortedFields = [...selectedType.fields].sort((a, b) => a.order - b.order);
     const initialConfig: Record<string, FieldConfig> = {};
 
     sortedFields.forEach((field) => {
@@ -118,24 +118,24 @@ export default function VocabularyAddCardPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-5">
-        <Breadcrumb 
-          items={[
-            { label: t("vocabulary.title"), href: "/vocabulary" },
-            { label: isColLoading ? t("vocabulary.loading") : colData?.name || t("vocabulary.collectionsTitle"), href: `/vocabulary/${collectionId}` },
-            { label: t("vocabulary.createCard") }
-          ]} 
-        />
+    <div className="space-y-6">
+      <Breadcrumb 
+        items={[
+          { label: t("vocabulary.title"), href: "/vocabulary" },
+          { label: isColLoading ? t("vocabulary.loading") : colData?.name || t("vocabulary.collectionsTitle"), href: `/vocabulary/${collectionId}` },
+          { label: t("vocabulary.createCard") }
+        ]} 
+      />
 
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold">{t("vocabulary.createCard")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t("vocabulary.createCardDescription")}
-            </p>
-          </div>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">{t("vocabulary.createCard")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t("vocabulary.createCardDescription")}
+          </p>
         </div>
+      </div>
+
 
         <form onSubmit={handleCreateCard} className="space-y-5">
           <div className="rounded-2xl border bg-card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -261,7 +261,7 @@ export default function VocabularyAddCardPage() {
             </Button>
           </div>
         </form>
-      </div>
     </div>
   );
 }
+

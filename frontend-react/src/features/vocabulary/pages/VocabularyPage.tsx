@@ -105,13 +105,13 @@ export default function VocabularyPage() {
       return {
         value: item.value,
         side: field?.side ?? (index === 0 ? "front" : "back"),
-        position: field?.position ?? field?.order ?? index,
+        position: field?.order ?? index,
       };
     });
 
     return enriched
       .filter((item) => item.side === side)
-      .sort((a, b) => b.position - a.position)
+      .sort((a, b) => a.position - b.position)
       .map((item) => item.value)
       .join(" | ");
   }
@@ -184,142 +184,141 @@ export default function VocabularyPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6 relative">
-      <div className="max-w-6xl mx-auto">
-        <Breadcrumb items={[{ label: t("vocabulary.title") }]} />
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">
-              {t("vocabulary.collectionsTitle")}
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              {t("vocabulary.collectionsDesc")}
-            </p>
-          </div>
+    <div className="space-y-6">
 
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setNewColOpen(true)}
-              className="gap-2"
-              disabled={createColMutation.isPending}
-            >
-              <Plus className="h-4 w-4" /> {t("vocabulary.createCollection")}
-            </Button>
-
-            <Button
-              onClick={() => setImportOpen(true)}
-              variant="outline"
-              className="gap-2"
-            >
-              <Import className="h-4 w-4" /> {t("vocabulary.importData")}
-            </Button>
-
-            <Button
-              onClick={() => navigate("/vocabulary/card-types")}
-              variant="outline"
-              className="gap-2"
-            >
-              <Settings className="h-4 w-4" /> {t("vocabulary.manageCardTypes")}
-            </Button>
-          </div>
+      <Breadcrumb items={[{ label: t("vocabulary.title") }]} />
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {t("vocabulary.collectionsTitle")}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {t("vocabulary.collectionsDesc")}
+          </p>
         </div>
 
-        {colsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-36 rounded-2xl bg-muted animate-pulse"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {colsData?.collections.length === 0 && (
-              <div className="col-span-full text-center py-16 border rounded-2xl bg-card text-muted-foreground">
-                <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p>{t("vocabulary.noCollections")}</p>
-              </div>
-            )}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setNewColOpen(true)}
+            className="gap-2"
+            disabled={createColMutation.isPending}
+          >
+            <Plus className="h-4 w-4" /> {t("vocabulary.createCollection")}
+          </Button>
 
-            {colsData?.collections.map((col) => (
-              <div
-                key={col.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/vocabulary/${col.id}`)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    navigate(`/vocabulary/${col.id}`);
-                  }
-                }}
-                className="text-left w-full p-4 rounded-2xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-semibold truncate">{col.name}</div>
-                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {col.description}
-                    </div>
-                  </div>
+          <Button
+            onClick={() => setImportOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <Import className="h-4 w-4" /> {t("vocabulary.importData")}
+          </Button>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openRenameDialog(col);
-                        }}
-                        className="gap-2"
-                      >
-                        <Pencil className="h-4 w-4" /> {t("vocabulary.rename")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExportCollection(col);
-                        }}
-                        className="gap-2"
-                      >
-                        <Download className="h-4 w-4" />{" "}
-                        {t("vocabulary.exportCsv")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openDeleteConfirm(col.id);
-                        }}
-                        className="gap-2 text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" /> {t("vocabulary.delete")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-                  <Layers className="h-4 w-4" />
-                  <span>
-                    {col._count?.cards ?? 0} {t("vocabulary.cards")}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          <Button
+            onClick={() => navigate("/vocabulary/card-types")}
+            variant="outline"
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" /> {t("vocabulary.manageCardTypes")}
+          </Button>
+        </div>
       </div>
+
+      {colsLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-36 rounded-2xl bg-muted animate-pulse"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {colsData?.collections.length === 0 && (
+            <div className="col-span-full text-center py-16 border rounded-2xl bg-card text-muted-foreground">
+              <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p>{t("vocabulary.noCollections")}</p>
+            </div>
+          )}
+
+          {colsData?.collections.map((col) => (
+            <div
+              key={col.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/vocabulary/${col.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/vocabulary/${col.id}`);
+                }
+              }}
+              className="text-left w-full p-4 rounded-2xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-semibold truncate">{col.name}</div>
+                  <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {col.description}
+                  </div>
+                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openRenameDialog(col);
+                      }}
+                      className="gap-2"
+                    >
+                      <Pencil className="h-4 w-4" /> {t("vocabulary.rename")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExportCollection(col);
+                      }}
+                      className="gap-2"
+                    >
+                      <Download className="h-4 w-4" />{" "}
+                      {t("vocabulary.exportCsv")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteConfirm(col.id);
+                      }}
+                      className="gap-2 text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" /> {t("vocabulary.delete")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
+                <Layers className="h-4 w-4" />
+                <span>
+                  {col._count?.cards ?? 0} {t("vocabulary.cards")}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Dialog open={newColOpen} onOpenChange={setNewColOpen}>
         <DialogContent className="max-w-sm">
@@ -412,3 +411,4 @@ export default function VocabularyPage() {
     </div>
   );
 }
+

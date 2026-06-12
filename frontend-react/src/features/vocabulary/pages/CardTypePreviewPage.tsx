@@ -56,33 +56,33 @@ export default function CardTypePreviewPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto">
-        <Breadcrumb 
-          items={[
-            { label: t("vocabulary.title"), href: "/vocabulary" },
-            { label: t("vocabulary.cardTypeManagement"), href: "/vocabulary/card-types" },
-            { label: cardType.name }
-          ]} 
-        />
+    <div className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: t("vocabulary.title"), href: "/vocabulary" },
+          {
+            label: t("vocabulary.cardTypeManagement"),
+            href: "/vocabulary/card-types",
+          },
+          { label: cardType.name },
+        ]}
+      />
 
-        <div className="flex items-center gap-3 mb-8">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">{cardType.name}</h1>
-            {cardType.description && (
-              <p className="text-muted-foreground text-sm mt-1">
-                {cardType.description}
-              </p>
-            )}
-          </div>
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold truncate">{cardType.name}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {cardType.description}
+          </p>
         </div>
-
-        <CardFieldDragDrop
-          cardType={cardType}
-          onSave={handleSaveChanges}
-          isSaving={updateMutation.isPending}
-        />
       </div>
+
+      <CardFieldDragDrop
+        cardType={cardType}
+        onSave={handleSaveChanges}
+        isSaving={updateMutation.isPending}
+      />
     </div>
+
   );
 }

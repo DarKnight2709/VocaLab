@@ -896,6 +896,8 @@
     "newPost": "<bold>{{sender}}</bold> đã đăng bài viết mới"
   },
   "stats": {
+    "title": "Thống kê học tập",
+    "description": "Theo dõi tiến độ học từ vựng và mục tiêu hàng ngày của bạn.",
     "today": "Hôm nay",
     "min": "phút",
     "thisWeek": "Tuần này",

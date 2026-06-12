@@ -903,6 +903,8 @@
     "uploadImageFailed": "Image upload failed"
   },
   "stats": {
+    "title": "Study Statistics",
+    "description": "Monitor your vocabulary learning progress and daily goals.",
     "today": "Today",
     "min": "min",
     "thisWeek": "This week",

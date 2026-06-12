@@ -116,188 +116,186 @@ export default function VocabularyCollectionPage() {
 
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-4">
-        <Breadcrumb 
-          items={[
-            { label: t("vocabulary.title"), href: "/vocabulary" },
-            { label: isLoading ? t("vocabulary.loading") : data?.name || t("vocabulary.collectionsTitle") }
-          ]} 
-        />
+    <div className="space-y-6">
+      <Breadcrumb 
+        items={[
+          { label: t("vocabulary.title"), href: "/vocabulary" },
+          { label: isLoading ? t("vocabulary.loading") : data?.name || t("vocabulary.collectionsTitle") }
+        ]} 
+      />
 
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold truncate">
-              {isLoading ? t("vocabulary.loading") : data?.name}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isLoading ? "" : data?.description}
-            </p>
-            <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
-              <Layers className="h-4 w-4" />
-              <span>{cards.length} {t("vocabulary.cards")}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 justify-end">
-            <Button
-              variant={mode === "preview" ? "default" : "outline"}
-              className="gap-2"
-              onClick={() => setMode("preview")}
-            >
-              <Eye className="h-4 w-4" /> {t("vocabulary.preview")}
-            </Button>
-            <Button
-              variant={mode === "learn" ? "default" : "outline"}
-              className="gap-2"
-              onClick={() => {
-                setMode("learn");
-                setFlipped(false);
-              }}
-            >
-              <BookOpenText className="h-4 w-4" /> {t("vocabulary.learn")}
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => setImportOpen(true)}
-            >
-              <Import className="h-4 w-4" /> {t("vocabulary.importData")}
-            </Button>
-            <Button
-              className="gap-2"
-              onClick={() => navigate(`/vocabulary/${collectionId}/add-card`)}
-            >
-              <Plus className="h-4 w-4" /> {t("vocabulary.addCard")}
-            </Button>
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold truncate">
+            {isLoading ? t("vocabulary.loading") : data?.name}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isLoading ? "" : data?.description}
+          </p>
+          <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
+            <Layers className="h-4 w-4" />
+            <span>{cards.length} {t("vocabulary.cards")}</span>
           </div>
         </div>
 
-        {mode === "preview" ? (
-          <div className="space-y-2">
-            {cards.length === 0 ? (
-                <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
-                {t("vocabulary.noCards")}
-              </div>
-            ) : (
-              cards.map((card) => (
-                <div
-                  key={card.id}
-                  className="group relative rounded-xl border bg-card p-4 hover:bg-muted/40 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="text-xs text-muted-foreground mb-1">
-                      {card.cardType?.name ?? t("vocabulary.cardType")}
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-primary"
-                        onClick={() => handleEdit(card)}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDeleteClick(card.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-start gap-4">
-                    <CardFace card={card} side="front" className="font-semibold" useStyles={false} />
-                    <div className="w-px self-stretch bg-border" aria-hidden="true" />
-                    <CardFace card={card} side="back" className="text-muted-foreground" useStyles={false} />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div>
-            {cards.length === 0 ? (
-                <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
-                {t("vocabulary.noCardsToLearn")}
-              </div>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  <div
-                    className="relative h-64 perspective-[2000px] cursor-pointer group"
-                    onClick={() => setFlipped((f) => !f)}
-                  >
-                    <div 
-                      className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}
-                    >
-                      {/* Front Face */}
-                      <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
-                        <div className="text-center">
-                          <CardFace 
-                            card={cards[flashcardIdx]} 
-                            side="front"
-                            className="text-base font-medium"
-                          />
-                        </div>
-                        <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                          {t("vocabulary.frontFace")}
-                        </div>
-                      </div>
-
-                      {/* Back Face */}
-                      <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
-                        <div className="text-center">
-                          <CardFace 
-                            card={cards[flashcardIdx]} 
-                            side="back"
-                            className="text-base font-medium"
-                          />
-                        </div>
-                        <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
-                          {t("vocabulary.backFace")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center text-[11px] text-muted-foreground uppercase tracking-widest font-medium">
-                    {t("vocabulary.flashcardProgress")
-                      .replace("{current}", String(flashcardIdx + 1))
-                      .replace("{total}", String(cards.length))}
-                  </div>
-                </div>
-
-                <div className="flex justify-center gap-3 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setFlashcardIdx((i) => Math.max(0, i - 1));
-                      setFlipped(false);
-                    }}
-                    disabled={flashcardIdx === 0}
-                  >
-                    {t("vocabulary.previous")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setFlashcardIdx((i) => Math.min(cards.length - 1, i + 1));
-                      setFlipped(false);
-                    }}
-                    disabled={flashcardIdx === cards.length - 1}
-                  >
-                    {t("vocabulary.next")}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          <Button
+            variant={mode === "preview" ? "default" : "outline"}
+            className="gap-2"
+            onClick={() => setMode("preview")}
+          >
+            <Eye className="h-4 w-4" /> {t("vocabulary.preview")}
+          </Button>
+          <Button
+            variant={mode === "learn" ? "default" : "outline"}
+            className="gap-2"
+            onClick={() => {
+              setMode("learn");
+              setFlipped(false);
+            }}
+          >
+            <BookOpenText className="h-4 w-4" /> {t("vocabulary.learn")}
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setImportOpen(true)}
+          >
+            <Import className="h-4 w-4" /> {t("vocabulary.importData")}
+          </Button>
+          <Button
+            className="gap-2"
+            onClick={() => navigate(`/vocabulary/${collectionId}/add-card`)}
+          >
+            <Plus className="h-4 w-4" /> {t("vocabulary.addCard")}
+          </Button>
+        </div>
       </div>
+
+      {mode === "preview" ? (
+        <div className="space-y-2">
+          {cards.length === 0 ? (
+              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+              {t("vocabulary.noCards")}
+            </div>
+          ) : (
+            cards.map((card) => (
+              <div
+                key={card.id}
+                className="group relative rounded-xl border bg-card p-4 hover:bg-muted/40 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="text-xs text-muted-foreground mb-1">
+                    {card.cardType?.name ?? t("vocabulary.cardType")}
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-primary"
+                      onClick={() => handleEdit(card)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteClick(card.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-start gap-4">
+                  <CardFace card={card} side="front" className="font-semibold" useStyles={false} />
+                  <div className="w-px self-stretch bg-border" aria-hidden="true" />
+                  <CardFace card={card} side="back" className="text-muted-foreground" useStyles={false} />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <div>
+          {cards.length === 0 ? (
+              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+              {t("vocabulary.noCardsToLearn")}
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                <div
+                  className="relative h-64 perspective-[2000px] cursor-pointer group"
+                  onClick={() => setFlipped((f) => !f)}
+                >
+                  <div 
+                    className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}
+                  >
+                    {/* Front Face */}
+                    <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
+                      <div className="text-center">
+                        <CardFace 
+                          card={cards[flashcardIdx]} 
+                          side="front"
+                          className="text-base font-medium"
+                        />
+                      </div>
+                      <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                        {t("vocabulary.frontFace")}
+                      </div>
+                    </div>
+
+                    {/* Back Face */}
+                    <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
+                      <div className="text-center">
+                        <CardFace 
+                          card={cards[flashcardIdx]} 
+                          side="back"
+                          className="text-base font-medium"
+                        />
+                      </div>
+                      <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
+                        {t("vocabulary.backFace")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-center text-[11px] text-muted-foreground uppercase tracking-widest font-medium">
+                  {t("vocabulary.flashcardProgress")
+                    .replace("{current}", String(flashcardIdx + 1))
+                    .replace("{total}", String(cards.length))}
+                </div>
+              </div>
+
+              <div className="flex justify-center gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFlashcardIdx((i) => Math.max(0, i - 1));
+                    setFlipped(false);
+                  }}
+                  disabled={flashcardIdx === 0}
+                >
+                  {t("vocabulary.previous")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFlashcardIdx((i) => Math.min(cards.length - 1, i + 1));
+                    setFlipped(false);
+                  }}
+                  disabled={flashcardIdx === cards.length - 1}
+                >
+                  {t("vocabulary.next")}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <ImportVocabularyDialog
         open={importOpen}
@@ -321,5 +319,6 @@ export default function VocabularyCollectionPage() {
         description={t("vocabulary.deleteCardDescription")}
       />
     </div>
+
   );
 }
