@@ -28,6 +28,7 @@ import { ExpressAdapter } from '@bull-board/express';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DevicesModule } from './modules/devices/devices.module';
 import { ProgressModule } from './modules/progress/progress.module';
+import { SearchModule } from './modules/search/search.module';
 
 
 
@@ -62,6 +63,7 @@ import { ProgressModule } from './modules/progress/progress.module';
       route: '/queues', // The path where you can access the UI
       adapter: ExpressAdapter,
     }),
+    SearchModule,
   ],
   controllers: [],
   providers: [

@@ -12,6 +12,7 @@ import { useLogoutMutation } from "@/features/auth/api/authService";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useUnreadCountQuery } from "@/features/notification/api/notificationService";
+import { useSearchSuggestion } from "@/shared/hooks/useSearchSuggestion";
 
 interface MainHeaderProps {
   me: MeResponse | undefined | null;
@@ -19,8 +20,10 @@ interface MainHeaderProps {
 }
 
 export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
-  const [headerSearch, setHeaderSearch] = useState("");
   const { t } = useTranslation();
+  const [searchInput, setSearchInput] = useState("");
+  const { data: searchSuggestion, isLoading } =
+    useSearchSuggestion(searchInput);
 
   const logoutMutation = useLogoutMutation();
 
@@ -46,7 +49,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   }
 
   function onHeaderSearchChange(value: string) {
-    setHeaderSearch(value);
+    setSearchInput(value);
   }
 
   function handleViewProfile() {
@@ -93,11 +96,41 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              value={headerSearch}
+              value={searchInput}
               onChange={(e) => onHeaderSearchChange(e.target.value)}
               placeholder={t("common.searchPlaceholder")}
               className="h-10 pl-9 bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
             />
+
+            {/* Search Suggestion Dropdown */}
+            {searchInput.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                {isLoading ? (
+                  <div className="px-4 py-2 text-sm text-muted-foreground animate-pulse">
+                    Searching...
+                  </div>
+                ) : searchSuggestion?.data?.length ? (
+                  <ul className="py-1">
+                    {searchSuggestion.data.map((item) => (
+                      <li
+                        key={item.id}
+                        className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors"
+                        onClick={() => {
+                          // Handle navigation or selection here
+                          setSearchInput(item.text);
+                        }}
+                      >
+                        {item.text}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
+                    No results found.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="ml-auto flex items-center gap-2">

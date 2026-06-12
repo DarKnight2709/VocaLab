@@ -146,6 +146,10 @@ const API_ROUTES = {
     HEARTBEAT: "v1/progress/heartbeat",
     STATS: "v1/progress/stats",
   },
+
+  SEARCH: {
+    SUGGESTION: "v1/search/suggestion",
+  },
 };
 
 export default API_ROUTES;
