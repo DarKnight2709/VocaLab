@@ -5,6 +5,8 @@ import CardFieldDragDrop from "../components/CardFieldDragDrop";
 import { useCardTypeDetailsQuery, useUpdateCardTypeMutation } from "../api/vocabularyService";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { type CardType } from "@/shared/validations/VocabularySchema";
+
 
 export default function CardTypePreviewPage() {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export default function CardTypePreviewPage() {
   } = useCardTypeDetailsQuery(cardTypeId!);
   const updateMutation = useUpdateCardTypeMutation();
 
-  const cardType = cardTypeData?.cardType;
+  const cardType = cardTypeData as CardType;
 
   if (isLoading) {
     return (

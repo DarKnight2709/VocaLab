@@ -36,6 +36,8 @@ interface Field {
   fieldType: "TEXT" | "TEXTAREA" | "IMAGE";
   side: "FRONT" | "BACK";
   order: number;
+  fontSize?: number | null;
+  color?: string | null;
   isRequired?: boolean;
 }
 

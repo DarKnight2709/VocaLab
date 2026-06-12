@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, getErrorMessage } from "@/shared/lib/api";
+import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
 import i18n from "@/shared/i18n";
+import { 
+  CardTypeSchema, 
+  CardTypeListResponseSchema,
+  type CardType, 
+  type CardField 
+} from "@/shared/validations/VocabularySchema";
+
  
 export const DuplicatePolicy = {
   SKIP: "SKIP",
@@ -29,31 +36,9 @@ export interface VocabCollection {
 // Domain: Card Type (types)
 // =====================================================
 
-export type CardFieldType = "TEXT" | "TEXTAREA" | "IMAGE";
-export type CardSide = "front" | "back";
+// CardFieldType and CardSide are now imported from shared/enums
+// CardField and CardType are now imported from shared/validations/VocabularySchema
 
-export interface CardField {
-  id: string;
-  key: string;
-  label: string;
-  fieldType: CardFieldType;
-  isRequired: boolean;
-  order: number;
-  side?: CardSide;
-  position?: number;
-  color?: string;
-  fontSize?: number;
-}
-
-export interface CardType {
-  id: string;
-  name: string;
-  description: string | null;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  fields: CardField[];
-}
 
 // =====================================================
 // Domain: Card (types)
@@ -164,31 +149,31 @@ export const useDeleteCollectionMutation = () => {
 // =====================================================
 
 export const useCardTypesQuery = () =>
-  useQuery<{ cardTypes: CardType[] }>({
+  useQuery({
     queryKey: ["card-types"],
     queryFn: async () => {
-      const res = await api.get(API_ROUTES.VOCABULARY.CARD_TYPES);
-      const payload = res.data;
-
-      if (Array.isArray(payload)) {
-        return { cardTypes: payload as CardType[] };
-      }
-
-      return {
-        cardTypes: (payload?.cardTypes ?? []) as CardType[],
-      };
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.VOCABULARY.CARD_TYPES),
+        CardTypeListResponseSchema
+      );
+      return result.data;
     },
   });
 
+
 export const useCardTypeDetailsQuery = (id: string | null) =>
-  useQuery<{ cardType: CardType }>({
+  useQuery({
     queryKey: ["card-type-details", id],
     queryFn: async () => {
-      const res = await api.get(API_ROUTES.VOCABULARY.CARD_TYPE_DETAILS(id!));
-      return res.data;
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.VOCABULARY.CARD_TYPE_DETAILS(id!)),
+        CardTypeSchema
+      );
+      return result.data;
     },
     enabled: !!id,
   });
+
 
 export const useCreateCardTypeMutation = () => {
   const qc = useQueryClient();
@@ -202,11 +187,12 @@ export const useCreateCardTypeMutation = () => {
         fieldType: string;
         side: string;
         order: number;
-        color?: string;
-        fontSize?: number;
+        color?: string | null;
+        fontSize?: number | null;
         isRequired?: boolean;
       }>;
     }) => api.post(API_ROUTES.VOCABULARY.CREATE_CARD_TYPE, body),
+
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-types"] });
       toast.success(i18n.t("vocabulary.cardTypeCreateSuccess"));
@@ -227,11 +213,14 @@ export const useUpdateCardTypeMutation = () => {
         name?: string;
         description?: string;
         fields?: Array<{
+          id?: string;
           key: string;
           label: string;
           fieldType: string;
           side: string;
           order: number;
+          color?: string | null;
+          fontSize?: number | null;
           isRequired?: boolean;
         }>;
       };

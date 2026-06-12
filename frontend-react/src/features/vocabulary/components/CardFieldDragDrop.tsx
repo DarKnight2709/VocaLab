@@ -5,18 +5,9 @@ import { toast } from "sonner";
 import FieldSelectionDialog from "./FieldSelectionDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { CardSide } from "@/shared/enums/CardSide.enum";
+import { type CardField } from "@/shared/validations/VocabularySchema";
 
-interface CardField {
-  id: string;
-  key: string;
-  label: string;
-  fieldType: "TEXT" | "TEXTAREA" | "IMAGE";
-  side?: "FRONT" | "BACK" | "front" | "back";
-  order: number;
-  fontSize?: number;
-  color?: string;
-  isRequired?: boolean;
-}
 
 interface CardTypeWithFields {
   id: string;
@@ -46,21 +37,21 @@ export default function CardFieldDragDrop({
   // Store drop target in a ref so it's always current at drop time
   // without causing re-renders on every dragover
   const dropTargetRef = useRef<{
-    side: "FRONT" | "BACK";
+    side: CardSide;
     insertBeforeId: string | null;
   } | null>(null);
 
   // Separate state just for visual highlight — updated less aggressively
   const [highlightedGap, setHighlightedGap] = useState<{
-    side: "FRONT" | "BACK";
+    side: CardSide;
     insertBeforeId: string | null;
   } | null>(null);
 
   const draggedFieldIdRef = useRef<string | null>(null);
 
-  const normalizeSide = (side?: CardField["side"]): "FRONT" | "BACK" => {
-    if (side === "BACK" || side === "back") return "BACK";
-    return "FRONT";
+  const normalizeSide = (side?: CardSide | string): CardSide => {
+    if (side === CardSide.BACK || side === "back") return CardSide.BACK;
+    return CardSide.FRONT;
   };
 
   useEffect(() => {
@@ -91,7 +82,7 @@ export default function CardFieldDragDrop({
   // Each gap calls this on dragover — most reliable way to track position
   const handleGapDragOver = (
     e: React.DragEvent,
-    side: "FRONT" | "BACK",
+    side: CardSide,
     insertBeforeId: string | null
   ) => {
     e.preventDefault();
@@ -112,7 +103,7 @@ export default function CardFieldDragDrop({
   // Used as fallback to set append-to-end
   const handleZoneDragOver = (
     e: React.DragEvent,
-    side: "FRONT" | "BACK"
+    side: CardSide
   ) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -124,7 +115,7 @@ export default function CardFieldDragDrop({
     }
   };
 
-  const handleDrop = (e: React.DragEvent, side: "FRONT" | "BACK") => {
+  const handleDrop = (e: React.DragEvent, side: CardSide) => {
     e.preventDefault();
 
     const draggedId =
@@ -204,7 +195,7 @@ export default function CardFieldDragDrop({
     }
   };
 
-  const isGapActive = (side: "FRONT" | "BACK", insertBeforeId: string | null) =>
+  const isGapActive = (side: CardSide, insertBeforeId: string | null) =>
     highlightedGap?.side === side &&
     highlightedGap?.insertBeforeId === insertBeforeId;
 
@@ -212,7 +203,7 @@ export default function CardFieldDragDrop({
     side,
     insertBeforeId,
   }: {
-    side: "FRONT" | "BACK";
+    side: CardSide;
     insertBeforeId: string | null;
   }) => {
     const active = isGapActive(side, insertBeforeId);
@@ -278,7 +269,7 @@ export default function CardFieldDragDrop({
     side,
     fields,
   }: {
-    side: "FRONT" | "BACK";
+    side: CardSide;
     fields: CardField[];
   }) => (
     <div
