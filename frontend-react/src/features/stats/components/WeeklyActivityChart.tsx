@@ -26,6 +26,8 @@ export const WeeklyActivityChart = ({
     return t("stats.weeksAhead", { count: weekOffset });
   };
 
+  const todayDayName = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+
   return (
     <div className="relative">
       {/* Week navigation buttons */}
@@ -56,7 +58,11 @@ export const WeeklyActivityChart = ({
       
       <div className="h-[200px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 25, right: 45, left: 0, bottom: 0 }} style={{ overflow: "visible" }}>
+          <BarChart 
+            data={chartData} 
+            margin={{ top: 25, right: 45, left: 0, bottom: 0 }} 
+            style={{ overflow: "visible" }}
+          >
             <XAxis 
               dataKey="date" 
               stroke="#475569" 
@@ -102,9 +108,37 @@ export const WeeklyActivityChart = ({
             
             <Bar 
               dataKey="minutes" 
-              fill="#fcd34d" 
-              radius={[8, 8, 8, 8]} 
               barSize={40}
+              shape={(props: any) => {
+                const { x, y, width, height, payload } = props;
+                const isToday = weekOffset === 0 && payload.date === todayDayName;
+                
+                return (
+                  <g>
+                    {/* Square Grey Column for Today */}
+                    {isToday && (
+                      <rect 
+                        x={x} 
+                        y={15} 
+                        width={width} 
+                        height={y + height - 15} 
+                        fill="#f1f5f9"
+                      />
+                    )}
+                    
+                    {/* Rounded Progress Bar */}
+                    <rect 
+                      x={x} 
+                      y={y} 
+                      width={width} 
+                      height={height} 
+                      fill="#fcd34d" 
+                      rx={10} 
+                      ry={10}
+                    />
+                  </g>
+                );
+              }}
             />
           </BarChart>
         </ResponsiveContainer>
