@@ -543,7 +543,7 @@
     "back": "Back",
     "view": "View",
     "edit": "Edit",
-    "cardsCount": "fields",
+    "cardsCount": "{{count}} fields",
     "coverPreviewAlt": "Cover image preview",
     "deleteCardTypeTitle": "Delete card type",
     "deleteCardTypeDesc": "NOTE: All cards using this card type will also be permanently deleted from every collection.",

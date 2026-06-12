@@ -17,6 +17,7 @@ export const CardFieldSchema = z.object({
   order: z.number(),
   color: z.string().nullable().optional(),
   fontSize: z.number().nullable().optional(),
+  isRequired: z.boolean().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

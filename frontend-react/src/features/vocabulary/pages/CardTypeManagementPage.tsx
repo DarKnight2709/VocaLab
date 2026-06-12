@@ -68,8 +68,9 @@ export default function CardTypeManagementPage() {
                 </div>
 
                 <div className="text-sm text-muted-foreground mb-4">
-                  {cardType.fields?.length || 0} trường
+                  {t("vocabulary.cardsCount", { count: cardType.fields?.length || 0 })}
                 </div>
+
 
                 <div className="flex gap-2">
                   <Button

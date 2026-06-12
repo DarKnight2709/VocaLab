@@ -235,7 +235,7 @@ export default function VocabularyAddCardPage() {
                       value: e.target.value,
                     })
                   }
-                  placeholder={t("vocabulary.enterFieldPlaceholder").replace("{label}", field.label.toLowerCase())}
+                  placeholder={t("vocabulary.enterFieldPlaceholder", { label: field.label.toLowerCase() })}
                   required={field.isRequired}
                 />
               </div>

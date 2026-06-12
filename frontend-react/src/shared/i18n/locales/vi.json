@@ -539,7 +539,7 @@
     "noCardTypes": "Chưa có kiểu thẻ nào",
     "view": "Xem",
     "edit": "Sửa",
-    "cardsCount": "trường",
+    "cardsCount": "{{count}} trường",
     "deleteCardTypeTitle": "Xóa kiểu thẻ",
     "deleteCardTypeDesc": "LƯU Ý: Toàn bộ thẻ (cards) đang sử dụng kiểu thẻ này cũng sẽ bị xóa vĩnh viễn khỏi tất cả các bộ sưu tập.",
     "addToList": "Thêm vào danh sách",
