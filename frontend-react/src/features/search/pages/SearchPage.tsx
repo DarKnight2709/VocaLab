@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search, User, Users, BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/shared/lib/api";
@@ -176,8 +176,9 @@ function BlogCard({ blog }: { blog: BlogResult }) {
 
 export default function SearchPage() {
   const { t } = useTranslation();
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const qParam = searchParams.get("q") || "";
+
   const [activeTab, setActiveTab] = useState<Tab>("users");
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -186,24 +187,12 @@ export default function SearchPage() {
     { key: "blogs", label: t("search.tabs.blogs"), icon: <BookOpen size={15} /> },
   ];
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(
-      () => setDebouncedQuery(query.trim()),
-      400,
-    );
-    return () => clearTimeout(debounceRef.current);
-  }, [query]);
-
   const { data: users = [], isFetching: usersLoading } =
-    useUserSearch(debouncedQuery);
+    useUserSearch(qParam);
   const { data: groups = [], isFetching: groupsLoading } =
-    useGroupSearch(debouncedQuery);
+    useGroupSearch(qParam);
   const { data: blogs = [], isFetching: blogsLoading } =
-    useBlogSearch(debouncedQuery);
+    useBlogSearch(qParam);
 
   const counts: Record<Tab, number> = {
     users: users.length,
@@ -218,25 +207,12 @@ export default function SearchPage() {
         : blogsLoading;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8">
-      <Breadcrumb items={[{ label: t("search.title") }]} />
-      <h1 className="mb-6 text-2xl font-bold">{t("search.title")}</h1>
-
-      {/* Search input */}
-      <div className="relative mb-6">
-        <Search
-          size={18}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <input
-          autoFocus
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("search.placeholder")}
-          className="w-full rounded-2xl border bg-background py-3 pl-11 pr-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-        />
-      </div>
+    <div className="h-full overflow-y-auto p-6 bg-background">
+      <div className="max-w-6xl mx-auto w-full">
+        <div className="max-w-2xl">
+          <div className="mb-6">
+            <Breadcrumb items={[{ label: t("search.title") }]} />
+          </div>
 
       {/* Tabs */}
       <div className="mb-5 flex gap-1 rounded-xl border bg-muted/30 p-1">
@@ -252,7 +228,7 @@ export default function SearchPage() {
           >
             {tab.icon}
             {tab.label}
-            {debouncedQuery && counts[tab.key] > 0 && (
+            {qParam && counts[tab.key] > 0 && (
               <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                 {counts[tab.key]}
               </span>
@@ -262,7 +238,7 @@ export default function SearchPage() {
       </div>
 
       {/* Results */}
-        {!debouncedQuery ? (
+        {!qParam ? (
         <div className="py-16 text-center text-muted-foreground">
           <Search size={40} className="mx-auto mb-3 opacity-30" />
           <p className="text-sm">{t("search.enterKeyword")}</p>
@@ -277,24 +253,26 @@ export default function SearchPage() {
         <div className="space-y-3">
           {activeTab === "users" &&
             (users.length === 0 ? (
-              <Empty query={debouncedQuery} type={t("search.types.users")} />
+              <Empty query={qParam} type={t("search.types.users")} />
             ) : (
               users.map((u) => <UserCard key={u.id} user={u} />)
             ))}
           {activeTab === "groups" &&
             (groups.length === 0 ? (
-              <Empty query={debouncedQuery} type={t("search.types.groups")} />
+              <Empty query={qParam} type={t("search.types.groups")} />
             ) : (
               groups.map((g) => <GroupCard key={g.id} group={g} />)
             ))}
           {activeTab === "blogs" &&
             (blogs.length === 0 ? (
-              <Empty query={debouncedQuery} type={t("search.types.posts")} />
+              <Empty query={qParam} type={t("search.types.posts")} />
             ) : (
               blogs.map((b) => <BlogCard key={b.id} blog={b} />)
             ))}
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
