@@ -55,7 +55,7 @@ export class UpdatePersonalInfoDto {
   @ApiProperty({ example: 'username123', required: false })
   @IsString()
   @MinLength(3)
-  @MaxLength(16)
+  @MaxLength(50)
   @IsOptional()
   username?: string;
 

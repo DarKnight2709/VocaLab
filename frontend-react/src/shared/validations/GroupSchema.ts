@@ -122,12 +122,12 @@ export const getCreateGroupSchema = () =>
     name: z
       .string()
       .min(1, i18n.t("validation.groupNameRequired"))
-      .max(50, i18n.t("validation.groupNameMaxLength")),
+    .max(50, i18n.t("validation.groupNameMaxLength")),
     description: z
       .string()
       .max(200, i18n.t("validation.descriptionMaxLength"))
       .optional(),
-    members: z.array(z.string()).min(2, i18n.t("validation.selectMinMembers")),
+    members: z.array(z.string()).min(1, i18n.t("validation.selectMinMembers")),
   });
 
 export const UpdateGroupResponseSchema = GroupInfoSchema;

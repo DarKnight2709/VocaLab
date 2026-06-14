@@ -9,7 +9,7 @@ export class CreateGroupDto {
 
   @ApiProperty({ example: ['user1', 'user2'], type: [String] })
   @IsArray()
-  @ArrayMinSize(2)
+  @ArrayMinSize(1)
   members!: string[];
 
   @ApiProperty({ example: 'Group description', required: false })

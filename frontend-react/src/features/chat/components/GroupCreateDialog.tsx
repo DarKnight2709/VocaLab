@@ -12,8 +12,6 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { useUsersQuery } from "@/features/chat/api/chatService";
 import { useCreateGroupMutation } from "@/features/chat/api/groupService";
-import { getErrorMessage } from "@/shared/lib/api";
-import { toast } from "sonner";
 import type { UserItem } from "@/shared/validations/ChatSchema";
 import {
   getCreateGroupSchema,
@@ -106,11 +104,10 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
       const { data: groupData } = await createGroupMutation.mutateAsync(values);
       const groupId = groupData?.id;
 
-      toast.success(t("chat.groupCreated"));
       onOpenChange(false);
       if (groupId) onCreated?.();
     } catch (e: any) {
-      toast.error(getErrorMessage(e, t("chat.groupCreateFailed")));
+      console.error(e);
     }
   };
 
