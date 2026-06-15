@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useBlogSearch, useCollectionSearch, useGroupSearch, useUserSearch } from "../api/searchService";
+import { useSearch } from "../api/searchService";
 import { BlogCard } from "../components/BlogCard";
 import { CollectionCard } from "../components/CollectionCard";
 import { GroupCard } from "../components/GroupCard";
@@ -57,12 +57,12 @@ export default function SearchPage() {
     { key: "users", label: t("search.tabs.users"), icon: <User size={15} /> },
   ];
 
-  const { data: users = [], isFetching: usersLoading } = useUserSearch(qParam);
-  const { data: groups = [], isFetching: groupsLoading } =
-    useGroupSearch(qParam);
-  const { data: blogs = [], isFetching: blogsLoading } = useBlogSearch(qParam);
-  const { data: collections = [], isFetching: collectionsLoading } =
-    useCollectionSearch(qParam);
+  const { data: results, isFetching: loading } = useSearch(qParam, activeTab);
+  
+  const users = results?.users ?? [];
+  const groups = results?.groups ?? [];
+  const blogs = results?.posts ?? [];
+  const collections = results?.collections ?? [];
 
   const counts = useMemo(
     () => ({
@@ -74,17 +74,6 @@ export default function SearchPage() {
     }),
     [users.length, groups.length, blogs.length, collections.length],
   );
-
-  const loading =
-    activeTab === "all"
-      ? usersLoading || groupsLoading || blogsLoading || collectionsLoading
-      : activeTab === "users"
-        ? usersLoading
-        : activeTab === "groups"
-          ? groupsLoading
-          : activeTab === "collections"
-            ? collectionsLoading
-            : blogsLoading;
 
   type SectionLayout = "grid" | "list" | "sidebar";
 

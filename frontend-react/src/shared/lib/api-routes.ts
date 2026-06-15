@@ -148,6 +148,7 @@ const API_ROUTES = {
   },
 
   SEARCH: {
+    BASE: "v1/search",
     SUGGESTION: "v1/search/suggestion",
   },
 };
