@@ -833,17 +833,34 @@
     "enterKeyword": "Nhập từ khóa để tìm kiếm",
     "noResults": "Không tìm thấy {{type}} cho \"{{query}}\"",
     "tabs": {
-      "users": "Người dùng",
+      "all": "Tất cả",
+      "collections": "Bộ từ vựng",
+      "posts": "Bài viết",
       "groups": "Nhóm",
-      "blogs": "Bài viết"
+      "users": "Người dùng"
     },
     "types": {
-      "users": "người dùng",
+      "all": "kết quả",
+      "collections": "bộ từ vựng",
+      "posts": "bài viết",
       "groups": "nhóm",
-      "posts": "bài viết"
+      "users": "người dùng"
     },
     "by": "bởi",
-    "members": "thành viên"
+    "members": "thành viên",
+    "viewAll": "Xem tất cả",
+    "votes": "{{count}} lượt thích",
+    "votes_plural": "{{count}} lượt thích",
+    "commentsCount": "{{count}} bình luận",
+    "commentsCount_plural": "{{count}} bình luận",
+    "timeAgo": {
+      "justNow": "vừa xong",
+      "minutes": "{{count}} phút trước",
+      "hours": "{{count}} giờ trước",
+      "days": "{{count}} ngày trước",
+      "months": "{{count}} tháng trước",
+      "years": "{{count}} năm trước"
+    }
   },
   "validation": {
     "fullNameRequired": "Họ tên là bắt buộc",

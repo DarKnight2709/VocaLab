@@ -840,17 +840,34 @@
     "enterKeyword": "Enter a keyword to search",
     "noResults": "No {{type}} found for \"{{query}}\"",
     "tabs": {
-      "users": "Users",
+      "all": "All",
+      "collections": "Collections",
+      "posts": "Posts",
       "groups": "Groups",
-      "blogs": "Posts"
+      "users": "Users"
     },
     "types": {
-      "users": "users",
+      "all": "results",
+      "collections": "collections",
+      "posts": "posts",
       "groups": "groups",
-      "posts": "posts"
+      "users": "users"
     },
     "by": "by",
-    "members": "members"
+    "members": "members",
+    "viewAll": "View all",
+    "votes": "{{count}} vote",
+    "votes_plural": "{{count}} votes",
+    "commentsCount": "{{count}} comment",
+    "commentsCount_plural": "{{count}} comments",
+    "timeAgo": {
+      "justNow": "just now",
+      "minutes": "{{count}}m ago",
+      "hours": "{{count}}h ago",
+      "days": "{{count}}d ago",
+      "months": "{{count}}mo ago",
+      "years": "{{count}}y ago"
+    }
   },
   "validation": {
     "fullNameRequired": "Full name is required",

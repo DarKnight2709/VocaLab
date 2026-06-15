@@ -45,7 +45,13 @@ export function SearchBar() {
   function handleSearchSubmit(q: string) {
     if (!q.trim()) return;
     addToHistory.mutate({ query: q.trim() });
-    navigate(`${ROUTES.SEARCH.url}?q=${encodeURIComponent(q.trim())}`);
+
+    const type = searchParams.get("type") || "all";
+    const params = new URLSearchParams();
+    params.set("q", q.trim());
+    params.set("type", type);
+
+    navigate(`${ROUTES.SEARCH.url}?${params.toString()}`);
     setShowSuggestions(false);
     inputRef.current?.blur();
   }
