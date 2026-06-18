@@ -1,4 +1,4 @@
-import { IsString, IsArray, MinLength, ArrayMinSize, IsOptional } from 'class-validator';
+import { IsString, IsArray, MinLength, ArrayMinSize, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateGroupDto {
@@ -16,5 +16,9 @@ export class CreateGroupDto {
   @IsString()
   @IsOptional()
   description?: string;
-}
 
+  @ApiProperty({ example: false, required: false })
+  @IsBoolean()
+  @IsOptional()
+  isPublic?: boolean;
+}

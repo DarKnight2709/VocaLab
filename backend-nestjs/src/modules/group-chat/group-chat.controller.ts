@@ -23,6 +23,7 @@ import { GroupPermission } from '../../common/enums/group-permission.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { UpdateGroupVisibilityDto } from './dto/update-group-visibility.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
@@ -96,6 +97,23 @@ export class GroupChatController {
     return {
       data: result
     }
+  }
+
+  @Patch(':id/visibility')
+  @IsOwner()
+  @UseGuards(GroupPermissionGuard)
+  @ApiOperation({ summary: 'Update group public visibility' })
+  async updateGroupVisibility(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateGroupVisibilityDto,
+  ): Promise<ResponseInterceptor<CreateGroupResponseDto>> {
+    const result = await this.groupChatService.updateGroupVisibility(
+      id,
+      user.id,
+      dto.isPublic,
+    );
+    return { data: result };
   }
 
 

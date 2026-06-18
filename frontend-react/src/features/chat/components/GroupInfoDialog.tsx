@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avat
 import { Button } from '@/shared/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
+import { Switch } from '@/shared/components/ui/switch'
 import { ConfirmModal } from '@/shared/components/ConfirmModal'
 import {
   DropdownMenu,
@@ -36,6 +37,7 @@ import {
   useUpdateRolePermissionMutation,
   useAvailablePermissionsQuery,
   useTransferOwnershipMutation,
+  useUpdateGroupVisibilityMutation,
 } from '@/features/chat/api/groupService'
 import PERMISSION_GROUP from '@/shared/constants/permissions.constant'
 import { useTranslation } from "@/shared/hooks/useTranslation"
@@ -110,6 +112,7 @@ export function GroupInfoDialog({
   const updateRolePermissionMutation = useUpdateRolePermissionMutation()
   const availablePermissionsQuery = useAvailablePermissionsQuery()
   const transferOwnershipMutation = useTransferOwnershipMutation()
+  const updateGroupVisibilityMutation = useUpdateGroupVisibilityMutation()
 
   const sortedMembers = useMemo(() => {
     return [...members].sort((a, b) => {
@@ -311,6 +314,20 @@ export function GroupInfoDialog({
     }
   }
 
+  async function handleUpdateVisibility(isPublic: boolean) {
+    if (!groupId || !isOwner) return
+    try {
+      const result = await updateGroupVisibilityMutation.mutateAsync({
+        groupId,
+        isPublic,
+      })
+      setGroup((prev) => (prev ? { ...prev, isPublic: result.data.isPublic } : result.data))
+      onUpdatedGroup?.(result.data as any)
+    } catch (e: any) {
+      // toast is already handled
+    }
+  }
+
   const groupRolePermissionsMap = useMemo(() => {
     const map: Record<string, { id: string }[]> = {}
     const rps = group?.rolePermissions || []
@@ -411,6 +428,19 @@ export function GroupInfoDialog({
 
             <div className="space-y-2">
               <div className="font-medium">{t('chat.actions')}</div>
+              <div className="mb-2 flex items-center justify-between gap-4 rounded-lg border p-3">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium">{t('chat.groupVisibility')}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {group?.isPublic ? t('chat.publicGroupDesc') : t('chat.privateGroupDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={!!group?.isPublic}
+                  disabled={!isOwner || updateGroupVisibilityMutation.isPending}
+                  onCheckedChange={(checked) => void handleUpdateVisibility(checked)}
+                />
+              </div>
               <div className="flex gap-2">
                 {canEditGroup && (
                   <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(true)} className="h-9 hover:bg-primary/5 transition-colors">

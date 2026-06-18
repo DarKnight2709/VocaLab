@@ -19,6 +19,7 @@ export const GroupItemSchema = z.object({
   members: z.array(z.string()),
   avatar: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  isPublic: z.boolean().optional(),
   unreadCount: z.number().optional(),
   lastMessage: z
     .object({
@@ -56,6 +57,7 @@ export const GroupInfoSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   avatar: z.string().nullable().optional(),
+  isPublic: z.boolean(),
   owner: MemberUserSchema,
   members: z.array(GroupMemberSchema),
   rolePermissions: z.array(RolePermissionSchema),
@@ -127,6 +129,7 @@ export const getCreateGroupSchema = () =>
       .string()
       .max(200, i18n.t("validation.descriptionMaxLength"))
       .optional(),
+    isPublic: z.boolean().optional(),
     members: z.array(z.string()).min(1, i18n.t("validation.selectMinMembers")),
   });
 

@@ -10,6 +10,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { Switch } from "@/shared/components/ui/switch";
 import { useUsersQuery } from "@/features/chat/api/chatService";
 import { useCreateGroupMutation } from "@/features/chat/api/groupService";
 import type { UserItem } from "@/shared/validations/ChatSchema";
@@ -57,6 +58,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
     register,
     handleSubmit,
     setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm<CreateGroupInput>({
@@ -64,9 +66,12 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
     defaultValues: {
       name: "",
       description: "",
+      isPublic: false,
       members: [],
     },
   });
+
+  const isPublic = watch("isPublic");
 
   useEffect(() => {
     if (!open) return;
@@ -143,6 +148,22 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
                 {errors.description.message}
               </p>
             )}
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+            <div className="space-y-1">
+              <Label htmlFor="group-public">{t("chat.groupVisibility")}</Label>
+              <p className="text-xs text-muted-foreground">
+                {isPublic ? t("chat.publicGroupDesc") : t("chat.privateGroupDesc")}
+              </p>
+            </div>
+            <Switch
+              id="group-public"
+              checked={!!isPublic}
+              onCheckedChange={(checked) =>
+                setValue("isPublic", checked, { shouldDirty: true })
+              }
+            />
           </div>
 
           <div className="space-y-2">

@@ -64,6 +64,9 @@ export class GroupDetailDto {
   @ApiProperty({ required: false, nullable: true })
   avatar!: string | null;
 
+  @ApiProperty()
+  isPublic!: boolean;
+
   @ApiProperty({ type: [GroupMemberDto] })
   members!: GroupMemberDto[];
 
@@ -86,6 +89,9 @@ export class GetGroupsResponseDto {
 
   @ApiProperty({ required: false, nullable: true })
   description!: string | null;
+
+  @ApiProperty()
+  isPublic!: boolean;
 
   @ApiProperty()
   unreadCount!: number;
@@ -112,6 +118,9 @@ export class GroupSearchItemDto {
 
   @ApiProperty({ description: 'The creator of the group' })
   owner!: UserResponse;
+
+  @ApiProperty()
+  isPublic!: boolean;
 
   @ApiProperty({ type: [UserResponse] })
   members!: {user: UserResponse}[];

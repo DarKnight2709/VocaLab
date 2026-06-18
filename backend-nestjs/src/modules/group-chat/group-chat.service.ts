@@ -146,6 +146,7 @@ export class GroupChatService {
       data: {
         name: createDto.name.trim(),
         description: createDto.description?.trim(),
+        isPublic: createDto.isPublic ?? true,
         ownerId: ownerId,
         members: {
           create: [
@@ -239,6 +240,7 @@ export class GroupChatService {
           name: group.name,
           avatar: group.avatar,
           description: group.description,
+          isPublic: group.isPublic,
           unreadCount,
           lastMessage: lastMessage
             ? {
@@ -363,6 +365,7 @@ export class GroupChatService {
       name: group.name,
       description: group.description,
       avatar: group.avatar,
+      isPublic: group.isPublic,
       owner: group.owner,
       members:
         group.members?.map((m) => ({
@@ -411,6 +414,24 @@ export class GroupChatService {
     await this.prisma.group.update({
       where: { id: groupId },
       data: updateData,
+    });
+
+    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
+
+    return this.getInfoGroup(groupId);
+  }
+
+  async updateGroupVisibility(
+    groupId: string,
+    userId: string,
+    isPublic: boolean,
+  ): Promise<CreateGroupResponseDto> {
+    const group = await this.getActiveGroupOrThrow(groupId);
+    const memberIds = group.members?.map((m) => m.userId) || [];
+
+    await this.prisma.group.update({
+      where: { id: groupId },
+      data: { isPublic },
     });
 
     this.groupChatGateway.notifyReloadGroups(memberIds, groupId);

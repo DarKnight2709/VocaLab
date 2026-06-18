@@ -93,6 +93,7 @@ export function useCreateGroupMutation() {
     mutationFn: async (payload: {
       name: string;
       description?: string;
+      isPublic?: boolean;
       members: string[];
     }) => {
       return await fetchWithSchema(
@@ -141,6 +142,32 @@ export function useUpdateGroupMutation() {
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("chat.groupUpdateFailed")));
+    },
+  });
+}
+
+export function useUpdateGroupVisibilityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { groupId: string; isPublic: boolean }) => {
+      return await fetchWithSchema(
+        api.patch(API_ROUTES.GROUP.UPDATE_VISIBILITY(params.groupId), {
+          isPublic: params.isPublic,
+        }),
+        UpdateGroupResponseSchema,
+      );
+    },
+    onSuccess: (_, vars) => {
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: groupKeys.info(vars.groupId),
+      });
+      toast.success(i18n.t("chat.groupVisibilityUpdated"));
+    },
+    onError: (error) => {
+      toast.error(
+        getErrorMessage(error, i18n.t("chat.groupVisibilityUpdateFailed")),
+      );
     },
   });
 }
