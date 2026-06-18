@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { BlogResult } from "../api/searchService";
+import type { BlogItem as BlogResult } from "@/shared/validations/BlogSchema";
 import { Link } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 import { formatTimeAgo } from "@/shared/lib/utils";

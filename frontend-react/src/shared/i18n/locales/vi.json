@@ -837,18 +837,28 @@
       "collections": "Bộ từ vựng",
       "posts": "Bài viết",
       "groups": "Nhóm",
-      "users": "Người dùng"
+      "profiles": "Hồ sơ"
     },
     "types": {
       "all": "kết quả",
       "collections": "bộ từ vựng",
       "posts": "bài viết",
       "groups": "nhóm",
-      "users": "người dùng"
+      "profiles": "hồ sơ"
     },
     "by": "bởi",
     "members": "thành viên",
+    "noGroupDescription": "Chưa có mô tả",
+    "groupDetails": "Chi tiết nhóm",
+    "owner": "Trưởng nhóm",
+    "unknownOwner": "Không rõ trưởng nhóm",
+    "unknownDate": "Không rõ ngày",
+    "createdAt": "Tạo {{date}}",
+    "join": "Tham gia",
+    "joining": "Đang tham gia...",
     "viewAll": "Xem tất cả",
+    "loadMore": "Tải thêm",
+    "loading": "Đang tải...",
     "votes": "{{count}} lượt thích",
     "votes_plural": "{{count}} lượt thích",
     "commentsCount": "{{count}} bình luận",

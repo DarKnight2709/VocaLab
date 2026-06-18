@@ -1,52 +1,65 @@
-import { api } from "@/shared/lib/api";
+import { api, fetchWithSchema } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
-import type { BlogItem } from "@/shared/validations/BlogSchema";
-import { useQuery } from "@tanstack/react-query";
-
-export type UserResult = {
-  id: string;
-  username: string;
-  fullName: string;
-  avatar?: string | null;
-};
-
-export type GroupResult = {
-  id: string;
-  name: string;
-  description?: string | null;
-  avatar?: string | null;
-  _count?: { members: number };
-};
-
-export type BlogResult = BlogItem;
-
-export type CollectionResult = {
-  id: string;
-  name: string;
-  description?: string | null;
-  _count?: { cards: number };
-};
+import { SearchInfiniteResponseSchema, SearchSidebarResponseSchema } from "@/shared/validations/SearchSchema";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 
 // ──────────────────────────────────────────────
 // Search hooks
 // ──────────────────────────────────────────────
 
-export type SearchResults = {
-  users?: UserResult[];
-  groups?: GroupResult[];
-  posts?: BlogResult[];
-  collections?: CollectionResult[];
-};
-
-export const useSearch = (q: string, type: string) =>
-  useQuery<SearchResults>({
-    queryKey: ["search", type, q],
+export const useSearchSidebar = (q: string, enabled = true) =>
+  useQuery({
+    queryKey: ["search-sidebar", q],
     queryFn: async () => {
-      const res = await api.get(API_ROUTES.SEARCH.BASE, {
-        params: { q, type },
-      });
-      return res.data;
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.SEARCH.SIDEBAR, {
+          params: { query: q },
+        }),
+        SearchSidebarResponseSchema,
+      );
+      return result.data;
     },
-    enabled: q.length >= 1,
+    enabled: enabled && q.length >= 1,
     staleTime: 30_000,
   });
+
+export const useSearchInfinite = (q: string, type: string) =>
+  useInfiniteQuery({
+    queryKey: ["search-infinite", q, type],
+    queryFn: async ({ pageParam = 1 }) => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.SEARCH.BASE(type), {
+          params: { query: q, page: pageParam, limit: 5 },
+        }),
+        SearchInfiniteResponseSchema,
+      );
+      return result.data;
+    },
+    getNextPageParam: (lastPage) => {
+      const meta = lastPage?.meta;
+      if (!meta) return undefined;
+      return meta.page < meta.totalPages ? meta.page + 1 : undefined;
+    },
+    initialPageParam: 1,
+    enabled: q.length >= 1,
+  });
+
+
+// export const useJoinSearchGroupMutation = () => {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: async (groupId: string) => {
+//       return api.post(API_ROUTES.GROUP.JOIN(groupId));
+//     },
+//     onSuccess: () => {
+//       void queryClient.invalidateQueries({ queryKey: ["search-sidebar"] });
+//       void queryClient.invalidateQueries({ queryKey: ["search-infinite"] });
+//       void queryClient.invalidateQueries({ queryKey: ["groups"] });
+//       toast.success(i18n.t("search.groupJoined"));
+//     },
+//     onError: (error) => {
+//       toast.error(getErrorMessage(error, i18n.t("search.groupJoinFailed")));
+//     },
+//   });
+// };

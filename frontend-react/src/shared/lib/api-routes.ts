@@ -39,6 +39,7 @@ const API_ROUTES = {
     GET_ALL: "v1/groups/all",
     INFO: (groupId: string) => `v1/groups/${groupId}`,
     UPDATE: (groupId: string) => `v1/groups/update/${groupId}`,
+    JOIN: (groupId: string) => `v1/groups/${groupId}/join`,
     DELETE: (groupId: string) => `v1/groups/delete/${groupId}`,
     TRANSFER_OWNERSHIP: (groupId: string) =>
       `v1/groups/${groupId}/transferOwnership`,
@@ -148,8 +149,9 @@ const API_ROUTES = {
   },
 
   SEARCH: {
-    BASE: "v1/search",
+    BASE: (type: string) => `v1/search/${type}`,
     SUGGESTION: "v1/search/suggestion",
+    SIDEBAR: "v1/search/sidebar",
   },
 };
 

@@ -21,6 +21,7 @@ import {
   GetGroupsResponseDto,
   GroupDetailDto,
   GroupMemberDto,
+  GroupsSearchResultResponse,
   PermissionDto,
 } from './dto/group-chat-response.dto';
 import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
@@ -258,6 +259,87 @@ export class GroupChatService {
         (b.lastMessage?.createdAt?.getTime() || b.updatedAt.getTime()) -
         (a.lastMessage?.createdAt?.getTime() || a.updatedAt.getTime()),
     );
+  }
+
+  async searchGroups(userId: string, page: number, limit: number, query?: string): Promise<GroupsSearchResultResponse> {
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      isPublic: true,
+      deletedAt: null,
+    };
+
+    if (userId) {
+      const blockRelations = await this.prisma.block.findMany({
+        where: {
+          blockedId: userId,
+        },
+        select: {
+          blockingId: true,
+        },
+      });
+
+      const blockerIds = blockRelations.map((r) => r.blockingId);
+
+      if (blockerIds.length > 0) {
+        where.ownerId = {
+          notIn: blockerIds,
+        };
+      }
+    }
+
+    if (query) {
+      where.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+      ];
+    }
+
+    let [searchedGroups, total] = await Promise.all([
+      this.prisma.group.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip: skip,
+        take: limit,
+
+        include: {
+          owner: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
+          },
+          _count: { select: { members: true } },
+          members: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  fullName: true,
+                  avatar: true,
+                }
+              }
+            }
+          }
+        }
+      }),
+      this.prisma.group.count({ where })
+    ]);
+
+    return {
+      groups: searchedGroups,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      }
+    }
   }
 
   async getInfoGroup(groupId: string): Promise<GroupDetailDto> {

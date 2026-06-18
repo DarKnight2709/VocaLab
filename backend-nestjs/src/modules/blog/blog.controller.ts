@@ -44,7 +44,7 @@ export class BlogController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
   ): Promise<ResponseInterceptor<GetBlogsResponseDto>> {
-    const result = await this.blogService.getBlogs(user?.id, page, limit, search);
+    const result = await this.blogService.getBlogs(user.id, page, limit, search);
     return {
       data: result
     }

@@ -1,3 +1,5 @@
+import { PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
+import { UserResponse } from '@/modules/users/dto/users-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { MemberRole } from '@prisma/client';
 
@@ -97,6 +99,35 @@ export class GetGroupsResponseDto {
   @ApiProperty()
   updatedAt!: Date;
 }
+
+export class GroupSearchItemDto {
+  @ApiProperty({ description: 'The unique identifier of the group' })
+  id!: string;
+
+  @ApiProperty({ description: 'The name of the group' })
+  name!: string;
+
+  @ApiProperty({ description: 'The description of the group' })
+  description!: string | null;
+
+  @ApiProperty({ description: 'The creator of the group' })
+  owner!: UserResponse;
+
+  @ApiProperty({ type: [UserResponse] })
+  members!: {user: UserResponse}[];
+
+  @ApiProperty({ description: 'The number of members in the group' })
+  _count!: { members: number };
+}
+
+export class GroupsSearchResultResponse {
+  @ApiProperty({ type: [GroupSearchItemDto] })
+  groups!: GroupSearchItemDto[];
+
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
+}
+
 
 export class CreateGroupResponseDto extends GroupDetailDto {}
 export class GetMembersResponseDto {

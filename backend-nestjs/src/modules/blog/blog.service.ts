@@ -27,7 +27,7 @@ export class BlogService {
 
   // ==================== BLOG CRUD ====================
 
-  async getBlogs(userId?: string, page = 1, limit = 10, search?: string): Promise<GetBlogsResponseDto> {
+  async getBlogs(userId: string, page = 1, limit = 10, search?: string): Promise<GetBlogsResponseDto> {
     const skip = (page - 1) * limit;
 
     const where: any = {

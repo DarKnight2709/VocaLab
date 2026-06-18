@@ -250,6 +250,48 @@ export class UserService {
     });
   }
 
+
+  // async getUsers(userId: string, page: number, limit: number, query?: string) {
+    
+  //   const where: any = {
+  //     id: { not: userId },
+  //     OR: [
+  //       { username: { contains: query, mode: 'insensitive' } },
+  //       { fullName: { contains: query, mode: 'insensitive' } },
+  //     ],
+  //   };
+  //   const [searchedUsers, total] = await Promise.all([
+  //     this.prisma.user.findMany({
+  //       where,
+  //       orderBy: {
+  //         createdAt: 'desc'
+  //       },
+  //       take: limit,
+  //       skip: (page - 1) * limit,
+  //       select: {
+  //         id: true,
+  //         username: true,
+  //         fullName: true,
+  //         email: true,
+  //         avatar: true,
+  //         createdAt: true,
+  //         updatedAt: true,
+  //       }
+  //     }),
+  //     this.prisma.user.count({ where })
+  //   ]);
+
+  //   return {
+  //     users: searchedUsers,
+  //     meta: {
+  //       page,
+  //       limit,
+  //       total,
+  //       totalPages: Math.ceil(total / limit),
+  //     }
+  //   }
+  // }
+
   async findAll(): Promise<PublicUser[]> {
     return this.prisma.user.findMany({
       select: {

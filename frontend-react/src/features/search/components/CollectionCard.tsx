@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import type { CollectionResult } from "../api/searchService";
+import type { SearchCollectionResult as CollectionResult } from "@/shared/validations/SearchSchema";
 import { Layers } from "lucide-react";
 
 export function CollectionCard({ collection }: { collection: CollectionResult }) {

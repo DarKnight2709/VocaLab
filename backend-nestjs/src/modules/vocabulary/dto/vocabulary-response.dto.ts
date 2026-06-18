@@ -1,3 +1,5 @@
+import { PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
+import { UserResponse } from '@/modules/users/dto/users-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CardFieldType, CardSide } from '@prisma/client';
 
@@ -231,3 +233,33 @@ export class DeleteResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
 }
+
+// ─── Search ─────────────────────────────────────────────────
+// export class CollectionSearchItemDto {
+//   @ApiProperty({ example: 'uuid-string' })
+//   id!: string;
+
+//   @ApiProperty({ example: 'Bộ từ IELTS' })
+//   name!: string;
+
+//   @ApiPropertyOptional({ example: 'Mô tả bộ từ vựng', nullable: true })
+//   description!: string | null;
+
+//   @ApiProperty({ type: UserResponse })
+//   user!: UserResponse;
+
+//   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
+//   createdAt!: Date;
+
+//   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
+//   updatedAt!: Date;
+// }
+
+
+// export class CollectionsSearchResultResponse {
+//   @ApiProperty({ type: [CollectionSearchItemDto] })
+//   collections!: CollectionSearchItemDto[];
+
+//   @ApiProperty({ type: PaginationMetaDto })
+//   meta!: PaginationMetaDto;
+// }

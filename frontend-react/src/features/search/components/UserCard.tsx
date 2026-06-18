@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import type { UserResult } from "../api/searchService";
+import type { SearchUserResult as UserResult } from "@/shared/validations/SearchSchema";
 import ROUTES from "@/shared/lib/routes";
 
 export function UserCard({ user }: { user: UserResult }) {

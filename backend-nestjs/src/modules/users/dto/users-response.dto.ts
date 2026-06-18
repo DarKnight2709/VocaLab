@@ -1,3 +1,4 @@
+import { PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SocialPlatform, VoteType } from '@prisma/client';
 
@@ -68,6 +69,32 @@ export class PublicUserDto {
   @ApiPropertyOptional({ example: true })
   hasPassword?: boolean;
 }
+
+export class UserResponse {
+  @ApiProperty({ example: 'uuid-string' })
+  id!: string;
+
+  @ApiProperty({ example: 'quyentran' })
+  username!: string;
+
+  @ApiProperty({ example: 'Trần Duy Quyến' })
+  fullName!: string;
+
+  @ApiPropertyOptional({
+    example: 'https://example.com/avatar.jpg',
+    nullable: true,
+  })
+  avatar!: string | null;
+}
+
+// export class UsersSearchResultResponse {
+//   @ApiProperty({ type: [UserResponse] })
+//   users!: UserResponse[];
+
+//   @ApiProperty({ type: PaginationMetaDto })
+//   meta!: PaginationMetaDto;
+// }
+
 
 // ─── Update Profile ─────────────────────────────────────────
 

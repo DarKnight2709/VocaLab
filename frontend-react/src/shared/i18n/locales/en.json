@@ -844,18 +844,28 @@
       "collections": "Collections",
       "posts": "Posts",
       "groups": "Groups",
-      "users": "Users"
+      "profiles": "Profiles"
     },
     "types": {
       "all": "results",
       "collections": "collections",
       "posts": "posts",
       "groups": "groups",
-      "users": "users"
+      "profiles": "profiles"
     },
     "by": "by",
     "members": "members",
+    "noGroupDescription": "No description",
+    "groupDetails": "Group details",
+    "owner": "Owner",
+    "unknownOwner": "Unknown owner",
+    "unknownDate": "Unknown date",
+    "createdAt": "Created {{date}}",
+    "join": "Join",
+    "joining": "Joining...",
     "viewAll": "View all",
+    "loadMore": "Load more",
+    "loading": "Loading...",
     "votes": "{{count}} vote",
     "votes_plural": "{{count}} votes",
     "commentsCount": "{{count}} comment",

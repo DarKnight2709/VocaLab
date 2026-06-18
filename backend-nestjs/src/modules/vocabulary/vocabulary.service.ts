@@ -116,6 +116,80 @@ export class VocabularyService {
     };
   }
 
+  // async searchCollections(
+  //   userId: string,
+  //   page = 1,
+  //   limit = 10,
+  //   query: string,
+  // ): Promise<CollectionsSearchResultResponse> {
+  //   const skip = (page - 1) * limit;
+
+  //   const where: any = {
+  //     isPublic: true,
+  //     deletedAt: null,
+  //   };
+
+  //   if (userId) {
+  //     const blockRelations = await this.prisma.block.findMany({
+  //       where: {
+  //         blockedId: userId,
+  //       },
+  //       select: {
+  //         blockingId: true,
+  //       },
+  //     });
+
+  //     const blockerIds = blockRelations.map((r) => r.blockingId);
+
+  //     if (blockerIds.length > 0) {
+  //       where.userId = {
+  //         notIn: blockerIds,
+  //       };
+  //     }
+  //   }
+
+  //   if (query) {
+  //     where.OR = [
+  //       { name: { contains: query, mode: 'insensitive' } },
+  //       { description: { contains: query, mode: 'insensitive' } },
+  //     ];
+  //   }
+
+  //   let [searchedCollections, total] = await Promise.all([
+  //     this.prisma.cardCollection.findMany({
+  //       where,
+  //       orderBy: {
+  //         createdAt: 'desc'
+  //       },
+  //       skip: skip,
+  //       take: limit,
+
+  //       include: {
+  //         user: {
+  //           select: {
+  //             id: true,
+  //             username: true,
+  //             fullName: true,
+  //             avatar: true,
+  //           },
+  //         },
+  //         _count: { select: { cards: true } },
+  //       }
+  //     }),
+  //     this.prisma.cardCollection.count({ where })
+  //   ]);
+
+  //   return {
+  //     collections: searchedCollections,
+  //     meta: {
+  //       page,
+  //       limit,
+  //       total,
+  //       totalPages: Math.ceil(total / limit),
+  //     }
+  //   }
+  // }
+
   // ──────────────────────────────────────────────
   // Cards
   // ──────────────────────────────────────────────

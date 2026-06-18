@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -11,14 +11,24 @@ import {
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useSearch } from "../api/searchService";
+import { 
+  useSearchSidebar, 
+  useSearchInfinite,
+} from "../api/searchService";
+import type { 
+  SearchCollectionResult as CollectionResult,
+  SearchGroupResult as GroupResult,
+  SearchUserResult as UserResult,
+} from "@/shared/validations/SearchSchema";
+import type { BlogItem as BlogResult } from "@/shared/validations/BlogSchema";
 import { BlogCard } from "../components/BlogCard";
 import { CollectionCard } from "../components/CollectionCard";
 import { GroupCard } from "../components/GroupCard";
 import { UserCard } from "../components/UserCard";
+import Empty from "@/shared/components/Empty";
 
 
-type Tab = "all" | "collections" | "posts" | "groups" | "users";
+type Tab = "all" | "collections" | "posts" | "groups" | "profiles";
 
 export default function SearchPage() {
   const { t } = useTranslation();
@@ -33,7 +43,7 @@ export default function SearchPage() {
   };
 
   const activeTab = useMemo(() => {
-    const validTabs: Tab[] = ["all", "collections", "posts", "groups", "users"];
+    const validTabs: Tab[] = ["all", "collections", "posts", "groups", "profiles"];
     return validTabs.includes(typeParam as Tab) ? (typeParam as Tab) : "all";
   }, [typeParam]);
 
@@ -54,25 +64,77 @@ export default function SearchPage() {
       label: t("search.tabs.groups"),
       icon: <Users size={15} />,
     },
-    { key: "users", label: t("search.tabs.users"), icon: <User size={15} /> },
+    { key: "profiles", label: t("search.tabs.profiles"), icon: <User size={15} /> },
   ];
 
-  const { data: results, isFetching: loading } = useSearch(qParam, activeTab);
-  
-  const users = results?.users ?? [];
-  const groups = results?.groups ?? [];
-  const blogs = results?.posts ?? [];
-  const collections = results?.collections ?? [];
+  const { data: sidebarData, isFetching: loadingSidebar } = useSearchSidebar(qParam, activeTab === "all");
+  const infiniteSearchType = activeTab === "all" ? "posts" : activeTab;
+  const { 
+    data: infiniteData, 
+    isLoading: loadingInfinite,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useSearchInfinite(qParam, infiniteSearchType);
+
+  const isAllPage = activeTab === "all";
+  const isPostsPage = activeTab === "posts";
+
+  // Data mapping from summary vs infinite sources
+  const summaryProfiles = sidebarData?.profiles ?? [];
+  const summaryGroups = sidebarData?.groups ?? [];
+  const summaryCollections = sidebarData?.collections?.collections ?? [];
+
+  const infinitePages = infiniteData?.pages ?? [];
+
+  // Normalise each page based on active type — the API returns different shapes per endpoint
+// 1. Memoize the flattened list properly
+const blogs = useMemo<BlogResult[]>(() => {
+  return infiniteData?.pages.flatMap((p) => p.blogs ?? []) ?? [];
+}, [infiniteData?.pages]);
+
+// 2. Optimized Intersection Observer
+const observerRef = useRef<IntersectionObserver | null>(null);
+
+const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+  if (observerRef.current) observerRef.current.disconnect();
+  if (!node) return;
+
+  observerRef.current = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, { rootMargin: "200px" });
+
+  observerRef.current.observe(node);
+}, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const collections = isAllPage
+    ? summaryCollections
+    : infinitePages.flatMap((p) =>
+        infiniteSearchType === "collections" ? p.collections ?? [] : []
+      );
+  const profiles = isAllPage || isPostsPage
+    ? summaryProfiles
+    : infinitePages.flatMap((p) =>
+        infiniteSearchType === "profiles" ? (p.users ?? p.profiles ?? []) : []
+      );
+  const groups = isAllPage || isPostsPage
+    ? summaryGroups
+    : infinitePages.flatMap((p) =>
+        infiniteSearchType === "groups" ? (p.groups ?? []) : []
+      );
+
+  const loading = isAllPage ? (loadingSidebar || loadingInfinite) : loadingInfinite;
 
   const counts = useMemo(
     () => ({
-      all: users.length + groups.length + blogs.length + collections.length,
-      users: users.length,
+      all: profiles.length + groups.length + blogs.length + collections.length,
+      profiles: profiles.length,
       groups: groups.length,
       posts: blogs.length,
       collections: collections.length,
     }),
-    [users.length, groups.length, blogs.length, collections.length],
+    [profiles.length, groups.length, blogs.length, collections.length],
   );
 
   type SectionLayout = "grid" | "list" | "sidebar";
@@ -88,7 +150,8 @@ export default function SearchPage() {
   ) => {
     if (items.length === 0) return null;
 
-    const propKey = tabKey === "posts" ? "blog" : tabKey.slice(0, -1);
+    const propKey =
+      tabKey === "posts" ? "blog" : tabKey === "profiles" ? "user" : tabKey.slice(0, -1);
     const contentClass =
       layout === "grid"
         ? "grid gap-3 sm:grid-cols-1 md:grid-cols-2"
@@ -117,7 +180,7 @@ export default function SearchPage() {
   };
 
   const renderSidebar = () => {
-    if (groups.length === 0 && users.length === 0) return null;
+    if (groups.length === 0 && profiles.length === 0) return null;
 
     return (
       <aside className="min-w-0 space-y-6 lg:sticky lg:top-6">
@@ -131,10 +194,10 @@ export default function SearchPage() {
             5,
           )}
           {renderSection(
-            t("search.tabs.users"),
-            users,
+            t("search.tabs.profiles"),
+            profiles,
             UserCard,
-            "users",
+            "profiles",
             "sidebar",
             5,
           )}
@@ -142,6 +205,24 @@ export default function SearchPage() {
       </aside>
     );
   };
+
+  const renderPostsList = () => (
+    <div className="space-y-6">
+      <div className="space-y-3">
+        {blogs.map((blog: BlogResult) => (
+          <BlogCard key={blog.id} blog={blog} />
+        ))}
+
+        <div ref={lastElementRef} className="h-10 w-full" />
+      </div>
+
+      {isFetchingNextPage && (
+        <div className="py-4 text-center text-sm text-muted-foreground">
+          {t("search.loading")}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="h-full overflow-y-auto p-6 bg-background">
@@ -203,13 +284,21 @@ export default function SearchPage() {
                         "grid",
                         4,
                       )}
-                      {renderSection(
-                        t("search.tabs.posts"),
-                        blogs,
-                        BlogCard,
-                        "posts",
-                        "list",
-                        6,
+                      {blogs.length > 0 && (
+                        <section className="space-y-3">
+                          <div className="flex items-center justify-between px-1">
+                            <h3 className="text-sm font-semibold text-foreground">
+                              {t("search.tabs.posts")}
+                            </h3>
+                            <button
+                              onClick={() => handleTabChange("posts")}
+                              className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                            >
+                              {t("search.viewAll")} <ArrowRight size={12} />
+                            </button>
+                          </div>
+                          {renderPostsList()}
+                        </section>
                       )}
                     </div>
 
@@ -220,14 +309,25 @@ export default function SearchPage() {
               </>
             )}
 
-            {activeTab === "users" &&
-              (users.length === 0 ? (
-                <Empty query={qParam} type={t("search.types.users")} />
+            {activeTab === "profiles" &&
+              (profiles.length === 0 ? (
+                <Empty query={qParam} type={t("search.types.profiles")} />
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {users.map((u) => (
-                    <UserCard key={u.id} user={u} />
-                  ))}
+                <div className="space-y-6">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {profiles.map((u: UserResult) => (
+                      <UserCard key={u.id} user={u} />
+                    ))}
+                  </div>
+                  {hasNextPage && (
+                    <button
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="w-full rounded-xl border py-4 text-sm font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
+                    >
+                      {isFetchingNextPage ? t("search.loading") : t("search.loadMore")}
+                    </button>
+                  )}
                 </div>
               ))}
 
@@ -235,51 +335,60 @@ export default function SearchPage() {
               (groups.length === 0 ? (
                 <Empty query={qParam} type={t("search.types.groups")} />
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {groups.map((g) => (
-                    <GroupCard key={g.id} group={g} />
-                  ))}
-                </div>
-              ))}
-
-            {activeTab === "posts" &&
-              (blogs.length === 0 ? (
-                <Empty query={qParam} type={t("search.types.posts")} />
-              ) : (
-                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-                  <div className="space-y-3">
-                    {blogs.map((b) => (
-                      <BlogCard key={b.id} blog={b} />
+                <div className="space-y-6">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {groups.map((g: GroupResult) => (
+                      <GroupCard key={g.id} group={g} />
                     ))}
                   </div>
-
-                  {/* Right column: groups + users */}
-                  {renderSidebar()}
+                  {hasNextPage && (
+                    <button
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="w-full rounded-xl border py-4 text-sm font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
+                    >
+                      {isFetchingNextPage ? t("search.loading") : t("search.loadMore")}
+                    </button>
+                  )}
                 </div>
               ))}
+
+   {activeTab === "posts" && (
+  blogs.length === 0 && !loading ? (
+    <Empty query={qParam} type={t("search.types.posts")} />
+  ) : (
+    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+      {renderPostsList()}
+      {renderSidebar()}
+    </div>
+  )
+)}
 
             {activeTab === "collections" &&
               (collections.length === 0 ? (
                 <Empty query={qParam} type={t("search.types.collections")} />
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {collections.map((c) => (
-                    <CollectionCard key={c.id} collection={c} />
-                  ))}
+                <div className="space-y-6">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {collections.map((c: CollectionResult) => (
+                      <CollectionCard key={c.id} collection={c} />
+                    ))}
+                  </div>
+                  {hasNextPage && (
+                    <button
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="w-full rounded-xl border py-4 text-sm font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
+                    >
+                      {isFetchingNextPage ? t("search.loading") : t("search.loadMore")}
+                    </button>
+                  )}
                 </div>
               ))}
+
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function Empty({ query, type }: { query: string; type: string }) {
-  const { t } = useTranslation();
-  return (
-    <div className="py-20 text-center text-muted-foreground">
-      <p className="text-sm">{t("search.noResults", { type, query })}</p>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import ROUTES from "@/shared/lib/routes";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useSearchSuggestion } from "@/shared/hooks/useSearchSuggestion";
 import { useSearchHistory } from "@/shared/hooks/useSearchHistory";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function SearchBar() {
   const { t } = useTranslation();
@@ -24,6 +25,7 @@ export function SearchBar() {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setSearchInput(qParam);
@@ -50,6 +52,11 @@ export function SearchBar() {
     const params = new URLSearchParams();
     params.set("q", q.trim());
     params.set("type", type);
+
+    // Invalidate search queries so pressing Enter always fetches fresh results,
+    // even when the URL hasn't changed (same query as before).
+    queryClient.invalidateQueries({ queryKey: ["search-sidebar", q.trim()] });
+    queryClient.invalidateQueries({ queryKey: ["search-infinite", q.trim()] });
 
     navigate(`${ROUTES.SEARCH.url}?${params.toString()}`);
     setShowSuggestions(false);

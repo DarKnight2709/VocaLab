@@ -7,3 +7,22 @@ export class SearchSuggestionResultResponse {
   @ApiProperty({ description: 'The display text of the suggestion' })
   text!: string;
 }
+// export class SidebarSearchResultResponse {
+//   @ApiProperty({
+//     description: 'Collections search results',
+//     type: CollectionsSearchResultResponse,
+//   })
+//   collections!: CollectionSearchItemDto[];
+
+//   @ApiProperty({
+//     description: 'Groups search results',
+//     type: [GetGroupsResponseDto],
+//   })
+//   groups!: GetGroupsResponseDto[];
+
+//   @ApiProperty({
+//     description: 'Profiles search results',
+//     type: [PublicUserDto],
+//   })
+//   profiles!: PublicUserDto[];
+// }
