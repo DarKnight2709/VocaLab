@@ -22,7 +22,7 @@ export default function LeftSidebar() {
       icon: BookMarked,
     },
     { label: t("common.stats"), url: ROUTES.STATS.url, icon: ChartNoAxesCombined },
-    { label: t("common.messages"), url: ROUTES.CHAT.url, icon: MessageCircle },
+    { label: t("common.chat"), url: ROUTES.CHAT.url, icon: MessageCircle },
     { label: t("common.blog"), url: ROUTES.BLOG.url, icon: PenSquare },
   ];
 
