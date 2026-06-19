@@ -151,7 +151,7 @@ export function MessageList({
   myId,
 }: MessageListProps) {
   const { t } = useTranslation();
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const lastMyMessageIndex = useMemo(() => {
@@ -167,12 +167,21 @@ export function MessageList({
     return lastIndex;
   }, [messages, myId]);
 
+  // Scroll to bottom when message count changes (with smooth scrolling)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (containerRef.current) {
+      containerRef.current.scrollTo({
+        top: containerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages.length, groupMessages.length]);
 
+  // Scroll to bottom instantly when switching chats
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
   }, [selectedUser?.id, selectedGroup?.id]);
 
   const renderMessageGroup = (
@@ -286,7 +295,10 @@ export function MessageList({
   const activeMessages = selectedGroup ? groupMessages : messages;
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto overscroll-contain bg-muted/30 p-4 flex flex-col">
+    <div
+      ref={containerRef}
+      className="flex-1 min-h-0 overflow-auto overscroll-contain bg-muted/30 p-4 flex flex-col"
+    >
       {lightboxUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
@@ -318,8 +330,6 @@ export function MessageList({
       ) : (
         messages.map((message, index) => renderMessageGroup(message, index, activeMessages, false))
       )}
-
-      <div ref={messagesEndRef} />
     </div>
   );
 }

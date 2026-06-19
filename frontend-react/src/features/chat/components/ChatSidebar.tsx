@@ -88,7 +88,7 @@ export function ChatSidebar({
           <Tabs
             value={activeTab}
             onValueChange={(v) => onActiveTabChange(v as "users" | "groups")}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col min-h-0"
           >
             <div className="px-4 pt-4">
               <TabsList className="grid w-full grid-cols-2">
@@ -105,7 +105,7 @@ export function ChatSidebar({
 
             <TabsContent
               value="users"
-              className="flex-1 overflow-auto overscroll-contain p-2 m-0"
+              className="flex-1 overflow-auto overscroll-contain p-2 pb-12 m-0"
             >
               {loadingUsers ? (
                 <div className="p-4 text-sm text-muted-foreground text-center">
@@ -174,9 +174,9 @@ export function ChatSidebar({
 
             <TabsContent
               value="groups"
-              className="flex-1 overflow-auto overscroll-contain p-2 m-0"
+              className="flex-1 flex flex-col min-h-0 p-2 m-0"
             >
-              <div className="px-2 pt-2 pb-3">
+              <div className="px-2 pt-2 pb-3 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
@@ -187,86 +187,88 @@ export function ChatSidebar({
                 </Button>
               </div>
 
-              {loadingGroups ? (
-                <div className="p-4 text-sm text-muted-foreground text-center">
-                  {t("chat.loading")}
-                </div>
-              ) : filteredGroups.length === 0 ? (
-                <div className="p-4 text-sm text-muted-foreground text-center">
-                  {searchQuery ? t("chat.noGroupsFound") : t("chat.noGroupsYet")}
-                </div>
-              ) : (
-                filteredGroups.map((g) => {
-                  const name = g.name || t("chat.group");
-                  const active = selectedGroup?.id === g.id;
-                  const unread = g.unreadCount || 0;
-                  const last = g.lastMessage;
-                  const preview = last?.content
-                    ? `${last.senderName ? `${last.isMine ? t("chat.you") : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
-                    : g.description || "";
+              <div className="flex-1 overflow-auto overscroll-contain px-2 pb-12">
+                {loadingGroups ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    {t("chat.loading")}
+                  </div>
+                ) : filteredGroups.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    {searchQuery ? t("chat.noGroupsFound") : t("chat.noGroupsYet")}
+                  </div>
+                ) : (
+                  filteredGroups.map((g) => {
+                    const name = g.name || t("chat.group");
+                    const active = selectedGroup?.id === g.id;
+                    const unread = g.unreadCount || 0;
+                    const last = g.lastMessage;
+                    const preview = last?.content
+                      ? `${last.senderName ? `${last.isMine ? t("chat.you") : last.senderName}: ` : ""}${last.content.slice(0, 30)}${last.content.length > 30 ? "..." : ""}`
+                      : g.description || "";
 
-                  const isGroupActive = g.members?.some(
-                    (memberId) => memberId !== myId && onlineIds.has(memberId),
-                  );
+                    const isGroupActive = g.members?.some(
+                      (memberId) => memberId !== myId && onlineIds.has(memberId),
+                    );
 
-                  return (
-                    <button
-                      key={g.id}
-                      className={`w-full text-left rounded-lg p-3 mb-2 transition-colors ${
-                        active
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
-                      }`}
-                      onClick={() => onGroupClick(g)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={g.avatar ?? undefined} />
-                            <AvatarFallback>{getInitials(name)}</AvatarFallback>
-                          </Avatar>
-                          {isGroupActive && (
-                            <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 truncate">
-                              <span
-                                className={`${unread > 0 ? "font-bold" : "font-medium"} truncate`}
-                              >
-                                {name}
-                              </span>
+                    return (
+                      <button
+                        key={g.id}
+                        className={`w-full text-left rounded-lg p-3 mb-2 transition-colors ${
+                          active
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => onGroupClick(g)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={g.avatar ?? undefined} />
+                              <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                            </Avatar>
+                            {isGroupActive && (
+                              <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 truncate">
+                                <span
+                                  className={`${unread > 0 ? "font-bold" : "font-medium"} truncate`}
+                                >
+                                  {name}
+                                </span>
+                              </div>
+                              {unread > 0 && !active && (
+                                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 text-center">
+                                  {unread}
+                                </span>
+                              )}
                             </div>
-                            {unread > 0 && !active && (
-                              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 text-center">
-                                {unread}
-                              </span>
-                            )}
-                          </div>
-                          <div
-                            className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
-                          >
-                            {isGroupActive && !last?.content ? (
-                              <span
-                                className={
-                                  active
-                                    ? "text-primary-foreground/80"
-                                    : "text-green-600 font-medium"
-                                }
-                              >
-                                {t("chat.online")}
-                              </span>
-                            ) : (
-                              preview
-                            )}
+                            <div
+                              className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                            >
+                              {isGroupActive && !last?.content ? (
+                                <span
+                                  className={
+                                    active
+                                      ? "text-primary-foreground/80"
+                                      : "text-green-600 font-medium"
+                                  }
+                                >
+                                  {t("chat.online")}
+                                </span>
+                              ) : (
+                                preview
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </aside>
