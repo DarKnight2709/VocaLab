@@ -47,9 +47,21 @@ const ROUTES = {
     title: "Card type details",
     url: "/vocabulary/card-types/:cardTypeId",
   },
-  CHAT: {
+  CHAT_TAB_USERS: {
     title: "Messages",
-    url: "/chat",
+    url: "/chat/users",
+  },
+  CHAT_TAB_GROUPS: {
+    title: "Messages",
+    url: "/chat/groups",
+  },
+  CHAT_TAB_USERS_ID: {
+    title: "Messages",
+    url: "/chat/users/:id",
+  },
+  CHAT_TAB_GROUPS_ID: {
+    title: "Messages",
+    url: "/chat/groups/:id",
   },
   SEARCH: {
     title: "Search",

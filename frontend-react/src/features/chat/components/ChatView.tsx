@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useLocation, useParams } from "react-router";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/shared/lib/api";
+import ROUTES from "@/shared/lib/routes";
 
 import { GroupCreateDialog } from "@/features/chat/components/GroupCreateDialog";
 import { GroupInfoDialog } from "@/features/chat/components/GroupInfoDialog";
@@ -39,7 +40,10 @@ export default function ChatView({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const queryClient = useQueryClient();
+
+  const isChatRoute = location.pathname.startsWith("/chat");
 
   // Local UI state (no fetching here)
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
@@ -59,9 +63,9 @@ export default function ChatView({
   // auto stop sau 1s
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Queries
-  const { data: users = [], isLoading: loadingUsers } = useUsersQuery();
-  const { data: groups = [], isLoading: loadingGroups } = useGroupsQuery();
+  // Queries — only fetch when the respective tab is active
+  const { data: users = [], isLoading: loadingUsers } = useUsersQuery(activeTab === "users");
+  const { data: groups = [], isLoading: loadingGroups } = useGroupsQuery(activeTab === "groups");
 
   // Merge loaded users with tempChatUser if it exists and isn't already loaded
   const allSidebarUsers = useMemo(() => {
@@ -121,22 +125,66 @@ export default function ChatView({
       if (!exists) {
         setTempChatUser(startChatWith);
       }
-      const targetUser =
-        users.find((u) => u.id === startChatWith.id) || startChatWith;
-      void openChat(targetUser);
-
-      // Clear navigation state so a reload/back action doesn't force re-opening
-      navigate(location.pathname, { replace: true, state: {} });
-    } else if (openGroupId) {
-      const targetGroup = groups.find((g) => g.id === openGroupId);
-      if (targetGroup) {
-        setActiveTab("groups");
-        void openGroup(targetGroup);
+      if (isChatRoute && !embedded) {
+        navigate(ROUTES.CHAT_TAB_USERS_ID.url.replace(":id", startChatWith.id), { replace: true, state: {} });
+      } else {
+        const targetUser = users.find((u) => u.id === startChatWith.id) || startChatWith;
+        openChat(targetUser);
+        navigate(location.pathname, { replace: true, state: {} });
       }
-      // Clear navigation state
-      navigate(location.pathname, { replace: true, state: {} });
+    } else if (openGroupId) {
+      if (isChatRoute && !embedded) {
+        navigate(ROUTES.CHAT_TAB_GROUPS_ID.url.replace(":id", openGroupId), { replace: true, state: {} });
+      } else {
+        const targetGroup = groups.find((g) => g.id === openGroupId);
+        if (targetGroup) {
+          setActiveTab("groups");
+          openGroup(targetGroup);
+        }
+        navigate(location.pathname, { replace: true, state: {} });
+      }
     }
-  }, [location.state, users, groups]);
+  }, [location.state, users, groups, isChatRoute, embedded, navigate]);
+
+  // Sync URL params to local state
+  useEffect(() => {
+    if (!isChatRoute || embedded) return;
+
+    // Derive tab and id from pathname: /chat/{tab}/{id?}
+    const segments = location.pathname.split("/").filter(Boolean); // ["chat", "users"|"groups", id?]
+    const urlTab = segments[1]; // "users" or "groups"
+    const urlId = segments[2] || params.id;
+
+    if (urlTab === "groups") {
+      setActiveTab("groups");
+      if (urlId) {
+        const group = groups.find((g) => g.id === urlId);
+        if (group) {
+          setSelectedGroup((prev) => (prev?.id === group.id ? prev : group));
+          setSelectedUser(null);
+        } else if (!loadingGroups) {
+          setSelectedGroup((prev) => (prev?.id === urlId ? prev : null));
+        }
+      } else {
+        setSelectedGroup(null);
+        setSelectedUser(null);
+      }
+    } else {
+      setActiveTab("users");
+      if (urlId) {
+        const user = allSidebarUsers.find((u) => u.id === urlId);
+        if (user) {
+          setSelectedUser((prev) => (prev?.id === user.id ? prev : user));
+          setSelectedGroup(null);
+        } else if (!loadingUsers) {
+          setSelectedUser((prev) => (prev?.id === urlId ? prev : null));
+        }
+      } else {
+        setSelectedGroup(null);
+        setSelectedUser(null);
+      }
+    }
+  }, [isChatRoute, embedded, location.pathname, params.id, groups, allSidebarUsers, loadingGroups, loadingUsers]);
 
   // If auth state is lost (e.g. token invalid), go back to login.
   useEffect(() => {
@@ -172,58 +220,71 @@ export default function ChatView({
   // reset state group
   // mark seen ngay
   // Invalidate messages + users
+  // Side effects for seen messages
+  useEffect(() => {
+    if (selectedUser) {
+      try {
+        socketRef.current?.emit(
+          "seen-message",
+          { senderId: selectedUser.id },
+          (status: any) => {
+            if (status?.status === "error" || status?.success === false) {
+              useSocketStore.getState().handleSocketError(status.message);
+            }
+          },
+        );
+        void queryClient.invalidateQueries({
+          queryKey: chatKeys.messages(selectedUser.id),
+        });
+        void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
+      } catch (e: any) {
+        toast.error(getErrorMessage(e, t("chat.loadMessagesFailed")));
+      }
+    }
+  }, [selectedUser, queryClient, socketRef, t]);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      try {
+        socketRef.current?.emit(
+          "seen-group-message",
+          { groupId: selectedGroup.id },
+          () => {
+            void queryClient.invalidateQueries({
+              queryKey: groupKeys.messages(selectedGroup.id),
+            });
+            void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+          },
+        );
+      } catch (e: any) {
+        toast.error(getErrorMessage(e, t("chat.loadMessagesFailed")));
+      }
+    }
+  }, [selectedGroup, queryClient, socketRef, t]);
+
   async function openChat(user: UserItem) {
+    if (isChatRoute && !embedded) {
+      navigate(ROUTES.CHAT_TAB_USERS_ID.url.replace(":id", user.id));
+      return;
+    }
     // Don't leave group (like frontend) - keep joined to receive notifications
 
     setSelectedGroup(null);
     setGroupTypingText("");
 
     setSelectedUser(user);
-    try {
-      // Mark seen for 1-1 messages
-      socketRef.current?.emit(
-        "seen-message",
-        { senderId: user.id },
-        (status: any) => {
-          if (status?.status === "error" || status?.success === false) {
-            useSocketStore.getState().handleSocketError(status.message);
-          }
-        },
-      );
-      void queryClient.invalidateQueries({
-        queryKey: chatKeys.messages(user.id),
-      });
-      void queryClient.invalidateQueries({ queryKey: chatKeys.list() });
-    } catch (e: any) {
-      toast.error(getErrorMessage(e, t("chat.loadMessagesFailed")));
-    }
   }
 
-  // Không leave group cũ → vẫn nhận notification
-  // Join idempotent → server ignore duplicate
   async function openGroup(group: GroupItem) {
+    if (isChatRoute && !embedded) {
+      navigate(ROUTES.CHAT_TAB_GROUPS_ID.url.replace(":id", group.id));
+      return;
+    }
     setSelectedUser(null);
     setTypingUsers(new Set());
 
     setSelectedGroup(group);
     setGroupTypingText("");
-
-    try {
-      // Join group room (no need to leave previous, like frontend)
-      // All groups are joined by `useChatSocket` when groups list changes
-      socketRef.current?.emit(
-        "seen-group-message",
-        { groupId: group.id },
-        () => {
-          void queryClient.invalidateQueries({
-            queryKey: groupKeys.messages(group.id),
-          });
-          void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-        },
-      );
-    } catch (e: any) {
-      toast.error(getErrorMessage(e, t("chat.loadMessagesFailed")));
-    }
   }
 
   async function sendMessage(
@@ -558,12 +619,22 @@ export default function ChatView({
   //   }
 
   function handleBackToList() {
-    // Don't leave group (like frontend) - keep joined to receive notifications
-
+    if (isChatRoute && !embedded) {
+      navigate(activeTab === "groups" ? ROUTES.CHAT_TAB_GROUPS.url : ROUTES.CHAT_TAB_USERS.url);
+      return;
+    }
     setSelectedUser(null);
     setSelectedGroup(null);
     setGroupTypingText("");
     setMessageText("");
+  }
+
+  function handleActiveTabChange(tab: "users" | "groups") {
+    if (isChatRoute && !embedded) {
+      navigate(tab === "groups" ? ROUTES.CHAT_TAB_GROUPS.url : ROUTES.CHAT_TAB_USERS.url);
+    } else {
+      setActiveTab(tab);
+    }
   }
 
   return (
@@ -615,7 +686,7 @@ export default function ChatView({
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}
           activeTab={activeTab}
-          onActiveTabChange={setActiveTab}
+          onActiveTabChange={handleActiveTabChange}
           filteredUsers={filteredUsers}
           filteredGroups={filteredGroups}
           loadingUsers={loadingUsers}

@@ -26,7 +26,7 @@ export const groupKeys = {
   messages: (id: string) => [...groupKeys.detail(id), "messages"] as const,
 };
 
-export function useGroupsQuery() {
+export function useGroupsQuery(enabled = true) {
   return useQuery({
     queryKey: groupKeys.list(),
     queryFn: async () => {
@@ -37,6 +37,7 @@ export function useGroupsQuery() {
 
       return result.data ?? [];
     },
+    enabled,
   });
 }
 
@@ -349,7 +350,7 @@ export function useUpdateRolePermissionMutation() {
   });
 }
 
-export function useAvailablePermissionsQuery() {
+export function useAvailablePermissionsQuery(enabled = true) {
   return useQuery({
     queryKey: ["available-permissions"],
     queryFn: async () => {
@@ -359,5 +360,6 @@ export function useAvailablePermissionsQuery() {
       );
       return result.data ?? [];
     },
+    enabled,
   });
 }

@@ -45,7 +45,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
   const createGroupMutation = useCreateGroupMutation();
 
   // Fetch all users once
-  const { data: users = [], isLoading: loadingUsers } = useUsersQuery();
+  const { data: users = [], isLoading: loadingUsers } = useUsersQuery(open);
 
   // Client-side filtering
   const filteredResults = useMemo(() => {

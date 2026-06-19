@@ -68,7 +68,7 @@ export default function ProfileActionButtons({
     e.preventDefault();
     e.stopPropagation();
     if (!profileUserId) return;
-    navigate(ROUTES.CHAT.url, {
+    navigate(ROUTES.CHAT_TAB_USERS_ID.url.replace(":id", profileUserId), {
       state: {
         startChatWith: {
           id: profileUserId,

@@ -110,7 +110,7 @@ export function GroupInfoDialog({
   const deleteMemberMutation = useDeleteGroupMemberMutation()
   const changeRoleMutation = useChangeGroupRoleMutation()
   const updateRolePermissionMutation = useUpdateRolePermissionMutation()
-  const availablePermissionsQuery = useAvailablePermissionsQuery()
+  const availablePermissionsQuery = useAvailablePermissionsQuery(open)
   const transferOwnershipMutation = useTransferOwnershipMutation()
   const updateGroupVisibilityMutation = useUpdateGroupVisibilityMutation()
 

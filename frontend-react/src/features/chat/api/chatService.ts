@@ -42,7 +42,7 @@ export const useSearchUsersQuery = (keyword: string) => {
 };
 
 
-export function useUsersQuery() {
+export function useUsersQuery(enabled = true) {
   return useQuery({
     queryKey: chatKeys.list(),
     queryFn: async () => {
@@ -53,6 +53,7 @@ export function useUsersQuery() {
 
       return result.data.users ?? [];
     },
+    enabled,
   });
 }
 

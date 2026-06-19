@@ -71,8 +71,13 @@ export function NotificationItem({
   const getLink = () => {
     switch (notification.type) {
       case NotificationType.CHAT_DIRECT:
+        return notification.senderId
+          ? ROUTES.CHAT_TAB_USERS_ID.url.replace(":id", notification.senderId)
+          : ROUTES.CHAT_TAB_USERS.url;
       case NotificationType.CHAT_GROUP:
-        return ROUTES.CHAT.url;
+        return notification.groupId
+          ? ROUTES.CHAT_TAB_GROUPS_ID.url.replace(":id", notification.groupId)
+          : ROUTES.CHAT_TAB_GROUPS.url;
       case NotificationType.COMMENT:
       case NotificationType.UPVOTE:
       case NotificationType.NEW_BLOG_POST:

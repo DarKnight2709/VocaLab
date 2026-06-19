@@ -75,7 +75,10 @@ const router = createBrowserRouter([
               },
             ],
           },
-          { path: ROUTES.CHAT.url, element: <ChatPage /> },
+          { path: ROUTES.CHAT_TAB_USERS.url, element: <ChatPage /> },
+          { path: ROUTES.CHAT_TAB_GROUPS.url, element: <ChatPage /> },
+          { path: ROUTES.CHAT_TAB_USERS_ID.url, element: <ChatPage /> },
+          { path: ROUTES.CHAT_TAB_GROUPS_ID.url, element: <ChatPage /> },
           { path: ROUTES.SEARCH.url, element: <SearchPage /> },
           { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
           {
