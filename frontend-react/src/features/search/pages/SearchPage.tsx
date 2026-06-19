@@ -11,11 +11,8 @@ import {
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { 
-  useSearchSidebar, 
-  useSearchInfinite,
-} from "../api/searchService";
-import type { 
+import { useSearchSidebar, useSearchInfinite } from "../api/searchService";
+import type {
   SearchCollectionResult as CollectionResult,
   SearchGroupResult as GroupResult,
   SearchUserResult as UserResult,
@@ -26,7 +23,6 @@ import { CollectionCard } from "../components/CollectionCard";
 import { GroupCard } from "../components/GroupCard";
 import { UserCard } from "../components/UserCard";
 import Empty from "@/shared/components/Empty";
-
 
 type Tab = "all" | "collections" | "posts" | "groups" | "profiles";
 
@@ -43,7 +39,13 @@ export default function SearchPage() {
   };
 
   const activeTab = useMemo(() => {
-    const validTabs: Tab[] = ["all", "collections", "posts", "groups", "profiles"];
+    const validTabs: Tab[] = [
+      "all",
+      "collections",
+      "posts",
+      "groups",
+      "profiles",
+    ];
     return validTabs.includes(typeParam as Tab) ? (typeParam as Tab) : "all";
   }, [typeParam]);
 
@@ -64,17 +66,24 @@ export default function SearchPage() {
       label: t("search.tabs.groups"),
       icon: <Users size={15} />,
     },
-    { key: "profiles", label: t("search.tabs.profiles"), icon: <User size={15} /> },
+    {
+      key: "profiles",
+      label: t("search.tabs.profiles"),
+      icon: <User size={15} />,
+    },
   ];
 
-  const { data: sidebarData, isFetching: loadingSidebar } = useSearchSidebar(qParam, activeTab === "all");
+  const { data: sidebarData, isFetching: loadingSidebar } = useSearchSidebar(
+    qParam,
+    activeTab === "all",
+  );
   const infiniteSearchType = activeTab === "all" ? "posts" : activeTab;
-  const { 
-    data: infiniteData, 
+  const {
+    data: infiniteData,
     isLoading: loadingInfinite,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
   } = useSearchInfinite(qParam, infiniteSearchType);
 
   const isAllPage = activeTab === "all";
@@ -88,43 +97,55 @@ export default function SearchPage() {
   const infinitePages = infiniteData?.pages ?? [];
 
   // Normalise each page based on active type — the API returns different shapes per endpoint
-// 1. Memoize the flattened list properly
-const blogs = useMemo<BlogResult[]>(() => {
-  return infiniteData?.pages.flatMap((p) => p.blogs ?? []) ?? [];
-}, [infiniteData?.pages]);
+  // 1. Memoize the flattened list properly
+  const blogs = useMemo<BlogResult[]>(() => {
+    return infiniteData?.pages.flatMap((p) => p.blogs ?? []) ?? [];
+  }, [infiniteData?.pages]);
 
-// 2. Optimized Intersection Observer
-const observerRef = useRef<IntersectionObserver | null>(null);
+  // 2. Optimized Intersection Observer
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-const lastElementRef = useCallback((node: HTMLDivElement | null) => {
-  if (observerRef.current) observerRef.current.disconnect();
-  if (!node) return;
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      if (!node) return;
 
-  observerRef.current = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, { rootMargin: "200px" });
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        },
+        { rootMargin: "200px" },
+      );
 
-  observerRef.current.observe(node);
-}, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+      observerRef.current.observe(node);
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage],
+  );
   const collections = isAllPage
     ? summaryCollections
     : infinitePages.flatMap((p) =>
-        infiniteSearchType === "collections" ? p.collections ?? [] : []
+        infiniteSearchType === "collections" ? (p.collections ?? []) : [],
       );
-  const profiles = isAllPage || isPostsPage
-    ? summaryProfiles
-    : infinitePages.flatMap((p) =>
-        infiniteSearchType === "profiles" ? (p.users ?? p.profiles ?? []) : []
-      );
-  const groups = isAllPage || isPostsPage
-    ? summaryGroups
-    : infinitePages.flatMap((p) =>
-        infiniteSearchType === "groups" ? (p.groups ?? []) : []
-      );
+  const profiles =
+    isAllPage || isPostsPage
+      ? summaryProfiles
+      : infinitePages.flatMap((p) =>
+          infiniteSearchType === "profiles"
+            ? (p.users ?? p.profiles ?? [])
+            : [],
+        );
+  const groups =
+    isAllPage || isPostsPage
+      ? summaryGroups
+      : infinitePages.flatMap((p) =>
+          infiniteSearchType === "groups" ? (p.groups ?? []) : [],
+        );
 
-  const loading = isAllPage ? (loadingSidebar || loadingInfinite) : loadingInfinite;
+  const loading = isAllPage
+    ? loadingSidebar || loadingInfinite
+    : loadingInfinite;
 
   const counts = useMemo(
     () => ({
@@ -151,7 +172,11 @@ const lastElementRef = useCallback((node: HTMLDivElement | null) => {
     if (items.length === 0) return null;
 
     const propKey =
-      tabKey === "posts" ? "blog" : tabKey === "profiles" ? "user" : tabKey.slice(0, -1);
+      tabKey === "posts"
+        ? "blog"
+        : tabKey === "profiles"
+          ? "user"
+          : tabKey.slice(0, -1);
     const contentClass =
       layout === "grid"
         ? "grid gap-3 sm:grid-cols-1 md:grid-cols-2"
@@ -319,14 +344,11 @@ const lastElementRef = useCallback((node: HTMLDivElement | null) => {
                       <UserCard key={u.id} user={u} />
                     ))}
                   </div>
-                  {hasNextPage && (
-                    <button
-                      onClick={() => fetchNextPage()}
-                      disabled={isFetchingNextPage}
-                      className="w-full rounded-xl border py-4 text-sm font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
-                    >
-                      {isFetchingNextPage ? t("search.loading") : t("search.loadMore")}
-                    </button>
+                  <div ref={lastElementRef} className="h-10 w-full" />
+                  {isFetchingNextPage && (
+                    <div className="py-4 text-center text-sm text-muted-foreground">
+                      {t("search.loading")}
+                    </div>
                   )}
                 </div>
               ))}
@@ -341,28 +363,24 @@ const lastElementRef = useCallback((node: HTMLDivElement | null) => {
                       <GroupCard key={g.id} group={g} />
                     ))}
                   </div>
-                  {hasNextPage && (
-                    <button
-                      onClick={() => fetchNextPage()}
-                      disabled={isFetchingNextPage}
-                      className="w-full rounded-xl border py-4 text-sm font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
-                    >
-                      {isFetchingNextPage ? t("search.loading") : t("search.loadMore")}
-                    </button>
+                  <div ref={lastElementRef} className="h-10 w-full" />
+                  {isFetchingNextPage && (
+                    <div className="py-4 text-center text-sm text-muted-foreground">
+                      {t("search.loading")}
+                    </div>
                   )}
                 </div>
               ))}
 
-   {activeTab === "posts" && (
-  blogs.length === 0 && !loading ? (
-    <Empty query={qParam} type={t("search.types.posts")} />
-  ) : (
-    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-      {renderPostsList()}
-      {renderSidebar()}
-    </div>
-  )
-)}
+            {activeTab === "posts" &&
+              (blogs.length === 0 && !loading ? (
+                <Empty query={qParam} type={t("search.types.posts")} />
+              ) : (
+                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+                  {renderPostsList()}
+                  {renderSidebar()}
+                </div>
+              ))}
 
             {activeTab === "collections" &&
               (collections.length === 0 ? (
@@ -374,18 +392,14 @@ const lastElementRef = useCallback((node: HTMLDivElement | null) => {
                       <CollectionCard key={c.id} collection={c} />
                     ))}
                   </div>
-                  {hasNextPage && (
-                    <button
-                      onClick={() => fetchNextPage()}
-                      disabled={isFetchingNextPage}
-                      className="w-full rounded-xl border py-4 text-sm font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
-                    >
-                      {isFetchingNextPage ? t("search.loading") : t("search.loadMore")}
-                    </button>
+                  <div ref={lastElementRef} className="h-10 w-full" />
+                  {isFetchingNextPage && (
+                    <div className="py-4 text-center text-sm text-muted-foreground">
+                      {t("search.loading")}
+                    </div>
                   )}
                 </div>
               ))}
-
           </div>
         )}
       </div>
