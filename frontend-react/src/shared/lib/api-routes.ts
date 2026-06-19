@@ -39,7 +39,7 @@ const API_ROUTES = {
     GET_ALL: "v1/groups/all",
     INFO: (groupId: string) => `v1/groups/${groupId}`,
     UPDATE: (groupId: string) => `v1/groups/update/${groupId}`,
-    JOIN: (groupId: string) => `v1/groups/${groupId}/join`,
+    JOIN: (groupId: string) => `v1/groups/join/${groupId}`,
     UPDATE_VISIBILITY: (groupId: string) => `v1/groups/${groupId}/visibility`,
     DELETE: (groupId: string) => `v1/groups/delete/${groupId}`,
     TRANSFER_OWNERSHIP: (groupId: string) =>

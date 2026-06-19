@@ -44,22 +44,3 @@ export const useSearchInfinite = (q: string, type: string) =>
     enabled: q.length >= 1,
   });
 
-
-// export const useJoinSearchGroupMutation = () => {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationFn: async (groupId: string) => {
-//       return api.post(API_ROUTES.GROUP.JOIN(groupId));
-//     },
-//     onSuccess: () => {
-//       void queryClient.invalidateQueries({ queryKey: ["search-sidebar"] });
-//       void queryClient.invalidateQueries({ queryKey: ["search-infinite"] });
-//       void queryClient.invalidateQueries({ queryKey: ["groups"] });
-//       toast.success(i18n.t("search.groupJoined"));
-//     },
-//     onError: (error) => {
-//       toast.error(getErrorMessage(error, i18n.t("search.groupJoinFailed")));
-//     },
-//   });
-// };

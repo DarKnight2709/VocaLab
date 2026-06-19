@@ -690,6 +690,8 @@
     "groupDeleteFailed": "Xóa nhóm thất bại",
     "leftGroup": "Đã rời khỏi nhóm",
     "leaveGroupFailed": "Rời nhóm thất bại",
+    "joinGroup": "Đã tham gia nhóm",
+    "joinGroupFailed": "Tham gia nhóm thất bại",
     "transferOwnershipSuccess": "Đã chuyển quyền sở hữu nhóm",
     "transferOwnershipFailed": "Chuyển quyền sở hữu thất bại",
     "membersAdded": "Đã thêm thành viên",

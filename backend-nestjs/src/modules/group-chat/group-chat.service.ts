@@ -263,7 +263,12 @@ export class GroupChatService {
     );
   }
 
-  async searchGroups(userId: string, page: number, limit: number, query?: string): Promise<GroupsSearchResultResponse> {
+  async searchGroups(
+    userId: string,
+    page: number,
+    limit: number,
+    query?: string,
+  ): Promise<GroupsSearchResultResponse> {
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -301,7 +306,7 @@ export class GroupChatService {
       this.prisma.group.findMany({
         where,
         orderBy: {
-          createdAt: 'desc'
+          createdAt: 'desc',
         },
         skip: skip,
         take: limit,
@@ -324,13 +329,13 @@ export class GroupChatService {
                   username: true,
                   fullName: true,
                   avatar: true,
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       }),
-      this.prisma.group.count({ where })
+      this.prisma.group.count({ where }),
     ]);
 
     return {
@@ -340,8 +345,8 @@ export class GroupChatService {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
-      }
-    }
+      },
+    };
   }
 
   async getInfoGroup(groupId: string): Promise<GroupDetailDto> {
@@ -375,13 +380,14 @@ export class GroupChatService {
           role: m.role,
           user: m.user,
           permissions: permissionsByRole[m.role] || [],
-          joinedAt: m.joinedAt
+          joinedAt: m.joinedAt,
         })) || [],
-      rolePermissions: group.rolePermissions?.map((rp) => ({
-        role: rp.role,
-        permissionId: rp.permissionId,
-        isEnabled: rp.isEnabled,
-      })) || [],
+      rolePermissions:
+        group.rolePermissions?.map((rp) => ({
+          role: rp.role,
+          permissionId: rp.permissionId,
+          isEnabled: rp.isEnabled,
+        })) || [],
     };
   }
 
@@ -477,6 +483,42 @@ export class GroupChatService {
     });
 
     this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
+  }
+
+  async joinGroup(groupId: string, userId: string): Promise<void> {
+    // 1. Validate the group exists
+    const group = await this.getActiveGroupOrThrow(groupId);
+
+    // 2. Validate the user exists
+    const userExists = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!userExists) {
+      throw new BadRequestException(ErrorCode.USER_NOT_FOUND);
+    }
+
+    // 3. Check if the user is already a member
+    const alreadyMember = await this.isMember(groupId, userId);
+    if (alreadyMember) {
+      throw new BadRequestException(ErrorCode.ALREADY_GROUP_MEMBER);
+    }
+
+    // 4. Add the user as a member
+    await this.prisma.groupMember.create({
+      data: {
+        groupId,
+        userId,
+        role: MemberRole.MEMBER,
+      },
+    });
+
+    // 5. Notify the relevant users
+    const currentMemberIds = group.members?.map((m) => m.userId) || [];
+    this.groupChatGateway.notifyReloadGroups(
+      [...currentMemberIds, userId],
+      groupId,
+    );
   }
 
   async getGroupMessages(groupId: string): Promise<MessageWithDetails[]> {

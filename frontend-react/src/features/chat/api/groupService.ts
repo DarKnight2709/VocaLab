@@ -363,3 +363,21 @@ export function useAvailablePermissionsQuery(enabled = true) {
     enabled,
   });
 }
+
+export const useJoinSearchGroupMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      return api.post(API_ROUTES.GROUP.JOIN(groupId));
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["search-infinite"] });
+      void queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast.success(i18n.t("chat.joinGroup"));
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, i18n.t("chat.joinGroupFailed")));
+    },
+  });
+};

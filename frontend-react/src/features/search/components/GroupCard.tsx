@@ -14,6 +14,9 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { getInitials } from "@/shared/lib/utils";
 import { useMemo } from "react";
+import ROUTES from "@/shared/lib/routes";
+import { useNavigate } from "react-router";
+import { useJoinSearchGroupMutation } from "@/features/chat/api/groupService";
 
 function AvatarBubble({
   user,
@@ -46,8 +49,9 @@ function AvatarBubble({
 
 export function GroupCard({ group }: { group: GroupResult }) {
   const { t } = useTranslation();
- const currentUserId = useAuthStore((state) => state.userId);
-  // const joinMutation = useJoinSearchGroupMutation();
+  const navigate = useNavigate(); // Initialize navigator
+  const currentUserId = useAuthStore((state) => state.userId);
+  const joinMutation = useJoinSearchGroupMutation();
 
   const nonOwnerMembers = useMemo(
     () =>
@@ -55,7 +59,9 @@ export function GroupCard({ group }: { group: GroupResult }) {
         .map((member) => member.user)
         .filter(
           (user) =>
-            user?.id && user.id !== group.owner?.id && user.id !== group.ownerId,
+            user?.id &&
+            user.id !== group.owner?.id &&
+            user.id !== group.ownerId,
         ),
     [group.members, group.owner?.id, group.ownerId],
   );
@@ -74,8 +80,19 @@ export function GroupCard({ group }: { group: GroupResult }) {
       )
     : t("search.unknownDate");
 
+  const handleCardClick = () => {
+    if (isCurrentUserMember) {
+      navigate(ROUTES.CHAT_TAB_GROUPS_ID.url.replace(":id", group.id));
+    }
+  };
+
   return (
-    <div className="relative flex gap-4 rounded-xl border bg-card p-4 transition-all hover:border-primary/25 hover:bg-accent/5">
+    <div
+      onClick={handleCardClick}
+      className={`relative flex gap-4 rounded-xl border bg-card p-4 transition-all hover:border-primary/25 hover:bg-accent/5 ${
+        isCurrentUserMember ? "cursor-pointer" : ""
+      }`}
+    >
       <div className="my-auto h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
         {group.avatar ? (
           <img
@@ -89,7 +106,7 @@ export function GroupCard({ group }: { group: GroupResult }) {
           </div>
         )}
       </div>
-       <div className="min-w-0 flex-1 pr-8 sm:pr-28">
+      <div className="min-w-0 flex-1 pr-8 sm:pr-28">
         <div className="min-w-0">
           <p className="truncate font-semibold">{group.name}</p>
           <p className="mt-1 line-clamp-2 text-xs leading-4 text-muted-foreground">
@@ -152,15 +169,15 @@ export function GroupCard({ group }: { group: GroupResult }) {
           </div>
         </div>
       </div>
-       {!isCurrentUserMember && (
+      {!isCurrentUserMember && (
         <Button
           type="button"
           size="sm"
           className="absolute bottom-4 right-4 shrink-0"
-          // disabled={joinMutation.isPending}
-          // onClick={() => joinMutation.mutate(group.id)}
+          disabled={joinMutation.isPending}
+          onClick={() => joinMutation.mutate(group.id)}
         >
-          {/* {joinMutation.isPending ? t("search.joining") : t("search.join")} */}
+          {joinMutation.isPending ? t("search.joining") : t("search.join")}
         </Button>
       )}
     </div>

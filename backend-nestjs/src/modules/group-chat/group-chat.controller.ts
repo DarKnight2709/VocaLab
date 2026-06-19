@@ -142,6 +142,15 @@ export class GroupChatController {
     await this.groupChatService.leaveGroup(id, user.id);
   }
 
+  @Post('join/:id')
+  @ApiOperation({ summary: 'Tham gia nhóm ' })
+  async joinGroup(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.groupChatService.joinGroup(id, user.id);
+  }
+
   @Patch(':id/transferOwnership')
   @IsOwner()
   @UseGuards(GroupPermissionGuard)
