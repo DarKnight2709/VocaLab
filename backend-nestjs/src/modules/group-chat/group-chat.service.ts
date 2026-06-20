@@ -18,7 +18,6 @@ import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { MessagesService } from '../messages/messages.service';
 import {
   CreateGroupResponseDto,
-  GetGroupsResponseDto,
   GroupDetailDto,
   GroupMemberDto,
   GroupsSearchResultResponse,
@@ -224,43 +223,6 @@ export class GroupChatService {
         },
       },
     });
-  }
-
-  async getGroups(userId: string): Promise<GetGroupsResponseDto[]> {
-    const groups = await this.findUserGroups(userId);
-    const transformedGroups = await Promise.all(
-      groups.map(async (group) => {
-        const [lastMessage, unreadCount] = await Promise.all([
-          this.messagesService.findLastGroupMessage(group.id),
-          this.messagesService.countUnreadGroupMessages(group.id, userId),
-        ]);
-
-        return {
-          id: group.id,
-          name: group.name,
-          avatar: group.avatar,
-          description: group.description,
-          isPublic: group.isPublic,
-          unreadCount,
-          lastMessage: lastMessage
-            ? {
-                content: lastMessage.content,
-                createdAt: lastMessage.createdAt,
-                senderName: lastMessage.sender?.fullName,
-                isMine: lastMessage.senderId === userId,
-              }
-            : null,
-          members: group.members?.map((m) => m.userId) || [],
-          updatedAt: group.updatedAt,
-        };
-      }),
-    );
-
-    return transformedGroups.sort(
-      (a, b) =>
-        (b.lastMessage?.createdAt?.getTime() || b.updatedAt.getTime()) -
-        (a.lastMessage?.createdAt?.getTime() || a.updatedAt.getTime()),
-    );
   }
 
   async searchGroups(

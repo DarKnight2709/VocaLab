@@ -14,8 +14,10 @@ import {
   GetConversationsResponseDto,
   GetMessagesResponseDto,
   LastMessageInfo,
+  GetGroupsResponseDto,
 } from './dto/messages-response.dto';
 import { MessageAttachmentDto } from './dto/messages.dto';
+import { GroupChatService } from '../group-chat/group-chat.service';
 
 export interface SendMessageInput {
   senderId: string;
@@ -33,6 +35,8 @@ export class MessagesService {
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    @Inject(forwardRef(() => GroupChatService))
+    private readonly groupChatService: GroupChatService,
   ) {}
 
   async getConversations(userId: string): Promise<GetConversationsResponseDto> {
@@ -152,6 +156,43 @@ export class MessagesService {
           b.lastMessage.createdAt.getTime() - a.lastMessage.createdAt.getTime(),
       ),
     };
+  }
+
+  async getGroups(userId: string): Promise<GetGroupsResponseDto[]> {
+    const groups = await this.groupChatService.findUserGroups(userId);
+    const transformedGroups = await Promise.all(
+      groups.map(async (group) => {
+        const [lastMessage, unreadCount] = await Promise.all([
+          this.findLastGroupMessage(group.id),
+          this.countUnreadGroupMessages(group.id, userId),
+        ]);
+
+        return {
+          id: group.id,
+          name: group.name,
+          avatar: group.avatar,
+          description: group.description,
+          isPublic: group.isPublic,
+          unreadCount,
+          lastMessage: lastMessage
+            ? {
+                content: lastMessage.content,
+                createdAt: lastMessage.createdAt,
+                senderName: lastMessage.sender?.fullName,
+                isMine: lastMessage.senderId === userId,
+              }
+            : null,
+          members: group.members?.map((m) => m.userId) || [],
+          updatedAt: group.updatedAt,
+        };
+      }),
+    );
+
+    return transformedGroups.sort(
+      (a, b) =>
+        (b.lastMessage?.createdAt?.getTime() || b.updatedAt.getTime()) -
+        (a.lastMessage?.createdAt?.getTime() || a.updatedAt.getTime()),
+    );
   }
 
   async getMessages(

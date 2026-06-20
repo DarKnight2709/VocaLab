@@ -36,7 +36,6 @@ const API_ROUTES = {
   },
   GROUP: {
     CREATE: "v1/groups/create",
-    GET_ALL: "v1/groups/all",
     INFO: (groupId: string) => `v1/groups/${groupId}`,
     UPDATE: (groupId: string) => `v1/groups/update/${groupId}`,
     JOIN: (groupId: string) => `v1/groups/join/${groupId}`,
@@ -58,6 +57,7 @@ const API_ROUTES = {
   },
   MESSAGE: {
     GET_USERS: "v1/messages/users",
+    GET_GROUPS: "v1/messages/groups",
     GET_MESSAGES: (friendId: string) => `v1/messages/${friendId}`,
   },
   UPLOAD: {

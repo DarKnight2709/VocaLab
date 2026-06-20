@@ -31,7 +31,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import {
   CreateGroupResponseDto,
-  GetGroupsResponseDto,
   GroupDetailDto,
   GroupMemberDto,
   PermissionDto,
@@ -54,15 +53,6 @@ export class GroupChatController {
     return {
       data: result
     }
-  }
-
-  @Get('all')
-  @ApiOperation({ summary: 'Lấy danh sách nhóm đã tham gia' })
-  async getGroups(
-    @CurrentUser() user: any,
-  ): Promise<ResponseInterceptor<GetGroupsResponseDto[]>> {
-    const result = await this.groupChatService.getGroups(user.id);
-    return { data: result };
   }
 
   @Get(':id')

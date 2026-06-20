@@ -31,7 +31,7 @@ export function useGroupsQuery(enabled = true) {
     queryKey: groupKeys.list(),
     queryFn: async () => {
       const result = await fetchWithSchema(
-        api.get(API_ROUTES.GROUP.GET_ALL),
+        api.get(API_ROUTES.MESSAGE.GET_GROUPS),
         GetGroupsResponseSchema,
       );
 

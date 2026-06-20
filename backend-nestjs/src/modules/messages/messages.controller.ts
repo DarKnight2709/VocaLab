@@ -8,7 +8,7 @@ import { MessagesService } from './messages.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
-import { GetConversationsResponseDto, GetMessagesResponseDto } from './dto/messages-response.dto';
+import { GetConversationsResponseDto, GetGroupsResponseDto, GetMessagesResponseDto } from './dto/messages-response.dto';
 
 @ApiTags('messages')
 @Controller('messages')
@@ -23,6 +23,15 @@ export class MessagesController {
     return {
       data: result
     }
+  }
+
+  @Get('groups')
+  @ApiOperation({ summary: 'Lấy danh sách nhóm đã tham gia' })
+  async getGroups(
+    @CurrentUser() user: any,
+  ): Promise<ResponseInterceptor<GetGroupsResponseDto[]>> {
+    const result = await this.messagesService.getGroups(user.id);
+    return { data: result };
   }
 
   @Get(':id')

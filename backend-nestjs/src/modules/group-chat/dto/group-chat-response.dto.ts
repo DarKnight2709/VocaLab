@@ -77,35 +77,6 @@ export class GroupDetailDto {
   rolePermissions!: RolePermissionDto[];
 }
 
-export class GetGroupsResponseDto {
-  @ApiProperty()
-  id!: string;
-
-  @ApiProperty()
-  name!: string;
-
-  @ApiProperty({ required: false, nullable: true })
-  avatar!: string | null;
-
-  @ApiProperty({ required: false, nullable: true })
-  description!: string | null;
-
-  @ApiProperty()
-  isPublic!: boolean;
-
-  @ApiProperty()
-  unreadCount!: number;
-
-  @ApiProperty()
-  lastMessage!: any;
-
-  @ApiProperty({ type: [String] })
-  members!: string[];
-
-  @ApiProperty()
-  updatedAt!: Date;
-}
-
 export class GroupSearchItemDto {
   @ApiProperty({ description: 'The unique identifier of the group' })
   id!: string;
