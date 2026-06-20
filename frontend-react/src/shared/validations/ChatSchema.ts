@@ -23,6 +23,16 @@ export const GetUsersResponseSchema = z.object({
   users: z.array(UserItemSchema),
 });
 
+export const SearchFriendsResponseSchema = z.object({
+  friends: z.array(UserItemSchema),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
 // Populated sender object schema
 export const PopulatedSenderSchema = z.object({
   id: z.string(),
@@ -63,3 +73,4 @@ export type UserItem = z.infer<typeof UserItemSchema>;
 export type GetUsersResponse = z.infer<typeof GetUsersResponseSchema>;
 export type ChatMessageItem = z.infer<typeof ChatMessageItemSchema>;
 export type GetMessagesResponse = z.infer<typeof GetMessagesResponseSchema>;
+export type SearchFriendsResponse = z.infer<typeof SearchFriendsResponseSchema>;

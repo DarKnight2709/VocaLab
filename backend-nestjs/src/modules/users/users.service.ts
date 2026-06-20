@@ -385,6 +385,44 @@ export class UserService {
     };
   }
 
+  async searchFriendsSuggestion(userId: string, query: string, page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+    const baseWhere = this.buildFriendsWhereClause(userId, query);
+
+    const blockerIds = await this.getBlockerIdsOf(userId);
+
+    if (blockerIds.length > 0) {
+      baseWhere.id = {
+        notIn: blockerIds,
+      };
+    }
+
+    const [friends, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where: baseWhere,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          avatar: true,
+        },
+      }),
+      this.prisma.user.count({ where: baseWhere }),
+    ]);
+
+    return {
+      friends,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async getAllUsers(): Promise<PublicUser[]> {
     return this.findAll();
   }

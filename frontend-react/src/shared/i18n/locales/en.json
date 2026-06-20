@@ -661,10 +661,11 @@
   },
   "chat": {
     "title": "Chat",
-    "searchPlaceholder": "Search users / groups...",
+    "searchPlaceholder": "Search your friends / groups...",
     "users": "Users",
     "groups": "Groups",
     "loading": "Loading...",
+    "noResultsFound": "No results found",
     "noUsersFound": "No users found",
     "noUsersYet": "No users yet",
     "noGroupsFound": "No groups found",

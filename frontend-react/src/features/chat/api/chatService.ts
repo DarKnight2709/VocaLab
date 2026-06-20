@@ -1,11 +1,13 @@
 
-import { useQuery} from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { api, fetchWithSchema } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
-
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import {
   GetUsersResponseSchema,
   GetMessagesResponseSchema,
+  SearchFriendsResponseSchema,
+  type SearchFriendsResponse,
 } from "@/shared/validations/ChatSchema";
 
 
@@ -21,6 +23,8 @@ export const chatKeys = {
     [...chatKeys.all, "search", keyword] as const,
   messages: (friendId: string) =>
     [...chatKeys.detail(friendId), "messages"] as const,
+  friendSearchSuggestion: (keyword: string) =>
+    [...chatKeys.all, "friend-search-suggestion", keyword] as const,
 };
 
 export const useSearchUsersQuery = (keyword: string) => {
@@ -57,7 +61,34 @@ export function useUsersQuery(enabled = true) {
   });
 }
 
+export function useFriendSearchSuggestionQuery(query: string, options: { enabled?: boolean } = {}) {
+  const debouncedQuery = useDebounce(query, 300);
 
+  return useInfiniteQuery<SearchFriendsResponse>({
+    queryKey: chatKeys.friendSearchSuggestion(debouncedQuery),
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await fetchWithSchema(
+        api.get(API_ROUTES.USER.SEARCH_FRIENDS, {
+          params: {
+            q: debouncedQuery,
+            page: pageParam,
+            limit: 5,
+          },
+        }),
+        SearchFriendsResponseSchema
+      );
+      return response.data;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.meta.page < lastPage.meta.totalPages) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    },
+    enabled: (options.enabled ?? true) && debouncedQuery.length > 0,
+  });
+}
 export function useMessagesQuery(friendId: string) {
   return useQuery({
     queryKey: chatKeys.messages(friendId),

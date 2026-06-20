@@ -228,6 +228,14 @@ export class GetFriendsResponseDto {
   meta!: UserPaginationMetaDto;
 }
 
+export class GetFriendsSuggestionResponseDto {
+  @ApiProperty({ type: [UserResponse] })
+  friends!: UserResponse[];
+
+  @ApiProperty({ type: UserPaginationMetaDto })
+  meta!: UserPaginationMetaDto;
+}
+
 export class BlockedUserDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;

@@ -19,6 +19,7 @@ const API_ROUTES = {
     PROFILE: "v1/users/profile",
     DELETE_ACCOUNT: "v1/users/profile",
     SEARCH: "v1/users/search",
+    SEARCH_FRIENDS: "v1/users/me/friends/search",
     UPLOAD_AVATAR: "v1/users/upload-avatar",
     GET_USERS: "v1/users/all",
     BY_USERNAME: (username: string) => `v1/users/by-username/${username}`,

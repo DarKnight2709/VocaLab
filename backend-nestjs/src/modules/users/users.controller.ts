@@ -30,8 +30,8 @@ import {
   DeleteSocialResponseDto,
   PublicUserDto,
   GetBlockedUsersResponseDto,
+  GetFriendsSuggestionResponseDto,
 } from './dto/users-response.dto';
-import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -50,7 +50,11 @@ export class UsersController {
     @Body() updateDto: UpdatePersonalInfoDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseInterceptor<UpdateProfileResponseDto>> {
-    const result = await this.userService.updateProfile(user.id, updateDto, file);
+    const result = await this.userService.updateProfile(
+      user.id,
+      updateDto,
+      file,
+    );
     return {
       data: result,
     };
@@ -61,9 +65,7 @@ export class UsersController {
     summary: 'Xóa tài khoản',
     description: 'Xóa tài khoản cá nhân (Xóa mềm)',
   })
-  async deleteProfile(
-    @CurrentUser() user: any,
-  ): Promise<void> {
+  async deleteProfile(@CurrentUser() user: any): Promise<void> {
     await this.userService.deleteAccount(user.id);
   }
 
@@ -137,13 +139,38 @@ export class UsersController {
     };
   }
 
+  @Get('me/friends/search')
+  @ApiOperation({ summary: 'Tìm kiếm bạn bè (dành cho gợi ý)' })
+  @ApiQuery({ name: 'q', required: true })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  async searchFriendsSuggestion(
+    @CurrentUser() user: any,
+    @Query('q') query: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<ResponseInterceptor<GetFriendsSuggestionResponseDto>> {
+    const result = await this.userService.searchFriendsSuggestion(
+      user.id,
+      query,
+      Number(page) || 1,
+      Number(limit) || 5,
+    );
+    return {
+      data: result,
+    };
+  }
+
   @Get('by-username/:username')
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
   async getByUsername(
     @Param('username') username: string,
     @CurrentUser() currentUser: any,
   ): Promise<ResponseInterceptor<GetByUsernameResponseDto>> {
-    const result = await this.userService.getByUsername(username, currentUser?.id);
+    const result = await this.userService.getByUsername(
+      username,
+      currentUser?.id,
+    );
     return {
       data: result,
     };
@@ -247,8 +274,6 @@ export class UsersController {
       data: result,
     };
   }
-
-
 
   @Post(':userId/follow')
   @ApiOperation({ summary: 'Theo dõi người dùng' })

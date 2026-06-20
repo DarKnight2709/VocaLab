@@ -658,10 +658,11 @@
   },
   "chat": {
     "title": "Trò chuyện",
-    "searchPlaceholder": "Tìm kiếm người dùng / nhóm...",
+    "searchPlaceholder": "Tìm kiếm bạn bè / nhóm...",
     "users": "Người dùng",
     "groups": "Nhóm",
     "loading": "Đang tải...",
+    "noResultsFound": "Không tìm thấy kết quả",
     "noUsersYet": "Chưa có người dùng nào",
     "noGroupsFound": "Không tìm thấy nhóm",
     "noGroupsYet": "Bạn chưa có nhóm nào",

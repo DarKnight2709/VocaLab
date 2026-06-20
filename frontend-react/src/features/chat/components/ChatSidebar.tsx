@@ -1,3 +1,7 @@
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useFriendSearchSuggestionQuery } from "@/features/chat/api/chatService";
+import { useInView } from "react-intersection-observer";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Input } from "@/shared/components/ui/input";
@@ -12,7 +16,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-import { Search, UserRound, UsersRound } from "lucide-react";
+import { Search, UserRound, UsersRound, X } from "lucide-react";
 import { getInitials } from "../utils";
 import type { UserItem } from "@/shared/validations/ChatSchema";
 import type { GroupItem } from "@/shared/validations/GroupSchema";
@@ -44,7 +48,6 @@ export function ChatSidebar({
   hideSidebarSearch = false,
   isSidebarVisible,
   searchQuery,
-  onSearchQueryChange,
   activeTab,
   onActiveTabChange,
   filteredUsers,
@@ -62,6 +65,49 @@ export function ChatSidebar({
   const { t } = useTranslation();
   const isEmbeddedChatView = embedded && (!!selectedUser || !!selectedGroup);
 
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 300);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const {
+    data: searchFriendResults,
+    isLoading: isSearchingFriends,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useFriendSearchSuggestionQuery(searchInput, {
+    enabled: activeTab === "users",
+  });
+  const suggestedUsers = activeTab === "users" ? (searchFriendResults?.pages.flatMap(page => page.friends) || []) : [];
+
+  const { ref: bottomRef } = useInView({
+    onChange: (inView) => {
+      if (inView && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+  });
+
+  const suggestedGroups = useMemo(() => {
+    if (activeTab === "users") return [];
+    const q = debouncedSearch.trim().toLowerCase();
+    if (!q) return [];
+    return filteredGroups.filter((g) =>
+      (g.name || "").toLowerCase().includes(q)
+    );
+  }, [debouncedSearch, filteredGroups, activeTab]);
+
   return (
     <>
       {isSidebarVisible && (!embedded || !isEmbeddedChatView) && (
@@ -72,15 +118,87 @@ export function ChatSidebar({
           }
         >
           {!hideSidebarSearch && (
-            <div className="p-4 border-b">
+            <div className="p-4 border-b" ref={searchRef}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t("chat.searchPlaceholder")}
-                  value={searchQuery}
-                  onChange={(e) => onSearchQueryChange(e.target.value)}
-                  className="pl-9"
+                  value={searchInput}
+                  onFocus={() => setShowSuggestions(true)}
+                  onChange={(e) => {
+                    setSearchInput(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  className="pl-9 pr-9"
                 />
+                {searchInput.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput("");
+                      setShowSuggestions(true);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+
+                {showSuggestions && searchInput.length > 0 && (
+                  <div className="absolute top-full left-0 mt-2 w-full bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                    {debouncedSearch.length > 0 && isSearchingFriends && activeTab === "users" ? (
+                      <div className="px-4 py-2 text-sm text-muted-foreground">
+                        {t("chat.loading", "Loading...")}
+                      </div>
+                    ) : debouncedSearch.length > 0 && suggestedUsers.length === 0 && suggestedGroups.length === 0 ? (
+                      <div className="px-4 py-2 text-sm text-muted-foreground">
+                        {t("chat.noResultsFound", "No results found.")}
+                      </div>
+                    ) : (
+                      <ul className="py-1 max-h-64 overflow-auto">
+                        {suggestedUsers.map((u) => (
+                          <li
+                            key={`su-${u.id}`}
+                            className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors flex items-center gap-3"
+                            onClick={() => {
+                              onUserClick(u);
+                              setSearchInput("");
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            <Avatar className="h-8 w-8 shrink-0">
+                              <AvatarImage src={u.avatar ?? undefined} />
+                              <AvatarFallback>{getInitials(u.fullName || u.username || t("chat.user"))}</AvatarFallback>
+                            </Avatar>
+                            <span className="truncate flex-1 font-medium">{u.fullName || u.username || t("chat.user")}</span>
+                          </li>
+                        ))}
+                        {suggestedGroups.map((g) => (
+                          <li
+                            key={`sg-${g.id}`}
+                            className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors flex items-center gap-3"
+                            onClick={() => {
+                              onGroupClick(g);
+                              setSearchInput("");
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            <Avatar className="h-8 w-8 shrink-0">
+                              <AvatarImage src={g.avatar ?? undefined} />
+                              <AvatarFallback>{getInitials(g.name || t("chat.group"))}</AvatarFallback>
+                            </Avatar>
+                            <span className="truncate flex-1 font-medium">{g.name || t("chat.group")}</span>
+                          </li>
+                        ))}
+                        {activeTab === "users" && hasNextPage && (
+                          <li ref={bottomRef} className="px-4 py-2 text-sm text-center text-muted-foreground">
+                            {isFetchingNextPage ? t("chat.loading", "Loading...") : " "}
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
