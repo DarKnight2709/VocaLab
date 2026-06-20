@@ -1164,7 +1164,7 @@ export class UserService {
     });
   }
 
-  private async getBlockerIdsOf(userId: string) {
+  async getBlockerIdsOf(userId: string) {
     const blockRelations = await this.prisma.block.findMany({
       where: {
         blockedId: userId,

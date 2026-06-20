@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { UserService } from '../users/users.service';
 import { MessageStatus, MessageType, VisibilityScope } from '@prisma/client';
@@ -31,22 +36,76 @@ export class MessagesService {
   ) {}
 
   async getConversations(userId: string): Promise<GetConversationsResponseDto> {
-    // Find all blocks where current userId is the blocked user
-    const blockRelations = await this.prisma.block.findMany({
+    // 1. Find all blocks where current userId is the blocked user and fetch all follows to determine friendship
+    const [blockerUserIds, follows] = await Promise.all([
+      this.userService.getBlockerIdsOf(userId),
+      this.prisma.follow.findMany({
+        where: {
+          OR: [{ followerId: userId }, { followingId: userId }],
+        },
+      }),
+    ]);
+
+    const followingIds = new Set(
+      follows.filter((f) => f.followerId === userId).map((f) => f.followingId),
+    );
+    const followerIds = new Set(
+      follows.filter((f) => f.followingId === userId).map((f) => f.followerId),
+    );
+
+    // 2. Get all direct messages for this user to calculate lastMessage and unreadCount
+    const messages = await this.prisma.message.findMany({
       where: {
-        blockedId: userId,
+        OR: [{ senderId: userId }, { receiverId: userId }],
+        groupId: null,
       },
-      select: {
-        blockingId: true,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        seenBy: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
-    const blockerUserIds = blockRelations.map((r) => r.blockingId);
+    // 3. Process messages to find last message and unread count per user
+    const statsMap = new Map<
+      string,
+      { lastMessage: LastMessageInfo; unreadCount: number }
+    >();
 
-    // 1. Get all users (except self and blockers)
+    for (const msg of messages) {
+      const otherUserId =
+        msg.senderId === userId ? msg.receiverId : msg.senderId;
+      if (!otherUserId) continue;
+
+      // Build the stats map
+      if (!statsMap.has(otherUserId)) {
+        statsMap.set(otherUserId, {
+          lastMessage: {
+            content: msg.content ?? null,
+            createdAt: msg.createdAt,
+            isMine: msg.senderId === userId,
+          },
+          unreadCount: 0,
+        });
+      }
+      if (
+        msg.receiverId === userId &&
+        !msg.seenBy.some((s) => s.userId === userId)
+      ) {
+        statsMap.get(otherUserId)!.unreadCount++;
+      }
+    }
+
+    // 4. Fetch users only for the conversation partners identified
+    const chattedUserIds = Array.from(statsMap.keys());
+
     const allUsers = await this.prisma.user.findMany({
       where: {
         id: {
+          in: chattedUserIds,
           notIn: [userId, ...blockerUserIds],
         },
       },
@@ -64,83 +123,12 @@ export class MessagesService {
       },
     });
 
-    // 2. Fetch all follows to determine friendship
-    const follows = await this.prisma.follow.findMany({
-      where: {
-        OR: [{ followerId: userId }, { followingId: userId }],
-      },
-    });
-
-    const followingIds = new Set(
-      follows.filter((f) => f.followerId === userId).map((f) => f.followingId),
-    );
-    const followerIds = new Set(
-      follows.filter((f) => f.followingId === userId).map((f) => f.followerId),
-    );
-
-    // 3. Get all direct messages for this user to calculate lastMessage and unreadCount
-    const messages = await this.prisma.message.findMany({
-      where: {
-        OR: [{ senderId: userId }, { receiverId: userId }],
-        groupId: null,
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        seenBy: {
-          select: {
-            userId: true,
-          },
-        },
-      },
-    });
-
-    // 4. Process messages to find last message and unread count per user
-    const statsMap = new Map<
-      string,
-      { lastMessage: LastMessageInfo; unreadCount: number }
-    >();
-    for (const msg of messages) {
-      const otherUserId =
-        msg.senderId === userId ? msg.receiverId : msg.senderId;
-      if (!otherUserId) continue;
-
-      if (!statsMap.has(otherUserId)) {
-        statsMap.set(otherUserId, {
-          lastMessage: {
-            content: msg.content ?? null,
-            createdAt: msg.createdAt,
-            isMine: msg.senderId === userId,
-          },
-          unreadCount: 0,
-        });
-      }
-
-      const stats = statsMap.get(otherUserId);
-      if (
-        msg.receiverId === userId &&
-        !msg.seenBy.some((s) => s.userId === userId)
-      ) {
-        stats!.unreadCount++;
-      }
-    }
-
     // 5. Combine all users with their stats and privacy capabilities
     const users = allUsers.map((user) => {
-      const stats = statsMap.get(user.id) || {
-        lastMessage: null,
-        unreadCount: 0,
-      };
-
+      const stats = statsMap.get(user.id)!;
       const isFriend = followingIds.has(user.id) && followerIds.has(user.id);
       const scope =
         user.privacySettings?.messageScope ?? VisibilityScope.EVERYONE;
-
-      let canChat = true;
-      if (scope === VisibilityScope.PRIVATE) {
-        canChat = false;
-      } else if (scope === VisibilityScope.FRIENDS) {
-        canChat = isFriend;
-      }
 
       return {
         id: user.id,
@@ -148,23 +136,22 @@ export class MessagesService {
         fullName: user.fullName ?? null,
         avatar: user.avatar ?? null,
         email: user.email ?? null,
-        canChat,
+        canChat:
+          scope === VisibilityScope.PRIVATE
+            ? false
+            : scope === VisibilityScope.FRIENDS
+              ? isFriend
+              : true,
         ...stats,
       };
     });
 
-    // Sort by last message time (users with messages first)
-    const sortedUsers = users.sort((a, b) => {
-      const timeA = a.lastMessage?.createdAt
-        ? new Date(a.lastMessage.createdAt).getTime()
-        : 0;
-      const timeB = b.lastMessage?.createdAt
-        ? new Date(b.lastMessage.createdAt).getTime()
-        : 0;
-      return timeB - timeA;
-    });
-
-    return { users: sortedUsers };
+    return {
+      users: users.sort(
+        (a, b) =>
+          b.lastMessage.createdAt.getTime() - a.lastMessage.createdAt.getTime(),
+      ),
+    };
   }
 
   async getMessages(
