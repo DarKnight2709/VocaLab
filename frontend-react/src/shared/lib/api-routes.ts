@@ -23,6 +23,7 @@ const API_ROUTES = {
     UPLOAD_AVATAR: "v1/users/upload-avatar",
     GET_USERS: "v1/users/all",
     BY_USERNAME: (username: string) => `v1/users/by-username/${username}`,
+    CHAT_INFO: (userId: string) => `v1/users/${userId}/chat-info`,
     getContentBy: (userId: string, type: ContentTab) =>
       `v1/users/${userId}/${type}`,
     BLOCK_USER: (userId: string) => `v1/users/${userId}/block`,

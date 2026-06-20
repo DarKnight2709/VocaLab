@@ -14,7 +14,7 @@ import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import { useVoiceCall } from "@/features/chat/hooks/useVoiceCall";
 import { useGroupsQuery, groupKeys } from "@/features/chat/api/groupService";
 import { useGroupMessagesQuery } from "@/features/chat/api/groupService";
-import { useUsersQuery, chatKeys } from "@/features/chat/api/chatService";
+import { useUsersQuery, chatKeys, useUserChatInfoQuery } from "@/features/chat/api/chatService";
 import { useMessagesQuery } from "@/features/chat/api/chatService";
 import { useUploadFilesMutation } from "@/shared/hooks/useUpload";
 
@@ -56,6 +56,8 @@ export default function ChatView({
   const [searchQuery, setSearchQuery] = useState("");
 
   const [tempChatUser, setTempChatUser] = useState<UserItem | null>(null);
+  // ID of a user we need to fetch because they are not in the conversation list yet
+  const [pendingChatUserId, setPendingChatUserId] = useState<string>("");
 
   const uploadFilesMutation = useUploadFilesMutation();
 
@@ -74,6 +76,44 @@ export default function ChatView({
     if (exists) return users;
     return [tempChatUser, ...users];
   }, [users, tempChatUser]);
+
+  // Clear tempChatUser once they appear in the real conversation list
+  useEffect(() => {
+    if (tempChatUser && users.some((u) => u.id === tempChatUser.id)) {
+      setTempChatUser(null);
+    }
+  }, [users, tempChatUser]);
+
+  // Fetch chat info for a user not yet in the conversation list
+  const { data: pendingChatInfo, isLoading: isLoadingPendingChatInfo } = useUserChatInfoQuery(
+    pendingChatUserId,
+    { enabled: !!pendingChatUserId },
+  );
+
+  // Process fetched chat info: set as temp user or hide if blocked
+  useEffect(() => {
+    if (!pendingChatUserId || isLoadingPendingChatInfo || !pendingChatInfo) return;
+
+    if (pendingChatInfo.isBlocked) {
+      // User blocked us — navigate away from their URL
+      setPendingChatUserId("");
+      navigate(ROUTES.CHAT_TAB_USERS.url, { replace: true });
+      return;
+    }
+
+    const tempUser: UserItem = {
+      id: pendingChatInfo.id,
+      username: pendingChatInfo.username,
+      fullName: pendingChatInfo.fullName ?? undefined,
+      avatar: pendingChatInfo.avatar,
+      canChat: pendingChatInfo.canChat,
+    };
+    setTempChatUser(tempUser);
+    setPendingChatUserId("");
+    // Open the chat immediately
+    setSelectedUser(tempUser);
+    setSelectedGroup(null);
+  }, [pendingChatUserId, pendingChatInfo, isLoadingPendingChatInfo]);
 
   const { data: messages = [], isLoading: loadingMessages } = useMessagesQuery(
     selectedUser?.id || "",
@@ -177,14 +217,17 @@ export default function ChatView({
           setSelectedUser((prev) => (prev?.id === user.id ? prev : user));
           setSelectedGroup(null);
         } else if (!loadingUsers) {
-          setSelectedUser((prev) => (prev?.id === urlId ? prev : null));
+          // User not in conversation list — trigger a fetch by ID
+          if (urlId !== pendingChatUserId) {
+            setPendingChatUserId(urlId);
+          }
         }
       } else {
         setSelectedGroup(null);
         setSelectedUser(null);
       }
     }
-  }, [isChatRoute, embedded, location.pathname, params.id, groups, allSidebarUsers, loadingGroups, loadingUsers]);
+  }, [isChatRoute, embedded, location.pathname, params.id, groups, allSidebarUsers, loadingGroups, loadingUsers, pendingChatUserId]);
 
   // If auth state is lost (e.g. token invalid), go back to login.
   useEffect(() => {

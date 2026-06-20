@@ -7,7 +7,9 @@ import {
   GetUsersResponseSchema,
   GetMessagesResponseSchema,
   SearchFriendsResponseSchema,
+  UserChatInfoResponseSchema,
   type SearchFriendsResponse,
+  type UserChatInfoResponse,
 } from "@/shared/validations/ChatSchema";
 
 
@@ -25,6 +27,8 @@ export const chatKeys = {
     [...chatKeys.detail(friendId), "messages"] as const,
   friendSearchSuggestion: (keyword: string) =>
     [...chatKeys.all, "friend-search-suggestion", keyword] as const,
+  chatInfo: (userId: string) =>
+    [...chatKeys.all, "chat-info", userId] as const,
 };
 
 export const useSearchUsersQuery = (keyword: string) => {
@@ -104,3 +108,18 @@ export function useMessagesQuery(friendId: string) {
   });
 }
 
+export function useUserChatInfoQuery(userId: string, options: { enabled?: boolean } = {}) {
+  return useQuery<UserChatInfoResponse>({
+    queryKey: chatKeys.chatInfo(userId),
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.USER.CHAT_INFO(userId)),
+        UserChatInfoResponseSchema
+      );
+      return result.data;
+    },
+    enabled: (options.enabled ?? true) && !!userId,
+    staleTime: 1000 * 30, // 30 seconds
+    retry: false, // don't retry on 404
+  });
+}

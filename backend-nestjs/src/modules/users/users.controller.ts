@@ -31,6 +31,7 @@ import {
   PublicUserDto,
   GetBlockedUsersResponseDto,
   GetFriendsSuggestionResponseDto,
+  UserChatInfoDto,
 } from './dto/users-response.dto';
 
 @ApiTags('users')
@@ -174,6 +175,21 @@ export class UsersController {
     return {
       data: result,
     };
+  }
+
+  @Get(':userId/chat-info')
+  @ApiOperation({
+    summary: 'Lấy thông tin chat của người dùng (block & privacy)',
+  })
+  async getUserChatInfo(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<ResponseInterceptor<UserChatInfoDto>> {
+    const result = await this.userService.getUserChatInfo(
+      userId,
+      currentUser.id,
+    );
+    return { data: result };
   }
 
   @Get(':userId/followers')

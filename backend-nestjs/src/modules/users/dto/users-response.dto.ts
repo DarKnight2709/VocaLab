@@ -355,3 +355,23 @@ export class ProfileSearchResultResponse {
   @ApiProperty({ type: UserPaginationMetaDto })
   meta!: UserPaginationMetaDto;
 }
+
+export class UserChatInfoDto {
+  @ApiProperty({ example: 'uuid-string' })
+  id!: string;
+
+  @ApiProperty({ example: 'quyentran' })
+  username!: string;
+
+  @ApiPropertyOptional({ example: 'Trần Duy Quyến', nullable: true })
+  fullName!: string | null;
+
+  @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg', nullable: true })
+  avatar!: string | null;
+
+  @ApiProperty({ example: true, description: 'Whether the current user can send messages to this user' })
+  canChat!: boolean;
+
+  @ApiProperty({ example: false, description: 'Whether this user has blocked the current user' })
+  isBlocked!: boolean;
+}

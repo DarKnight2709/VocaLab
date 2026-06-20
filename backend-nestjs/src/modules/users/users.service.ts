@@ -33,6 +33,7 @@ import {
   UserSummaryDto,
   GetBlockedUsersResponseDto,
   ProfileSearchResultResponse,
+  UserChatInfoDto,
 } from './dto/users-response.dto';
 import { Follow, VisibilityScope } from '@prisma/client';
 import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
@@ -81,6 +82,75 @@ export class UserService {
     return {
       ...rest,
       hasPassword: !!hashedPassword,
+    };
+  }
+
+  async getUserChatInfo(
+    targetId: string,
+    currentUserId: string,
+  ): Promise<UserChatInfoDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: targetId },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        avatar: true,
+        privacySettings: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Self: always allowed
+    if (targetId === currentUserId) {
+      return {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        avatar: user.avatar,
+        canChat: true,
+        isBlocked: false,
+      };
+    }
+
+    // Check if target blocked currentUser
+    const blockedByTarget = await this.prisma.block.findFirst({
+      where: { blockingId: targetId, blockedId: currentUserId },
+    });
+
+    if (blockedByTarget) {
+      return {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        avatar: user.avatar,
+        canChat: false,
+        isBlocked: true,
+      };
+    }
+
+    // Determine canChat based on messageScope privacy setting
+    const messageScope = user.privacySettings?.messageScope ?? VisibilityScope.EVERYONE;
+
+    let isFriend = false;
+    if (messageScope === VisibilityScope.FRIENDS) {
+      isFriend = await this.checkFriendship(currentUserId, targetId);
+    }
+
+    const canChat =
+      messageScope === VisibilityScope.EVERYONE ||
+      (messageScope === VisibilityScope.FRIENDS && isFriend);
+
+    return {
+      id: user.id,
+      username: user.username,
+      fullName: user.fullName,
+      avatar: user.avatar,
+      canChat,
+      isBlocked: false,
     };
   }
 

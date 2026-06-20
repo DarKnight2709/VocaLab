@@ -69,8 +69,18 @@ export const GetMessagesResponseSchema = z.object({
   messages: z.array(ChatMessageItemSchema),
 });
 
+export const UserChatInfoResponseSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  fullName: z.string().nullable().optional(),
+  avatar: z.string().nullable().optional(),
+  canChat: z.boolean(),
+  isBlocked: z.boolean(),
+});
+
 export type UserItem = z.infer<typeof UserItemSchema>;
 export type GetUsersResponse = z.infer<typeof GetUsersResponseSchema>;
 export type ChatMessageItem = z.infer<typeof ChatMessageItemSchema>;
 export type GetMessagesResponse = z.infer<typeof GetMessagesResponseSchema>;
 export type SearchFriendsResponse = z.infer<typeof SearchFriendsResponseSchema>;
+export type UserChatInfoResponse = z.infer<typeof UserChatInfoResponseSchema>;
