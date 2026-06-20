@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BlogItemSchema } from "./BlogSchema";
+import { UserSummarySchema } from "./UserSchema";
 
 export const SearchSuggestionResultSchema = z.object({
   id: z.string(),
@@ -8,12 +9,7 @@ export const SearchSuggestionResultSchema = z.object({
 
 export const SearchSuggestionListSchema = z.array(SearchSuggestionResultSchema);
 
-export const SearchUserResultSchema = z.object({
-  id: z.string(),
-  username: z.string(),
-  fullName: z.string(),
-  avatar: z.string().nullable().optional(),
-});
+export const SearchUserResultSchema = UserSummarySchema;
 
 export const SearchGroupMemberSchema = z.object({
   user: SearchUserResultSchema,
@@ -53,7 +49,6 @@ export const SearchInfiniteResponseSchema = z.object({
   blogs: z.array(BlogItemSchema).optional(),
   collections: z.array(SearchCollectionResultSchema).optional(),
   groups: z.array(SearchGroupResultSchema).optional(),
-  users: z.array(SearchUserResultSchema).optional(),
   profiles: z.array(SearchUserResultSchema).optional(),
   meta: SearchPaginationMetaSchema.optional(),
 });

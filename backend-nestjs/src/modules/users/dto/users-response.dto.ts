@@ -338,3 +338,12 @@ export class DeleteSocialResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
 }
+
+
+export class ProfileSearchResultResponse {
+  @ApiProperty({ type: [UserSummaryDto] })
+  profiles!: UserSummaryDto[];
+
+  @ApiProperty({ type: UserPaginationMetaDto })
+  meta!: UserPaginationMetaDto;
+}

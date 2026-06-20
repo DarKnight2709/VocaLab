@@ -32,6 +32,7 @@ import {
   DeleteSocialResponseDto,
   UserSummaryDto,
   GetBlockedUsersResponseDto,
+  ProfileSearchResultResponse,
 } from './dto/users-response.dto';
 import { Follow, VisibilityScope } from '@prisma/client';
 import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
@@ -250,9 +251,8 @@ export class UserService {
     });
   }
 
-
   // async getUsers(userId: string, page: number, limit: number, query?: string) {
-    
+
   //   const where: any = {
   //     id: { not: userId },
   //     OR: [
@@ -318,7 +318,7 @@ export class UserService {
         },
         learningSetting: {
           create: {},
-        }
+        },
       },
       select: {
         id: true,
@@ -389,9 +389,73 @@ export class UserService {
     return this.findAll();
   }
 
+  async getProfiles(
+    userId: string,
+    page: number,
+    limit: number,
+    query?: string,
+  ): Promise<ProfileSearchResultResponse> {
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      id: { not: userId },
+      deletedAt: null,
+    };
+
+    const blockerIds = await this.getBlockerIdsOf(userId);
+
+    if (blockerIds.length > 0) {
+      where.id = {
+        notIn: blockerIds,
+      };
+    }
+
+    if (query) {
+      where.OR = [
+        { username: { contains: query, mode: 'insensitive' } },
+        { fullName: { contains: query, mode: 'insensitive' } },
+      ];
+    }
+
+    const [profiles, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          avatar: true,
+          privacySettings: {
+            select: {
+              allowFollow: true,
+            },
+          },
+        },
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    const mappedProfiles = await this.mapUsersWithCapabilities(
+      profiles,
+      userId,
+    );
+
+    return {
+      profiles: mappedProfiles,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async getFollowers(
     userId: string,
-    currentUserId?: string,
+    currentUserId: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
@@ -411,6 +475,13 @@ export class UserService {
     const where: any = {
       followingId: userId,
     };
+
+    const blockerIds = await this.getBlockerIdsOf(currentUserId);
+    if (blockerIds.length > 0) {
+      where.followerId = {
+        notIn: blockerIds,
+      };
+    }
 
     if (search) {
       where.follower = {
@@ -464,7 +535,7 @@ export class UserService {
 
   async getFollowing(
     userId: string,
-    currentUserId?: string,
+    currentUserId: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
@@ -484,6 +555,14 @@ export class UserService {
     const where: any = {
       followerId: userId,
     };
+
+    const blockerIds = await this.getBlockerIdsOf(currentUserId);
+
+    if (blockerIds.length > 0) {
+      where.followingId = {
+        notIn: blockerIds,
+      };
+    }
 
     if (search) {
       where.following = {
@@ -537,7 +616,7 @@ export class UserService {
 
   async getFriends(
     userId: string,
-    currentUserId?: string,
+    currentUserId: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
@@ -553,6 +632,14 @@ export class UserService {
     }
     const skip = (page - 1) * limit;
     const baseWhere = this.buildFriendsWhereClause(userId, search);
+
+    const blockerIds = await this.getBlockerIdsOf(currentUserId);
+
+    if (blockerIds.length > 0) {
+      baseWhere.id = {
+        notIn: blockerIds,
+      };
+    }
 
     // thêm logic để không trả về nếu người dùng không cho phép xem
     const [friends, total] = await Promise.all([
@@ -593,7 +680,7 @@ export class UserService {
 
   async getPosts(
     profileUserId: string,
-    requestingUserId?: string,
+    requestingUserId: string,
     page = 1,
     limit = 12,
     search?: string,
@@ -604,7 +691,7 @@ export class UserService {
     const user = await this.findById(profileUserId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
-    if (requestingUserId && requestingUserId !== profileUserId) {
+    if (requestingUserId !== profileUserId) {
       const blockedByTarget = await this.prisma.block.findFirst({
         where: {
           blockingId: profileUserId,
@@ -1075,5 +1162,19 @@ export class UserService {
         canFollow,
       };
     });
+  }
+
+  private async getBlockerIdsOf(userId: string) {
+    const blockRelations = await this.prisma.block.findMany({
+      where: {
+        blockedId: userId,
+      },
+      select: {
+        blockingId: true,
+      },
+    });
+
+    const blockerIds = blockRelations.map((r) => r.blockingId);
+    return blockerIds;
   }
 }

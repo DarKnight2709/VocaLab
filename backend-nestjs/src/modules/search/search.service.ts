@@ -110,7 +110,7 @@ export class SearchService {
     return this.groupService.searchGroups(userId, page, limit, query);
   }
 
-  // async searchProfiles(userId?: string, page = 1, limit = 10, query?: string) {
-  //   return this.userService.getUsers(userId ?? '', page, limit, query);
-  // }
+  async searchProfiles(userId: string, page = 1, limit = 10, query?: string) {
+    return this.userService.getProfiles(userId, page, limit, query);
+  }
 }

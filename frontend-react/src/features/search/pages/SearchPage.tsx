@@ -21,7 +21,7 @@ import type { BlogItem as BlogResult } from "@/shared/validations/BlogSchema";
 import { BlogCard } from "../components/BlogCard";
 import { CollectionCard } from "../components/CollectionCard";
 import { GroupCard } from "../components/GroupCard";
-import { UserCard } from "../components/UserCard";
+import { UserCard } from "@/features/user/components/UserCard";
 import Empty from "@/shared/components/Empty";
 
 type Tab = "all" | "collections" | "posts" | "groups" | "profiles";
@@ -133,7 +133,7 @@ export default function SearchPage() {
       ? summaryProfiles
       : infinitePages.flatMap((p) =>
           infiniteSearchType === "profiles"
-            ? (p.users ?? p.profiles ?? [])
+            ? (p.profiles ?? [])
             : [],
         );
   const groups =

@@ -163,7 +163,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetFollowersResponseDto>> {
     const result = await this.userService.getFollowers(
       userId,
-      currentUser?.id,
+      currentUser.id,
       Number(page),
       Number(limit),
       search,
@@ -187,7 +187,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetFollowingResponseDto>> {
     const result = await this.userService.getFollowing(
       userId,
-      currentUser?.id,
+      currentUser.id,
       Number(page),
       Number(limit),
       search,
@@ -211,7 +211,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetFriendsResponseDto>> {
     const result = await this.userService.getFriends(
       userId,
-      currentUser?.id,
+      currentUser.id,
       Number(page),
       Number(limit),
       search,
@@ -237,7 +237,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetUserPostsResponseDto>> {
     const result = await this.userService.getPosts(
       userId,
-      currentUser?.id,
+      currentUser.id,
       Number(page),
       Number(limit),
       search,

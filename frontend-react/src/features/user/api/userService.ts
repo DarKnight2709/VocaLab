@@ -155,6 +155,7 @@ export const useFollowUserMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["me"] });
+      qc.invalidateQueries({ queryKey: ["search-infinite"] });
       toast.success(i18n.t("profile.followSuccess"));
     },
     onError: (err) =>
@@ -170,6 +171,7 @@ export const useUnfollowUserMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["me"] });
+      qc.invalidateQueries({ queryKey: ["search-infinite"] });
       toast.success(i18n.t("profile.unfollowSuccess"));
     },
     onError: (err) =>

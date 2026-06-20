@@ -8,6 +8,7 @@ import { Response as ResponseInterceptor } from '@/common/interceptors/transform
 import { GetBlogsResponseDto } from '../blog/dto/blog-response.dto';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { GroupsSearchResultResponse } from '../group-chat/dto/group-chat-response.dto';
+import { ProfileSearchResultResponse } from '../users/dto/users-response.dto';
 
 @ApiTags('search')
 @Controller('search')
@@ -79,23 +80,23 @@ export class SearchController {
     };
   }
 
-  // @Get("profiles")
-  // @ApiOperation({summary: 'Get profiles search results'})
-  // @ApiResponse({type: UsersSearchResultResponse})
-  // async searchProfiles(
-  //   @Query('query') query: string,
-  //   @Query('userId') userId?: string,
-  //   @Query('page') page?: string,
-  //   @Query('limit') limit?: string,
-  // ): Promise<ResponseInterceptor<UsersSearchResultResponse>> {
-  //   const result = await this.searchService.searchProfiles(
-  //     userId,
-  //     Number(page) || 1,
-  //     Number(limit) || 10,
-  //     query
-  //   );
-  //   return {
-  //     data: result
-  //   }
-  // }
+  @Get("profiles")
+  @ApiOperation({summary: 'Get profiles search results'})
+  @ApiResponse({type: ProfileSearchResultResponse})
+  async searchProfiles(
+    @CurrentUser() user: any,
+    @Query('query') query: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<ResponseInterceptor<ProfileSearchResultResponse>> {
+    const result = await this.searchService.searchProfiles(
+      user.id,
+      Number(page) || 1,
+      Number(limit) || 10,
+      query
+    );
+    return {
+      data: result
+    }
+  }
 }
