@@ -203,7 +203,7 @@ export default function ChatView({
           setSelectedGroup((prev) => (prev?.id === group.id ? prev : group));
           setSelectedUser(null);
         } else if (!loadingGroups) {
-          setSelectedGroup((prev) => (prev?.id === urlId ? prev : null));
+          navigate(ROUTES.CHAT_TAB_GROUPS.url, { replace: true });
         }
       } else {
         setSelectedGroup(null);
