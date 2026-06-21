@@ -9,9 +9,6 @@ export class CardFieldResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
 
-  @ApiProperty({ example: 'uuid-string' })
-  cardTypeId!: string;
-
   @ApiProperty({ example: 'word' })
   key!: string;
 
@@ -32,20 +29,11 @@ export class CardFieldResponseDto {
 
   @ApiPropertyOptional({ example: 16, nullable: true })
   fontSize!: number | null;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
 }
 
 export class CardFieldValueResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
-
-  @ApiProperty({ example: 'uuid-string' })
-  cardId!: string;
 
   @ApiProperty({ example: 'uuid-string' })
   fieldId!: string;
@@ -113,15 +101,6 @@ export class CardTypeWithFieldsDto {
   @ApiPropertyOptional({ example: 'Kiểu thẻ từ vựng cơ bản', nullable: true })
   description!: string | null;
 
-  @ApiProperty({ example: 'uuid-string' })
-  userId!: string;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
-
   @ApiProperty({ type: [CardFieldResponseDto] })
   fields!: CardFieldResponseDto[];
 }
@@ -130,23 +109,8 @@ export class CardDetailDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
 
-  @ApiProperty({ example: 'uuid-string' })
-  cardTypeId!: string;
-
-  @ApiProperty({ example: 'uuid-string' })
-  cardCollectionId!: string;
-
   @ApiPropertyOptional({ example: 1, nullable: true })
   position!: number | null;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
-
-  @ApiPropertyOptional({ example: null, nullable: true })
-  deletedAt!: Date | null;
 
   @ApiProperty({ type: CardTypeWithFieldsDto })
   cardType!: CardTypeWithFieldsDto;
@@ -171,12 +135,6 @@ export class GetCollectionByIdResponseDto {
 
   @ApiProperty({ example: true })
   isPublic!: boolean;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
 
   @ApiProperty({ type: [CardDetailDto] })
   cards!: CardDetailDto[];

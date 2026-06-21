@@ -64,24 +64,77 @@ export class VocabularyService {
   ): Promise<GetCollectionByIdResponseDto> {
     const collection = await this.prisma.cardCollection.findFirst({
       where: { id, userId },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        userId: true,
+        isPublic: true,
         cards: {
-          include: {
+          select: {
+            id: true,
+            position: true,
+            cardTypeId: true,
             cardType: {
-              include: {
-                fields: true,
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                fields: {
+                  select: {
+                    id: true,
+                    key: true,
+                    label: true,
+                    fieldType: true,
+                    side: true,
+                    order: true,
+                    color: true,
+                    fontSize: true,
+                  },
+                },
               },
             },
             values: {
-              include: {
-                field: true,
+              select: {
+                id: true,
+                fieldId: true,
+                value: true,
+                field: {
+                  select: {
+                    id: true,
+                    key: true,
+                    label: true,
+                    fieldType: true,
+                    side: true,
+                    order: true,
+                    color: true,
+                    fontSize: true,
+                  },
+                },
               },
             },
           },
-          orderBy: { createdAt: 'desc' },
         },
         _count: { select: { cards: true } },
       },
+      // include: {
+      //   cards: {
+      //     include: {
+      //       cardType: {
+      //         include: {
+      //           fields: true,
+      //         },
+      //       },
+      //       values: {
+      //         include: {
+      //           field: true,
+      //         },
+      //       },
+      //     },
+      //     orderBy: { createdAt: 'desc' },
+      //   },
+      //   _count: { select: { cards: true } },
+      // },
     });
     if (!collection)
       throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);
