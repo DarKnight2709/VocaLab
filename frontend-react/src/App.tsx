@@ -37,6 +37,7 @@ import { useEffect } from "react";
 import { useTranslation } from "./shared/hooks/useTranslation";
 import { StudyLayout } from "./shared/layout/StudyLayout";
 import StatsPage from "./features/stats/pages/StatsPage";
+import PublicCollectionDetailPage from "./features/vocabulary/pages/PublicCollectionDetailPage";
 
 const router = createBrowserRouter([
   {
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
           { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
           { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
           { path: ROUTES.STATS.url, element: <StatsPage /> },
+          {
+            path: ROUTES.COLLECTION_DETAIL.url,
+            element: <PublicCollectionDetailPage />,
+          },
           {
             element: <StudyLayout />,
             children: [

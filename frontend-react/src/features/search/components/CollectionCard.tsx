@@ -13,11 +13,11 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
       key={collection.id}
       role="button"
       tabIndex={0}
-      onClick={() => navigate(`/vocabulary/${collection.id}`)}
+      onClick={() => navigate(`/collections/${collection.id}`)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          navigate(`/vocabulary/${collection.id}`);
+          navigate(`/collections/${collection.id}`);
         }
       }}
       className="text-left w-full p-4 rounded-2xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"

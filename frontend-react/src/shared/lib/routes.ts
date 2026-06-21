@@ -31,6 +31,10 @@ const ROUTES = {
     title: "Vocabulary",
     url: "/vocabulary",
   },
+  COLLECTION_DETAIL:{
+    title: "Vocabulary collection details",
+    url: "/collections/:collectionId",
+  },
   VOCABULARY_COLLECTION: {
     title: "Vocabulary collection details",
     url: "/vocabulary/:collectionId",
