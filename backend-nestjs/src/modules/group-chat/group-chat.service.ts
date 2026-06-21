@@ -3,6 +3,8 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MemberRole, Prisma } from '@prisma/client';
@@ -25,6 +27,7 @@ import {
 } from './dto/group-chat-response.dto';
 import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 import { MessageWithDetails } from '../messages/dto/messages-response.dto';
+import { UserService } from '../users/users.service';
 
 // Types previously in IGroupRepository
 export type MemberWithUser = Prisma.GroupMemberGetPayload<{
@@ -78,6 +81,8 @@ export class GroupChatService {
     private prisma: PrismaService,
     private readonly messagesService: MessagesService,
     private groupChatGateway: GroupChatGateway,
+    @Inject(forwardRef(() => UserService))
+    private userService: UserService,
     private cloudinaryService: CloudinaryService,
   ) {}
 
@@ -238,23 +243,12 @@ export class GroupChatService {
       deletedAt: null,
     };
 
-    if (userId) {
-      const blockRelations = await this.prisma.block.findMany({
-        where: {
-          blockedId: userId,
-        },
-        select: {
-          blockingId: true,
-        },
-      });
+    const blockerIds = await this.userService.getBlockerIdsOf(userId);
 
-      const blockerIds = blockRelations.map((r) => r.blockingId);
-
-      if (blockerIds.length > 0) {
-        where.ownerId = {
-          notIn: blockerIds,
-        };
-      }
+    if (blockerIds.length > 0) {
+      where.ownerId = {
+        notIn: blockerIds,
+      };
     }
 
     if (query) {

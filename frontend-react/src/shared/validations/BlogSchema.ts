@@ -17,7 +17,7 @@ export const AuthorSchema = z.object({
   id: z.string(),
   username: z.string(),
   fullName: z.string(),
-  avatar: z.string().nullable().optional(),
+  avatar: z.string().nullable(),
 });
 
 export const BlogItemSchema = z.object({

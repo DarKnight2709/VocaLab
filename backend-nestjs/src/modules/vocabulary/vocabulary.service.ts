@@ -27,11 +27,16 @@ import {
   CreateCardTypeResponseDto,
   CardTypeWithFieldsDto,
   DeleteResponseDto,
+  CollectionSearchResponseDto,
 } from './dto/vocabulary-response.dto';
+import { UserService } from '../users/users.service';
 
 @Injectable()
 export class VocabularyService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private userService: UserService,
+  ) {}
 
   // ──────────────────────────────────────────────
   // Collections
@@ -116,79 +121,74 @@ export class VocabularyService {
     };
   }
 
-  // async searchCollections(
-  //   userId: string,
-  //   page = 1,
-  //   limit = 10,
-  //   query: string,
-  // ): Promise<CollectionsSearchResultResponse> {
-  //   const skip = (page - 1) * limit;
+  async searchCollections(
+    userId: string,
+    page = 1,
+    limit = 10,
+    query?: string,
+  ): Promise<CollectionSearchResponseDto> {
+    const skip = (page - 1) * limit;
 
-  //   const where: any = {
-  //     isPublic: true,
-  //     deletedAt: null,
-  //   };
+    const where: any = {
+      isPublic: true,
+      deletedAt: null,
+    };
 
-  //   if (userId) {
-  //     const blockRelations = await this.prisma.block.findMany({
-  //       where: {
-  //         blockedId: userId,
-  //       },
-  //       select: {
-  //         blockingId: true,
-  //       },
-  //     });
+    const blockerIds = await this.userService.getBlockerIdsOf(userId);
 
-  //     const blockerIds = blockRelations.map((r) => r.blockingId);
+    if (blockerIds.length > 0) {
+      where.userId = {
+        notIn: blockerIds,
+      };
+    }
 
-  //     if (blockerIds.length > 0) {
-  //       where.userId = {
-  //         notIn: blockerIds,
-  //       };
-  //     }
-  //   }
+    if (query) {
+      where.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+      ];
+    }
 
-  //   if (query) {
-  //     where.OR = [
-  //       { name: { contains: query, mode: 'insensitive' } },
-  //       { description: { contains: query, mode: 'insensitive' } },
-  //     ];
-  //   }
+    let [searchedCollections, total] = await Promise.all([
+      this.prisma.cardCollection.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: skip,
+        take: limit,
 
-  //   let [searchedCollections, total] = await Promise.all([
-  //     this.prisma.cardCollection.findMany({
-  //       where,
-  //       orderBy: {
-  //         createdAt: 'desc'
-  //       },
-  //       skip: skip,
-  //       take: limit,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
+          user: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
+          },
+          _count: { select: { cards: true } },
+        },
+      }),
+      this.prisma.cardCollection.count({ where }),
+    ]);
 
-  //       include: {
-  //         user: {
-  //           select: {
-  //             id: true,
-  //             username: true,
-  //             fullName: true,
-  //             avatar: true,
-  //           },
-  //         },
-  //         _count: { select: { cards: true } },
-  //       }
-  //     }),
-  //     this.prisma.cardCollection.count({ where })
-  //   ]);
-
-  //   return {
-  //     collections: searchedCollections,
-  //     meta: {
-  //       page,
-  //       limit,
-  //       total,
-  //       totalPages: Math.ceil(total / limit),
-  //     }
-  //   }
-  // }
+    return {
+      collections: searchedCollections,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 
   // ──────────────────────────────────────────────
   // Cards

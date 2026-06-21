@@ -14,20 +14,36 @@ import {
 } from './dto/blog.dto';
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { ErrorCode } from '@/common/enums/error-code.enum';
-import { CreateBlogResponseDto, CreateCommentResponseDto, DeleteResponseDto, GetBlogByIdResponseDto, GetBlogsResponseDto, GetMyBlogsResponseDto, UpdateBlogResponseDto, UpdateCommentResponseDto } from './dto/blog-response.dto';
+import {
+  CreateBlogResponseDto,
+  CreateCommentResponseDto,
+  DeleteResponseDto,
+  GetBlogByIdResponseDto,
+  GetBlogsResponseDto,
+  GetMyBlogsResponseDto,
+  UpdateBlogResponseDto,
+  UpdateCommentResponseDto,
+} from './dto/blog-response.dto';
 import { SettingKey } from '@/common/enums/setting-key.enum';
 import { NotificationsService } from '../notifications/services/notifications.service';
+import { UserService } from '../users/users.service';
 
 @Injectable()
 export class BlogService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private userService: UserService,
   ) {}
 
   // ==================== BLOG CRUD ====================
 
-  async getBlogs(userId: string, page = 1, limit = 10, search?: string): Promise<GetBlogsResponseDto> {
+  async getBlogs(
+    userId: string,
+    page = 1,
+    limit = 10,
+    search?: string,
+  ): Promise<GetBlogsResponseDto> {
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -35,23 +51,12 @@ export class BlogService {
       deletedAt: null,
     };
 
-    if (userId) {
-      const blockRelations = await this.prisma.block.findMany({
-        where: {
-          blockedId: userId,
-        },
-        select: {
-          blockingId: true,
-        },
-      });
+    const blockerIds = await this.userService.getBlockerIdsOf(userId);
 
-      const blockerIds = blockRelations.map((r) => r.blockingId);
-
-      if (blockerIds.length > 0) {
-        where.authorId = {
-          notIn: blockerIds,
-        };
-      }
+    if (blockerIds.length > 0) {
+      where.authorId = {
+        notIn: blockerIds,
+      };
     }
 
     if (search) {
@@ -106,7 +111,10 @@ export class BlogService {
     };
   }
 
-  async getBlogById(id: string, userId?: string): Promise<GetBlogByIdResponseDto> {
+  async getBlogById(
+    id: string,
+    userId?: string,
+  ): Promise<GetBlogByIdResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
       include: {
@@ -169,13 +177,17 @@ export class BlogService {
       ...rest,
       comments: commentsWithVotes,
     };
-    
+
     const mappedBlog = mapVoteScore(formattedBlog, userId);
 
     return mappedBlog;
   }
 
-  async getMyBlogs(userId: string, page = 1, limit = 10): Promise<GetMyBlogsResponseDto> {
+  async getMyBlogs(
+    userId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<GetMyBlogsResponseDto> {
     const skip = (page - 1) * limit;
     const [blogs, total] = await Promise.all([
       this.prisma.blog.findMany({
@@ -199,7 +211,10 @@ export class BlogService {
     };
   }
 
-  async createBlog(userId: string, dto: CreateBlogDto): Promise<CreateBlogResponseDto> {
+  async createBlog(
+    userId: string,
+    dto: CreateBlogDto,
+  ): Promise<CreateBlogResponseDto> {
     const blog = await this.prisma.blog.create({
       data: {
         title: dto.title,
@@ -243,7 +258,11 @@ export class BlogService {
     return blog;
   }
 
-  async updateBlog(id: string, userId: string, dto: UpdateBlogDto): Promise<UpdateBlogResponseDto> {
+  async updateBlog(
+    id: string,
+    userId: string,
+    dto: UpdateBlogDto,
+  ): Promise<UpdateBlogResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
     });
@@ -280,7 +299,11 @@ export class BlogService {
 
   // ==================== VOTES ====================
 
-  async voteBlog(blogId: string, userId: string, type: VoteType): Promise<void> {
+  async voteBlog(
+    blogId: string,
+    userId: string,
+    type: VoteType,
+  ): Promise<void> {
     const blog = await this.prisma.blog.findFirst({
       where: {
         id: blogId,
@@ -358,7 +381,11 @@ export class BlogService {
 
   // ==================== COMMENTS ====================
 
-  async createComment(blogId: string, userId: string, dto: CreateCommentDto): Promise<CreateCommentResponseDto> {
+  async createComment(
+    blogId: string,
+    userId: string,
+    dto: CreateCommentDto,
+  ): Promise<CreateCommentResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: {
         id: blogId,
@@ -370,7 +397,7 @@ export class BlogService {
       throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
     }
 
-    const comment =await this.prisma.comment.create({
+    const comment = await this.prisma.comment.create({
       data: {
         content: dto.content,
         authorId: userId,
@@ -396,7 +423,11 @@ export class BlogService {
     return comment;
   }
 
-  async editComment(commentId: string, userId: string, dto: UpdateCommentDto): Promise<UpdateCommentResponseDto> {
+  async editComment(
+    commentId: string,
+    userId: string,
+    dto: UpdateCommentDto,
+  ): Promise<UpdateCommentResponseDto> {
     const comment = await this.prisma.comment.findFirst({
       where: { id: commentId, deletedAt: null },
     });
@@ -417,7 +448,10 @@ export class BlogService {
     return updatedComment;
   }
 
-  async deleteComment(commentId: string, userId: string): Promise<DeleteResponseDto> {
+  async deleteComment(
+    commentId: string,
+    userId: string,
+  ): Promise<DeleteResponseDto> {
     const comment = await this.prisma.comment.findFirst({
       where: { id: commentId, deletedAt: null },
     });
@@ -429,11 +463,15 @@ export class BlogService {
       data: { deletedAt: new Date() },
     });
     return {
-      id: deletedComment.id
+      id: deletedComment.id,
     };
   }
 
-  async replyComment(commentId: string, userId: string, dto: ReplyCommentDto): Promise<CreateCommentResponseDto> {
+  async replyComment(
+    commentId: string,
+    userId: string,
+    dto: ReplyCommentDto,
+  ): Promise<CreateCommentResponseDto> {
     const comment = await this.prisma.comment.findFirst({
       where: {
         id: commentId,
@@ -475,7 +513,10 @@ export class BlogService {
     }
 
     // Also notify blog author if they are not the sender and not the parent comment author
-    if (comment.blog.authorId !== userId && comment.blog.authorId !== comment.authorId) {
+    if (
+      comment.blog.authorId !== userId &&
+      comment.blog.authorId !== comment.authorId
+    ) {
       await this.notificationsService.notifyActivity({
         recipientId: comment.blog.authorId,
         senderId: userId,
@@ -493,7 +534,11 @@ export class BlogService {
     return replyComment;
   }
 
-  async voteComment(commentId: string, userId: string, type: VoteType): Promise<void> {
+  async voteComment(
+    commentId: string,
+    userId: string,
+    type: VoteType,
+  ): Promise<void> {
     const comment = await this.prisma.comment.findFirst({
       where: {
         id: commentId,

@@ -102,6 +102,10 @@ export class SearchService {
   //   return this.vocabularyService.searchCollections(userId ?? '', page, limit, query);
   // }
 
+  async searchCollections(userId: string, page = 1, limit = 10, query?: string) {
+    return this.vocabularyService.searchCollections(userId, page, limit, query);
+  }
+
   async searchPosts(userId: string, page = 1, limit = 10, query?: string) {
     return this.blogService.getBlogs(userId, page, limit, query);
   }

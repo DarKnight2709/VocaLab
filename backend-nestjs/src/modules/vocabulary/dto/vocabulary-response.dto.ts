@@ -81,6 +81,25 @@ export class GetCollectionsResponseDto {
   collections!: CollectionListItemDto[];
 }
 
+export class CollectionSearchItemDto extends CollectionListItemDto {
+  @ApiProperty({ type: UserResponse })
+  user!: UserResponse;
+
+  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
+  createdAt!: Date;
+
+  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
+  updatedAt!: Date;
+}
+
+export class CollectionSearchResponseDto {
+  @ApiProperty({ type: [CollectionSearchItemDto] })
+  collections!: CollectionSearchItemDto[];
+
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
+}
+
 export class CardTypeWithFieldsDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;

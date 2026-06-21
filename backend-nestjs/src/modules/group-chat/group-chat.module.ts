@@ -5,10 +5,12 @@ import { GroupChatService } from './group-chat.service';
 import { MessagesModule } from '../messages/messages.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { GroupPermissionGuard } from './guards/group-permission.guard';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     MessagesModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => NotificationsModule),
   ],
   controllers: [GroupChatController],
