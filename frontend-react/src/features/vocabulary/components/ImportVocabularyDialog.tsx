@@ -64,8 +64,8 @@ export default function ImportVocabularyDialog({
   } | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
-  const { data: cardTypesData } = useCardTypesQuery();
-  const { data: collectionsData } = useCollectionsQuery();
+  const { data: cardTypesData } = useCardTypesQuery(open);
+  const { data: collectionsData } = useCollectionsQuery(open);
   const importMutation = useImportVocabularyMutation();
 
   // Set default card type if not set yet

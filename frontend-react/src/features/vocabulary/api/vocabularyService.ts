@@ -72,13 +72,14 @@ export interface VocabCollectionDetail extends VocabCollection {
 // Domain: Card Collection (hooks)
 // =====================================================
 
-export const useCollectionsQuery = () =>
+export const useCollectionsQuery = (enabled: boolean) =>
   useQuery<{ collections: VocabCollection[] }>({
     queryKey: ["card-collections"],
     queryFn: async () => {
       const res = await api.get(API_ROUTES.VOCABULARY.COLLECTIONS);
       return res.data;
     },
+    enabled,
   });
 
 export const useCollectionDetailQuery = (id: string | null) =>
@@ -151,7 +152,7 @@ export const useDeleteCollectionMutation = () => {
 // Domain: Card Type (hooks)
 // =====================================================
 
-export const useCardTypesQuery = () =>
+export const useCardTypesQuery = (enabled: boolean) =>
   useQuery({
     queryKey: ["card-types"],
     queryFn: async () => {
@@ -161,6 +162,7 @@ export const useCardTypesQuery = () =>
       );
       return result.data;
     },
+    enabled
   });
 
 

@@ -29,7 +29,7 @@ export default function VocabularyAddCardPage() {
   const { t } = useTranslation();
   const { collectionId } = useParams<{ collectionId: string }>();
 
-  const { data: cardTypesData, isLoading: isTypesLoading } = useCardTypesQuery();
+  const { data: cardTypesData, isLoading: isTypesLoading } = useCardTypesQuery(true);
   const { data: colData, isLoading: isColLoading } = useCollectionCardsQuery(collectionId || null);
   const createCardMutation = useCreateCardMutation(collectionId || "");
 

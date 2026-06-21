@@ -20,7 +20,7 @@ export default function CardTypeManagementPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingCardType, setEditingCardType] = useState<any | null>(null);
 
-  const { data: cardTypesData } = useCardTypesQuery();
+  const { data: cardTypesData } = useCardTypesQuery(true);
   const deleteCardTypeMutation = useDeleteCardTypeMutation();
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);

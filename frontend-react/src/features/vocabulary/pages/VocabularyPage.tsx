@@ -63,7 +63,7 @@ export default function VocabularyPage() {
   const [renameDesc, setRenameDesc] = useState("");
   const [renameIsPublic, setRenameIsPublic] = useState(true);
 
-  const { data: colsData, isLoading: colsLoading } = useCollectionsQuery();
+  const { data: colsData, isLoading: colsLoading } = useCollectionsQuery(true);
   const createColMutation = useCreateCollectionMutation();
   const deleteColMutation = useDeleteCollectionMutation();
   const updateColMutation = useUpdateCollectionMutation();
