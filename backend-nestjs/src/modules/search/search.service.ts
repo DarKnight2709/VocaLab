@@ -26,6 +26,7 @@ export class SearchService {
       this.prisma.cardCollection.findMany({
         where: {
           name: { contains: normalizedQuery, mode: 'insensitive' },
+          isPublic: true,
         },
         take: 3, // Limit each source to ensure diversity
         select: { id: true, name: true },
@@ -33,6 +34,7 @@ export class SearchService {
       this.prisma.blog.findMany({
         where: {
           title: { contains: normalizedQuery, mode: 'insensitive' },
+          isPublic: true,
         },
         take: 3,
         select: { id: true, title: true },
@@ -40,6 +42,7 @@ export class SearchService {
       this.prisma.group.findMany({
         where: {
           name: { contains: normalizedQuery, mode: 'insensitive' },
+          isPublic: true,
         },
         take: 3,
         select: { id: true, name: true },
