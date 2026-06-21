@@ -28,6 +28,7 @@ export interface VocabCollection {
   name: string;
   description: string | null;
   userId: string;
+  isPublic: boolean;
   createdAt: string;
   _count?: { cards: number };
 }
@@ -103,7 +104,7 @@ export const useCollectionCardsQuery = (id: string | null) =>
 export const useCreateCollectionMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name: string; description?: string }) =>
+    mutationFn: (body: { name: string; description?: string; isPublic?: boolean }) =>
       api.post(API_ROUTES.VOCABULARY.CREATE_COLLECTION, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
@@ -121,10 +122,12 @@ export const useUpdateCollectionMutation = () => {
       body,
     }: {
       id: string;
-      body: { name?: string; description?: string };
+      body: { name?: string; description?: string; isPublic?: boolean };
     }) => api.patch(API_ROUTES.VOCABULARY.UPDATE_COLLECTION(id), body),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
+      qc.invalidateQueries({ queryKey: ["card-collection-detail", variables.id] });
+      qc.invalidateQueries({ queryKey: ["card-collection-cards", variables.id] });
       toast.success(i18n.t("vocabulary.updateSuccess"));
     },
     onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.updateFailed"))),

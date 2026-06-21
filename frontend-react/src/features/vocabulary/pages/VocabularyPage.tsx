@@ -10,8 +10,11 @@ import {
   Download,
   Settings,
   Import,
+  Globe,
+  Lock,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import { Switch } from "@/shared/components/ui/switch";
 import ImportVocabularyDialog from "../components/ImportVocabularyDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { toast } from "sonner";
@@ -51,12 +54,14 @@ export default function VocabularyPage() {
   const [newColOpen, setNewColOpen] = useState(false);
   const [newColName, setNewColName] = useState("");
   const [newColDesc, setNewColDesc] = useState("");
+  const [newColIsPublic, setNewColIsPublic] = useState(true);
   const [importOpen, setImportOpen] = useState(false);
 
   const [renameOpen, setRenameOpen] = useState(false);
   const [renamingCol, setRenamingCol] = useState<VocabCollection | null>(null);
   const [renameName, setRenameName] = useState("");
   const [renameDesc, setRenameDesc] = useState("");
+  const [renameIsPublic, setRenameIsPublic] = useState(true);
 
   const { data: colsData, isLoading: colsLoading } = useCollectionsQuery();
   const createColMutation = useCreateCollectionMutation();
@@ -71,10 +76,12 @@ export default function VocabularyPage() {
     await createColMutation.mutateAsync({
       name: newColName,
       description: newColDesc || undefined,
+      isPublic: newColIsPublic,
     });
     setNewColOpen(false);
     setNewColName("");
     setNewColDesc("");
+    setNewColIsPublic(true);
   }
 
   async function handleRenameCollection(e: React.FormEvent) {
@@ -86,6 +93,7 @@ export default function VocabularyPage() {
       body: {
         name: renameName,
         description: renameDesc || undefined,
+        isPublic: renameIsPublic,
       },
     });
 
@@ -93,6 +101,7 @@ export default function VocabularyPage() {
     setRenamingCol(null);
     setRenameName("");
     setRenameDesc("");
+    setRenameIsPublic(true);
   }
 
   function getCardText(card: CardItem, side: "front" | "back") {
@@ -164,6 +173,7 @@ export default function VocabularyPage() {
     setRenamingCol(collection);
     setRenameName(collection.name);
     setRenameDesc(collection.description || "");
+    setRenameIsPublic(collection.isPublic ?? true);
     setRenameOpen(true);
   }
 
@@ -257,8 +267,19 @@ export default function VocabularyPage() {
               className="text-left w-full p-4 rounded-2xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-semibold truncate">{col.name}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold truncate flex items-center gap-2">
+                    {col.name}
+                    {col.isPublic ? (
+                      <span title={t("vocabulary.public")}>
+                        <Globe className="h-3 w-3 text-muted-foreground" />
+                      </span>
+                    ) : (
+                      <span title={t("vocabulary.private")}>
+                        <Lock className="h-3 w-3 text-muted-foreground" />
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
                     {col.description}
                   </div>
@@ -343,6 +364,20 @@ export default function VocabularyPage() {
                 placeholder={t("vocabulary.descriptionPlaceholder")}
               />
             </div>
+            <div className="flex items-center justify-between mt-4">
+              <div className="space-y-0.5">
+                <Label>{t("vocabulary.visibility")}</Label>
+                <div className="text-xs text-muted-foreground">
+                  {newColIsPublic
+                    ? t("vocabulary.publicDesc")
+                    : t("vocabulary.privateDesc")}
+                </div>
+              </div>
+              <Switch
+                checked={newColIsPublic}
+                onCheckedChange={setNewColIsPublic}
+              />
+            </div>
             <DialogFooter>
               <Button
                 type="button"
@@ -380,6 +415,20 @@ export default function VocabularyPage() {
                 value={renameDesc}
                 onChange={(e) => setRenameDesc(e.target.value)}
                 placeholder={t("vocabulary.descriptionPlaceholder")}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <div className="space-y-0.5">
+                <Label>{t("vocabulary.visibility")}</Label>
+                <div className="text-xs text-muted-foreground">
+                  {renameIsPublic
+                    ? t("vocabulary.publicDesc")
+                    : t("vocabulary.privateDesc")}
+                </div>
+              </div>
+              <Switch
+                checked={renameIsPublic}
+                onCheckedChange={setRenameIsPublic}
               />
             </div>
             <DialogFooter>

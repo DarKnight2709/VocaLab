@@ -8,11 +8,14 @@ import {
   Import,
   Pencil,
   Trash2,
+  Globe,
+  Lock,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import {
   useCollectionCardsQuery,
   useDeleteCardMutation,
+  useUpdateCollectionMutation,
   type CardItem,
 } from "../api/vocabularyService";
 import ImportVocabularyDialog from "../components/ImportVocabularyDialog";
@@ -39,6 +42,16 @@ export default function VocabularyCollectionPage() {
 
   const { data, isLoading } = useCollectionCardsQuery(collectionId || null);
   const deleteMutation = useDeleteCardMutation(collectionId || "");
+  const updateCollectionMutation = useUpdateCollectionMutation();
+
+  const handleToggleVisibility = async () => {
+    if (data && collectionId) {
+      await updateCollectionMutation.mutateAsync({
+        id: collectionId,
+        body: { isPublic: !data.isPublic },
+      });
+    }
+  };
 
   const handleEdit = (card: CardItem) => {
     setEditingCard(card);
@@ -126,9 +139,21 @@ export default function VocabularyCollectionPage() {
 
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold truncate">
-            {isLoading ? t("vocabulary.loading") : data?.name}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold truncate">
+              {isLoading ? t("vocabulary.loading") : data?.name}
+            </h1>
+            {!isLoading && data && (
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                data.isPublic 
+                  ? "bg-green-500/10 text-green-600 dark:text-green-400" 
+                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              }`}>
+                {data.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                {data.isPublic ? t("vocabulary.public") : t("vocabulary.private")}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             {isLoading ? "" : data?.description}
           </p>
@@ -139,6 +164,24 @@ export default function VocabularyCollectionPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 justify-end">
+          {!isLoading && data && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleToggleVisibility}
+              disabled={updateCollectionMutation.isPending}
+            >
+              {data.isPublic ? (
+                <>
+                  <Lock className="h-4 w-4" /> {t("vocabulary.makePrivate")}
+                </>
+              ) : (
+                <>
+                  <Globe className="h-4 w-4" /> {t("vocabulary.publish")}
+                </>
+              )}
+            </Button>
+          )}
           <Button
             variant={mode === "preview" ? "default" : "outline"}
             className="gap-2"

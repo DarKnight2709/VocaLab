@@ -72,6 +72,9 @@ export class CollectionListItemDto {
   @ApiProperty({ example: 'uuid-string' })
   userId!: string;
 
+  @ApiProperty({ example: true })
+  isPublic!: boolean;
+
   @ApiProperty({ example: { cards: 25 } })
   _count!: { cards: number };
 }
@@ -166,6 +169,9 @@ export class GetCollectionByIdResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   userId!: string;
 
+  @ApiProperty({ example: true })
+  isPublic!: boolean;
+
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
   createdAt!: Date;
 
@@ -191,6 +197,9 @@ export class CreateCollectionResponseDto {
 
   @ApiProperty({ example: 'uuid-string' })
   userId!: string;
+
+  @ApiProperty({ example: true })
+  isPublic!: boolean;
 
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
   createdAt!: Date;

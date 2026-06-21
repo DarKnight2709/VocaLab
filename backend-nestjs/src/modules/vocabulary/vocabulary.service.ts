@@ -50,6 +50,7 @@ export class VocabularyService {
         name: true,
         description: true,
         userId: true,
+        isPublic: true,
         _count: { select: { cards: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -165,6 +166,7 @@ export class VocabularyService {
           createdAt: true,
           updatedAt: true,
           userId: true,
+          isPublic: true,
           user: {
             select: {
               id: true,

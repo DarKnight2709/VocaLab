@@ -26,6 +26,10 @@ export class CreateCollectionDto {
   @IsString()
   @MaxLength(500)
   description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
 }
 
 export class UpdateCollectionDto extends PartialType(CreateCollectionDto) {}

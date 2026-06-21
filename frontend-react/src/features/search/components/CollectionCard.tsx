@@ -8,11 +8,6 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const isEdited =
-    collection.updatedAt &&
-    new Date(collection.updatedAt).getTime() - new Date(collection.createdAt).getTime() >
-      1000;
-
   return (
     <div
       key={collection.id}
@@ -50,7 +45,6 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
               <span aria-hidden>·</span>
               <span className="shrink-0">
                 {formatTimeAgo(collection.createdAt, t)}
-                {isEdited && ` ${t("blog.editedLabel") || `(${t("blog.edited")})`}`}
               </span>
             </div>
           )}
