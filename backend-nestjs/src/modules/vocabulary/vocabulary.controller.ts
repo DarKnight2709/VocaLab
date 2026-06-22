@@ -53,13 +53,12 @@ export class VocabularyController {
     return { data: result };
   }
 
-  @Get('collections/:collectionId/cards')
-  @ApiOperation({ summary: 'Lấy danh sách thẻ của bộ từ vựng' })
-  async getCollectionCards(
-    @Param('collectionId') id: string,
-    @CurrentUser() user: any,
+  @Get('collections/:id/public')
+  @ApiOperation({ summary: 'Lấy thông tin chi tiết bộ từ vựng công khai' })
+  async getPublicCollectionById(
+    @Param('id') id: string,
   ): Promise<ResponseInterceptor<GetCollectionByIdResponseDto>> {
-    const result = await this.vocabularyService.getCollectionById(id, user.id);
+    const result = await this.vocabularyService.getCollectionByIdPublic(id);
     return { data: result };
   }
 

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import {
-  useCollectionCardsQuery,
+  useCollectionDetailQuery,
   useDeleteCardMutation,
   useUpdateCollectionMutation,
   type CardItem,
@@ -40,7 +40,7 @@ export default function VocabularyCollectionPage() {
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const { data, isLoading } = useCollectionCardsQuery(collectionId || null);
+  const { data, isLoading } = useCollectionDetailQuery(collectionId || null);
   const deleteMutation = useDeleteCardMutation(collectionId || "");
   const updateCollectionMutation = useUpdateCollectionMutation();
 

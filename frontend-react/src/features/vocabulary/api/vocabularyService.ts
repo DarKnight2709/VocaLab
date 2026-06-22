@@ -3,21 +3,21 @@ import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
 import i18n from "@/shared/i18n";
-import { 
-  CardTypeSchema, 
+import {
+  CardTypeSchema,
   CardTypeListResponseSchema,
-  type CardType, 
-  type CardField 
+  type CardType,
+  type CardField,
 } from "@/shared/validations/VocabularySchema";
 
- 
 export const DuplicatePolicy = {
   SKIP: "SKIP",
   UPDATE: "UPDATE",
   DUPLICATE: "DUPLICATE",
 } as const;
- 
-export type DuplicatePolicy = (typeof DuplicatePolicy)[keyof typeof DuplicatePolicy];
+
+export type DuplicatePolicy =
+  (typeof DuplicatePolicy)[keyof typeof DuplicatePolicy];
 
 // =====================================================
 // Domain: Card Collection (types)
@@ -39,7 +39,6 @@ export interface VocabCollection {
 
 // CardFieldType and CardSide are now imported from shared/enums
 // CardField and CardType are now imported from shared/validations/VocabularySchema
-
 
 // =====================================================
 // Domain: Card (types)
@@ -83,7 +82,7 @@ export const useCollectionsQuery = (enabled: boolean) =>
   });
 
 export const useCollectionDetailQuery = (id: string | null) =>
-  useQuery<{ collection: VocabCollectionDetail }>({
+  useQuery({
     queryKey: ["card-collection-detail", id],
     queryFn: async () => {
       const res = await api.get(API_ROUTES.VOCABULARY.COLLECTION_DETAIL(id!));
@@ -92,11 +91,11 @@ export const useCollectionDetailQuery = (id: string | null) =>
     enabled: !!id,
   });
 
-export const useCollectionCardsQuery = (id: string | null) =>
+export const useCollectionDetailPublicQuery = (id: string | null) =>
   useQuery({
-    queryKey: ["card-collection-cards", id],
+    queryKey: ["card-collection-detail-public", id],
     queryFn: async () => {
-      const res = await api.get(API_ROUTES.VOCABULARY.COLLECTION_CARDS(id!));
+      const res = await api.get(API_ROUTES.VOCABULARY.COLLECTION_DETAIL_PUBLIC(id!));
       return res.data;
     },
     enabled: !!id,
@@ -105,13 +104,17 @@ export const useCollectionCardsQuery = (id: string | null) =>
 export const useCreateCollectionMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name: string; description?: string; isPublic?: boolean }) =>
-      api.post(API_ROUTES.VOCABULARY.CREATE_COLLECTION, body),
+    mutationFn: (body: {
+      name: string;
+      description?: string;
+      isPublic?: boolean;
+    }) => api.post(API_ROUTES.VOCABULARY.CREATE_COLLECTION, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
       toast.success(i18n.t("vocabulary.createSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.createFailed"))),
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.createFailed"))),
   });
 };
 
@@ -127,11 +130,16 @@ export const useUpdateCollectionMutation = () => {
     }) => api.patch(API_ROUTES.VOCABULARY.UPDATE_COLLECTION(id), body),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
-      qc.invalidateQueries({ queryKey: ["card-collection-detail", variables.id] });
-      qc.invalidateQueries({ queryKey: ["card-collection-cards", variables.id] });
+      qc.invalidateQueries({
+        queryKey: ["card-collection-detail", variables.id],
+      });
+      qc.invalidateQueries({
+        queryKey: ["card-collection-cards", variables.id],
+      });
       toast.success(i18n.t("vocabulary.updateSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.updateFailed"))),
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.updateFailed"))),
   });
 };
 
@@ -144,7 +152,8 @@ export const useDeleteCollectionMutation = () => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
       toast.success(i18n.t("vocabulary.deleteSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.deleteFailed"))),
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.deleteFailed"))),
   });
 };
 
@@ -158,13 +167,12 @@ export const useCardTypesQuery = (enabled: boolean) =>
     queryFn: async () => {
       const result = await fetchWithSchema(
         api.get(API_ROUTES.VOCABULARY.CARD_TYPES),
-        CardTypeListResponseSchema
+        CardTypeListResponseSchema,
       );
       return result.data;
     },
-    enabled
+    enabled,
   });
-
 
 export const useCardTypeDetailsQuery = (id: string | null) =>
   useQuery({
@@ -172,13 +180,12 @@ export const useCardTypeDetailsQuery = (id: string | null) =>
     queryFn: async () => {
       const result = await fetchWithSchema(
         api.get(API_ROUTES.VOCABULARY.CARD_TYPE_DETAILS(id!)),
-        CardTypeSchema
+        CardTypeSchema,
       );
       return result.data;
     },
     enabled: !!id,
   });
-
 
 export const useCreateCardTypeMutation = () => {
   const qc = useQueryClient();
@@ -202,7 +209,10 @@ export const useCreateCardTypeMutation = () => {
       qc.invalidateQueries({ queryKey: ["card-types"] });
       toast.success(i18n.t("vocabulary.cardTypeCreateSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardTypeCreateFailed"))),
+    onError: (e) =>
+      toast.error(
+        getErrorMessage(e, i18n.t("vocabulary.cardTypeCreateFailed")),
+      ),
   });
 };
 
@@ -240,7 +250,9 @@ export const useUpdateCardTypeMutation = () => {
       toast.success(i18n.t("vocabulary.cardTypeUpdateSuccess"));
     },
     onError: (e) =>
-      toast.error(getErrorMessage(e, i18n.t("vocabulary.cardTypeUpdateFailed"))),
+      toast.error(
+        getErrorMessage(e, i18n.t("vocabulary.cardTypeUpdateFailed")),
+      ),
   });
 };
 
@@ -253,7 +265,10 @@ export const useDeleteCardTypeMutation = () => {
       qc.invalidateQueries({ queryKey: ["card-types"] });
       toast.success(i18n.t("vocabulary.cardTypeDeleteSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardTypeDeleteFailed"))),
+    onError: (e) =>
+      toast.error(
+        getErrorMessage(e, i18n.t("vocabulary.cardTypeDeleteFailed")),
+      ),
   });
 };
 
@@ -280,7 +295,8 @@ export const useCreateCardMutation = (collectionId: string) => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
       toast.success(i18n.t("vocabulary.cardAddSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardAddFailed"))),
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.cardAddFailed"))),
   });
 };
 
@@ -299,7 +315,8 @@ export const useDeleteCardMutation = (collectionId: string) => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
       toast.success(i18n.t("vocabulary.cardDeleteSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.cardDeleteFailed"))),
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.cardDeleteFailed"))),
   });
 };
 
@@ -323,7 +340,8 @@ export const useUpdateCardMutation = (collectionId: string) => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
       toast.success(i18n.t("vocabulary.updateSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.updateFailed"))),
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.updateFailed"))),
   });
 };
 
@@ -352,6 +370,7 @@ export const useImportVocabularyMutation = () => {
       }
       toast.success(i18n.t("vocabulary.importSuccess"));
     },
-    onError: (e) => toast.error(getErrorMessage(e, i18n.t("vocabulary.importFailed"))),
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.importFailed"))),
   });
 };

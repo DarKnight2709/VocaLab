@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import {
   useCardTypesQuery,
   useCreateCardMutation,
-  useCollectionCardsQuery,
+  useCollectionDetailQuery,
 } from "../api/vocabularyService";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { Button } from "@/shared/components/ui/button";
@@ -30,7 +30,7 @@ export default function VocabularyAddCardPage() {
   const { collectionId } = useParams<{ collectionId: string }>();
 
   const { data: cardTypesData, isLoading: isTypesLoading } = useCardTypesQuery(true);
-  const { data: colData, isLoading: isColLoading } = useCollectionCardsQuery(collectionId || null);
+  const { data: colData, isLoading: isColLoading } = useCollectionDetailQuery(collectionId || null);
   const createCardMutation = useCreateCardMutation(collectionId || "");
 
   const [selectedTypeId, setSelectedTypeId] = useState("");

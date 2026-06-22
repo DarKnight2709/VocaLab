@@ -1,27 +1,51 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import {
   BookOpenText,
   Eye,
   Layers,
+  Pencil,
+  Copy,
+  Bookmark
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import {
-  useCollectionCardsQuery,
+  useCollectionDetailPublicQuery,
   type CardItem,
 } from "../api/vocabularyService";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 
 export default function PublicCollectionDetailPage() {
   const { t } = useTranslation();
   const { collectionId } = useParams<{ collectionId: string }>();
+  const navigate = useNavigate();
+  const currentUserId = useAuthStore((s) => s.userId);
 
   const [mode, setMode] = useState<"preview" | "learn">("preview");
   const [flashcardIdx, setFlashcardIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
 
-  const { data, isLoading } = useCollectionCardsQuery(collectionId || null);
+  const { data, isLoading } = useCollectionDetailPublicQuery(collectionId || null);
+
+  const isMine = !!data && data.userId === currentUserId;
+
+  const handleFork = async () => {
+    if (!data) return;
+
+    try {
+      // create a new collection with the same information but private
+
+      // create cards in that collection with the same values and card types
+
+    } catch (e) {
+    }
+  };
+
+  const handleBookmark = async () => {
+
+  }
 
   const cards: CardItem[] = useMemo(
     () => data?.cards ?? [],
@@ -81,13 +105,14 @@ export default function PublicCollectionDetailPage() {
 
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb 
-        items={[
-          { label: t("search.title"), href: "/search" },
-          { label: isLoading ? t("vocabulary.loading") : data?.name || t("vocabulary.collectionsTitle") }
-        ]} 
-      />
+    <div className="h-full overflow-y-auto p-6 relative">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <Breadcrumb 
+          items={[
+            { label: t("search.title"), href: "/search" },
+            { label: isLoading ? t("vocabulary.loading") : data?.name || t("vocabulary.collectionsTitle") }
+          ]} 
+        />
 
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div className="min-w-0">
@@ -123,6 +148,31 @@ export default function PublicCollectionDetailPage() {
           >
             <BookOpenText className="h-4 w-4" /> {t("vocabulary.learn")}
           </Button>
+          {isMine ? (
+            <Button
+              className="gap-2"
+              onClick={() => navigate(`/vocabulary/${collectionId}`)}
+            >
+              <Pencil className="h-4 w-4" /> {t("vocabulary.edit") || "Edit"}
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={handleFork}
+              >
+                <Copy className="h-4 w-4" /> Fork
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={handleBookmark}
+              >
+                <Bookmark className="h-4 w-4" /> Bookmark
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -232,6 +282,7 @@ export default function PublicCollectionDetailPage() {
           )}
         </div>
       )}
+      </div>
     </div>
 
   );

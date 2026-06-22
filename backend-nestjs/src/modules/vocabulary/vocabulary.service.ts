@@ -31,6 +31,61 @@ import {
 } from './dto/vocabulary-response.dto';
 import { UserService } from '../users/users.service';
 
+const collectionDetailSelect = {
+  id: true,
+  name: true,
+  description: true,
+  userId: true,
+  isPublic: true,
+  cards: {
+    orderBy: { createdAt: 'desc' as const },
+    select: {
+      id: true,
+      position: true,
+      cardTypeId: true,
+      cardType: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          fields: {
+            select: {
+              id: true,
+              key: true,
+              label: true,
+              fieldType: true,
+              side: true,
+              order: true,
+              color: true,
+              fontSize: true,
+            },
+          },
+        },
+      },
+      values: {
+        select: {
+          id: true,
+          fieldId: true,
+          value: true,
+          field: {
+            select: {
+              id: true,
+              key: true,
+              label: true,
+              fieldType: true,
+              side: true,
+              order: true,
+              color: true,
+              fontSize: true,
+            },
+          },
+        },
+      },
+    },
+  },
+  _count: { select: { cards: true } },
+};
+
 @Injectable()
 export class VocabularyService {
   constructor(
@@ -58,83 +113,25 @@ export class VocabularyService {
     return { collections };
   }
 
+  async getCollectionByIdPublic(
+    id: string,
+  ): Promise<GetCollectionByIdResponseDto> {
+    const collection = await this.prisma.cardCollection.findFirst({
+      where: { id, isPublic: true },
+      select: collectionDetailSelect,
+    });
+    if (!collection)
+      throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);
+    return collection;
+  }
+
   async getCollectionById(
     id: string,
     userId: string,
   ): Promise<GetCollectionByIdResponseDto> {
     const collection = await this.prisma.cardCollection.findFirst({
       where: { id, userId },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        userId: true,
-        isPublic: true,
-        cards: {
-          select: {
-            id: true,
-            position: true,
-            cardTypeId: true,
-            cardType: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                fields: {
-                  select: {
-                    id: true,
-                    key: true,
-                    label: true,
-                    fieldType: true,
-                    side: true,
-                    order: true,
-                    color: true,
-                    fontSize: true,
-                  },
-                },
-              },
-            },
-            values: {
-              select: {
-                id: true,
-                fieldId: true,
-                value: true,
-                field: {
-                  select: {
-                    id: true,
-                    key: true,
-                    label: true,
-                    fieldType: true,
-                    side: true,
-                    order: true,
-                    color: true,
-                    fontSize: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        _count: { select: { cards: true } },
-      },
-      // include: {
-      //   cards: {
-      //     include: {
-      //       cardType: {
-      //         include: {
-      //           fields: true,
-      //         },
-      //       },
-      //       values: {
-      //         include: {
-      //           field: true,
-      //         },
-      //       },
-      //     },
-      //     orderBy: { createdAt: 'desc' },
-      //   },
-      //   _count: { select: { cards: true } },
-      // },
+      select: collectionDetailSelect,
     });
     if (!collection)
       throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);

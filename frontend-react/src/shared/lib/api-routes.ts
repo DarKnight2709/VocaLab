@@ -92,7 +92,7 @@ const API_ROUTES = {
   VOCABULARY: {
     COLLECTIONS: "v1/vocabulary/collections",
     COLLECTION_DETAIL: (id: string) => `v1/vocabulary/collections/${id}`,
-    COLLECTION_CARDS: (id: string) => `v1/vocabulary/collections/${id}/cards`,
+    COLLECTION_DETAIL_PUBLIC: (id: string) => `v1/vocabulary/collections/${id}/public`,
     CREATE_COLLECTION: "v1/vocabulary/collections",
     UPDATE_COLLECTION: (id: string) => `v1/vocabulary/collections/${id}`,
     DELETE_COLLECTION: (id: string) => `v1/vocabulary/collections/${id}`,
