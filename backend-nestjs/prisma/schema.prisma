@@ -406,9 +406,10 @@ model GrammarStructure {
 
 model CardCollection {
   id          String   @id @default(uuid())
-  name        String
+  name        String   @unique
   description String?
   userId      String
+  originId    String?
   isPublic   Boolean   @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -416,6 +417,8 @@ model CardCollection {
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards Card[]
+  origin CardCollection? @relation("CollectionLineage", fields: [originId], references: [id])
+  forks  CardCollection[] @relation("CollectionLineage")
 
   @@index([userId])
   @@map("card_collections")

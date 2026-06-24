@@ -487,6 +487,11 @@
     "coverPreviewAlt": "Cover preview"
   },
   "vocabulary": {
+    "saveAsCopy": "Save as Copy",
+    "collectionDesc": "Description",
+    "forking": "Saving copy...",
+    "forkSuccess": "Collection copied successfully!",
+    "forkFailed": "Failed to copy collection.",
     "title": "Vocabulary",
     "collectionsTitle": "Vocabulary collections",
     "collectionsDesc": "Choose a collection to open its dedicated study page.",

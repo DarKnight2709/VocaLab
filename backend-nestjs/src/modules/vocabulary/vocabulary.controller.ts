@@ -97,6 +97,21 @@ export class VocabularyController {
     return { data: result };
   }
 
+  @Post('collections/:id/fork')
+  @ApiOperation({ summary: 'Fork bộ từ vựng' })
+  async forkCollection(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() dto: CreateCollectionDto,
+  ): Promise<ResponseInterceptor<CreateCollectionResponseDto>> {
+    const result = await this.vocabularyService.forkCollection(
+      user.id,
+      id,
+      dto,
+    );
+    return { data: result };
+  }
+
   @Delete('collections/:id')
   @ApiOperation({ summary: 'Xóa bộ từ vựng' })
   async deleteCollection(

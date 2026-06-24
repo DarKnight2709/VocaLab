@@ -486,6 +486,11 @@
     }
   },
   "vocabulary": {
+    "saveAsCopy": "Lưu bản sao",
+    "collectionDesc": "Mô tả",
+    "forking": "Đang lưu bản sao...",
+    "forkSuccess": "Lưu bản sao thành công!",
+    "forkFailed": "Lưu bản sao thất bại.",
     "title": "Từ vựng",
     "collectionsTitle": "Bộ sưu tập từ vựng",
     "collectionsDesc": "Chọn một bộ sưu tập để mở trang học riêng của bộ đó.",

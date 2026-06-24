@@ -95,7 +95,9 @@ export const useCollectionDetailPublicQuery = (id: string | null) =>
   useQuery({
     queryKey: ["card-collection-detail-public", id],
     queryFn: async () => {
-      const res = await api.get(API_ROUTES.VOCABULARY.COLLECTION_DETAIL_PUBLIC(id!));
+      const res = await api.get(
+        API_ROUTES.VOCABULARY.COLLECTION_DETAIL_PUBLIC(id!),
+      );
       return res.data;
     },
     enabled: !!id,
@@ -154,6 +156,46 @@ export const useDeleteCollectionMutation = () => {
     },
     onError: (e) =>
       toast.error(getErrorMessage(e, i18n.t("vocabulary.deleteFailed"))),
+  });
+};
+
+export const useForkCollectionMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      originalCollectionId,
+      name,
+      description,
+      isPublic,
+    }: {
+      originalCollectionId: string;
+      name: string;
+      description?: string;
+      isPublic: boolean;
+    }) => {
+      const response = await api.post(
+        API_ROUTES.VOCABULARY.FORK_COLLECTION(originalCollectionId),
+        {
+          name,
+          description,
+          isPublic,
+        },
+      )
+      return response.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["card-collections"] });
+      toast.success(
+        i18n.t("vocabulary.forkSuccess") || "Collection copied successfully!",
+      );
+    },
+    onError: (e) =>
+      toast.error(
+        getErrorMessage(
+          e,
+          i18n.t("vocabulary.forkFailed") || "Failed to copy collection.",
+        ),
+      ),
   });
 };
 

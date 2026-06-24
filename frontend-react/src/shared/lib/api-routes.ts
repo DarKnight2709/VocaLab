@@ -94,6 +94,7 @@ const API_ROUTES = {
     COLLECTION_DETAIL: (id: string) => `v1/vocabulary/collections/${id}`,
     COLLECTION_DETAIL_PUBLIC: (id: string) => `v1/vocabulary/collections/${id}/public`,
     CREATE_COLLECTION: "v1/vocabulary/collections",
+    FORK_COLLECTION: (id: string) => `v1/vocabulary/collections/${id}/fork`,
     UPDATE_COLLECTION: (id: string) => `v1/vocabulary/collections/${id}`,
     DELETE_COLLECTION: (id: string) => `v1/vocabulary/collections/${id}`,
     CARD_TYPES: "v1/vocabulary/card-types",

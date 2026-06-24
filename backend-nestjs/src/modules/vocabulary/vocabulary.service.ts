@@ -148,6 +148,221 @@ export class VocabularyService {
     return collection;
   }
 
+  async forkCollection(
+    userId: string,
+    originalCollectionId: string,
+    dto: CreateCollectionDto,
+  ): Promise<CreateCollectionResponseDto> {
+    const originalCollection = await this.prisma.cardCollection.findFirst({
+      where: {
+        id: originalCollectionId,
+        isPublic: true,
+        deletedAt: null,
+      },
+      include: {
+        cards: {
+          where: {
+            deletedAt: null,
+          },
+          include: {
+            cardType: {
+              include: {
+                fields: true,
+              },
+            },
+            values: true,
+          },
+        },
+      },
+    });
+    if (!originalCollection) {
+      throw new BadRequestException(ErrorCode.COLLECTION_NOT_FOUND);
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Create a new collection
+      const newCollection = await tx.cardCollection.create({
+        data: {
+          name: dto.name,
+          description: dto.description,
+          isPublic: dto.isPublic ?? true,
+          userId: userId,
+          originId: originalCollectionId,
+        },
+      });
+
+      const cardTypeCache = new Map<
+        string,
+        { cardTypeId: string; fieldIdMap: Map<string, string> }
+      >();
+      
+      const copiedCardsStrings: string[] = [];
+
+      // 2. Clone the card type
+      for (const card of originalCollection.cards) {
+        const cardType = card.cardType;
+        const cardFields = cardType.fields;
+        const cardFieldValues = card.values;
+
+        let mapping = cardTypeCache.get(cardType.id);
+        if (!mapping) {
+          const userCardTypes = await tx.cardType.findMany({
+            where: { userId },
+            include: { fields: true },
+          });
+
+          let exactMatchCardType: any = null;
+          let exactMatchFieldMap = new Map<string, string>();
+
+          for (const uct of userCardTypes) {
+            if (uct.fields.length === cardFields.length) {
+              const sortedUctFields = [...uct.fields].sort((a, b) => a.order - b.order);
+              const sortedCardFields = [...cardFields].sort((a, b) => a.order - b.order);
+              let isExactMatch = true;
+              const tempMap = new Map<string, string>();
+
+              for (let i = 0; i < sortedUctFields.length; i++) {
+                const uf = sortedUctFields[i];
+                const cf = sortedCardFields[i];
+                if (
+                  uf.key !== cf.key ||
+                  uf.label !== cf.label ||
+                  uf.fieldType !== cf.fieldType ||
+                  uf.side !== cf.side ||
+                  uf.order !== cf.order
+                ) {
+                  isExactMatch = false;
+                  break;
+                }
+                tempMap.set(cf.id, uf.id);
+              }
+
+              if (isExactMatch) {
+                exactMatchCardType = uct;
+                exactMatchFieldMap = tempMap;
+                break;
+              }
+            }
+          }
+
+          if (exactMatchCardType) {
+            // case 1.2: already had the exact same cardFields  (same name -> use that cardType + different name -> use that cardType)
+            mapping = { cardTypeId: exactMatchCardType.id, fieldIdMap: exactMatchFieldMap };
+            cardTypeCache.set(cardType.id, mapping);
+          } else {
+            const nameConflict = userCardTypes.find((ct) => ct.name === cardType.name);
+
+            if (nameConflict) {
+              // case 1.3: Already had the  different cardFields and same card type name -> create a new type (with the name adding (counter)  (different card type name -> create new type with the original name)
+              let newName = cardType.name;
+              let counter = 1;
+              while (userCardTypes.some((ct) => ct.name === newName)) {
+                newName = `${cardType.name} (${counter})`;
+                counter++;
+              }
+
+              const newCardType = await tx.cardType.create({
+                data: {
+                  name: newName,
+                  description: cardType.description,
+                  userId: userId,
+                },
+              });
+
+              const fieldIdMap = new Map<string, string>();
+              for (const field of cardFields) {
+                const newCardField = await tx.cardField.create({
+                  data: {
+                    cardTypeId: newCardType.id,
+                    key: field.key,
+                    label: field.label,
+                    fieldType: field.fieldType,
+                    side: field.side,
+                    order: field.order,
+                    color: field.color,
+                    fontSize: field.fontSize,
+                  },
+                });
+                fieldIdMap.set(field.id, newCardField.id);
+              }
+              
+              userCardTypes.push({ ...newCardType, fields: [] } as any);
+              mapping = { cardTypeId: newCardType.id, fieldIdMap };
+              cardTypeCache.set(cardType.id, mapping);
+            } else {
+              // case 1.1: haven't had the cardType (done) -> create new cardType and new cardFields
+              const newCardType = await this.prisma.cardType.create({
+                data: {
+                  name: cardType.name,
+                  description: cardType.description,
+                  userId: userId,
+                },
+              });
+
+              const fieldIdMap = new Map<string, string>();
+              cardFields.forEach(async (field) => {
+                const newCardField = await tx.cardField.create({
+                  data: {
+                    cardTypeId: newCardType.id,
+                    key: field.key,
+                    label: field.label,
+                    fieldType: field.fieldType,
+                    side: field.side,
+                    order: field.order,
+                    color: field.color,
+                    fontSize: field.fontSize,
+                  },
+                });
+                fieldIdMap.set(field.id, newCardField.id);
+              });
+              mapping = { cardTypeId: newCardType.id, fieldIdMap };
+              cardTypeCache.set(cardType.id, mapping);
+            }
+          }
+        }
+
+        // create a corresponding card
+        const newCard = await tx.card.create({
+          data: {
+            cardTypeId: mapping.cardTypeId,
+            cardCollectionId: newCollection.id,
+            position: card.position,
+          },
+        });
+
+        const fieldValuesForThisCard: string[] = [];
+        for (const [fieldId, newFieldId] of mapping.fieldIdMap) {
+          // create a corresponding cardFieldValue
+          const foundCardFieldValue = cardFieldValues.find(
+            (value) => value.fieldId === fieldId,
+          );
+          if (!foundCardFieldValue) {
+            continue;
+          }
+          await tx.cardFieldValue.create({
+            data: {
+              cardId: newCard.id,
+              fieldId: newFieldId,
+              value: foundCardFieldValue.value,
+            },
+          });
+          fieldValuesForThisCard.push(foundCardFieldValue.value);
+        }
+        copiedCardsStrings.push(fieldValuesForThisCard.join(','));
+      }
+      return {
+        id: newCollection.id,
+        name: newCollection.name,
+        description: newCollection.description,
+        isPublic: newCollection.isPublic,
+        userId: newCollection.userId,
+        createdAt: newCollection.createdAt,
+        updatedAt: newCollection.updatedAt,
+        copiedCards: copiedCardsStrings,
+      };
+    });
+  }
+
   async updateCollection(
     id: string,
     userId: string,
