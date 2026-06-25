@@ -180,6 +180,25 @@ export class VocabularyService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      // const existingCollection = await tx.cardCollection.findFirst({
+      //   where: {
+      //     name: dto.name,
+      //   },
+      // });
+
+      // if (!existingCollection) {
+      //   // 1. Create a new collection
+      //   const newCollection = await tx.cardCollection.create({
+      //     data: {
+      //       name: dto.name,
+      //       description: dto.description,
+      //       isPublic: dto.isPublic ?? true,
+      //       userId: userId,
+      //       originId: originalCollectionId,
+      //     },
+      //   });
+      // }
+
       // 1. Create a new collection
       const newCollection = await tx.cardCollection.create({
         data: {
@@ -195,7 +214,7 @@ export class VocabularyService {
         string,
         { cardTypeId: string; fieldIdMap: Map<string, string> }
       >();
-      
+
       const copiedCardsStrings: string[] = [];
 
       // 2. Clone the card type
@@ -216,8 +235,12 @@ export class VocabularyService {
 
           for (const uct of userCardTypes) {
             if (uct.fields.length === cardFields.length) {
-              const sortedUctFields = [...uct.fields].sort((a, b) => a.order - b.order);
-              const sortedCardFields = [...cardFields].sort((a, b) => a.order - b.order);
+              const sortedUctFields = [...uct.fields].sort(
+                (a, b) => a.order - b.order,
+              );
+              const sortedCardFields = [...cardFields].sort(
+                (a, b) => a.order - b.order,
+              );
               let isExactMatch = true;
               const tempMap = new Map<string, string>();
 
@@ -247,10 +270,15 @@ export class VocabularyService {
 
           if (exactMatchCardType) {
             // case 1.2: already had the exact same cardFields  (same name -> use that cardType + different name -> use that cardType)
-            mapping = { cardTypeId: exactMatchCardType.id, fieldIdMap: exactMatchFieldMap };
+            mapping = {
+              cardTypeId: exactMatchCardType.id,
+              fieldIdMap: exactMatchFieldMap,
+            };
             cardTypeCache.set(cardType.id, mapping);
           } else {
-            const nameConflict = userCardTypes.find((ct) => ct.name === cardType.name);
+            const nameConflict = userCardTypes.find(
+              (ct) => ct.name === cardType.name,
+            );
 
             if (nameConflict) {
               // case 1.3: Already had the  different cardFields and same card type name -> create a new type (with the name adding (counter)  (different card type name -> create new type with the original name)
@@ -285,7 +313,7 @@ export class VocabularyService {
                 });
                 fieldIdMap.set(field.id, newCardField.id);
               }
-              
+
               userCardTypes.push({ ...newCardType, fields: [] } as any);
               mapping = { cardTypeId: newCardType.id, fieldIdMap };
               cardTypeCache.set(cardType.id, mapping);
@@ -860,9 +888,9 @@ export class VocabularyService {
 
       // 2. Xử lý Fields nếu có truyền vào
       if (dto.fields) {
-        // Lấy danh sách ID các field hiện có trong DB
+        // Lấy danh sách ID các field hiện có trong DB (chưa bị xóa)
         const currentFields = await tx.cardField.findMany({
-          where: { cardTypeId: id },
+          where: { cardTypeId: id, deletedAt: null },
           select: { id: true },
         });
         const currentFieldIds = currentFields.map((f) => f.id);
@@ -877,8 +905,9 @@ export class VocabularyService {
           (fid) => !incomingFieldIds.includes(fid),
         );
         if (fieldsToDelete.length > 0) {
-          await tx.cardField.deleteMany({
+          await tx.cardField.updateMany({
             where: { id: { in: fieldsToDelete } },
+            data: { deletedAt: new Date() }
           });
         }
 
@@ -921,11 +950,12 @@ export class VocabularyService {
         }
       }
 
-      // Trả về CardType đã cập nhật kèm các trường đã sắp xếp
+      // Trả về CardType đã cập nhật kèm các trường đã sắp xếp (không lấy những trường đã bị xóa)
       return await tx.cardType.findUnique({
         where: { id },
         include: {
           fields: {
+            where: { deletedAt: null },
             orderBy: { order: 'asc' },
           },
         },
