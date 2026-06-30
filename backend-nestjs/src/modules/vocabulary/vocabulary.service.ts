@@ -40,6 +40,28 @@ const collectionDetailSelect = {
   description: true,
   userId: true,
   isPublic: true,
+  originId: true,
+  createdAt: true,
+  updatedAt: true,
+  origin: {
+    select: {
+      id: true,
+      name: true,
+      user: {
+        select: {
+          username: true,
+        },
+      },
+    },
+  },
+  user: {
+    select: {
+      id: true,
+      username: true,
+      fullName: true,
+      avatar: true,
+    },
+  },
   cards: {
     orderBy: { createdAt: 'desc' as const },
     select: {
@@ -109,6 +131,18 @@ export class VocabularyService {
         description: true,
         userId: true,
         isPublic: true,
+        originId: true,
+        origin: {
+          select: {
+            id: true,
+            name: true,
+            user: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
         _count: { select: { cards: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -675,6 +709,18 @@ export class VocabularyService {
           updatedAt: true,
           userId: true,
           isPublic: true,
+          originId: true,
+          origin: {
+            select: {
+              id: true,
+              name: true,
+              user: {
+                select: {
+                  username: true,
+                },
+              },
+            },
+          },
           user: {
             select: {
               id: true,

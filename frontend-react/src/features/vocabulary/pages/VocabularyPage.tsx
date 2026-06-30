@@ -29,6 +29,7 @@ import {
 } from "../api/vocabularyService";
 import { api, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
+import ROUTES from "@/shared/lib/routes";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -283,6 +284,21 @@ export default function VocabularyPage() {
                   <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
                     {col.description}
                   </div>
+                  {col.originId && (
+                    <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                      <span>{t("vocabulary.forkedFrom")} </span>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", col.originId!));
+                        }}
+                        className="text-blue-500 hover:underline hover:text-blue-600 transition-colors"
+                      >
+                        {col.origin ? `${col.origin.user.username}/${col.origin.name}` : t("vocabulary.originalCollection")}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <DropdownMenu>

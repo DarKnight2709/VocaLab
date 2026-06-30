@@ -37,6 +37,12 @@ export const SearchCollectionResultSchema = z.object({
   description: z.string().nullable(),
   _count: z.object({ cards: z.number() }),
   userId: z.string(),
+  originId: z.string().nullable().optional(),
+  origin: z.object({
+    id: z.string(),
+    name: z.string(),
+    user: z.object({ username: z.string() }),
+  }).nullable().optional(),
   user: AuthorSchema,
   createdAt: z.string(),
   updatedAt: z.string(),

@@ -31,6 +31,20 @@ export interface VocabCollection {
   description: string | null;
   userId: string;
   isPublic: boolean;
+  originId: string | null;
+  origin?: {
+    id: string;
+    name: string;
+    user: {
+      username: string;
+    };
+  } | null;
+  user: {
+    id: string;
+    username: string;
+    fullName: string;
+    avatar: string | null;
+  };
   createdAt: string;
   _count?: { cards: number };
 }

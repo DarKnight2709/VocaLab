@@ -23,6 +23,7 @@ import EditCardDialog from "../components/EditCardDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import ROUTES from "@/shared/lib/routes";
 
 export default function VocabularyCollectionPage() {
   const navigate = useNavigate();
@@ -154,9 +155,23 @@ export default function VocabularyCollectionPage() {
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isLoading ? "" : data?.description}
-          </p>
+          <div className="flex flex-col mt-1">
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? "" : data?.description}
+            </p>
+            {data?.originId && (
+              <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1 bg-muted/40 w-fit px-2 py-1 rounded-md border">
+                <span>{t("vocabulary.forkedFrom")} </span>
+                <button 
+                  type="button"
+                  onClick={() => navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", data.originId!))}
+                  className="text-blue-500 hover:underline hover:text-blue-600 transition-colors font-medium"
+                >
+                  {data.origin ? `${data.origin.user.username}/${data.origin.name}` : t("vocabulary.originalCollection")}
+                </button>
+              </div>
+            )}
+          </div>
           <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
             <Layers className="h-4 w-4" />
             <span>{cards.length} {t("vocabulary.cards")}</span>

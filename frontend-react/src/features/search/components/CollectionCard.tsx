@@ -8,6 +8,7 @@ import { Layers, MoreHorizontal, Copy, CheckCircle2 } from "lucide-react";
 import { formatTimeAgo } from "@/shared/lib/utils";
 import { useForkCollectionMutation } from "@/features/vocabulary/api/vocabularyService";
 import { useAuthStore } from "@/features/auth/stores/authStore";
+import ROUTES from "@/shared/lib/routes";
 import { Button } from "@/shared/components/ui/button";
 import {
   DropdownMenu,
@@ -105,22 +106,39 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
           <div className="min-w-0 w-full flex flex-col gap-2">
             {collection.user && (
               <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <div className="h-5 w-5 shrink-0 overflow-hidden rounded-full bg-muted ring-1 ring-border">
-                  {collection.user.avatar ? (
-                    <img
-                      src={collection.user.avatar}
-                      alt={collection.user.fullName}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-[10px] font-bold uppercase text-muted-foreground">
-                      {collection.user.fullName[0]}
-                    </div>
-                  )}
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  className="flex items-center gap-1.5 cursor-pointer hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(ROUTES.PROFILE.url.replace(":username", collection.user.username));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(ROUTES.PROFILE.url.replace(":username", collection.user.username));
+                    }
+                  }}
+                >
+                  <div className="h-5 w-5 shrink-0 overflow-hidden rounded-full bg-muted ring-1 ring-border">
+                    {collection.user.avatar ? (
+                      <img
+                        src={collection.user.avatar}
+                        alt={collection.user.fullName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[10px] font-bold uppercase text-muted-foreground">
+                        {collection.user.fullName[0]}
+                      </div>
+                    )}
+                  </div>
+                  <span className="truncate font-medium text-foreground">
+                    {collection.user.fullName}
+                  </span>
                 </div>
-                <span className="truncate font-medium text-foreground">
-                  {collection.user.fullName}
-                </span>
                 <span aria-hidden>·</span>
                 <span className="shrink-0">
                   {formatTimeAgo(collection.createdAt, t)}
@@ -132,6 +150,23 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
               <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
                 {collection.description}
               </div>
+              {collection.originId && (
+                <div className="mt-1.5 text-xs text-muted-foreground flex items-center gap-1">
+                  <span>{t("vocabulary.forkedFrom")} </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", collection.originId!));
+                    }}
+                    className="text-blue-500 hover:underline hover:text-blue-600 transition-colors"
+                  >
+                    {collection.origin
+                      ? `${collection.origin.user.username}/${collection.origin.name}`
+                      : t("vocabulary.originalCollection")}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

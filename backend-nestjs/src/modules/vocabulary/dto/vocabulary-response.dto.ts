@@ -47,6 +47,22 @@ export class CardFieldValueResponseDto {
 
 // ─── Collections ────────────────────────────────────────────
 
+export class OriginUserDto {
+  @ApiProperty({ example: 'johndoe' })
+  username!: string;
+}
+
+export class CollectionOriginDto {
+  @ApiProperty({ example: 'uuid-string' })
+  id!: string;
+
+  @ApiProperty({ example: 'Original name' })
+  name!: string;
+
+  @ApiProperty({ type: OriginUserDto })
+  user!: OriginUserDto;
+}
+
 export class CollectionListItemDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
@@ -62,6 +78,12 @@ export class CollectionListItemDto {
 
   @ApiProperty({ example: true })
   isPublic!: boolean;
+
+  @ApiPropertyOptional({ example: 'uuid-string', nullable: true })
+  originId!: string | null;
+
+  @ApiPropertyOptional({ type: CollectionOriginDto, nullable: true })
+  origin!: CollectionOriginDto | null;
 
   @ApiProperty({ example: { cards: 25 } })
   _count!: { cards: number };
@@ -135,6 +157,15 @@ export class GetCollectionByIdResponseDto {
 
   @ApiProperty({ example: true })
   isPublic!: boolean;
+
+  @ApiPropertyOptional({ example: 'uuid-string', nullable: true })
+  originId!: string | null;
+
+  @ApiPropertyOptional({ type: CollectionOriginDto, nullable: true })
+  origin!: CollectionOriginDto | null;
+
+  @ApiProperty({ type: UserResponse })
+  user!: UserResponse;
 
   @ApiProperty({ type: [CardDetailDto] })
   cards!: CardDetailDto[];

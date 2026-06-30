@@ -4,6 +4,7 @@ import { BookOpenText, Eye, Layers, Pencil, Copy, CheckCircle2 } from "lucide-re
 import { UpdateCardType } from "@/shared/enums/UpdateCardType.enum";
 import { UpdateCard } from "@/shared/enums/UpdateCard.enum";
 import Breadcrumb from "@/shared/components/Breadcrumb";
+import { formatTimeAgo } from "@/shared/lib/utils";
 import {
   useCollectionDetailPublicQuery,
   useForkCollectionMutation,
@@ -11,6 +12,7 @@ import {
 } from "../api/vocabularyService";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import ROUTES from "@/shared/lib/routes";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import {
   Dialog,
@@ -173,9 +175,66 @@ export default function PublicCollectionDetailPage() {
                 {isLoading ? t("vocabulary.loading") : data?.name}
               </h1>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isLoading ? "" : data?.description}
-            </p>
+            
+            {data?.user && (
+              <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground mt-2">
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  className="flex items-center gap-1.5 cursor-pointer hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(ROUTES.PROFILE.url.replace(":username", data.user!.username));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(ROUTES.PROFILE.url.replace(":username", data.user!.username));
+                    }
+                  }}
+                >
+                  <div className="h-5 w-5 shrink-0 overflow-hidden rounded-full bg-muted ring-1 ring-border">
+                    {data.user.avatar ? (
+                      <img
+                        src={data.user.avatar}
+                        alt={data.user.fullName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[10px] font-bold uppercase text-muted-foreground">
+                        {data.user.fullName[0]}
+                      </div>
+                    )}
+                  </div>
+                  <span className="truncate font-medium text-foreground">
+                    {data.user.fullName}
+                  </span>
+                </div>
+                <span aria-hidden>·</span>
+                <span className="shrink-0">
+                  {formatTimeAgo(data.createdAt, t)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex flex-col mt-2">
+              <p className="text-sm text-muted-foreground">
+                {isLoading ? "" : data?.description}
+              </p>
+              {data?.originId && (
+                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1 bg-muted/40 w-fit px-2 py-1 rounded-md border">
+                  <span>{t("vocabulary.forkedFrom")} </span>
+                  <button 
+                    type="button"
+                    onClick={() => navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", data.originId!))}
+                    className="text-blue-500 hover:underline hover:text-blue-600 transition-colors font-medium"
+                  >
+                    {data.origin ? `${data.origin.user.username}/${data.origin.name}` : t("vocabulary.originalCollection")}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
               <Layers className="h-4 w-4" />
               <span>
