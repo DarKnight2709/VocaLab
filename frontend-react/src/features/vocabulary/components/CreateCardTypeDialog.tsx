@@ -31,7 +31,6 @@ interface CreateCardTypeDialogProps {
 
 interface Field {
   id?: string;
-  key: string;
   label: string;
   fieldType: "TEXT" | "TEXTAREA" | "IMAGE";
   side: "FRONT" | "BACK";

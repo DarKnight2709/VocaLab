@@ -164,9 +164,17 @@ export class CreateCollectionResponseDto {
 
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
   updatedAt!: Date;
+}
 
-  @ApiPropertyOptional({ type: [String], nullable: true })
-  copiedCards?: string[];
+export class ForkCollectionResponseDto extends CreateCollectionResponseDto {
+  @ApiProperty({ type: [String], example: ['hello', 'world'] })
+  createdCards!: string[];
+
+  @ApiProperty({ type: [String], example: ['existing'] })
+  updatedCards!: string[];
+
+  @ApiProperty({ type: [String], example: ['skipped'] })
+  skippedCards!: string[];
 }
 
 // ─── Cards ──────────────────────────────────────────────────

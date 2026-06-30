@@ -16,6 +16,7 @@ import {
   CreateCardDto,
   ImportCardsDto,
   UpdateCardDto,
+  ForkCollectionDto,
 } from './dto/vocabulary.dto';
 import { IsProtected } from '../../common/decorators/protected.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -24,6 +25,7 @@ import {
   GetCollectionsResponseDto,
   GetCollectionByIdResponseDto,
   CreateCollectionResponseDto,
+  ForkCollectionResponseDto,
   AddCardResponseDto,
   UpdateCardResponseDto,
   ImportCardsResponseDto,
@@ -102,8 +104,8 @@ export class VocabularyController {
   async forkCollection(
     @Param('id') id: string,
     @CurrentUser() user: any,
-    @Body() dto: CreateCollectionDto,
-  ): Promise<ResponseInterceptor<CreateCollectionResponseDto>> {
+    @Body() dto: ForkCollectionDto,
+  ): Promise<ResponseInterceptor<ForkCollectionResponseDto>> {
     const result = await this.vocabularyService.forkCollection(
       user.id,
       id,

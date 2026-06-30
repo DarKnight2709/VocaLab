@@ -10,10 +10,12 @@ import {
   ValidateNested,
   IsEnum,
 } from 'class-validator';
-import { PartialType } from '@nestjs/mapped-types';
+import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { CardFieldType, CardSide } from '@prisma/client';
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
+import { UpdateCardType } from '@/common/enums/update-card-type';
+import { UpdateCard } from '@/common/enums/update-card';
 
 export class CreateCollectionDto {
   @IsString()
@@ -30,6 +32,16 @@ export class CreateCollectionDto {
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
+}
+export class ForkCollectionDto extends CreateCollectionDto {
+  @IsBoolean()
+  mergeCardType!: boolean;
+
+  @IsEnum(UpdateCardType)
+  updateCardType!: UpdateCardType;
+
+  @IsEnum(UpdateCard)
+  updateCard!: UpdateCard;
 }
 
 export class UpdateCollectionDto extends PartialType(CreateCollectionDto) {}
@@ -56,12 +68,10 @@ export class CardValueDto {
   fieldId!: string;
 
   @IsString()
-  @IsNotEmpty()
   value!: string;
 }
 
-export class UpdateCardDto extends PartialType(CreateCardDto) {}
-
+export class UpdateCardDto extends OmitType(CreateCardDto, ['cardTypeId'] as const) { }
 export class ImportCardsDto {
   @IsString()
   @IsNotEmpty()
@@ -73,16 +83,15 @@ export class ImportCardsDto {
 
   @IsString()
   @IsNotEmpty()
-  delimiter!: string
-  
+  delimiter!: string;
+
   @IsEnum(DuplicatePolicy)
   @IsNotEmpty()
-  duplicatePolicy!: DuplicatePolicy
-
+  duplicatePolicy!: DuplicatePolicy;
 
   @IsString()
   @IsNotEmpty()
-  rawText!: string
+  rawText!: string;
 }
 
 export class CreateCardTypeDto {
@@ -101,10 +110,6 @@ export class CreateCardTypeDto {
 }
 
 export class CardFieldDto {
-  @IsString()
-  @IsNotEmpty()
-  key!: string;
-
   @IsString()
   @IsNotEmpty()
   label!: string;

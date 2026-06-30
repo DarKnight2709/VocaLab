@@ -9,6 +9,8 @@ import {
   type CardType,
   type CardField,
 } from "@/shared/validations/VocabularySchema";
+import type { UpdateCardType } from "@/shared/enums/UpdateCardType.enum";
+import type { UpdateCard } from "@/shared/enums/UpdateCard.enum";
 
 export const DuplicatePolicy = {
   SKIP: "SKIP",
@@ -167,11 +169,17 @@ export const useForkCollectionMutation = () => {
       name,
       description,
       isPublic,
+      mergeCardType,
+      updateCardType,
+      updateCard,
     }: {
       originalCollectionId: string;
       name: string;
       description?: string;
       isPublic: boolean;
+      mergeCardType: boolean;
+      updateCardType: UpdateCardType;
+      updateCard: UpdateCard;
     }) => {
       const response = await api.post(
         API_ROUTES.VOCABULARY.FORK_COLLECTION(originalCollectionId),
@@ -179,6 +187,9 @@ export const useForkCollectionMutation = () => {
           name,
           description,
           isPublic,
+          mergeCardType,
+          updateCardType,
+          updateCard,
         },
       )
       return response.data;
@@ -236,7 +247,6 @@ export const useCreateCardTypeMutation = () => {
       name: string;
       description?: string;
       fields: Array<{
-        key: string;
         label: string;
         fieldType: string;
         side: string;
@@ -271,7 +281,6 @@ export const useUpdateCardTypeMutation = () => {
         description?: string;
         fields?: Array<{
           id?: string;
-          key: string;
           label: string;
           fieldType: string;
           side: string;

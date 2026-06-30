@@ -21,7 +21,6 @@ import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface Field {
   id?: string;
-  key: string;
   label: string;
   fieldType: "TEXT" | "TEXTAREA" | "IMAGE";
   side: "FRONT" | "BACK";
@@ -48,14 +47,12 @@ export default function FieldSelectionDialog({
 
   const PREDEFINED_FIELDS: Field[] = [
     {
-      key: "front",
       label: t("vocabulary.fieldsObj.front"),
       fieldType: "TEXT",
       side: "FRONT",
       order: 0,
     },
     {
-      key: "back",
       label: t("vocabulary.fieldsObj.back"),
       fieldType: "TEXT",
       side: "BACK",
@@ -76,45 +73,24 @@ export default function FieldSelectionDialog({
   const [customFieldColor, setCustomFieldColor] = useState("");
   const [customFieldFontSize, setCustomFieldFontSize] = useState<number>(16);
   const [editingField, setEditingField] = useState<{
-    key: string;
+    label: string;
     source: "default" | "custom";
   } | null>(null);
 
   const allFields = [...defaultFields, ...customFields];
 
-  const createUniqueKey = (rawName: string, excludeKey?: string) => {
-    const base = rawName
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-z0-9_]/g, "") || "field";
-
-    const used = new Set(
-      allFields.filter((f) => f.key !== excludeKey).map((f) => f.key)
-    );
-
-    let key = base;
-    let i = 1;
-    while (used.has(key)) {
-      key = `${base}_${i}`;
-      i += 1;
-    }
-
-    return key;
-  };
-
   const hydrateFromInitialFields = (fields: Field[]) => {
-    const byKey = new Map(fields.map((field) => [field.key, field]));
+    const byLabel = new Map(fields.map((field) => [field.label, field]));
 
     const nextDefaultFields = PREDEFINED_FIELDS.map((baseField) => {
-      const existing = byKey.get(baseField.key);
+      const existing = byLabel.get(baseField.label);
       if (!existing) {
         return baseField;
       }
 
       return {
         ...baseField,
-        id: existing.id, // Giữ ID nếu có
+        id: existing.id,
         label: existing.label,
         fieldType: existing.fieldType,
         side: existing.side,
@@ -124,12 +100,12 @@ export default function FieldSelectionDialog({
     });
 
     const nextCustomFields = fields
-      .filter((field) => field.key !== "front" && field.key !== "back")
+      .filter((field) => field.label !== t("vocabulary.fieldsObj.front") && field.label !== t("vocabulary.fieldsObj.back"))
       .map((field, index) => ({ ...field, order: index }));
 
     setDefaultFields(nextDefaultFields);
     setCustomFields(nextCustomFields);
-    setSelectedFields(new Set(fields.map((field) => field.key)));
+    setSelectedFields(new Set(fields.map((field) => field.label)));
     setCustomFieldName("");
     setCustomFieldType("TEXT");
     setCustomFieldSide("FRONT");
@@ -142,27 +118,29 @@ export default function FieldSelectionDialog({
     }
   }, [open, initialFields]);
 
-  const toggleField = (key: string) => {
+  const toggleField = (label: string) => {
     const newSelected = new Set(selectedFields);
-    if (newSelected.has(key)) {
-      newSelected.delete(key);
+    if (newSelected.has(label)) {
+      newSelected.delete(label);
     } else {
-      newSelected.add(key);
+      newSelected.add(label);
     }
     setSelectedFields(newSelected);
   };
 
   const handleAddCustomField = () => {
-    if (!customFieldName.trim()) return;
+    const trimmedName = customFieldName.trim();
+    if (!trimmedName) return;
 
-    const nextKey = createUniqueKey(
-      customFieldName,
-      editingField?.source === "custom" ? editingField.key : undefined
-    );
+    if (
+      allFields.some((f) => f.label === trimmedName) &&
+      editingField?.label !== trimmedName
+    ) {
+      return;
+    }
 
     const newField: Field = {
-      key: nextKey,
-      label: customFieldName,
+      label: trimmedName,
       fieldType: customFieldType,
       side: customFieldSide,
       color: customFieldColor || undefined,
@@ -174,10 +152,10 @@ export default function FieldSelectionDialog({
     if (editingField?.source === "default") {
       setDefaultFields(
         defaultFields.map((field) =>
-          field.key === editingField.key
+          field.label === editingField.label
             ? {
                 ...field,
-                label: customFieldName,
+                label: trimmedName,
                 fieldType: customFieldType,
                 side: customFieldSide,
                 color: customFieldColor || undefined,
@@ -189,7 +167,7 @@ export default function FieldSelectionDialog({
     } else if (editingField?.source === "custom") {
       setCustomFields(
         customFields.map((field) =>
-          field.key === editingField.key 
+          field.label === editingField.label 
             ? { 
                 ...field, 
                 ...newField,
@@ -200,18 +178,18 @@ export default function FieldSelectionDialog({
         )
       );
 
-      if (editingField.key !== newField.key) {
+      if (editingField.label !== newField.label) {
         const newSelected = new Set(selectedFields);
-        if (newSelected.has(editingField.key)) {
-          newSelected.delete(editingField.key);
-          newSelected.add(newField.key);
+        if (newSelected.has(editingField.label)) {
+          newSelected.delete(editingField.label);
+          newSelected.add(newField.label);
         }
         setSelectedFields(newSelected);
       }
     } else {
       setCustomFields([...customFields, newField]);
       const newSelected = new Set(selectedFields);
-      newSelected.add(newField.key);
+      newSelected.add(newField.label);
       setSelectedFields(newSelected);
     }
 
@@ -228,10 +206,10 @@ export default function FieldSelectionDialog({
     setCustomFields(customFields.filter((_, i) => i !== index));
 
     const newSelected = new Set(selectedFields);
-    newSelected.delete(field.key);
+    newSelected.delete(field.label);
     setSelectedFields(newSelected);
 
-    if (editingField?.source === "custom" && editingField.key === field.key) {
+    if (editingField?.source === "custom" && editingField.label === field.label) {
       setEditingField(null);
       setCustomFieldName("");
       setCustomFieldType("TEXT");
@@ -240,7 +218,7 @@ export default function FieldSelectionDialog({
   };
 
   const handleEditField = (field: Field, source: "default" | "custom") => {
-    setEditingField({ key: field.key, source });
+    setEditingField({ label: field.label, source });
     setCustomFieldName(field.label);
     setCustomFieldType(field.fieldType);
     setCustomFieldSide(field.side);
@@ -250,7 +228,7 @@ export default function FieldSelectionDialog({
 
   const handleConfirm = () => {
     const fieldsToAdd = allFields
-      .filter((field) => selectedFields.has(field.key))
+      .filter((field) => selectedFields.has(field.label))
       .map((field, index) => ({ ...field, order: index }));
 
     onSelectFields(fieldsToAdd);
@@ -270,18 +248,18 @@ export default function FieldSelectionDialog({
             <Label className="font-semibold">{t("vocabulary.fieldsObj.fieldsLabel")}</Label>
             <div className="space-y-2">
               {allFields.map((field) => {
-                const customIndex = customFields.findIndex((f) => f.key === field.key);
+                const customIndex = customFields.findIndex((f) => f.label === field.label);
                 const isCustom = customIndex >= 0;
 
                 return (
                 <div
-                  key={field.key}
+                  key={field.label}
                   className="flex items-center gap-3 p-2 rounded hover:bg-muted"
                 >
                   <input
                     type="checkbox"
-                    checked={selectedFields.has(field.key)}
-                    onChange={() => toggleField(field.key)}
+                    checked={selectedFields.has(field.label)}
+                    onChange={() => toggleField(field.label)}
                     className="h-4 w-4 cursor-pointer"
                   />
                   <div className="flex-1">

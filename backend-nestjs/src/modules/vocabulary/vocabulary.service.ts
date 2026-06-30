@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -12,6 +11,7 @@ import {
   UpdateCardDto,
   ImportCardsDto,
   CreateCardTypeDto,
+  ForkCollectionDto,
 } from './dto/vocabulary.dto';
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
 import { ErrorCode } from '@/common/enums/error-code.enum';
@@ -28,8 +28,11 @@ import {
   CardTypeWithFieldsDto,
   DeleteResponseDto,
   CollectionSearchResponseDto,
+  ForkCollectionResponseDto,
 } from './dto/vocabulary-response.dto';
 import { UserService } from '../users/users.service';
+import { UpdateCardType } from '@/common/enums/update-card-type';
+import { UpdateCard } from '@/common/enums/update-card';
 
 const collectionDetailSelect = {
   id: true,
@@ -151,8 +154,8 @@ export class VocabularyService {
   async forkCollection(
     userId: string,
     originalCollectionId: string,
-    dto: CreateCollectionDto,
-  ): Promise<CreateCollectionResponseDto> {
+    dto: ForkCollectionDto,
+  ): Promise<ForkCollectionResponseDto> {
     const originalCollection = await this.prisma.cardCollection.findFirst({
       where: {
         id: originalCollectionId,
@@ -170,7 +173,11 @@ export class VocabularyService {
                 fields: true,
               },
             },
-            values: true,
+            values: {
+              include: {
+                field: true,
+              },
+            },
           },
         },
       },
@@ -180,203 +187,409 @@ export class VocabularyService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      // const existingCollection = await tx.cardCollection.findFirst({
-      //   where: {
-      //     name: dto.name,
-      //   },
-      // });
-
-      // if (!existingCollection) {
-      //   // 1. Create a new collection
-      //   const newCollection = await tx.cardCollection.create({
-      //     data: {
-      //       name: dto.name,
-      //       description: dto.description,
-      //       isPublic: dto.isPublic ?? true,
-      //       userId: userId,
-      //       originId: originalCollectionId,
-      //     },
-      //   });
-      // }
-
-      // 1. Create a new collection
-      const newCollection = await tx.cardCollection.create({
-        data: {
+      const existingCollection = await tx.cardCollection.findFirst({
+        where: {
           name: dto.name,
-          description: dto.description,
-          isPublic: dto.isPublic ?? true,
-          userId: userId,
-          originId: originalCollectionId,
+          userId,
         },
       });
 
-      const cardTypeCache = new Map<
-        string,
-        { cardTypeId: string; fieldIdMap: Map<string, string> }
-      >();
+      let newCollection: any;
+      if (existingCollection) {
+        newCollection = await tx.cardCollection.update({
+          where: {
+            id: existingCollection.id,
+          },
+          data: {
+            description: dto.description,
+            isPublic: dto.isPublic,
+            originId: originalCollectionId,
+          },
+        });
+      } else {
+        // Create a new collection
+        newCollection = await tx.cardCollection.create({
+          data: {
+            name: dto.name,
+            description: dto.description,
+            isPublic: dto.isPublic,
+            userId: userId,
+            originId: originalCollectionId,
+          },
+        });
+      }
 
-      const copiedCardsStrings: string[] = [];
+      const userCardTypes = await tx.cardType.findMany({
+        where: { userId },
+        include: { fields: true },
+      });
+      const userAddedCardTypes = new Map<string, any>();
 
-      // 2. Clone the card type
-      for (const card of originalCollection.cards) {
-        const cardType = card.cardType;
-        const cardFields = cardType.fields;
-        const cardFieldValues = card.values;
+      //  Get unique card types from the original collection
+      const originalCardTypes = Array.from(
+        new Map(
+          originalCollection.cards.map((c) => [c.cardType.id, c.cardType]),
+        ).values(),
+      );
 
-        let mapping = cardTypeCache.get(cardType.id);
-        if (!mapping) {
-          const userCardTypes = await tx.cardType.findMany({
-            where: { userId },
-            include: { fields: true },
+      const typeIdMap = new Map<string, string>(); // OriginalTypeId -> NewTypeId
+      const createdCards: string[] = [];
+      const updatedCards: string[] = [];
+      const skippedCards: string[] = [];
+
+      // Clone the card type
+      for (const origType of originalCardTypes) {
+        const originalCardFields = origType.fields;
+
+        // find the card type in the current user to create/merge/update
+        const existingCardType = userCardTypes.find(
+          (uct) => uct.name === origType.name,
+        );
+
+        if (!existingCardType) {
+          let targetCardType;
+          if (userAddedCardTypes.has(origType.id)) {
+            targetCardType = userAddedCardTypes.get(origType.id);
+          } else {
+            // haven't had the cardType (done) -> create new cardType and new cardFields
+            targetCardType = await tx.cardType.create({
+              data: {
+                name: origType.name,
+                description: origType.description,
+                userId: userId,
+              },
+            });
+          }
+          typeIdMap.set(origType.id, targetCardType.id);
+
+          // create card fields
+          // Use Promise.all to process all field creations concurrently
+          const cardType = await tx.cardType.findFirst({
+            where: {
+              id: targetCardType.id,
+            },
+            include: {
+              fields: true,
+            },
           });
 
-          let exactMatchCardType: any = null;
-          let exactMatchFieldMap = new Map<string, string>();
-
-          for (const uct of userCardTypes) {
-            if (uct.fields.length === cardFields.length) {
-              const sortedUctFields = [...uct.fields].sort(
-                (a, b) => a.order - b.order,
-              );
-              const sortedCardFields = [...cardFields].sort(
-                (a, b) => a.order - b.order,
-              );
-              let isExactMatch = true;
-              const tempMap = new Map<string, string>();
-
-              for (let i = 0; i < sortedUctFields.length; i++) {
-                const uf = sortedUctFields[i];
-                const cf = sortedCardFields[i];
-                if (
-                  uf.key !== cf.key ||
-                  uf.label !== cf.label ||
-                  uf.fieldType !== cf.fieldType ||
-                  uf.side !== cf.side ||
-                  uf.order !== cf.order
-                ) {
-                  isExactMatch = false;
-                  break;
-                }
-                tempMap.set(cf.id, uf.id);
-              }
-
-              if (isExactMatch) {
-                exactMatchCardType = uct;
-                exactMatchFieldMap = tempMap;
-                break;
+          if (cardType!.fields.length === 0) {
+            await Promise.all(
+              originalCardFields.map(async (cardField) => {
+                const newCardField = await tx.cardField.create({
+                  data: {
+                    cardTypeId: targetCardType.id,
+                    key: cardField.key,
+                    label: cardField.label,
+                    fieldType: cardField.fieldType,
+                    side: cardField.side,
+                    order: cardField.order,
+                    color: cardField.color,
+                    fontSize: cardField.fontSize,
+                  },
+                });
+              }),
+            );
+          }
+        } else {
+          // check mergeCardType (add the new field to existing card type)
+          typeIdMap.set(origType.id, existingCardType.id);
+          const existingCardFields = await tx.cardField.findMany({
+            where: {
+              cardTypeId: existingCardType.id,
+            },
+          });
+          if (dto.mergeCardType) {
+            const existingFields = existingCardFields.map((field) => field.key);
+            for (const cardField of originalCardFields) {
+              if (!existingFields.includes(cardField.key)) {
+                const newCardField = await tx.cardField.create({
+                  data: {
+                    cardTypeId: existingCardType.id,
+                    key: cardField.key,
+                    label: cardField.label,
+                    fieldType: cardField.fieldType,
+                    side: cardField.side,
+                    order: cardField.order,
+                    color: cardField.color,
+                    fontSize: cardField.fontSize,
+                  },
+                });
               }
             }
           }
 
-          if (exactMatchCardType) {
-            // case 1.2: already had the exact same cardFields  (same name -> use that cardType + different name -> use that cardType)
-            mapping = {
-              cardTypeId: exactMatchCardType.id,
-              fieldIdMap: exactMatchFieldMap,
-            };
-            cardTypeCache.set(cardType.id, mapping);
-          } else {
-            const nameConflict = userCardTypes.find(
-              (ct) => ct.name === cardType.name,
-            );
-
-            if (nameConflict) {
-              // case 1.3: Already had the  different cardFields and same card type name -> create a new type (with the name adding (counter)  (different card type name -> create new type with the original name)
-              let newName = cardType.name;
-              let counter = 1;
-              while (userCardTypes.some((ct) => ct.name === newName)) {
-                newName = `${cardType.name} (${counter})`;
-                counter++;
-              }
-
-              const newCardType = await tx.cardType.create({
+          if (dto.updateCardType !== UpdateCardType.NEVER) {
+            if (dto.updateCardType === UpdateCardType.ALWAYS) {
+              // update the card type
+              await tx.cardType.update({
+                where: {
+                  id: existingCardType.id,
+                },
                 data: {
-                  name: newName,
-                  description: cardType.description,
-                  userId: userId,
+                  description: origType.description,
                 },
               });
 
-              const fieldIdMap = new Map<string, string>();
-              for (const field of cardFields) {
-                const newCardField = await tx.cardField.create({
-                  data: {
-                    cardTypeId: newCardType.id,
-                    key: field.key,
-                    label: field.label,
-                    fieldType: field.fieldType,
-                    side: field.side,
-                    order: field.order,
-                    color: field.color,
-                    fontSize: field.fontSize,
-                  },
-                });
-                fieldIdMap.set(field.id, newCardField.id);
+              // update card fields
+              const existingCardFields = await tx.cardField.findMany({
+                where: {
+                  cardTypeId: existingCardType.id,
+                },
+              });
+              for (const cardField of originalCardFields) {
+                const existingField = existingCardFields.find(
+                  (field) => field.key === cardField.key,
+                );
+                if (existingField) {
+                  await tx.cardField.update({
+                    where: {
+                      id: existingField.id,
+                    },
+                    data: {
+                      cardTypeId: existingCardType.id,
+                      label: cardField.label,
+                      fieldType: cardField.fieldType,
+                      side: cardField.side,
+                      order: cardField.order,
+                      color: cardField.color,
+                      fontSize: cardField.fontSize,
+                    },
+                  });
+                }
               }
-
-              userCardTypes.push({ ...newCardType, fields: [] } as any);
-              mapping = { cardTypeId: newCardType.id, fieldIdMap };
-              cardTypeCache.set(cardType.id, mapping);
             } else {
-              // case 1.1: haven't had the cardType (done) -> create new cardType and new cardFields
-              const newCardType = await this.prisma.cardType.create({
-                data: {
-                  name: cardType.name,
-                  description: cardType.description,
-                  userId: userId,
-                },
-              });
-
-              const fieldIdMap = new Map<string, string>();
-              cardFields.forEach(async (field) => {
-                const newCardField = await tx.cardField.create({
+              // only update if the card type is newer version.
+              if (origType.updatedAt > existingCardType.updatedAt) {
+                await tx.cardType.update({
+                  where: {
+                    id: existingCardType.id,
+                  },
                   data: {
-                    cardTypeId: newCardType.id,
-                    key: field.key,
-                    label: field.label,
-                    fieldType: field.fieldType,
-                    side: field.side,
-                    order: field.order,
-                    color: field.color,
-                    fontSize: field.fontSize,
+                    description: origType.description,
                   },
                 });
-                fieldIdMap.set(field.id, newCardField.id);
+              }
+
+              // update card fields
+              const existingCardFields = await tx.cardField.findMany({
+                where: {
+                  cardTypeId: existingCardType.id,
+                },
               });
-              mapping = { cardTypeId: newCardType.id, fieldIdMap };
-              cardTypeCache.set(cardType.id, mapping);
+              for (const cardField of originalCardFields) {
+                const existingField = existingCardFields.find(
+                  (field) => field.key === cardField.key,
+                );
+                if (existingField) {
+                  if (cardField.updatedAt > existingField.updatedAt) {
+                    await tx.cardField.update({
+                      where: {
+                        id: existingField.id,
+                      },
+                      data: {
+                        cardTypeId: existingCardType.id,
+                        label: cardField.label,
+                        fieldType: cardField.fieldType,
+                        side: cardField.side,
+                        order: cardField.order,
+                        color: cardField.color,
+                        fontSize: cardField.fontSize,
+                      },
+                    });
+                  }
+                }
+              }
             }
           }
         }
 
-        // create a corresponding card
-        const newCard = await tx.card.create({
-          data: {
-            cardTypeId: mapping.cardTypeId,
-            cardCollectionId: newCollection.id,
-            position: card.position,
+        const userExistingCards = await tx.card.findMany({
+          where: {
+            cardCollection: {
+              userId,
+            },
+          },
+          include: {
+            cardType: true,
+            values: {
+              include: {
+                field: true,
+              },
+            },
           },
         });
 
-        const fieldValuesForThisCard: string[] = [];
-        for (const [fieldId, newFieldId] of mapping.fieldIdMap) {
-          // create a corresponding cardFieldValue
-          const foundCardFieldValue = cardFieldValues.find(
-            (value) => value.fieldId === fieldId,
-          );
-          if (!foundCardFieldValue) {
-            continue;
-          }
-          await tx.cardFieldValue.create({
-            data: {
-              cardId: newCard.id,
-              fieldId: newFieldId,
-              value: foundCardFieldValue.value,
+        // Pre-fetch all relevant target card fields for creation
+        const targetCardTypeIds = Array.from(typeIdMap.values());
+        const allTargetCardFields = await tx.cardField.findMany({
+          where: {
+            cardTypeId: {
+              in: targetCardTypeIds,
             },
-          });
-          fieldValuesForThisCard.push(foundCardFieldValue.value);
+          },
+        });
+        const cardFieldsByTypeId = new Map<string, any[]>();
+        for (const field of allTargetCardFields) {
+          if (!cardFieldsByTypeId.has(field.cardTypeId)) {
+            cardFieldsByTypeId.set(field.cardTypeId, []);
+          }
+          cardFieldsByTypeId.get(field.cardTypeId)!.push(field);
         }
-        copiedCardsStrings.push(fieldValuesForThisCard.join(','));
+
+        const creationPromises: any[] = [];
+        const updatePromises: any[] = [];
+
+        const cardsWithOrigType = originalCollection.cards.filter(
+          (c) => c.cardTypeId === origType.id,
+        );
+        for (const origCard of cardsWithOrigType) {
+          const term = origCard.values.find((v) => v.field.order === 0)?.value;
+          const cardFullText = [...origCard.values]
+            .sort((a, b) => a.field.order - b.field.order)
+            .map((v) => v.value)
+            .filter(Boolean)
+            .join(', ');
+
+          const existingCards = userExistingCards.filter(
+            (c) =>
+              c.values.find((v) => v.field.order === 0)?.value === term &&
+              c.cardType.name === origCard.cardType.name,
+          );
+
+          if (existingCards.length > 0 && dto.updateCard === UpdateCard.NEVER) {
+            skippedCards.push(cardFullText || `card-${origCard.position}`);
+          } else if (existingCards.length > 0) {
+            // update card
+            let updated = 0;
+            const targetTypeId = typeIdMap.get(origCard.cardTypeId)!;
+            const cardFields = cardFieldsByTypeId.get(targetTypeId) || [];
+
+            if (dto.updateCard === UpdateCard.ALWAYS) {
+              // always update existingCards with origCard
+              for (const existingCard of existingCards) {
+                for (const cardFieldValue of existingCard.values) {
+                  const updateValue = origCard.values.find(
+                    (value) => value.field.key === cardFieldValue.field.key,
+                  );
+                  if (updateValue) {
+                    updatePromises.push(
+                      tx.cardFieldValue.update({
+                        where: {
+                          id: cardFieldValue.id,
+                        },
+                        data: {
+                          value: updateValue?.value || '',
+                        },
+                      }),
+                    );
+                    updated++;
+                  }
+                }
+
+                // Create values for newly merged fields that the existing card doesn't have
+                const existingFieldKeys = existingCard.values.map(
+                  (v) => v.field.key,
+                );
+                for (const cardField of cardFields) {
+                  if (!existingFieldKeys.includes(cardField.key)) {
+                    const origValue = origCard.values.find(
+                      (v) => v.field.key === cardField.key,
+                    );
+                    creationPromises.push(
+                      tx.cardFieldValue.create({
+                        data: {
+                          cardId: existingCard.id,
+                          fieldId: cardField.id,
+                          value: origValue?.value || '',
+                        },
+                      }),
+                    );
+                    updated++;
+                  }
+                }
+              }
+            } else {
+              // only update card if origCard is newer version
+              for (const existingCard of existingCards) {
+                for (const cardFieldValue of existingCard.values) {
+                  const updateValue = origCard.values.find(
+                    (value) =>
+                      value.field.key === cardFieldValue.field.key &&
+                      value.updatedAt > cardFieldValue.updatedAt,
+                  );
+                  if (updateValue) {
+                    updatePromises.push(
+                      tx.cardFieldValue.update({
+                        where: {
+                          id: cardFieldValue.id,
+                        },
+                        data: {
+                          value: updateValue?.value || '',
+                        },
+                      }),
+                    );
+                    updated++;
+                  }
+                }
+
+                // Create values for newly merged fields that the existing card doesn't have
+                const existingFieldKeys = existingCard.values.map(
+                  (v) => v.field.key,
+                );
+                for (const cardField of cardFields) {
+                  if (!existingFieldKeys.includes(cardField.key)) {
+                    const origValue = origCard.values.find(
+                      (v) => v.field.key === cardField.key,
+                    );
+                    creationPromises.push(
+                      tx.cardFieldValue.create({
+                        data: {
+                          cardId: existingCard.id,
+                          fieldId: cardField.id,
+                          value: origValue?.value || '',
+                        },
+                      }),
+                    );
+                    updated++;
+                  }
+                }
+              }
+            }
+            if (updated > 0) {
+              updatedCards.push(cardFullText || `card-${origCard.position}`);
+            } else {
+              skippedCards.push(cardFullText || `card-${origCard.position}`);
+            }
+          } else {
+            // create card
+            const targetTypeId = typeIdMap.get(origCard.cardTypeId)!;
+            const cardFields = cardFieldsByTypeId.get(targetTypeId) || [];
+
+            creationPromises.push(
+              tx.card.create({
+                data: {
+                  cardTypeId: targetTypeId,
+                  cardCollectionId: newCollection.id,
+                  position: origCard.position,
+                  values: {
+                    create: cardFields.map((cardField) => {
+                      const fieldValue = origCard.values.find(
+                        (v) => cardField.key === v.field.key,
+                      );
+                      return {
+                        fieldId: cardField.id,
+                        value: fieldValue?.value || '',
+                      };
+                    }),
+                  },
+                },
+              }),
+            );
+            createdCards.push(cardFullText || `card-${origCard.position}`);
+          }
+        }
+        await Promise.all([...creationPromises, ...updatePromises]);
       }
       return {
         id: newCollection.id,
@@ -386,7 +599,9 @@ export class VocabularyService {
         userId: newCollection.userId,
         createdAt: newCollection.createdAt,
         updatedAt: newCollection.updatedAt,
-        copiedCards: copiedCardsStrings,
+        createdCards,
+        updatedCards,
+        skippedCards,
       };
     });
   }
@@ -589,11 +804,53 @@ export class VocabularyService {
       throw new NotFoundException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
     }
 
+    const cardType = await this.prisma.cardType.findFirst({
+      where: { id: card.cardTypeId, userId },
+      include: {
+        fields: true,
+      },
+    });
+
+    if (!cardType) {
+      throw new NotFoundException(ErrorCode.CARD_TYPE_NOT_FOUND);
+    }
+
+    // get cardFieldId that belongs to that cardType
+    const validFieldIds = new Set(cardType.fields.map((f) => f.id));
+    const cleanedValues = (dto.values ?? []).map((item) => ({
+      fieldId: item.fieldId,
+      value: item.value?.trim() ?? '',
+    }));
+
+    const duplicateFieldIds = new Set<string>();
+    const seenFieldIds = new Set<string>();
+    for (const item of cleanedValues) {
+      if (seenFieldIds.has(item.fieldId)) {
+        duplicateFieldIds.add(item.fieldId);
+      }
+      seenFieldIds.add(item.fieldId);
+    }
+
+    if (duplicateFieldIds.size > 0) {
+      throw new BadRequestException(ErrorCode.DUPLICATE_FIELD_DATA);
+    }
+
+    const invalidFieldExists = cleanedValues.some(
+      (item) => !validFieldIds.has(item.fieldId),
+    );
+    if (invalidFieldExists) {
+      throw new BadRequestException(ErrorCode.FIELD_NOT_IN_CARD_TYPE);
+    }
+
+    if (cleanedValues.length < 1) {
+      throw new BadRequestException(ErrorCode.ALL_FIELDS_EMPTY);
+    }
+
     const updatedCard = await this.prisma.$transaction(async (tx) => {
       // 1. Cập nhật hoặc tạo mới các values
-      if (dto.values && dto.values.length > 0) {
+      if (cleanedValues && cleanedValues.length > 0) {
         await Promise.all(
-          dto.values.map((val) =>
+          cleanedValues.map((val) =>
             tx.cardFieldValue.upsert({
               where: {
                 cardId_fieldId: {
@@ -798,6 +1055,8 @@ export class VocabularyService {
     userId: string,
     createCardTypeDto: CreateCardTypeDto,
   ): Promise<CreateCardTypeResponseDto | null> {
+    const usedKeys = new Set<string>();
+
     const cardType = await this.prisma.cardType.create({
       data: {
         name: createCardTypeDto.name,
@@ -819,8 +1078,10 @@ export class VocabularyService {
               parsedFontSize && !isNaN(parsedFontSize) ? parsedFontSize : null;
 
             return {
-              key:
-                field.key || `field_${Math.random().toString(36).slice(2, 7)}`,
+              key: this.generateUniqueKeyFromLabel(
+                field.label || 'New Field',
+                usedKeys,
+              ),
               label: field.label || 'New Field',
               fieldType: fieldType as any,
               side: side as any,
@@ -891,7 +1152,7 @@ export class VocabularyService {
         // Lấy danh sách ID các field hiện có trong DB (chưa bị xóa)
         const currentFields = await tx.cardField.findMany({
           where: { cardTypeId: id, deletedAt: null },
-          select: { id: true },
+          select: { id: true, key: true },
         });
         const currentFieldIds = currentFields.map((f) => f.id);
 
@@ -904,10 +1165,16 @@ export class VocabularyService {
         const fieldsToDelete = currentFieldIds.filter(
           (fid) => !incomingFieldIds.includes(fid),
         );
+
+        const usedKeys = new Set<string>(
+          currentFields
+            .filter((f) => !fieldsToDelete.includes(f.id))
+            .map((f) => f.key),
+        );
         if (fieldsToDelete.length > 0) {
           await tx.cardField.updateMany({
             where: { id: { in: fieldsToDelete } },
-            data: { deletedAt: new Date() }
+            data: { deletedAt: new Date() },
           });
         }
 
@@ -922,7 +1189,6 @@ export class VocabularyService {
             parsedFontSize && !isNaN(parsedFontSize) ? parsedFontSize : null;
 
           const cleanData = {
-            key: fieldData.key,
             label: fieldData.label,
             fieldType: String(fieldData.fieldType).toUpperCase() as any,
             side: String(fieldData.side).toUpperCase() as any,
@@ -943,6 +1209,10 @@ export class VocabularyService {
             await tx.cardField.create({
               data: {
                 ...cleanData,
+                key: this.generateUniqueKeyFromLabel(
+                  fieldData.label || 'New Field',
+                  usedKeys,
+                ),
                 cardTypeId: id,
               },
             });
@@ -974,6 +1244,28 @@ export class VocabularyService {
   // ──────────────────────────────────────────────
   // Helpers
   // ──────────────────────────────────────────────
+
+  private generateUniqueKeyFromLabel(
+    label: string,
+    usedKeys: Set<string>,
+  ): string {
+    const baseKey =
+      label
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/[\s_-]+/g, '_') || 'field'; // Replace spaces with underscores
+
+    let key = baseKey;
+    let counter = 1;
+    while (usedKeys.has(key)) {
+      key = `${baseKey}_${counter}`;
+      counter++;
+    }
+
+    usedKeys.add(key);
+    return key;
+  }
 
   private async findCollectionOrFail(id: string, userId: string) {
     const col = await this.prisma.cardCollection.findFirst({

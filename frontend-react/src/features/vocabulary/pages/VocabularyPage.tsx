@@ -128,7 +128,7 @@ export default function VocabularyPage() {
   async function handleExportCollection(collection: VocabCollection) {
     try {
       const res = await api.get<{ collection: VocabCollectionDetail }>(
-        API_ROUTES.VOCABULARY.COLLECTION_CARDS(collection.id),
+        API_ROUTES.VOCABULARY.COLLECTION_DETAIL(collection.id),
       );
 
       const cards = res.data.collection.cards || [];
