@@ -9,6 +9,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import { GetConversationsResponseDto, GetGroupsResponseDto, GetMessagesResponseDto } from './dto/messages-response.dto';
+import { UserResponse } from '../users/dto/users-response.dto';
 
 @ApiTags('messages')
 @Controller('messages')
@@ -23,6 +24,13 @@ export class MessagesController {
     return {
       data: result
     }
+  }
+
+  @Get('friends')
+  @ApiOperation({ summary: 'Lấy danh sách bạn bè (mutual follow)' })
+  async getFriends(@CurrentUser() user: any): Promise<ResponseInterceptor<UserResponse[]>> {
+    const result = await this.messagesService.getFriends(user.id);
+    return { data: result };
   }
 
   @Get('groups')

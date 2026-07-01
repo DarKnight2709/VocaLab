@@ -92,7 +92,7 @@ export default function SearchPage() {
   // Data mapping from summary vs infinite sources
   const summaryProfiles = sidebarData?.profiles ?? [];
   const summaryGroups = sidebarData?.groups ?? [];
-  const summaryCollections = sidebarData?.collections?.collections ?? [];
+  const summaryCollections = sidebarData?.collections ?? [];
 
   const infinitePages = infiniteData?.pages ?? [];
 
@@ -192,7 +192,7 @@ export default function SearchPage() {
             onClick={() => handleTabChange(tabKey)}
             className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
-            {t("search.viewAll")} <ArrowRight size={12} />
+            {t("search.seeMore")} <ArrowRight size={12} />
           </button>
         </div>
         <div className={contentClass}>
@@ -319,7 +319,7 @@ export default function SearchPage() {
                               onClick={() => handleTabChange("posts")}
                               className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                             >
-                              {t("search.viewAll")} <ArrowRight size={12} />
+                              {t("search.seeMore")} <ArrowRight size={12} />
                             </button>
                           </div>
                           {renderPostsList()}

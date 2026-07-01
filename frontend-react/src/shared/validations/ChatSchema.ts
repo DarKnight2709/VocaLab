@@ -23,8 +23,19 @@ export const GetUsersResponseSchema = z.object({
   users: z.array(UserItemSchema),
 });
 
+export const FriendItemSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  fullName: z.string().optional().nullable(),
+  avatar: z.string().optional().nullable(),
+});
+
+export const GetFriendsResponseSchema = z.object({
+  friends: z.array(FriendItemSchema),
+});
+
 export const SearchFriendsResponseSchema = z.object({
-  friends: z.array(UserItemSchema),
+  friends: z.array(FriendItemSchema),
   meta: z.object({
     page: z.number(),
     limit: z.number(),
@@ -60,7 +71,8 @@ export const ChatMessageItemSchema = z.object({
         mimeType: z.string().optional(),
       }),
     )
-    .optional().nullable(),
+    .optional()
+    .nullable(),
   createdAt: z.string(),
   seenBy: z.array(PopulatedSenderSchema).optional(),
 });
@@ -79,6 +91,7 @@ export const UserChatInfoResponseSchema = z.object({
 });
 
 export type UserItem = z.infer<typeof UserItemSchema>;
+export type FriendItem = z.infer<typeof FriendItemSchema>;
 export type GetUsersResponse = z.infer<typeof GetUsersResponseSchema>;
 export type ChatMessageItem = z.infer<typeof ChatMessageItemSchema>;
 export type GetMessagesResponse = z.infer<typeof GetMessagesResponseSchema>;

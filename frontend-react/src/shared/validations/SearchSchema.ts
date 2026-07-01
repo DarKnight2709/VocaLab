@@ -72,10 +72,7 @@ export type SearchPaginationMeta = z.infer<typeof SearchPaginationMetaSchema>;
 export const SearchSidebarResponseSchema = z.object({
   profiles: z.array(SearchUserResultSchema),
   groups: z.array(SearchGroupResultSchema),
-  collections: z.object({
-    collections: z.array(SearchCollectionResultSchema),
-    meta: SearchPaginationMetaSchema,
-  }),
+  collections: z.array(SearchCollectionResultSchema),
 });
 
 export type SearchInfiniteResponse = z.infer<typeof SearchInfiniteResponseSchema>;

@@ -18,6 +18,7 @@ import {
 } from './dto/messages-response.dto';
 import { MessageAttachmentDto } from './dto/messages.dto';
 import { GroupChatService } from '../group-chat/group-chat.service';
+import { UserResponse } from '../users/dto/users-response.dto';
 
 export interface SendMessageInput {
   senderId: string;
@@ -156,6 +157,42 @@ export class MessagesService {
           b.lastMessage.createdAt.getTime() - a.lastMessage.createdAt.getTime(),
       ),
     };
+  }
+
+  async getFriends(userId: string): Promise<UserResponse[]> {
+    const [blockerUserIds, follows] = await Promise.all([
+      this.userService.getBlockerIdsOf(userId),
+      this.prisma.follow.findMany({
+        where: {
+          OR: [{ followerId: userId }, { followingId: userId }],
+        },
+      }),
+    ]);
+
+    const followingIds = new Set(
+      follows.filter((f) => f.followerId === userId).map((f) => f.followingId),
+    );
+    const followerIds = new Set(
+      follows.filter((f) => f.followingId === userId).map((f) => f.followerId),
+    );
+
+    const friendIds = Array.from(followingIds).filter(
+      (id) => followerIds.has(id) && !blockerUserIds.includes(id)
+    );
+
+    const friends = await this.prisma.user.findMany({
+      where: {
+        id: { in: friendIds },
+      },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        avatar: true,
+      },
+    });
+
+    return friends;
   }
 
   async getGroups(userId: string): Promise<GetGroupsResponseDto[]> {

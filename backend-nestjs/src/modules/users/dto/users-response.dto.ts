@@ -87,15 +87,6 @@ export class UserResponse {
   avatar!: string | null;
 }
 
-// export class UsersSearchResultResponse {
-//   @ApiProperty({ type: [UserResponse] })
-//   users!: UserResponse[];
-
-//   @ApiProperty({ type: PaginationMetaDto })
-//   meta!: PaginationMetaDto;
-// }
-
-
 // ─── Update Profile ─────────────────────────────────────────
 
 export class UpdateProfileResponseDto {

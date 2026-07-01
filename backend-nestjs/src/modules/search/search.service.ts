@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
-import { SearchSuggestionResultResponse } from './dto/search.dto';
+import { SearchSuggestionResultResponse, SidebarSearchResultResponse } from './dto/search.dto';
 import { VocabularyService } from '../vocabulary/vocabulary.service';
 import { BlogService } from '../blog/blog.service';
 import { UserService } from '../users/users.service';
 import { GroupChatService } from '../group-chat/group-chat.service';
 @Injectable()
 export class SearchService {
-  constructor(private readonly prisma: PrismaService,
+  constructor(
+    private readonly prisma: PrismaService,
     private readonly vocabularyService: VocabularyService,
     private readonly blogService: BlogService,
     private readonly groupService: GroupChatService,
-    private readonly userService: UserService
+    private readonly userService: UserService,
   ) {}
 
   async getSuggestions(
@@ -64,48 +65,40 @@ export class SearchService {
     ].slice(0, 5); // Ensure exactly 5 items
   }
 
+  async searchSidebar(
+    userId: string,
+    query: string,
+  ): Promise<SidebarSearchResultResponse> {
+    const sanitizedQuery = query.trim();
+    if (!sanitizedQuery || sanitizedQuery.length < 2) {
+      return {
+        collections: [],
+        groups: [],
+        profiles: [],
+      };
+    }
 
-  // async searchSidebar(userId: string, query: string): Promise<SidebarSearchResultResponse> {
-  //   if (!query || query.length < 2) {
-  //     return {
-  //       collections: {
-  //         collections: [],
-  //         meta: {
-  //           page: 1,
-  //           limit: 4,
-  //           total: 0,
-  //           totalPages: 0,
-  //         },
-  //       },
-  //       groups: [],
-  //       profiles: [],
-  //     } as any;
-  //   }
+    // get 4 collections, 5 groups, and 5 users.
+    // search collections, groups, users
+    const [collectionsData, groupsData, usersData] = await Promise.all([
+      this.vocabularyService.searchCollections(userId, 1, 4, sanitizedQuery),
+      this.groupService.searchGroups(userId, 1, 5, sanitizedQuery),
+      this.userService.getProfiles(userId, 1, 5, sanitizedQuery),
+    ]);
 
+    return {
+      collections: collectionsData.collections,
+      groups: groupsData.groups,
+      profiles: usersData.profiles,
+    };
+  }
 
-  //   // search collections
-  //   const collectionsData = await this.vocabularyService.searchCollections(userId, 1, 4, query);    
-    
-
-  //   // search groups
-  //   const { groups: groupsData } = await this.groupService.searchGroups(userId, 1, 5, query);
-
-
-  //   // // search users
-  //   const { users: usersData } = await this.userService.getUsers(userId, 1, 5, query);
-
-  //   return {
-  //     collections: [],
-  //     groups: [],
-  //     profiles: [],
-  //   }
-  // }
-
-  // async searchCollections(userId?: string, page = 1, limit = 10, query?: string) {
-  //   return this.vocabularyService.searchCollections(userId ?? '', page, limit, query);
-  // }
-
-  async searchCollections(userId: string, page = 1, limit = 10, query?: string) {
+  async searchCollections(
+    userId: string,
+    page = 1,
+    limit = 10,
+    query?: string,
+  ) {
     return this.vocabularyService.searchCollections(userId, page, limit, query);
   }
 

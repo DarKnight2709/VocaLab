@@ -890,7 +890,7 @@
     "createdAt": "Tạo {{date}}",
     "join": "Tham gia",
     "joining": "Đang tham gia...",
-    "viewAll": "Xem tất cả",
+    "seeMore": "Xem thêm",
     "loadMore": "Tải thêm",
     "loading": "Đang tải...",
     "votes": "{{count}} lượt thích",

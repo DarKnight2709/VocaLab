@@ -897,7 +897,7 @@
     "createdAt": "Created {{date}}",
     "join": "Join",
     "joining": "Joining...",
-    "viewAll": "View all",
+    "seeMore": "See more",
     "loadMore": "Load more",
     "loading": "Loading...",
     "votes": "{{count}} vote",

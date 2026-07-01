@@ -35,7 +35,7 @@ import {
   ProfileSearchResultResponse,
   UserChatInfoDto,
 } from './dto/users-response.dto';
-import { Follow, VisibilityScope } from '@prisma/client';
+import { Follow, Prisma, VisibilityScope } from '@prisma/client';
 import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
 import { NotificationType } from '@prisma/client';
 import { SettingKey } from '@/common/enums/setting-key.enum';
@@ -133,7 +133,8 @@ export class UserService {
     }
 
     // Determine canChat based on messageScope privacy setting
-    const messageScope = user.privacySettings?.messageScope ?? VisibilityScope.EVERYONE;
+    const messageScope =
+      user.privacySettings?.messageScope ?? VisibilityScope.EVERYONE;
 
     let isFriend = false;
     if (messageScope === VisibilityScope.FRIENDS) {
@@ -321,47 +322,6 @@ export class UserService {
     });
   }
 
-  // async getUsers(userId: string, page: number, limit: number, query?: string) {
-
-  //   const where: any = {
-  //     id: { not: userId },
-  //     OR: [
-  //       { username: { contains: query, mode: 'insensitive' } },
-  //       { fullName: { contains: query, mode: 'insensitive' } },
-  //     ],
-  //   };
-  //   const [searchedUsers, total] = await Promise.all([
-  //     this.prisma.user.findMany({
-  //       where,
-  //       orderBy: {
-  //         createdAt: 'desc'
-  //       },
-  //       take: limit,
-  //       skip: (page - 1) * limit,
-  //       select: {
-  //         id: true,
-  //         username: true,
-  //         fullName: true,
-  //         email: true,
-  //         avatar: true,
-  //         createdAt: true,
-  //         updatedAt: true,
-  //       }
-  //     }),
-  //     this.prisma.user.count({ where })
-  //   ]);
-
-  //   return {
-  //     users: searchedUsers,
-  //     meta: {
-  //       page,
-  //       limit,
-  //       total,
-  //       totalPages: Math.ceil(total / limit),
-  //     }
-  //   }
-  // }
-
   async findAll(): Promise<PublicUser[]> {
     return this.prisma.user.findMany({
       select: {
@@ -455,7 +415,12 @@ export class UserService {
     };
   }
 
-  async searchFriendsSuggestion(userId: string, query: string, page: number = 1, limit: number = 5) {
+  async searchFriendsSuggestion(
+    userId: string,
+    query: string,
+    page: number = 1,
+    limit: number = 5,
+  ) {
     const skip = (page - 1) * limit;
     const baseWhere = this.buildFriendsWhereClause(userId, query);
 
@@ -504,19 +469,15 @@ export class UserService {
     query?: string,
   ): Promise<ProfileSearchResultResponse> {
     const skip = (page - 1) * limit;
-
-    const where: any = {
-      id: { not: userId },
-      deletedAt: null,
-    };
-
     const blockerIds = await this.getBlockerIdsOf(userId);
 
-    if (blockerIds.length > 0) {
-      where.id = {
-        notIn: blockerIds,
-      };
-    }
+    const where: Prisma.UserWhereInput = {
+      deletedAt: null,
+      id: {
+        not: userId,
+        notIn: blockerIds.length > 0 ? blockerIds : undefined,
+      },
+    };
 
     if (query) {
       where.OR = [

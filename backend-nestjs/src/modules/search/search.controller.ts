@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SearchService } from './search.service';
 import {
   SearchSuggestionResultResponse,
+  SidebarSearchResultResponse,
 } from './dto/search.dto';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import { GetBlogsResponseDto } from '../blog/dto/blog-response.dto';
@@ -28,20 +29,20 @@ export class SearchController {
     };
   }
 
-  // @Get('sidebar')
-  // @ApiOperation({ summary: 'Get sidebar search results' })
-  // @ApiResponse({ type: SidebarSearchResultResponse })
-  // async searchSidebar(
-  //   @Query('query') query: string,
-  //   @CurrentUser() user: any,
-  // ): Promise<ResponseInterceptor<SidebarSearchResultResponse>> {
-  //   const result = await this.searchService.searchSidebar(user.id, query);
-  //   return {
-  //     data: result,
-  //   };
-  // }
+  @Get('sidebar')
+  @ApiOperation({ summary: 'Get sidebar search results' })
+  @ApiResponse({ type: SidebarSearchResultResponse })
+  async searchSidebar(
+    @Query('query') query: string,
+    @CurrentUser() user: any,
+  ): Promise<ResponseInterceptor<SidebarSearchResultResponse>> {
+    const result = await this.searchService.searchSidebar(user.id, query);
+    return {
+      data: result,
+    };
+  }
 
-    @Get('collections')
+  @Get('collections')
   @ApiOperation({ summary: 'Get collections search results' })
   @ApiResponse({ type: CollectionSearchResponseDto })
   async searchCollections(

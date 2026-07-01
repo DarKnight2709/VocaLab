@@ -11,14 +11,15 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
-import { useUsersQuery } from "@/features/chat/api/chatService";
+import { useFriendsQuery } from "@/features/chat/api/chatService";
 import { useCreateGroupMutation } from "@/features/chat/api/groupService";
-import type { UserItem } from "@/shared/validations/ChatSchema";
+import type { FriendItem } from "@/shared/validations/ChatSchema";
 import {
   getCreateGroupSchema,
   type CreateGroupInput,
 } from "@/shared/validations/GroupSchema";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { getInitials } from "../utils";
 
 type Props = {
   open: boolean;
@@ -26,33 +27,22 @@ type Props = {
   onCreated?: () => void;
 };
 
-function initials(name?: string) {
-  const n = (name || "").trim();
-  if (!n) return "?";
-  return n
-    .split(" ")
-    .filter(Boolean)
-    .map((p) => p.charAt(0))
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
   const { t } = useTranslation();
   const [keyword, setKeyword] = useState("");
-  const [selected, setSelected] = useState<UserItem[]>([]);
+  const [selected, setSelected] = useState<FriendItem[]>([]);
   const createGroupMutation = useCreateGroupMutation();
 
   // Fetch all users once
-  const { data: users = [], isLoading: loadingUsers } = useUsersQuery(open);
+  const { data: friends = [], isLoading: isLoadingFriends } = useFriendsQuery(open);
 
   // Client-side filtering
   const filteredResults = useMemo(() => {
     const q = keyword.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => `${u.fullName || ""} ${u.username || ""}`.toLowerCase().includes(q));
-  }, [users, keyword]);
+    if (!q) return friends;
+    return friends.filter((f) => `${f.fullName || ""} ${f.username || ""}`.toLowerCase().includes(q));
+  }, [friends, keyword]);
 
   const {
     register,
@@ -95,7 +85,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
     [selected],
   );
 
-  function addMember(u: UserItem) {
+  function addMember(u: FriendItem) {
     if (selectedIds.has(u.id)) return;
     setSelected((prev) => [...prev, u]);
   }
@@ -197,7 +187,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
                           className="h-6 w-6 rounded-full object-cover"
                         />
                       ) : (
-                        initials(u.fullName || u.username)
+                        getInitials(u.fullName || u.username)
                       )}
                     </span>
                     <span className="max-w-45 truncate">
@@ -210,7 +200,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
             )}
 
             <div className="rounded-lg border p-2 max-h-64 overflow-auto mt-2">
-              {loadingUsers ? (
+              {isLoadingFriends ? (
                 <div className="text-sm text-muted-foreground p-2 text-center italic">
                   {t("chat.loadingUsers")}
                 </div>
@@ -220,7 +210,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredResults.map((u: UserItem) => {
+                  {filteredResults.map((u: FriendItem) => {
                     const disabled = selectedIds.has(u.id);
                     return (
                       <div
@@ -237,7 +227,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
                               />
                             ) : (
                               <span className="text-sm font-semibold">
-                                {initials(u.fullName || u.username)}
+                                {getInitials(u.fullName || u.username)}
                               </span>
                             )}
                           </div>
