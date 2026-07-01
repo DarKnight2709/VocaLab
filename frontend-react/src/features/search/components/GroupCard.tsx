@@ -89,11 +89,11 @@ export function GroupCard({ group }: { group: GroupResult }) {
   return (
     <div
       onClick={handleCardClick}
-      className={`relative flex gap-4 rounded-xl border bg-card p-4 transition-all hover:border-primary/25 hover:bg-accent/5 ${
+      className={`relative flex gap-3 rounded-xl bg-transparent p-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
         isCurrentUserMember ? "cursor-pointer" : ""
       }`}
     >
-      <div className="my-auto h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
+      <div className="my-auto h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
         {group.avatar ? (
           <img
             src={group.avatar}
@@ -106,10 +106,10 @@ export function GroupCard({ group }: { group: GroupResult }) {
           </div>
         )}
       </div>
-      <div className="min-w-0 flex-1 pr-8 sm:pr-28">
+      <div className="min-w-0 flex-1 pr-6 sm:pr-20">
         <div className="min-w-0">
-          <p className="truncate font-semibold">{group.name}</p>
-          <p className="mt-1 line-clamp-2 text-xs leading-4 text-muted-foreground">
+          <p className="truncate text-sm font-semibold">{group.name}</p>
+          <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-muted-foreground">
             {group.description || t("search.noGroupDescription")}
           </p>
         </div>
@@ -126,7 +126,7 @@ export function GroupCard({ group }: { group: GroupResult }) {
               <Info className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuLabel>{t("search.groupDetails")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <div className="space-y-3 p-2 text-sm">
@@ -152,7 +152,7 @@ export function GroupCard({ group }: { group: GroupResult }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex items-center gap-2.5">
           <div className="min-w-0">
             <div className="flex items-center">
               {visibleMembers.map((member) => (
@@ -161,7 +161,7 @@ export function GroupCard({ group }: { group: GroupResult }) {
                 </div>
               ))}
               {remainingMembers > 0 && (
-                <div className="-ml-2 flex h-7 min-w-7 items-center justify-center rounded-full border-2 border-background bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                <div className="-ml-2 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                   +{remainingMembers}
                 </div>
               )}
@@ -173,7 +173,7 @@ export function GroupCard({ group }: { group: GroupResult }) {
         <Button
           type="button"
           size="sm"
-          className="absolute bottom-4 right-4 shrink-0"
+          className="absolute bottom-3 right-3 h-8 shrink-0 px-3 text-[11px]"
           disabled={joinMutation.isPending}
           onClick={() => joinMutation.mutate(group.id)}
         >

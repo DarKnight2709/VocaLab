@@ -100,7 +100,7 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
             navigate(`/collections/${collection.id}`);
           }
         }}
-        className="relative text-left w-full p-4 rounded-2xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+        className="relative text-left w-full rounded-2xl bg-background/70 p-4 transition-colors cursor-pointer hover:bg-muted/40"
       >
         <div className="flex items-start justify-between gap-3 pr-8">
           <div className="min-w-0 w-full flex flex-col gap-2">
@@ -305,10 +305,10 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
       </Dialog>
 
       <Dialog open={!!copySuccessResult} onOpenChange={(open) => !open && setCopySuccessResult(null)}>
-        <DialogContent className="w-[90vw] max-w-[90vw] max-h-[95vh] overflow-hidden flex flex-col p-0 gap-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <DialogContent className="w-[90vw] max-w-[90vw] max-h-[95vh] overflow-hidden flex flex-col p-0 gap-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
           {/* Header Section */}
-          <div className="relative overflow-hidden bg-gradient-to-b from-green-500/10 to-transparent px-6 py-8 flex flex-col items-center justify-center border-b">
-            <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-black/10" />
+          <div className="relative overflow-hidden bg-linear-to-b from-green-500/10 to-transparent px-6 py-8 flex flex-col items-center justify-center border-b">
+            <div className="absolute inset-0 bg-grid-white/10 mask-[linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-black/10" />
             <div className="relative flex flex-col items-center z-10">
               <div className="h-16 w-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 ring-8 ring-green-500/10">
                 <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
@@ -364,7 +364,7 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
                               {item.status}
                             </span>
                           </td>
-                          <td className="px-6 py-3 font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors break-words max-w-lg leading-relaxed">
+                          <td className="px-6 py-3 font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors wrap-break-word max-w-lg leading-relaxed">
                             {item.term.split(',').map((part, i, arr) => (
                               <span key={i} className="inline-block">
                                 <span className="bg-muted/50 px-1.5 py-0.5 rounded text-foreground/80">{part.trim()}</span>

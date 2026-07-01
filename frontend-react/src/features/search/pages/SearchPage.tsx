@@ -208,24 +208,26 @@ export default function SearchPage() {
     if (groups.length === 0 && profiles.length === 0) return null;
 
     return (
-      <aside className="min-w-0 space-y-6 lg:sticky lg:top-6">
-        <div className="space-y-6 rounded-2xl border bg-muted/30 p-4">
-          {renderSection(
-            t("search.tabs.groups"),
-            groups,
-            GroupCard,
-            "groups",
-            "sidebar",
-            5,
-          )}
-          {renderSection(
-            t("search.tabs.profiles"),
-            profiles,
-            UserCard,
-            "profiles",
-            "sidebar",
-            5,
-          )}
+      <aside className="min-w-0 lg:sticky lg:top-2 lg:mt-6 lg:self-start">
+        <div className="rounded-2xl bg-zinc-50/90 p-4 lg:h-[calc(100dvh-9rem)] lg:overflow-hidden dark:bg-zinc-900/30">
+          <div className="space-y-6 lg:h-full lg:overflow-y-auto lg:pr-1 custom-scrollbar lg:[scrollbar-gutter:stable]">
+            {renderSection(
+              t("search.tabs.groups"),
+              groups,
+              GroupCard,
+              "groups",
+              "sidebar",
+              5,
+            )}
+            {renderSection(
+              t("search.tabs.profiles"),
+              profiles,
+              UserCard,
+              "profiles",
+              "sidebar",
+              5,
+            )}
+          </div>
         </div>
       </aside>
     );
@@ -298,7 +300,7 @@ export default function SearchPage() {
                 {counts.all === 0 && !loading ? (
                   <Empty query={qParam} type={t("search.types.all")} />
                 ) : (
-                  <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+                  <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
                     {/* Left column: collections + posts */}
                     <div className="min-w-0 space-y-8">
                       {renderSection(
@@ -376,7 +378,7 @@ export default function SearchPage() {
               (blogs.length === 0 && !loading ? (
                 <Empty query={qParam} type={t("search.types.posts")} />
               ) : (
-                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
                   {renderPostsList()}
                   {renderSidebar()}
                 </div>
