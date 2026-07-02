@@ -57,7 +57,7 @@ export function BlogCard({ blog }: { blog: BlogResult }) {
         <img
           src={blog.coverImage}
           alt=""
-          className="h-[72px] w-[72px] shrink-0 rounded-lg object-cover"
+          className="h-18 w-18 shrink-0 rounded-lg object-cover"
         />
       )}
     </Link>

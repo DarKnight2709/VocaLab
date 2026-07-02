@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { VoteType, NotificationType } from '@prisma/client';
+import { VoteType, NotificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import {
   CreateBlogDto,
@@ -27,6 +27,7 @@ import {
 import { SettingKey } from '@/common/enums/setting-key.enum';
 import { NotificationsService } from '../notifications/services/notifications.service';
 import { UserService } from '../users/users.service';
+import { SearchFilters, SearchTime } from '../search/search.types';
 
 @Injectable()
 export class BlogService {
@@ -43,6 +44,7 @@ export class BlogService {
     page = 1,
     limit = 10,
     search?: string,
+    _filters?: SearchFilters,
   ): Promise<GetBlogsResponseDto> {
     const skip = (page - 1) * limit;
 
@@ -65,14 +67,26 @@ export class BlogService {
         { excerpt: { contains: search, mode: 'insensitive' } },
       ];
     }
+    const orderBy: Prisma.BlogOrderByWithRelationInput[] =
+      _filters?.sort === 'popular'
+        ? [{ popularityScore: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }]
+        : [
+            {
+              createdAt: (_filters?.sort === 'oldest'
+                ? 'asc'
+                : 'desc') as Prisma.SortOrder,
+            },
+            { id: 'asc' },
+          ];
+    const dateThreshold: Date | null = this.getDateThreshold(_filters?.time);
+    if (dateThreshold) {
+      where.createdAt = { gte: dateThreshold };
+    }
 
     let [searchedBlogs, total] = await Promise.all([
       this.prisma.blog.findMany({
         where,
-        // order by createAt
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy,
         skip: skip,
         take: limit,
 
@@ -304,65 +318,71 @@ export class BlogService {
     userId: string,
     type: VoteType,
   ): Promise<void> {
-    const blog = await this.prisma.blog.findFirst({
-      where: {
-        id: blogId,
-        deletedAt: null,
-      },
-    });
-
-    if (!blog) {
-      throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
-    }
-
-    const userVote = await this.prisma.blogVote.findUnique({
-      where: {
-        userId_blogId: {
-          userId,
-          blogId,
+    const [blog, shouldNotify] = await this.prisma.$transaction(async (tx) => {
+      const blog = await tx.blog.findFirst({
+        where: {
+          id: blogId,
+          deletedAt: null,
         },
-      },
-    });
+      });
 
-    let shouldNotify = false;
+      if (!blog) {
+        throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
+      }
 
-    if (userVote) {
-      // có rồi thì thì update
-      // nếu mà trùng với type thì xóa còn khác type thì update
-      if (type === userVote.type) {
-        await this.prisma.blogVote.delete({
-          where: {
-            userId_blogId: {
-              userId,
-              blogId,
-            },
+      const userVote = await tx.blogVote.findUnique({
+        where: {
+          userId_blogId: {
+            userId,
+            blogId,
           },
-        });
+        },
+      });
+
+      let shouldNotify = false;
+
+      if (userVote) {
+        // có rồi thì thì update
+        // nếu mà trùng với type thì xóa còn khác type thì update
+        if (type === userVote.type) {
+          await tx.blogVote.delete({
+            where: {
+              userId_blogId: {
+                userId,
+                blogId,
+              },
+            },
+          });
+        } else {
+          await tx.blogVote.update({
+            where: {
+              userId_blogId: {
+                userId,
+                blogId,
+              },
+            },
+            data: {
+              type,
+            },
+          });
+          if (type === VoteType.UPVOTE) shouldNotify = true;
+        }
       } else {
-        await this.prisma.blogVote.update({
-          where: {
-            userId_blogId: {
-              userId,
-              blogId,
-            },
-          },
+        // chưa có thì tạo
+        await tx.blogVote.create({
           data: {
+            userId,
+            blogId,
             type,
           },
         });
         if (type === VoteType.UPVOTE) shouldNotify = true;
       }
-    } else {
-      // chưa có thì tạo
-      await this.prisma.blogVote.create({
-        data: {
-          userId,
-          blogId,
-          type,
-        },
-      });
-      if (type === VoteType.UPVOTE) shouldNotify = true;
-    }
+
+      await this.recalculatePopularityScores(tx, blog.id);
+
+      return [blog, shouldNotify];
+    });
 
     // Notify blog author about the upvote
     if (shouldNotify && blog.authorId !== userId) {
@@ -386,23 +406,27 @@ export class BlogService {
     userId: string,
     dto: CreateCommentDto,
   ): Promise<CreateCommentResponseDto> {
-    const blog = await this.prisma.blog.findFirst({
-      where: {
-        id: blogId,
-        deletedAt: null,
-      },
-    });
+    const [blog, comment] = await this.prisma.$transaction(async (tx) => {
+      const blog = await tx.blog.findFirst({
+        where: {
+          id: blogId,
+          deletedAt: null,
+        },
+      });
 
-    if (!blog) {
-      throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
-    }
+      if (!blog) {
+        throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
+      }
 
-    const comment = await this.prisma.comment.create({
-      data: {
-        content: dto.content,
-        authorId: userId,
-        blogId,
-      },
+      const comment = await tx.comment.create({
+        data: {
+          content: dto.content,
+          authorId: userId,
+          blogId,
+        },
+      });
+      await this.recalculatePopularityScores(tx, blog.id);
+      return [blog, comment];
     });
 
     // Notify blog author
@@ -452,15 +476,19 @@ export class BlogService {
     commentId: string,
     userId: string,
   ): Promise<DeleteResponseDto> {
-    const comment = await this.prisma.comment.findFirst({
-      where: { id: commentId, deletedAt: null },
-    });
-    if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
-    if (comment.authorId !== userId)
-      throw new ForbiddenException(ErrorCode.COMMENT_DELETE_FORBIDDEN);
-    const deletedComment = await this.prisma.comment.update({
-      where: { id: commentId },
-      data: { deletedAt: new Date() },
+    const deletedComment = await this.prisma.$transaction(async (tx) => {
+      const comment = await tx.comment.findFirst({
+        where: { id: commentId, deletedAt: null },
+      });
+      if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
+      if (comment.authorId !== userId)
+        throw new ForbiddenException(ErrorCode.COMMENT_DELETE_FORBIDDEN);
+      const deletedComment = await tx.comment.update({
+        where: { id: commentId },
+        data: { deletedAt: new Date() },
+      });
+      await this.recalculatePopularityScores(tx, comment.blogId);
+      return deletedComment;
     });
     return {
       id: deletedComment.id,
@@ -472,29 +500,37 @@ export class BlogService {
     userId: string,
     dto: ReplyCommentDto,
   ): Promise<CreateCommentResponseDto> {
-    const comment = await this.prisma.comment.findFirst({
-      where: {
-        id: commentId,
-        deletedAt: null,
-        blog: {
-          deletedAt: null,
-        },
-      },
-      include: {
-        blog: true,
-      },
-    });
+    const [comment, replyComment] = await this.prisma.$transaction(
+      async (tx) => {
+        const comment = await tx.comment.findFirst({
+          where: {
+            id: commentId,
+            deletedAt: null,
+            blog: {
+              deletedAt: null,
+            },
+          },
+          include: {
+            blog: true,
+          },
+        });
 
-    if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
+        if (!comment) throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
 
-    const replyComment = await this.prisma.comment.create({
-      data: {
-        content: dto.reply,
-        blogId: comment.blogId,
-        authorId: userId,
-        parentCommentId: comment.id,
+        const replyComment = await tx.comment.create({
+          data: {
+            content: dto.reply,
+            blogId: comment.blogId,
+            authorId: userId,
+            parentCommentId: comment.id,
+          },
+        });
+
+        await this.recalculatePopularityScores(tx, comment.blogId);
+
+        return [comment, replyComment];
       },
-    });
+    );
 
     // Notify parent comment author
     if (comment.authorId !== userId) {
@@ -706,5 +742,46 @@ export class BlogService {
           replies: this.buildCommentTree(comments, c.id),
         };
       });
+  }
+
+  // recalulate popularity score for all blogs
+  async recalculatePopularityScores(
+    tx: Prisma.TransactionClient,
+    blogId: string,
+  ) {
+    const [upvotes, downvotes, comments] = await Promise.all([
+      tx.blogVote.count({ where: { blogId, type: VoteType.UPVOTE } }),
+      tx.blogVote.count({ where: { blogId, type: VoteType.DOWNVOTE } }),
+      tx.comment.count({ where: { blogId, deletedAt: null } }),
+    ]);
+
+    const newScore = upvotes - downvotes + comments * 2;
+    await tx.blog.update({
+      where: { id: blogId },
+      data: { popularityScore: newScore },
+    });
+  }
+
+  getDateThreshold(time?: SearchTime): Date | null {
+    let dateThreshold: Date | null = null;
+    const now = new Date();
+
+    switch (time) {
+      case '24h':
+        dateThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        dateThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        dateThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '1y':
+        dateThreshold = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        dateThreshold = null; // 'all'
+    }
+    return dateThreshold;
   }
 }

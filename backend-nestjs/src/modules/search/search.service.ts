@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
-import { SearchSuggestionResultResponse, SidebarSearchResultResponse } from './dto/search.dto';
+import {
+  SearchSuggestionResultResponse,
+  SidebarSearchResultResponse,
+} from './dto/search.dto';
 import { VocabularyService } from '../vocabulary/vocabulary.service';
 import { BlogService } from '../blog/blog.service';
 import { UserService } from '../users/users.service';
 import { GroupChatService } from '../group-chat/group-chat.service';
+import { SearchFilters } from './search.types';
 @Injectable()
 export class SearchService {
   constructor(
@@ -67,9 +71,10 @@ export class SearchService {
 
   async searchSidebar(
     userId: string,
-    query: string,
+    query?: string,
+    _filters?: SearchFilters,
   ): Promise<SidebarSearchResultResponse> {
-    const sanitizedQuery = query.trim();
+    const sanitizedQuery = query?.trim();
     if (!sanitizedQuery || sanitizedQuery.length < 2) {
       return {
         collections: [],
@@ -102,8 +107,14 @@ export class SearchService {
     return this.vocabularyService.searchCollections(userId, page, limit, query);
   }
 
-  async searchPosts(userId: string, page = 1, limit = 10, query?: string) {
-    return this.blogService.getBlogs(userId, page, limit, query);
+  async searchPosts(
+    userId: string,
+    page = 1,
+    limit = 10,
+    query?: string,
+    _filters?: SearchFilters,
+  ) {
+    return this.blogService.getBlogs(userId, page, limit, query, _filters);
   }
 
   async searchGroups(userId: string, page = 1, limit = 10, query?: string) {

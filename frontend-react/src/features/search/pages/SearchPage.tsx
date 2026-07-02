@@ -23,18 +23,54 @@ import { CollectionCard } from "../components/CollectionCard";
 import { GroupCard } from "../components/GroupCard";
 import { UserCard } from "@/features/user/components/UserCard";
 import Empty from "@/shared/components/Empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 
 type Tab = "all" | "collections" | "posts" | "groups" | "profiles";
+
+type SearchSortOption = "newest" | "oldest" | "popular";
+type SearchTimeOption = "all" | "24h" | "7d" | "30d" | "1y";
+
+const SEARCH_SORT_OPTIONS: { value: SearchSortOption; label: string }[] = [
+  { value: "newest", label: "Newest" },
+  { value: "oldest", label: "Oldest" },
+  { value: "popular", label: "Popular" },
+];
+
+const SEARCH_TIME_OPTIONS: { value: SearchTimeOption; label: string }[] = [
+  { value: "all", label: "All time" },
+  { value: "24h", label: "Past 24 hours" },
+  { value: "7d", label: "Past week" },
+  { value: "30d", label: "Past month" },
+  { value: "1y", label: "Past year" },
+];
+
+const VALID_SORT_VALUES: SearchSortOption[] = ["newest", "oldest", "popular"];
+
+const VALID_TIME_VALUES: SearchTimeOption[] = ["all", "24h", "7d", "30d", "1y"];
 
 export default function SearchPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const qParam = searchParams.get("q") || "";
   const typeParam = searchParams.get("type") || "all";
+  const sortParam = searchParams.get("sort") || "newest";
+  const timeParam = searchParams.get("time") || "all";
 
   const handleTabChange = (tab: Tab) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("type", tab);
+    setSearchParams(newParams);
+  };
+
+  const updateSearchParam = (key: string, value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set(key, value);
     setSearchParams(newParams);
   };
 
@@ -48,6 +84,13 @@ export default function SearchPage() {
     ];
     return validTabs.includes(typeParam as Tab) ? (typeParam as Tab) : "all";
   }, [typeParam]);
+
+  const activeSort = VALID_SORT_VALUES.includes(sortParam as SearchSortOption)
+    ? (sortParam as SearchSortOption)
+    : "newest";
+  const activeTime = VALID_TIME_VALUES.includes(timeParam as SearchTimeOption)
+    ? (timeParam as SearchTimeOption)
+    : "all";
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "all", label: t("search.tabs.all"), icon: <Layers size={15} /> },
@@ -76,6 +119,7 @@ export default function SearchPage() {
   const { data: sidebarData, isFetching: loadingSidebar } = useSearchSidebar(
     qParam,
     activeTab === "all",
+    { sort: activeSort, time: activeTime },
   );
   const infiniteSearchType = activeTab === "all" ? "posts" : activeTab;
   const {
@@ -84,7 +128,10 @@ export default function SearchPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSearchInfinite(qParam, infiniteSearchType);
+  } = useSearchInfinite(qParam, infiniteSearchType, {
+    sort: activeSort,
+    time: activeTime,
+  });
 
   const isAllPage = activeTab === "all";
   const isPostsPage = activeTab === "posts";
@@ -132,9 +179,7 @@ export default function SearchPage() {
     isAllPage || isPostsPage
       ? summaryProfiles
       : infinitePages.flatMap((p) =>
-          infiniteSearchType === "profiles"
-            ? (p.profiles ?? [])
-            : [],
+          infiniteSearchType === "profiles" ? (p.profiles ?? []) : [],
         );
   const groups =
     isAllPage || isPostsPage
@@ -251,6 +296,42 @@ export default function SearchPage() {
     </div>
   );
 
+  const renderAllFilters = () => (
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Select
+        value={activeSort}
+        onValueChange={(value) => updateSearchParam("sort", value)}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEARCH_SORT_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={activeTime}
+        onValueChange={(value) => updateSearchParam("time", value)}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEARCH_TIME_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   return (
     <div className="h-full overflow-y-auto p-6 bg-background">
       <div className="mx-auto w-full max-w-6xl">
@@ -259,7 +340,7 @@ export default function SearchPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-8 flex gap-1 overflow-x-auto rounded-xl p-1 no-scrollbar">
+        <div className="mb-2 flex gap-1 overflow-x-auto rounded-xl p-1 no-scrollbar">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -297,6 +378,7 @@ export default function SearchPage() {
           <div className="space-y-10">
             {activeTab === "all" && (
               <>
+                {renderAllFilters()}
                 {counts.all === 0 && !loading ? (
                   <Empty query={qParam} type={t("search.types.all")} />
                 ) : (
@@ -374,15 +456,18 @@ export default function SearchPage() {
                 </div>
               ))}
 
-            {activeTab === "posts" &&
-              (blogs.length === 0 && !loading ? (
-                <Empty query={qParam} type={t("search.types.posts")} />
-              ) : (
+            {activeTab === "posts" && (
+              <>
+                {renderAllFilters()}
+                {(blogs.length === 0 && !loading ? (
+                <Empty query={qParam} type={t("search.types.posts")} />) : (
                 <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
                   {renderPostsList()}
                   {renderSidebar()}
                 </div>
-              ))}
+                ))}
+              </>
+            )}
 
             {activeTab === "collections" &&
               (collections.length === 0 ? (
