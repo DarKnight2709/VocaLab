@@ -72,7 +72,6 @@ export class SearchService {
   async searchSidebar(
     userId: string,
     query?: string,
-    _filters?: PostSearchFilters,
   ): Promise<SidebarSearchResultResponse> {
     const sanitizedQuery = query?.trim();
     if (!sanitizedQuery || sanitizedQuery.length < 2) {

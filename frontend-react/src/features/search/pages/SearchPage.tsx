@@ -105,6 +105,12 @@ export default function SearchPage() {
     } else {
       newParams.delete(key);
     }
+
+    const currentType = searchParams.get("type") || "all";
+    if (currentType === "all") {
+      newParams.set("type", "posts");
+    }
+
     setSearchParams(newParams);
   };
 

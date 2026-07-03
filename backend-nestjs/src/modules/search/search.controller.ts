@@ -62,10 +62,6 @@ export class SearchController {
     const result = await this.searchService.searchSidebar(
       user.id,
       query.query,
-      {
-        sort: query.sort,
-        time: query.time,
-      },
     );
     return { data: result };
   }
