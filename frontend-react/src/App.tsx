@@ -38,6 +38,7 @@ import { useTranslation } from "./shared/hooks/useTranslation";
 import { StudyLayout } from "./shared/layout/StudyLayout";
 import StatsPage from "./features/stats/pages/StatsPage";
 import PublicCollectionDetailPage from "./features/vocabulary/pages/PublicCollectionDetailPage";
+import HomePage from "./features/home/pages/HomePage";
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
         path: ROUTES.HOME.url,
         element: <MainLayout />,
         children: [
+          { index: true, element: <HomePage /> },
           { path: ROUTES.BLOG.url, element: <BlogPage /> },
           { path: ROUTES.BLOG_DETAIL.url, element: <BlogDetailPage /> },
           { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },

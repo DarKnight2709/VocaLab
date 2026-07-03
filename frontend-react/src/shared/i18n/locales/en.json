@@ -995,5 +995,41 @@
       "Sat": "Sat",
       "Sun": "Sun"
     }
+  },
+
+  "home": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "subtitle": "Ready to expand your vocabulary today?",
+    "studyProgress": "Study Progress",
+    "todayStudy": "Today's study",
+    "minutesStudied": "{{count}} min studied",
+    "dailyGoal": "Daily goal",
+    "weeklyAverage": "Weekly average",
+    "minutesShort": "{{count}} min",
+    "goalReached": "Goal reached! 🎉",
+    "viewStats": "View stats",
+    "quickActions": "Quick Actions",
+    "actions": {
+      "vocabulary": "Vocabulary",
+      "vocabularyDesc": "Build & review flashcard collections",
+      "grammar": "Grammar",
+      "grammarDesc": "Master grammar structures",
+      "blog": "Blog",
+      "blogDesc": "Read & share language tips",
+      "chat": "Chat",
+      "chatDesc": "Practice with the community"
+    },
+    "myCollections": "My Collections",
+    "viewAll": "View all",
+    "cards": "{{count}} cards",
+    "noCollections": "No collections yet. Create your first one!",
+    "recentPosts": "Recent Posts",
+    "noPosts": "No posts yet.",
+    "createCollection": "Create collection",
+    "writePost": "Write a post"
   }
 }

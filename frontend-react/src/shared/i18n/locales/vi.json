@@ -986,5 +986,41 @@
       "Sat": "T7",
       "Sun": "CN"
     }
+  },
+
+  "home": {
+    "greeting": {
+      "morning": "Chào buổi sáng",
+      "afternoon": "Chào buổi chiều",
+      "evening": "Chào buổi tối"
+    },
+    "subtitle": "Sẵn sàng mở rộng vốn từ vựng hôm nay chứ?",
+    "studyProgress": "Tiến độ học tập",
+    "todayStudy": "Hôm nay",
+    "minutesStudied": "Đã học {{count}} phút",
+    "dailyGoal": "Mục tiêu hàng ngày",
+    "weeklyAverage": "Trung bình tuần",
+    "minutesShort": "{{count}} phút",
+    "goalReached": "Đạt mục tiêu! 🎉",
+    "viewStats": "Xem thống kê",
+    "quickActions": "Truy cập nhanh",
+    "actions": {
+      "vocabulary": "Từ vựng",
+      "vocabularyDesc": "Tạo & ôn tập bộ thẻ từ vựng",
+      "grammar": "Ngữ pháp",
+      "grammarDesc": "Nắm vững cấu trúc ngữ pháp",
+      "blog": "Bài viết",
+      "blogDesc": "Đọc & chia sẻ mẹo ngôn ngữ",
+      "chat": "Trò chuyện",
+      "chatDesc": "Luyện tập cùng cộng đồng"
+    },
+    "myCollections": "Bộ sưu tập của tôi",
+    "viewAll": "Xem tất cả",
+    "cards": "{{count}} thẻ",
+    "noCollections": "Chưa có bộ sưu tập nào. Tạo bộ đầu tiên!",
+    "recentPosts": "Bài viết gần đây",
+    "noPosts": "Chưa có bài viết nào.",
+    "createCollection": "Tạo bộ sưu tập",
+    "writePost": "Viết bài"
   }
 }
