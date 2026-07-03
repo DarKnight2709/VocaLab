@@ -17,6 +17,7 @@ import Breadcrumb from "@/shared/components/Breadcrumb";
 import { Switch } from "@/shared/components/ui/switch";
 import ImportVocabularyDialog from "../components/ImportVocabularyDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
+import { LanguagePicker } from "@/features/chat/components/LanguagePicker";
 import { toast } from "sonner";
 import {
   useCollectionsQuery,
@@ -56,6 +57,7 @@ export default function VocabularyPage() {
   const [newColName, setNewColName] = useState("");
   const [newColDesc, setNewColDesc] = useState("");
   const [newColIsPublic, setNewColIsPublic] = useState(true);
+  const [newColLanguages, setNewColLanguages] = useState<string[]>([]);
   const [importOpen, setImportOpen] = useState(false);
 
   const [renameOpen, setRenameOpen] = useState(false);
@@ -63,6 +65,7 @@ export default function VocabularyPage() {
   const [renameName, setRenameName] = useState("");
   const [renameDesc, setRenameDesc] = useState("");
   const [renameIsPublic, setRenameIsPublic] = useState(true);
+  const [renameLanguages, setRenameLanguages] = useState<string[]>([]);
 
   const { data: colsData, isLoading: colsLoading } = useCollectionsQuery(true);
   const createColMutation = useCreateCollectionMutation();
@@ -78,11 +81,13 @@ export default function VocabularyPage() {
       name: newColName,
       description: newColDesc || undefined,
       isPublic: newColIsPublic,
+      languages: newColLanguages,
     });
     setNewColOpen(false);
     setNewColName("");
     setNewColDesc("");
     setNewColIsPublic(true);
+    setNewColLanguages([]);
   }
 
   async function handleRenameCollection(e: React.FormEvent) {
@@ -95,6 +100,7 @@ export default function VocabularyPage() {
         name: renameName,
         description: renameDesc || undefined,
         isPublic: renameIsPublic,
+        languages: renameLanguages,
       },
     });
 
@@ -103,6 +109,7 @@ export default function VocabularyPage() {
     setRenameName("");
     setRenameDesc("");
     setRenameIsPublic(true);
+    setRenameLanguages([]);
   }
 
   function getCardText(card: CardItem, side: "front" | "back") {
@@ -175,6 +182,7 @@ export default function VocabularyPage() {
     setRenameName(collection.name);
     setRenameDesc(collection.description || "");
     setRenameIsPublic(collection.isPublic ?? true);
+    setRenameLanguages(collection.languages || []);
     setRenameOpen(true);
   }
 
@@ -380,6 +388,14 @@ export default function VocabularyPage() {
                 placeholder={t("vocabulary.descriptionPlaceholder")}
               />
             </div>
+            <div className="space-y-1.5">
+              <Label>{t("chat.languagesOptional") || "Languages (Optional)"}</Label>
+              <LanguagePicker
+                selected={newColLanguages}
+                onChange={setNewColLanguages}
+                maxDisplayed={3}
+              />
+            </div>
             <div className="flex items-center justify-between mt-4">
               <div className="space-y-0.5">
                 <Label>{t("vocabulary.visibility")}</Label>
@@ -431,6 +447,14 @@ export default function VocabularyPage() {
                 value={renameDesc}
                 onChange={(e) => setRenameDesc(e.target.value)}
                 placeholder={t("vocabulary.descriptionPlaceholder")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("chat.languagesOptional") || "Languages (Optional)"}</Label>
+              <LanguagePicker
+                selected={renameLanguages}
+                onChange={setRenameLanguages}
+                maxDisplayed={3}
               />
             </div>
             <div className="flex items-center justify-between mt-4">

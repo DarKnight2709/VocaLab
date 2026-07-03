@@ -414,6 +414,7 @@ model CardCollection {
   userId      String
   originId    String?
   isPublic    Boolean   @default(true)
+  languages   String[]  @default([])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?

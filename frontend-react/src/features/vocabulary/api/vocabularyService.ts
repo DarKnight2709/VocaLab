@@ -31,6 +31,7 @@ export interface VocabCollection {
   description: string | null;
   userId: string;
   isPublic: boolean;
+  languages: string[];
   originId: string | null;
   origin?: {
     id: string;
@@ -126,6 +127,7 @@ export const useCreateCollectionMutation = () => {
       name: string;
       description?: string;
       isPublic?: boolean;
+      languages?: string[];
     }) => api.post(API_ROUTES.VOCABULARY.CREATE_COLLECTION, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });
@@ -144,7 +146,7 @@ export const useUpdateCollectionMutation = () => {
       body,
     }: {
       id: string;
-      body: { name?: string; description?: string; isPublic?: boolean };
+      body: { name?: string; description?: string; isPublic?: boolean; languages?: string[] };
     }) => api.patch(API_ROUTES.VOCABULARY.UPDATE_COLLECTION(id), body),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["card-collections"] });

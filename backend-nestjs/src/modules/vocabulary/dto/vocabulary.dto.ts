@@ -32,6 +32,11 @@ export class CreateCollectionDto {
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  languages?: string[];
 }
 export class ForkCollectionDto extends CreateCollectionDto {
   @IsBoolean()
