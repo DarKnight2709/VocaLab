@@ -15,12 +15,14 @@ import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
 import { useUpdateGroupMutation } from "@/features/chat/api/groupService";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { LanguagePicker } from "./LanguagePicker";
 
 export type GroupBasicInfo = {
   id: string;
   name: string;
   description?: string | null;
   avatar?: string | null;
+  languages?: string[];
 };
 
 type Props = {
@@ -57,6 +59,7 @@ export function GroupEditDialog({
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [languages, setLanguages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const groupName = useMemo(() => group?.name || "Group", [group]);
@@ -74,6 +77,7 @@ export function GroupEditDialog({
       setGroup(initial);
       setName(initial.name || "");
       setDescription(initial.description || "");
+      setLanguages(initial.languages || []);
       return;
     }
 
@@ -104,6 +108,7 @@ export function GroupEditDialog({
     const payload: Record<string, unknown> = {
       name: trimmed,
       description: description,
+      languages: languages,
     };
     try {
       setSaving(true);
@@ -114,6 +119,7 @@ export function GroupEditDialog({
         name: updated.name,
         description: updated.description,
         avatar: updated.avatar,
+        languages: updated.languages,
       };
       setGroup(basicInfo);
       onUpdated?.(basicInfo);
@@ -179,6 +185,15 @@ export function GroupEditDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t("chat.descriptionPlaceholder")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-sm font-medium">{t("chat.languagesOptional") || "Languages (Optional)"}</div>
+              <LanguagePicker
+                selected={languages}
+                onChange={setLanguages}
+                maxDisplayed={3}
               />
             </div>
 

@@ -20,6 +20,7 @@ import {
 } from "@/shared/validations/GroupSchema";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { getInitials } from "../utils";
+import { LanguagePicker } from "./LanguagePicker";
 
 type Props = {
   open: boolean;
@@ -58,6 +59,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
       description: "",
       isPublic: false,
       members: [],
+      languages: [],
     },
   });
 
@@ -108,7 +110,7 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("chat.createGroup")}</DialogTitle>
         </DialogHeader>
@@ -138,6 +140,15 @@ export function GroupCreateDialog({ open, onOpenChange, onCreated }: Props) {
                 {errors.description.message}
               </p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t("chat.languagesOptional") || "Languages (Optional)"}</Label>
+            <LanguagePicker
+              selected={watch("languages") || []}
+              onChange={(langs) => setValue("languages", langs, { shouldDirty: true })}
+              maxDisplayed={3}
+            />
           </div>
 
           <div className="flex items-center justify-between gap-4 rounded-lg border p-3">

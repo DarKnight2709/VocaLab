@@ -10,7 +10,7 @@ import {
   SearchSuggestionResultResponse,
   SidebarSearchResultResponse,
 } from './dto/search.dto';
-import { PostSearchQueryDto, ProfileSearchQueryDto, SideBarSearchQueryDto } from './dto/search-query.dto';
+import { PostSearchQueryDto, ProfileSearchQueryDto, SideBarSearchQueryDto, GroupSearchQueryDto } from './dto/search-query.dto';
 import { SearchService } from './search.service';
 import {
   SEARCH_SORT,
@@ -19,6 +19,7 @@ import {
   SEARCH_SORT as SEARCH_SORT_VALUES,
   SEARCH_TIME as SEARCH_TIME_VALUES,
   SEARCH_PROFILE_SORT as SEARCH_PROFILE_SORT_VALUES,
+  SEARCH_GROUP_FILTER as SEARCH_GROUP_FILTER_VALUES,
 } from './search.types';
 
 @ApiTags('search')
@@ -129,17 +130,28 @@ export class SearchController {
   @Get('groups')
   @ApiOperation({ summary: 'Get groups search results' })
   @ApiResponse({ type: GroupsSearchResultResponse })
+  @ApiQuery({ name: 'query', required: true })
+  @ApiQuery({ name: 'page', required: false, default: 1 })
+  @ApiQuery({ name: 'limit', required: false, default: 10 })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    enum: Object.values(SEARCH_GROUP_FILTER_VALUES),
+    default: SEARCH_GROUP_FILTER_VALUES.ALL,
+  })
   async searchGroups(
     @CurrentUser() user: any,
-    @Query('query') query: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: GroupSearchQueryDto,
   ): Promise<ResponseInterceptor<GroupsSearchResultResponse>> {
     const result = await this.searchService.searchGroups(
       user.id,
-      Number(page) || 1,
-      Number(limit) || 10,
-      query,
+      query.page,
+      query.limit,
+      query.query,
+      {
+        filter: query.filter,
+        languages: query.languages,
+      },
     );
     return {
       data: result,

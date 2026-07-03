@@ -23,6 +23,7 @@ export const SearchGroupResultSchema = z.object({
   ownerId: z.string().optional(),
   isActive: z.boolean().optional(),
   isPublic: z.boolean().optional(),
+  languages: z.array(z.string()).optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
   deletedAt: z.string().nullable().optional(),

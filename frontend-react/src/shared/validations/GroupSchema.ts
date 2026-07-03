@@ -61,6 +61,7 @@ export const GroupInfoSchema = z.object({
   owner: MemberUserSchema,
   members: z.array(GroupMemberSchema),
   rolePermissions: z.array(RolePermissionSchema),
+  languages: z.array(z.string()).optional(),
   // isActive: z.boolean().optional(),
   // createdAt: z.string().optional(),
   // updatedAt: z.string().optional(),
@@ -131,6 +132,7 @@ export const getCreateGroupSchema = () =>
       .optional(),
     isPublic: z.boolean().optional(),
     members: z.array(z.string()).min(1, i18n.t("validation.selectMinMembers")),
+    languages: z.array(z.string()).optional(),
   });
 
 export const UpdateGroupResponseSchema = GroupInfoSchema;

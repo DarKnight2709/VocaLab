@@ -33,3 +33,17 @@ export interface PostSearchFilters {
 export interface ProfileSearchFilters {
   profileSort: SearchProfileSort;
 }
+
+export const SEARCH_GROUP_FILTER = {
+  ALL: 'all',
+  MY_GROUPS: 'my_groups',
+  POPULAR: 'popular',
+} as const;
+
+export type SearchGroupFilter =
+  (typeof SEARCH_GROUP_FILTER)[keyof typeof SEARCH_GROUP_FILTER];
+
+export interface GroupSearchFilters {
+  filter?: SearchGroupFilter;
+  languages?: string[];
+}

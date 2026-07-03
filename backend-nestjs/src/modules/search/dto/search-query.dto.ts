@@ -7,14 +7,17 @@ import {
   IsOptional,
   IsString,
   Min,
+  IsArray,
 } from 'class-validator';
 import {
   SEARCH_SORT,
   SEARCH_TIME,
   SEARCH_PROFILE_SORT,
+  SEARCH_GROUP_FILTER,
   type SearchSort,
   type SearchTime,
   type SearchProfileSort,
+  type SearchGroupFilter,
 } from '../search.types';
 
 export class SearchQueryDto {
@@ -74,4 +77,18 @@ export class ProfileSearchQueryDto extends SearchQueryDto {
   @IsOptional()
   @IsEnum(SEARCH_PROFILE_SORT)
   profileSort: SearchProfileSort = SEARCH_PROFILE_SORT.ALL;
+}
+
+export class GroupSearchQueryDto extends SearchQueryDto {
+  @ApiPropertyOptional({ enum: SEARCH_GROUP_FILTER, default: SEARCH_GROUP_FILTER.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_GROUP_FILTER)
+  filter: SearchGroupFilter = SEARCH_GROUP_FILTER.ALL;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value ? [value] : []))
+  languages?: string[];
 }

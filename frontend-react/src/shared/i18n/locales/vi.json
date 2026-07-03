@@ -751,6 +751,9 @@
     "description": "Mô tả",
     "descriptionOptional": "Mô tả (tùy chọn)",
     "descriptionPlaceholder": "Nhập mô tả nhóm",
+    "languagesOptional": "Ngôn ngữ (Tùy chọn)",
+    "selectLanguages": "Chọn ngôn ngữ...",
+    "searchLanguage": "Tìm kiếm ngôn ngữ...",
     "addMembers": "Thêm thành viên",
     "searchMembersPlaceholder": "Tìm kiếm thành viên...",
     "clickToRemove": "Nhấn để xóa",
@@ -872,6 +875,11 @@
       "posts": "Bài viết",
       "groups": "Nhóm",
       "profiles": "Hồ sơ"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "myGroups": "Nhóm của tôi",
+      "popular": "Phổ biến"
     },
     "types": {
       "all": "kết quả",

@@ -7,10 +7,14 @@ type SearchSort = "relevance" | "newest" | "oldest" | "popular" | "active";
 type SearchTime = "all" | "24h" | "7d" | "30d" | "1y";
 type SearchProfileSort = "all" | "friends" | "mutual-friends";
 
+type SearchGroupFilter = "all" | "my_groups" | "popular";
+
 export type SearchFilters = {
   sort?: SearchSort;
   time?: SearchTime;
   profileSort?: SearchProfileSort;
+  filter?: SearchGroupFilter;
+  languages?: string[];
 };
 
 // ──────────────────────────────────────────────
@@ -47,7 +51,7 @@ export const useSearchInfinite = (
   filters: SearchFilters = {},
 ) =>
   useInfiniteQuery({
-    queryKey: ["search-infinite", q, type, filters.sort, filters.time, filters.profileSort],
+    queryKey: ["search-infinite", q, type, filters.sort, filters.time, filters.profileSort, filters.filter, filters.languages],
     queryFn: async ({ pageParam = 1 }) => {
       const result = await fetchWithSchema(
         api.get(API_ROUTES.SEARCH.BASE(type), {
@@ -58,6 +62,8 @@ export const useSearchInfinite = (
             sort: filters.sort,
             time: filters.time,
             profileSort: filters.profileSort,
+            filter: filters.filter,
+            languages: filters.languages,
           },
         }),
         SearchInfiniteResponseSchema,

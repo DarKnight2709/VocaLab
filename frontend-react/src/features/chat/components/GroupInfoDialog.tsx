@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import ISO6391 from 'iso-639-1'
 import { MemberRole } from '@/shared/enums/MemberRole.enum'
 import { useSearchUsersQuery } from '@/features/chat/api/chatService'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
@@ -6,6 +7,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Switch } from '@/shared/components/ui/switch'
+import { Badge } from '@/shared/components/ui/badge'
 import { ConfirmModal } from '@/shared/components/ConfirmModal'
 import {
   DropdownMenu,
@@ -402,7 +404,7 @@ export function GroupInfoDialog({
           open={editOpen}
           onOpenChange={setEditOpen}
           groupId={groupId}
-          initial={group ? { id: group.id, name: group.name, description: group.description, avatar: group.avatar } : null}
+          initial={group ? { id: group.id, name: group.name, description: group.description, avatar: group.avatar, languages: group.languages } : null}
           onUpdated={(g: any) => {
             setGroup((prev) => (prev ? { ...prev, ...g } : (g as any)))
             onUpdatedGroup?.(g as any)
@@ -423,6 +425,18 @@ export function GroupInfoDialog({
               <div className="min-w-0">
                 <div className="font-semibold truncate">{groupName}</div>
                 <div className="text-sm text-muted-foreground truncate">{groupDesc}</div>
+                {group?.languages && group.languages.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {group.languages.map(langCode => {
+                      const langInfo = ISO6391.getName(langCode);
+                      return (
+                        <Badge key={langCode} variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
+                          {langInfo || langCode}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

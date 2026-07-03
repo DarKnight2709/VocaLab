@@ -26,6 +26,7 @@ import { BlogCard } from "../components/BlogCard";
 import { CollectionCard } from "../components/CollectionCard";
 import { GroupCard } from "../components/GroupCard";
 import { UserCard } from "@/features/user/components/UserCard";
+import { LanguagePicker } from "@/features/chat/components/LanguagePicker";
 import Empty from "@/shared/components/Empty";
 import {
   Select,
@@ -39,6 +40,7 @@ type Tab = "all" | "collections" | "posts" | "groups" | "profiles";
 
 type SearchSortOption = "newest" | "oldest" | "popular";
 type SearchProfileSortOption = "all" | "friends" | "mutual-friends";
+type SearchGroupFilterOption = "all" | "my_groups" | "popular";
 type SearchTimeOption = "all" | "24h" | "7d" | "30d" | "1y";
 
 const SEARCH_SORT_OPTIONS: { value: SearchSortOption; label: string }[] = [
@@ -73,6 +75,7 @@ const VALID_PROFILE_SORT_VALUES: SearchProfileSortOption[] = [
   "friends",
   "mutual-friends",
 ];
+const VALID_GROUP_FILTER_VALUES: SearchGroupFilterOption[] = ["all", "my_groups", "popular"];
 
 const VALID_TIME_VALUES: SearchTimeOption[] = ["all", "24h", "7d", "30d", "1y"];
 
@@ -83,6 +86,8 @@ export default function SearchPage() {
   const typeParam = searchParams.get("type") || "all";
   const sortParam = searchParams.get("sort") || "newest";
   const profileSortParam = searchParams.get("profileSort") || "all";
+  const groupFilterParam = searchParams.get("filter") || "all";
+  const languagesParam = searchParams.get("languages") || "";
   const timeParam = searchParams.get("time") || "all";
 
   const handleTabChange = (tab: Tab) => {
@@ -95,7 +100,11 @@ export default function SearchPage() {
 
   const updateSearchParam = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set(key, value);
+    if (value) {
+      newParams.set(key, value);
+    } else {
+      newParams.delete(key);
+    }
     setSearchParams(newParams);
   };
 
@@ -118,6 +127,12 @@ export default function SearchPage() {
     profileSortParam as SearchProfileSortOption,
   )
     ? (profileSortParam as SearchProfileSortOption)
+    : "all";
+
+  const activeGroupFilter = VALID_GROUP_FILTER_VALUES.includes(
+    groupFilterParam as SearchGroupFilterOption,
+  )
+    ? (groupFilterParam as SearchGroupFilterOption)
     : "all";
 
   const activeTime = VALID_TIME_VALUES.includes(timeParam as SearchTimeOption)
@@ -160,6 +175,12 @@ export default function SearchPage() {
     }
     if (activeTab === "profiles") {
       return { profileSort: activeProfileSort };
+    }
+    if (activeTab === "groups") {
+      return { 
+        filter: activeGroupFilter, 
+        languages: languagesParam ? languagesParam.split(",") : undefined 
+      };
     }
     return {};
   })();
@@ -391,6 +412,34 @@ export default function SearchPage() {
     </div>
   );
 
+  const renderGroupFilters = () => (
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Select
+        value={activeGroupFilter}
+        onValueChange={(value) => updateSearchParam("filter", value)}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {VALID_GROUP_FILTER_VALUES.map((value) => (
+            <SelectItem key={value} value={value}>
+              {t(`search.filters.${value.replace('_groups', 'Groups')}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <div className="w-full sm:w-[400px]">
+        <LanguagePicker
+          selected={languagesParam ? languagesParam.split(",") : []}
+          onChange={(selected) => updateSearchParam("languages", selected.join(","))}
+          maxDisplayed={2}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full overflow-y-auto p-6 bg-background">
       <div className="mx-auto w-full max-w-6xl">
@@ -500,12 +549,14 @@ export default function SearchPage() {
               </>
             )}
 
-            {activeTab === "groups" &&
-              (groups.length === 0 ? (
-                <Empty query={qParam} type={t("search.types.groups")} />
-              ) : (
-                <div className="space-y-6">
-                  <div className="grid gap-3 sm:grid-cols-2">
+            {activeTab === "groups" && (
+              <>
+                {renderGroupFilters()}
+                {groups.length === 0 ? (
+                  <Empty query={qParam} type={t("search.types.groups")} />
+                ) : (
+                  <div className="space-y-6">
+                    <div className="grid gap-3 sm:grid-cols-2">
                     {groups.map((g: GroupResult) => (
                       <GroupCard key={g.id} group={g} />
                     ))}
@@ -517,7 +568,9 @@ export default function SearchPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                )}
+              </>
+            )}
 
             {activeTab === "posts" && (
               <>

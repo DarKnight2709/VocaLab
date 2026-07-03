@@ -1,4 +1,4 @@
-import { CalendarDays, Info, UserRound, Users } from "lucide-react";
+import { CalendarDays, Info, UserRound, Users, Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { SearchGroupResult as GroupResult } from "@/shared/validations/SearchSchema";
 import type { SearchUserResult as UserResult } from "@/shared/validations/SearchSchema";
@@ -48,7 +48,7 @@ function AvatarBubble({
 }
 
 export function GroupCard({ group }: { group: GroupResult }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate(); // Initialize navigator
   const currentUserId = useAuthStore((state) => state.userId);
   const joinMutation = useJoinSearchGroupMutation();
@@ -148,6 +148,20 @@ export function GroupCard({ group }: { group: GroupResult }) {
                 <CalendarDays className="h-3.5 w-3.5" />
                 <span>{t("search.createdAt", { date: createdDate })}</span>
               </div>
+              {group.languages && group.languages.length > 0 && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Languages className="h-3.5 w-3.5" />
+                  <span>
+                    {group.languages.map((lang) => {
+                      try {
+                        return new Intl.DisplayNames([i18n.language], { type: "language" }).of(lang);
+                      } catch {
+                        return lang.toUpperCase();
+                      }
+                    }).join(" + ")}
+                  </span>
+                </div>
+              )}
             </div>
           </DropdownMenuContent>
         </DropdownMenu>

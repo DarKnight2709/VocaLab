@@ -764,6 +764,9 @@
     "description": "Description",
     "descriptionOptional": "Description (optional)",
     "descriptionPlaceholder": "Enter group description",
+    "languagesOptional": "Languages (Optional)",
+    "selectLanguages": "Select languages...",
+    "searchLanguage": "Search language...",
     "addMembers": "Add members",
     "searchMembersPlaceholder": "Search members...",
     "clickToRemove": "Click to remove",
@@ -879,6 +882,11 @@
       "posts": "Posts",
       "groups": "Groups",
       "profiles": "Profiles"
+    },
+    "filters": {
+      "all": "All",
+      "myGroups": "My groups",
+      "popular": "Popular"
     },
     "types": {
       "all": "results",

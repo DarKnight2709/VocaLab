@@ -30,10 +30,7 @@ export const FriendItemSchema = z.object({
   avatar: z.string().optional().nullable(),
 });
 
-export const GetFriendsResponseSchema = z.object({
-  friends: z.array(FriendItemSchema),
-});
-
+export const GetFriendsResponseSchema = z.array(FriendItemSchema);
 export const SearchFriendsResponseSchema = z.object({
   friends: z.array(FriendItemSchema),
   meta: z.object({

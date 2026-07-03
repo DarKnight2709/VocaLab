@@ -76,7 +76,7 @@ export function useFriendsQuery(enabled = true) {
         GetFriendsResponseSchema
       );
 
-      return result.data.friends;
+      return result.data;
     },
     enabled,
   });

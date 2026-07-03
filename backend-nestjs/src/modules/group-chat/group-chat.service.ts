@@ -18,6 +18,7 @@ import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 import { GroupChatGateway } from './group-chat.gateway';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { MessagesService } from '../messages/messages.service';
+import { SEARCH_GROUP_FILTER, GroupSearchFilters } from '../search/search.types';
 import {
   CreateGroupResponseDto,
   GroupDetailDto,
@@ -151,6 +152,7 @@ export class GroupChatService {
         name: createDto.name.trim(),
         description: createDto.description?.trim(),
         isPublic: createDto.isPublic ?? true,
+        languages: createDto.languages ?? [],
         ownerId: ownerId,
         members: {
           create: [
@@ -235,13 +237,32 @@ export class GroupChatService {
     page: number,
     limit: number,
     query?: string,
+    filters?: GroupSearchFilters,
   ): Promise<GroupsSearchResultResponse> {
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      isPublic: true,
+    const where: Prisma.GroupWhereInput = {
       deletedAt: null,
     };
+
+    const AND: Prisma.GroupWhereInput[] = [];
+
+    const filter = filters?.filter || SEARCH_GROUP_FILTER.ALL;
+
+    if (filter === SEARCH_GROUP_FILTER.MY_GROUPS) {
+      where.members = { some: { userId } };
+    } else {
+      AND.push({
+        OR: [
+          { isPublic: true },
+          { members: { some: { userId } } },
+        ],
+      });
+    }
+
+    if (filters?.languages && filters.languages.length > 0) {
+      where.languages = { hasSome: filters.languages };
+    }
 
     const blockerIds = await this.userService.getBlockerIdsOf(userId);
 
@@ -252,18 +273,29 @@ export class GroupChatService {
     }
 
     if (query) {
-      where.OR = [
-        { name: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-      ];
+      AND.push({
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (AND.length > 0) {
+      where.AND = AND;
+    }
+
+    const orderBy: Prisma.GroupOrderByWithRelationInput = {};
+    if (filter === SEARCH_GROUP_FILTER.POPULAR) {
+      orderBy.members = { _count: 'desc' };
+    } else {
+      orderBy.createdAt = 'desc';
     }
 
     let [searchedGroups, total] = await Promise.all([
       this.prisma.group.findMany({
         where,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy,
         skip: skip,
         take: limit,
 
@@ -327,6 +359,7 @@ export class GroupChatService {
       description: group.description,
       avatar: group.avatar,
       isPublic: group.isPublic,
+      languages: group.languages,
       owner: group.owner,
       members:
         group.members?.map((m) => ({
@@ -371,6 +404,9 @@ export class GroupChatService {
       updateData.avatar = result.secure_url;
     } else if (updateDto.avatar !== undefined) {
       updateData.avatar = updateDto.avatar;
+    }
+    if (updateDto.languages !== undefined) {
+      updateData.languages = updateDto.languages;
     }
 
     await this.prisma.group.update({

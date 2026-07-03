@@ -21,4 +21,10 @@ export class CreateGroupDto {
   @IsBoolean()
   @IsOptional()
   isPublic?: boolean;
+
+  @ApiProperty({ example: ['en', 'vi'], type: [String], required: false })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  languages?: string[];
 }

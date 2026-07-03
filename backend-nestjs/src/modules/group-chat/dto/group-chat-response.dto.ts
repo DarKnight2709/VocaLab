@@ -67,6 +67,9 @@ export class GroupDetailDto {
   @ApiProperty()
   isPublic!: boolean;
 
+  @ApiProperty({ type: [String], required: false })
+  languages!: string[];
+
   @ApiProperty({ type: [GroupMemberDto] })
   members!: GroupMemberDto[];
 
@@ -92,6 +95,9 @@ export class GroupSearchItemDto {
 
   @ApiProperty()
   isPublic!: boolean;
+
+  @ApiProperty({ type: [String], required: false })
+  languages?: string[];
 
   @ApiProperty({ type: [UserResponse] })
   members!: {user: UserResponse}[];
