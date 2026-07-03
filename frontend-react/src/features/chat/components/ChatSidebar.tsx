@@ -161,7 +161,7 @@ export function ChatSidebar({
                             key={`su-${u.id}`}
                             className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors flex items-center gap-3"
                             onClick={() => {
-                              onUserClick(u);
+                              onUserClick({ ...u, fullName: u.fullName || undefined });
                               setSearchInput("");
                               setShowSuggestions(false);
                             }}

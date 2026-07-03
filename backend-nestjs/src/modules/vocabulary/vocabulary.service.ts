@@ -30,7 +30,9 @@ import {
   CollectionSearchResponseDto,
   ForkCollectionResponseDto,
 } from './dto/vocabulary-response.dto';
+import { CollectionSearchFilters, SEARCH_SORT, SEARCH_TIME } from '../search/search.types';
 import { UserService } from '../users/users.service';
+import { BlogService } from '../blog/blog.service';
 import { UpdateCardType } from '@/common/enums/update-card-type';
 import { UpdateCard } from '@/common/enums/update-card';
 
@@ -116,6 +118,7 @@ export class VocabularyService {
   constructor(
     private prisma: PrismaService,
     private userService: UserService,
+    private blogService: BlogService,
   ) {}
 
   // ──────────────────────────────────────────────
@@ -669,6 +672,7 @@ export class VocabularyService {
     page = 1,
     limit = 10,
     query?: string,
+    filters?: CollectionSearchFilters,
   ): Promise<CollectionSearchResponseDto> {
     const skip = (page - 1) * limit;
 
@@ -692,12 +696,30 @@ export class VocabularyService {
       ];
     }
 
+    if (filters?.time && filters.time !== SEARCH_TIME.ALL) {
+      const threshold = this.blogService.getDateThreshold(filters.time);
+      if (threshold) {
+        where.createdAt = { gte: threshold };
+      }
+    }
+
+    if (filters?.languages && filters.languages.length > 0) {
+      where.languages = { hasSome: filters.languages };
+    }
+
+    let orderBy: any = { createdAt: 'desc' };
+    if (filters?.sort) {
+      if (filters.sort === SEARCH_SORT.OLDEST) {
+        orderBy = { createdAt: 'asc' };
+      } else if (filters.sort === SEARCH_SORT.POPULAR) {
+        orderBy = { forks: { _count: 'desc' } };
+      }
+    }
+
     let [searchedCollections, total] = await Promise.all([
       this.prisma.cardCollection.findMany({
         where,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy,
         skip: skip,
         take: limit,
 

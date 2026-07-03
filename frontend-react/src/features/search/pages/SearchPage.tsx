@@ -182,6 +182,13 @@ export default function SearchPage() {
         languages: languagesParam ? languagesParam.split(",") : undefined 
       };
     }
+    if (activeTab === "collections") {
+      return {
+        sort: activeSort,
+        time: activeTime,
+        languages: languagesParam ? languagesParam.split(",") : undefined,
+      };
+    }
     return {};
   })();
 
@@ -412,6 +419,50 @@ export default function SearchPage() {
     </div>
   );
 
+  const renderCollectionFilters = () => (
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Select
+        value={activeSort}
+        onValueChange={(value) => updateSearchParam("sort", value)}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEARCH_SORT_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={activeTime}
+        onValueChange={(value) => updateSearchParam("time", value)}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEARCH_TIME_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <div className="w-full sm:w-[400px]">
+        <LanguagePicker
+          selected={languagesParam ? languagesParam.split(",") : []}
+          onChange={(selected) => updateSearchParam("languages", selected.join(","))}
+          maxDisplayed={2}
+        />
+      </div>
+    </div>
+  );
+
   const renderGroupFilters = () => (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
       <Select
@@ -586,10 +637,12 @@ export default function SearchPage() {
               </>
             )}
 
-            {activeTab === "collections" &&
-              (collections.length === 0 ? (
-                <Empty query={qParam} type={t("search.types.collections")} />
-              ) : (
+            {activeTab === "collections" && (
+              <>
+                {renderCollectionFilters()}
+                {collections.length === 0 ? (
+                  <Empty query={qParam} type={t("search.types.collections")} />
+                ) : (
                 <div className="space-y-6">
                   <div className="grid gap-3 sm:grid-cols-2">
                     {collections.map((c: CollectionResult) => (
@@ -603,7 +656,9 @@ export default function SearchPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                )}
+              </>
+            )}
           </div>
         )}
       </div>

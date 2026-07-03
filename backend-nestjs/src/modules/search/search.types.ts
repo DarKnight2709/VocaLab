@@ -34,6 +34,12 @@ export interface ProfileSearchFilters {
   profileSort: SearchProfileSort;
 }
 
+export interface CollectionSearchFilters {
+  sort?: SearchSort;
+  time?: SearchTime;
+  languages?: string[];
+}
+
 export const SEARCH_GROUP_FILTER = {
   ALL: 'all',
   MY_GROUPS: 'my_groups',

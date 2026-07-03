@@ -79,6 +79,25 @@ export class ProfileSearchQueryDto extends SearchQueryDto {
   profileSort: SearchProfileSort = SEARCH_PROFILE_SORT.ALL;
 }
 
+export class CollectionSearchQueryDto extends SearchQueryDto {
+  @ApiPropertyOptional({ enum: SEARCH_SORT, default: SEARCH_SORT.NEWEST })
+  @IsOptional()
+  @IsEnum(SEARCH_SORT)
+  sort: SearchSort = SEARCH_SORT.NEWEST;
+
+  @ApiPropertyOptional({ enum: SEARCH_TIME, default: SEARCH_TIME.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_TIME)
+  time: SearchTime = SEARCH_TIME.ALL;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value ? [value] : []))
+  languages?: string[];
+}
+
 export class GroupSearchQueryDto extends SearchQueryDto {
   @ApiPropertyOptional({ enum: SEARCH_GROUP_FILTER, default: SEARCH_GROUP_FILTER.ALL })
   @IsOptional()

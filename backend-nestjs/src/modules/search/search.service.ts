@@ -8,7 +8,7 @@ import { VocabularyService } from '../vocabulary/vocabulary.service';
 import { BlogService } from '../blog/blog.service';
 import { UserService } from '../users/users.service';
 import { GroupChatService } from '../group-chat/group-chat.service';
-import { PostSearchFilters, ProfileSearchFilters, GroupSearchFilters } from './search.types';
+import { PostSearchFilters, ProfileSearchFilters, GroupSearchFilters, CollectionSearchFilters } from './search.types';
 @Injectable()
 export class SearchService {
   constructor(
@@ -103,8 +103,9 @@ export class SearchService {
     page = 1,
     limit = 10,
     query?: string,
+    filters?: CollectionSearchFilters,
   ) {
-    return this.vocabularyService.searchCollections(userId, page, limit, query);
+    return this.vocabularyService.searchCollections(userId, page, limit, query, filters);
   }
 
   async searchPosts(

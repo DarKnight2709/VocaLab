@@ -10,7 +10,7 @@ import {
   SearchSuggestionResultResponse,
   SidebarSearchResultResponse,
 } from './dto/search.dto';
-import { PostSearchQueryDto, ProfileSearchQueryDto, SideBarSearchQueryDto, GroupSearchQueryDto } from './dto/search-query.dto';
+import { PostSearchQueryDto, ProfileSearchQueryDto, SideBarSearchQueryDto, GroupSearchQueryDto, CollectionSearchQueryDto } from './dto/search-query.dto';
 import { SearchService } from './search.service';
 import {
   SEARCH_SORT,
@@ -75,15 +75,18 @@ export class SearchController {
   @ApiResponse({ type: CollectionSearchResponseDto })
   async searchCollections(
     @CurrentUser() user: any,
-    @Query('query') query: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: CollectionSearchQueryDto,
   ): Promise<ResponseInterceptor<CollectionSearchResponseDto>> {
     const result = await this.searchService.searchCollections(
       user.id,
-      Number(page) || 1,
-      Number(limit) || 10,
-      query,
+      query.page,
+      query.limit,
+      query.query,
+      {
+        sort: query.sort,
+        time: query.time,
+        languages: query.languages,
+      },
     );
     return {
       data: result,
