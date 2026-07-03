@@ -467,6 +467,7 @@ export class UserService {
     page: number,
     limit: number,
     query?: string,
+    filters?: { profileSort?: string },
   ): Promise<ProfileSearchResultResponse> {
     const skip = (page - 1) * limit;
     const blockerIds = await this.getBlockerIdsOf(userId);
@@ -484,6 +485,33 @@ export class UserService {
         { username: { contains: query, mode: 'insensitive' } },
         { fullName: { contains: query, mode: 'insensitive' } },
       ];
+    }
+
+    // Apply profileSort filter
+    if (filters?.profileSort === 'friends') {
+      where.AND = [
+        { followers: { some: { followerId: userId } } },
+        { following: { some: { followingId: userId } } },
+      ];
+    } else if (filters?.profileSort === 'mutual-friends') {
+      const myFriendIds = await this.getFriendIds(userId);
+      if (myFriendIds.length > 0) {
+        // Users who are friends with at least one of my friends, but not my friends themselves
+        where.AND = [
+          {
+            AND: [
+              { followers: { some: { followerId: { in: myFriendIds } } } },
+              { following: { some: { followingId: { in: myFriendIds } } } },
+            ],
+          },
+          { id: { notIn: myFriendIds } },
+        ];
+      } else {
+        return {
+          profiles: [],
+          meta: { page, limit, total: 0, totalPages: 0 },
+        };
+      }
     }
 
     const [profiles, total] = await Promise.all([
@@ -1245,5 +1273,23 @@ export class UserService {
 
     const blockerIds = blockRelations.map((r) => r.blockingId);
     return blockerIds;
+  }
+
+  private async getFriendIds(userId: string): Promise<string[]> {
+    // Get all users who are friends with the current user (mutual follow)
+    const baseWhere = this.buildFriendsWhereClause(userId);
+
+    const blockerIds = await this.getBlockerIdsOf(userId);
+    if (blockerIds.length > 0) {
+      baseWhere.id = {
+        notIn: blockerIds,
+      };
+    }
+
+    const friends = await this.prisma.user.findMany({
+      where: baseWhere,
+      select: { id: true },
+    });
+    return friends.map((f) => f.id);
   }
 }

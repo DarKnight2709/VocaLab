@@ -10,13 +10,15 @@ import {
   SearchSuggestionResultResponse,
   SidebarSearchResultResponse,
 } from './dto/search.dto';
-import { PostSearchQueryDto, SideBarSearchQueryDto } from './dto/search-query.dto';
+import { PostSearchQueryDto, ProfileSearchQueryDto, SideBarSearchQueryDto } from './dto/search-query.dto';
 import { SearchService } from './search.service';
 import {
   SEARCH_SORT,
   SEARCH_TIME,
+  SEARCH_PROFILE_SORT,
   SEARCH_SORT as SEARCH_SORT_VALUES,
   SEARCH_TIME as SEARCH_TIME_VALUES,
+  SEARCH_PROFILE_SORT as SEARCH_PROFILE_SORT_VALUES,
 } from './search.types';
 
 @ApiTags('search')
@@ -147,17 +149,25 @@ export class SearchController {
   @Get('profiles')
   @ApiOperation({ summary: 'Get profiles search results' })
   @ApiResponse({ type: ProfileSearchResultResponse })
+  @ApiQuery({ name: 'query', required: true })
+  @ApiQuery({ name: 'page', required: false, default: 1 })
+  @ApiQuery({ name: 'limit', required: false, default: 10 })
+  @ApiQuery({
+    name: 'profileSort',
+    required: false,
+    enum: Object.values(SEARCH_PROFILE_SORT_VALUES),
+    default: SEARCH_PROFILE_SORT.ALL,
+  })
   async searchProfiles(
     @CurrentUser() user: any,
-    @Query('query') query: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: ProfileSearchQueryDto,
   ): Promise<ResponseInterceptor<ProfileSearchResultResponse>> {
     const result = await this.searchService.searchProfiles(
       user.id,
-      Number(page) || 1,
-      Number(limit) || 10,
-      query,
+      query.page,
+      query.limit,
+      query.query,
+      { profileSort: query.profileSort },
     );
     return {
       data: result,

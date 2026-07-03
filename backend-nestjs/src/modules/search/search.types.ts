@@ -16,7 +16,20 @@ export const SEARCH_TIME = {
 
 export type SearchTime = (typeof SEARCH_TIME)[keyof typeof SEARCH_TIME];
 
-export interface SearchFilters {
+export const SEARCH_PROFILE_SORT = {
+  ALL: 'all',
+  FRIENDS: 'friends',
+  MUTUAL_FRIENDS: 'mutual-friends',
+} as const;
+
+export type SearchProfileSort =
+  (typeof SEARCH_PROFILE_SORT)[keyof typeof SEARCH_PROFILE_SORT];
+
+export interface PostSearchFilters {
   sort: SearchSort;
   time: SearchTime;
+}
+
+export interface ProfileSearchFilters {
+  profileSort: SearchProfileSort;
 }

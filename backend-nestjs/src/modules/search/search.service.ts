@@ -8,7 +8,7 @@ import { VocabularyService } from '../vocabulary/vocabulary.service';
 import { BlogService } from '../blog/blog.service';
 import { UserService } from '../users/users.service';
 import { GroupChatService } from '../group-chat/group-chat.service';
-import { SearchFilters } from './search.types';
+import { PostSearchFilters, ProfileSearchFilters } from './search.types';
 @Injectable()
 export class SearchService {
   constructor(
@@ -72,7 +72,7 @@ export class SearchService {
   async searchSidebar(
     userId: string,
     query?: string,
-    _filters?: SearchFilters,
+    _filters?: PostSearchFilters,
   ): Promise<SidebarSearchResultResponse> {
     const sanitizedQuery = query?.trim();
     if (!sanitizedQuery || sanitizedQuery.length < 2) {
@@ -112,7 +112,7 @@ export class SearchService {
     page = 1,
     limit = 10,
     query?: string,
-    _filters?: SearchFilters,
+    _filters?: PostSearchFilters,
   ) {
     return this.blogService.getBlogs(userId, page, limit, query, _filters);
   }
@@ -121,7 +121,13 @@ export class SearchService {
     return this.groupService.searchGroups(userId, page, limit, query);
   }
 
-  async searchProfiles(userId: string, page = 1, limit = 10, query?: string) {
-    return this.userService.getProfiles(userId, page, limit, query);
+  async searchProfiles(
+    userId: string,
+    page = 1,
+    limit = 10,
+    query?: string,
+    filters?: ProfileSearchFilters,
+  ) {
+    return this.userService.getProfiles(userId, page, limit, query, filters);
   }
 }

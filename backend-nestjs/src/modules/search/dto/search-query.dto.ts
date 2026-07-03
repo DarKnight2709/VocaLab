@@ -11,8 +11,10 @@ import {
 import {
   SEARCH_SORT,
   SEARCH_TIME,
+  SEARCH_PROFILE_SORT,
   type SearchSort,
   type SearchTime,
+  type SearchProfileSort,
 } from '../search.types';
 
 export class SearchQueryDto {
@@ -65,4 +67,11 @@ export class PostSearchQueryDto extends SearchQueryDto {
   @IsOptional()
   @IsEnum(SEARCH_TIME)
   time: SearchTime = SEARCH_TIME.ALL;
+}
+
+export class ProfileSearchQueryDto extends SearchQueryDto {
+  @ApiPropertyOptional({ enum: SEARCH_PROFILE_SORT, default: SEARCH_PROFILE_SORT.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_PROFILE_SORT)
+  profileSort: SearchProfileSort = SEARCH_PROFILE_SORT.ALL;
 }

@@ -11,7 +11,11 @@ import {
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useSearchSidebar, useSearchInfinite } from "../api/searchService";
+import {
+  useSearchSidebar,
+  useSearchInfinite,
+  type SearchFilters,
+} from "../api/searchService";
 import type {
   SearchCollectionResult as CollectionResult,
   SearchGroupResult as GroupResult,
@@ -34,12 +38,25 @@ import {
 type Tab = "all" | "collections" | "posts" | "groups" | "profiles";
 
 type SearchSortOption = "newest" | "oldest" | "popular";
+type SearchProfileSortOption = "all" | "friends" | "mutual-friends";
 type SearchTimeOption = "all" | "24h" | "7d" | "30d" | "1y";
 
 const SEARCH_SORT_OPTIONS: { value: SearchSortOption; label: string }[] = [
   { value: "newest", label: "Newest" },
   { value: "oldest", label: "Oldest" },
   { value: "popular", label: "Popular" },
+];
+
+const SEARCH_PROFILE_SORT_OPTIONS: {
+  value: SearchProfileSortOption;
+  label: string;
+}[] = [
+  { value: "all", label: "All" },
+  { value: "friends", label: "Friends" },
+  {
+    value: "mutual-friends",
+    label: "Mutual Friends",
+  },
 ];
 
 const SEARCH_TIME_OPTIONS: { value: SearchTimeOption; label: string }[] = [
@@ -51,6 +68,11 @@ const SEARCH_TIME_OPTIONS: { value: SearchTimeOption; label: string }[] = [
 ];
 
 const VALID_SORT_VALUES: SearchSortOption[] = ["newest", "oldest", "popular"];
+const VALID_PROFILE_SORT_VALUES: SearchProfileSortOption[] = [
+  "all",
+  "friends",
+  "mutual-friends",
+];
 
 const VALID_TIME_VALUES: SearchTimeOption[] = ["all", "24h", "7d", "30d", "1y"];
 
@@ -60,10 +82,13 @@ export default function SearchPage() {
   const qParam = searchParams.get("q") || "";
   const typeParam = searchParams.get("type") || "all";
   const sortParam = searchParams.get("sort") || "newest";
+  const profileSortParam = searchParams.get("profileSort") || "all";
   const timeParam = searchParams.get("time") || "all";
 
   const handleTabChange = (tab: Tab) => {
-    const newParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams();
+    // Only preserve the search query
+    if (qParam) newParams.set("q", qParam);
     newParams.set("type", tab);
     setSearchParams(newParams);
   };
@@ -88,6 +113,13 @@ export default function SearchPage() {
   const activeSort = VALID_SORT_VALUES.includes(sortParam as SearchSortOption)
     ? (sortParam as SearchSortOption)
     : "newest";
+
+  const activeProfileSort = VALID_PROFILE_SORT_VALUES.includes(
+    profileSortParam as SearchProfileSortOption,
+  )
+    ? (profileSortParam as SearchProfileSortOption)
+    : "all";
+
   const activeTime = VALID_TIME_VALUES.includes(timeParam as SearchTimeOption)
     ? (timeParam as SearchTimeOption)
     : "all";
@@ -122,16 +154,23 @@ export default function SearchPage() {
     { sort: activeSort, time: activeTime },
   );
   const infiniteSearchType = activeTab === "all" ? "posts" : activeTab;
+  const filters: SearchFilters = (() => {
+    if (activeTab === "posts" || activeTab === "all") {
+      return { sort: activeSort, time: activeTime };
+    }
+    if (activeTab === "profiles") {
+      return { profileSort: activeProfileSort };
+    }
+    return {};
+  })();
+
   const {
     data: infiniteData,
     isLoading: loadingInfinite,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSearchInfinite(qParam, infiniteSearchType, {
-    sort: activeSort,
-    time: activeTime,
-  });
+  } = useSearchInfinite(qParam, infiniteSearchType, filters);
 
   const isAllPage = activeTab === "all";
   const isPostsPage = activeTab === "posts";
@@ -296,7 +335,7 @@ export default function SearchPage() {
     </div>
   );
 
-  const renderAllFilters = () => (
+  const renderPostFilters = () => (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
       <Select
         value={activeSort}
@@ -323,6 +362,26 @@ export default function SearchPage() {
         </SelectTrigger>
         <SelectContent>
           {SEARCH_TIME_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const renderProfileFilters = () => (
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Select
+        value={activeProfileSort}
+        onValueChange={(value) => updateSearchParam("profileSort", value)}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEARCH_PROFILE_SORT_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
@@ -378,7 +437,7 @@ export default function SearchPage() {
           <div className="space-y-10">
             {activeTab === "all" && (
               <>
-                {renderAllFilters()}
+                {renderPostFilters()}
                 {counts.all === 0 && !loading ? (
                   <Empty query={qParam} type={t("search.types.all")} />
                 ) : (
@@ -418,24 +477,28 @@ export default function SearchPage() {
               </>
             )}
 
-            {activeTab === "profiles" &&
-              (profiles.length === 0 ? (
-                <Empty query={qParam} type={t("search.types.profiles")} />
-              ) : (
-                <div className="space-y-6">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {profiles.map((u: UserResult) => (
-                      <UserCard key={u.id} user={u} />
-                    ))}
-                  </div>
-                  <div ref={lastElementRef} className="h-10 w-full" />
-                  {isFetchingNextPage && (
-                    <div className="py-4 text-center text-sm text-muted-foreground">
-                      {t("search.loading")}
+            {activeTab === "profiles" && (
+              <>
+                {renderProfileFilters()}
+                {profiles.length === 0 ? (
+                  <Empty query={qParam} type={t("search.types.profiles")} />
+                ) : (
+                  <div className="space-y-6">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {profiles.map((u: UserResult) => (
+                        <UserCard key={u.id} user={u} />
+                      ))}
                     </div>
-                  )}
-                </div>
-              ))}
+                    <div ref={lastElementRef} className="h-10 w-full" />
+                    {isFetchingNextPage && (
+                      <div className="py-4 text-center text-sm text-muted-foreground">
+                        {t("search.loading")}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
 
             {activeTab === "groups" &&
               (groups.length === 0 ? (
@@ -458,14 +521,15 @@ export default function SearchPage() {
 
             {activeTab === "posts" && (
               <>
-                {renderAllFilters()}
-                {(blogs.length === 0 && !loading ? (
-                <Empty query={qParam} type={t("search.types.posts")} />) : (
-                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-                  {renderPostsList()}
-                  {renderSidebar()}
-                </div>
-                ))}
+                {renderPostFilters()}
+                {blogs.length === 0 && !loading ? (
+                  <Empty query={qParam} type={t("search.types.posts")} />
+                ) : (
+                  <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+                    {renderPostsList()}
+                    {renderSidebar()}
+                  </div>
+                )}
               </>
             )}
 

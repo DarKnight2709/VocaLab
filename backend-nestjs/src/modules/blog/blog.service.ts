@@ -27,7 +27,7 @@ import {
 import { SettingKey } from '@/common/enums/setting-key.enum';
 import { NotificationsService } from '../notifications/services/notifications.service';
 import { UserService } from '../users/users.service';
-import { SearchFilters, SearchTime } from '../search/search.types';
+import { PostSearchFilters, SearchTime } from '../search/search.types';
 
 @Injectable()
 export class BlogService {
@@ -44,7 +44,7 @@ export class BlogService {
     page = 1,
     limit = 10,
     search?: string,
-    _filters?: SearchFilters,
+    _filters?: PostSearchFilters,
   ): Promise<GetBlogsResponseDto> {
     const skip = (page - 1) * limit;
 
