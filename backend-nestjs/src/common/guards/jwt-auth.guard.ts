@@ -38,19 +38,48 @@ export class JwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // nếu có route có @Public(), bỏ qua xác thực -> cho đi thẳng
+    // nếu có route có @Public(), bỏ qua xác thực bắt buộc -> cho đi thẳng nhưng vẫn giải mã token nếu có để hỗ trợ optional auth
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
-    }
-
-    // lấy request và token
     const request = context.switchToHttp().getRequest<IRequest>();
     const token = this.extractTokenFromHeader(request);
+
+    if (isPublic) {
+      if (token) {
+        try {
+          const payload = jwt.verify(token, this.keyManager.getPublicKeyAccess(), {
+            algorithms: ['RS256'],
+          }) as JwtPayload;
+
+          const user = await this.prisma.user.findUnique({
+            select: {
+              id: true,
+              fullName: true,
+              username: true,
+              email: true,
+              avatar: true,
+            },
+            where: {
+              id: payload.sub as string,
+            },
+          });
+
+          if (user) {
+            request.user = {
+              id: payload.sub,
+              email: payload.email,
+              fullName: user.fullName,
+            };
+          }
+        } catch (e: any) {
+          this.logger.warn(`Optional JWT verification failed: ${e.message}`);
+        }
+      }
+      return true;
+    }
 
     // không có token -> 401
     if (!token) {

@@ -21,6 +21,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/shared/components/ui/dialog";
+import { useOptionalAuth } from "@/features/auth/hooks/useOptionalAuth";
+
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
@@ -38,6 +40,7 @@ export default function PublicCollectionDetailPage() {
   const { collectionId } = useParams<{ collectionId: string }>();
   const navigate = useNavigate();
   const currentUserId = useAuthStore((s) => s.userId);
+  const { isAuth } = useOptionalAuth();
 
   const [mode, setMode] = useState<"preview" | "learn">("preview");
   const [flashcardIdx, setFlashcardIdx] = useState(0);
@@ -62,6 +65,10 @@ export default function PublicCollectionDetailPage() {
 
   const handleOpenCopyDialog = () => {
     if (!data) return;
+    if (!isAuth) {
+      navigate(ROUTES.LOGIN.url);
+      return;
+    }
 
     setCopyName(`${data.name} (Copy)`);
     setCopyDescription(data.description || "");
@@ -273,7 +280,9 @@ export default function PublicCollectionDetailPage() {
                 <Button
                   variant="outline"
                   className="gap-2"
-                  onClick={handleOpenCopyDialog}
+                  onClick={() => {
+                    handleOpenCopyDialog();
+                  }}
                 >
                   <Copy className="h-4 w-4" /> Save as Copy
                 </Button>

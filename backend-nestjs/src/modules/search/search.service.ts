@@ -70,7 +70,7 @@ export class SearchService {
   }
 
   async searchSidebar(
-    userId: string,
+    userId: string | null,
     query?: string,
   ): Promise<SidebarSearchResultResponse> {
     const sanitizedQuery = query?.trim();
@@ -98,7 +98,7 @@ export class SearchService {
   }
 
   async searchCollections(
-    userId: string,
+    userId: string | null,
     page = 1,
     limit = 10,
     query?: string,
@@ -108,7 +108,7 @@ export class SearchService {
   }
 
   async searchPosts(
-    userId: string,
+    userId: string | null,
     page = 1,
     limit = 10,
     query?: string,
@@ -117,12 +117,12 @@ export class SearchService {
     return this.blogService.getBlogs(userId, page, limit, query, _filters);
   }
 
-  async searchGroups(userId: string, page = 1, limit = 10, query?: string, filters?: GroupSearchFilters) {
+  async searchGroups(userId: string | null, page = 1, limit = 10, query?: string, filters?: GroupSearchFilters) {
     return this.groupService.searchGroups(userId, page, limit, query, filters);
   }
 
   async searchProfiles(
-    userId: string,
+    userId: string | null,
     page = 1,
     limit = 10,
     query?: string,

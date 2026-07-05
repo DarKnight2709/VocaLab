@@ -40,7 +40,7 @@ export class BlogService {
   // ==================== BLOG CRUD ====================
 
   async getBlogs(
-    userId: string,
+    userId: string | null,
     page = 1,
     limit = 10,
     search?: string,
@@ -53,7 +53,7 @@ export class BlogService {
       deletedAt: null,
     };
 
-    const blockerIds = await this.userService.getBlockerIdsOf(userId);
+    const blockerIds = userId ? await this.userService.getBlockerIdsOf(userId) : [];
 
     if (blockerIds.length > 0) {
       where.authorId = {

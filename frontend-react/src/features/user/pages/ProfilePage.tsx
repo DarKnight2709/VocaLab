@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const { data: matchedUser, isLoading: resolvingProfileUser } =
     useUserByUsernameQuery(normalizedUsername);
   
-  const isOwnProfile = matchedUser?.id === me?.id;
+  const isOwnProfile = Boolean(me?.id && matchedUser?.id === me?.id);
 
   const profileUser = isOwnProfile ? me : matchedUser;
   const shouldShowNotFound =

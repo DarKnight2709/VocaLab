@@ -19,6 +19,7 @@ import {
   ForkCollectionDto,
 } from './dto/vocabulary.dto';
 import { IsProtected } from '../../common/decorators/protected.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import {
@@ -56,6 +57,7 @@ export class VocabularyController {
   }
 
   @Get('collections/:id/public')
+  @Public()
   @ApiOperation({ summary: 'Lấy thông tin chi tiết bộ từ vựng công khai' })
   async getPublicCollectionById(
     @Param('id') id: string,

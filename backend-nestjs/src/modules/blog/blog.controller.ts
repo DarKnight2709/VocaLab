@@ -15,6 +15,7 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
+import { Public } from '@/common/decorators/public.decorator';
 import { BlogService } from './blog.service';
 import {
   CreateBlogDto,
@@ -34,6 +35,7 @@ export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Lấy danh sách blog công khai' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -44,13 +46,14 @@ export class BlogController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
   ): Promise<ResponseInterceptor<GetBlogsResponseDto>> {
-    const result = await this.blogService.getBlogs(user.id, page, limit, search);
+    const result = await this.blogService.getBlogs(user?.id ?? null, page, limit, search);
     return {
       data: result
     }
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'Xem chi tiết bài viết' })
   async getBlogById(@Param('id') id: string, @CurrentUser() user: any): Promise<ResponseInterceptor<GetBlogByIdResponseDto>> {
     const result = await this.blogService.getBlogById(id, user?.id);

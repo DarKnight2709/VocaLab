@@ -22,7 +22,9 @@ import Breadcrumb from "@/shared/components/Breadcrumb";
 import { CommentItem } from "../components/CommentItem";
 import { VoteType } from "@/shared/enums/VoteType.enum";
 import { useAuthStore } from "@/features/auth/stores/authStore";
+import { useOptionalAuth } from "@/features/auth/hooks/useOptionalAuth";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+
 
 function ReadOnlyEditor({ content }: { content: string }) {
   const editor = useEditor({
@@ -71,6 +73,7 @@ export default function BlogDetailPage() {
   const [commentText, setCommentText] = useState("");
 
   const currentUserId = useAuthStore((state) => state.userId ?? undefined);
+  const { isAuth } = useOptionalAuth();
 
   const { data: blogData, isLoading } = useBlogDetailQuery(id);
   const blog = blogData?.data;
@@ -185,58 +188,70 @@ export default function BlogDetailPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {isOwner && (
-            <>
-              <Link
-                to={ROUTES.BLOG_EDIT.url.replace(":id", id)}
-                className="rounded-lg border px-3 py-1.5 text-xs hover:bg-muted"
-              >
-                {t("blog.edit")}
-              </Link>
+          <div className="flex items-center gap-3">
+            {isOwner && (
+              <>
+                <Link
+                  to={ROUTES.BLOG_EDIT.url.replace(":id", id)}
+                  className="rounded-lg border px-3 py-1.5 text-xs hover:bg-muted"
+                >
+                  {t("blog.edit")}
+                </Link>
+                <button
+                  onClick={handleDeleteBlog}
+                  className="rounded-lg border border-destructive/30 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                >
+                  {t("blog.delete")}
+                </button>
+              </>
+            )}
+            <div className="flex items-center rounded-lg border bg-background">
               <button
-                onClick={handleDeleteBlog}
-                className="rounded-lg border border-destructive/30 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  if (!isAuth) {
+                    navigate(ROUTES.LOGIN.url);
+                    return;
+                  }
+                  voteBlog.mutate(VoteType.UPVOTE);
+                }}
+                className={`flex items-center p-1.5 transition-colors rounded-l-lg ${
+                  blog.userVote === VoteType.UPVOTE
+                    ? "bg-green-50 text-green-600 dark:bg-green-950"
+                    : "hover:bg-muted text-muted-foreground"
+                }`}
               >
-                {t("blog.delete")}
+                <ArrowBigUp
+                  size={18}
+                  className={
+                    blog.userVote === VoteType.UPVOTE ? "fill-current" : ""
+                  }
+                />
               </button>
-            </>
-          )}
-          <div className="flex items-center rounded-lg border bg-background">
-            <button
-              onClick={() => voteBlog.mutate(VoteType.UPVOTE)}
-              className={`flex items-center p-1.5 transition-colors rounded-l-lg ${
-                blog.userVote === VoteType.UPVOTE
-                  ? "bg-green-50 text-green-600 dark:bg-green-950"
-                  : "hover:bg-muted text-muted-foreground"
-              }`}
-            >
-              <ArrowBigUp
-                size={18}
-                className={
-                  blog.userVote === VoteType.UPVOTE ? "fill-current" : ""
-                }
-              />
-            </button>
-            <span className="min-w-6 text-center text-xs font-semibold">
-              {blog.voteScore ?? 0}
-            </span>
-            <button
-              onClick={() => voteBlog.mutate(VoteType.DOWNVOTE)}
-              className={`flex items-center p-1.5 transition-colors rounded-r-lg ${
-                blog.userVote === VoteType.DOWNVOTE
-                  ? "bg-red-50 text-red-600 dark:bg-red-950"
-                  : "hover:bg-muted text-muted-foreground"
-              }`}
-            >
-              <ArrowBigDown
-                size={18}
-                className={
-                  blog.userVote === VoteType.DOWNVOTE ? "fill-current" : ""
-                }
-              />
-            </button>
-          </div>
+              <span className="min-w-6 text-center text-xs font-semibold">
+                {blog.voteScore ?? 0}
+              </span>
+              <button
+                onClick={() => {
+                  if (!isAuth) {
+                    navigate(ROUTES.LOGIN.url);
+                    return;
+                  }
+                  voteBlog.mutate(VoteType.DOWNVOTE);
+                }}
+                className={`flex items-center p-1.5 transition-colors rounded-r-lg ${
+                  blog.userVote === VoteType.DOWNVOTE
+                    ? "bg-red-50 text-red-600 dark:bg-red-950"
+                    : "hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <ArrowBigDown
+                  size={18}
+                  className={
+                    blog.userVote === VoteType.DOWNVOTE ? "fill-current" : ""
+                  }
+                />
+              </button>
+            </div>
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <MessageCircle size={14} />
             {blog._count?.comments ?? 0}
@@ -255,28 +270,43 @@ export default function BlogDetailPage() {
           {t("blog.comments")} ({blog._count?.comments ?? 0})
         </h2>
 
-        <div className="mb-6 flex gap-3">
-          <textarea
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
+          <div className="mb-6 flex gap-3">
+            <textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onFocus={() => {
+                if (!isAuth) {
+                  navigate(ROUTES.LOGIN.url);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (!isAuth) {
+                  navigate(ROUTES.LOGIN.url);
+                  return;
+                }
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmitComment();
+                }
+              }}
+              placeholder={t("blog.writeComment")}
+              rows={2}
+              className="flex-1 resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            <button
+              onClick={() => {
+                if (!isAuth) {
+                  navigate(ROUTES.LOGIN.url);
+                  return;
+                }
                 handleSubmitComment();
-              }
-            }}
-            placeholder={t("blog.writeComment")}
-            rows={2}
-            className="flex-1 resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
-          <button
-            onClick={handleSubmitComment}
-            disabled={!commentText.trim() || addComment.isPending}
-            className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl bg-primary text-primary-foreground disabled:opacity-50"
-          >
-            <Send size={16} />
-          </button>
-        </div>
+              }}
+              disabled={(!isAuth ? false : !commentText.trim()) || addComment.isPending}
+              className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl bg-primary text-primary-foreground disabled:opacity-50"
+            >
+              <Send size={16} />
+            </button>
+          </div>
 
         <div className="space-y-4">
           {blog.comments?.map((c: any) => (

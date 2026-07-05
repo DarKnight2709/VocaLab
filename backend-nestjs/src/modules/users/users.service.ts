@@ -463,19 +463,19 @@ export class UserService {
   }
 
   async getProfiles(
-    userId: string,
+    userId: string | null,
     page: number,
     limit: number,
     query?: string,
     filters?: { profileSort?: string },
   ): Promise<ProfileSearchResultResponse> {
     const skip = (page - 1) * limit;
-    const blockerIds = await this.getBlockerIdsOf(userId);
+    const blockerIds = userId ? await this.getBlockerIdsOf(userId) : [];
 
     const where: Prisma.UserWhereInput = {
       deletedAt: null,
       id: {
-        not: userId,
+        not: userId || undefined,
         notIn: blockerIds.length > 0 ? blockerIds : undefined,
       },
     };
@@ -488,12 +488,12 @@ export class UserService {
     }
 
     // Apply profileSort filter
-    if (filters?.profileSort === 'friends') {
+    if (filters?.profileSort === 'friends' && userId) {
       where.AND = [
         { followers: { some: { followerId: userId } } },
         { following: { some: { followingId: userId } } },
       ];
-    } else if (filters?.profileSort === 'mutual-friends') {
+    } else if (filters?.profileSort === 'mutual-friends' && userId) {
       const myFriendIds = await this.getFriendIds(userId);
       if (myFriendIds.length > 0) {
         // Users who are friends with at least one of my friends, but not my friends themselves
@@ -536,7 +536,7 @@ export class UserService {
 
     const mappedProfiles = await this.mapUsersWithCapabilities(
       profiles,
-      userId,
+      userId ?? undefined,
     );
 
     return {
@@ -552,7 +552,7 @@ export class UserService {
 
   async getFollowers(
     userId: string,
-    currentUserId: string,
+    currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
@@ -573,7 +573,7 @@ export class UserService {
       followingId: userId,
     };
 
-    const blockerIds = await this.getBlockerIdsOf(currentUserId);
+    const blockerIds = currentUserId ? await this.getBlockerIdsOf(currentUserId) : [];
     if (blockerIds.length > 0) {
       where.followerId = {
         notIn: blockerIds,
@@ -632,7 +632,7 @@ export class UserService {
 
   async getFollowing(
     userId: string,
-    currentUserId: string,
+    currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
@@ -653,7 +653,7 @@ export class UserService {
       followerId: userId,
     };
 
-    const blockerIds = await this.getBlockerIdsOf(currentUserId);
+    const blockerIds = currentUserId ? await this.getBlockerIdsOf(currentUserId) : [];
 
     if (blockerIds.length > 0) {
       where.followingId = {
@@ -713,7 +713,7 @@ export class UserService {
 
   async getFriends(
     userId: string,
-    currentUserId: string,
+    currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
@@ -730,7 +730,7 @@ export class UserService {
     const skip = (page - 1) * limit;
     const baseWhere = this.buildFriendsWhereClause(userId, search);
 
-    const blockerIds = await this.getBlockerIdsOf(currentUserId);
+    const blockerIds = currentUserId ? await this.getBlockerIdsOf(currentUserId) : [];
 
     if (blockerIds.length > 0) {
       baseWhere.id = {
@@ -777,7 +777,7 @@ export class UserService {
 
   async getPosts(
     profileUserId: string,
-    requestingUserId: string,
+    requestingUserId?: string,
     page = 1,
     limit = 12,
     search?: string,
@@ -788,7 +788,7 @@ export class UserService {
     const user = await this.findById(profileUserId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
-    if (requestingUserId !== profileUserId) {
+    if (requestingUserId && requestingUserId !== profileUserId) {
       const blockedByTarget = await this.prisma.block.findFirst({
         where: {
           blockingId: profileUserId,

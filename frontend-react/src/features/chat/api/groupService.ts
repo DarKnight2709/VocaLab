@@ -373,6 +373,7 @@ export const useJoinSearchGroupMutation = () => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["search-infinite"] });
+      void queryClient.invalidateQueries({ queryKey: ["search-sidebar"] });
       void queryClient.invalidateQueries({ queryKey: ["groups"] });
       toast.success(i18n.t("chat.joinGroup"));
     },

@@ -40,26 +40,57 @@ import StatsPage from "./features/stats/pages/StatsPage";
 import PublicCollectionDetailPage from "./features/vocabulary/pages/PublicCollectionDetailPage";
 import HomePage from "./features/home/pages/HomePage";
 
+import { LandingRedirectGuard, OptionalPublicGuard } from "./features/auth/components/OptionalAuthGuard";
+import PublicLayout from "./shared/layout/PublicLayout";
+import LandingPage from "./features/home/pages/LandingPage";
+
 const router = createBrowserRouter([
+  // 1. PUBLIC ROUTES (Accessible to both guests and users, but users get redirected from landing)
+  {
+    element: <OptionalPublicGuard />,
+    children: [
+      {
+        path: ROUTES.LANDING.url,
+        element: <LandingRedirectGuard />,
+        children: [
+          {
+            element: <PublicLayout />,
+            children: [
+              { index: true, element: <LandingPage /> },
+            ],
+          },
+        ],
+      },
+      // Shared public routes that use PublicLayout for guests (we map them in PublicLayout below)
+      {
+        element: <PublicLayout />,
+        children: [
+          { path: ROUTES.BLOG.url, element: <BlogPage /> },
+          { path: ROUTES.BLOG_DETAIL.url, element: <BlogDetailPage /> },
+          { path: ROUTES.SEARCH.url, element: <SearchPage /> },
+          {
+            path: ROUTES.COLLECTION_DETAIL.url,
+            element: <PublicCollectionDetailPage />,
+          },
+          { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
+        ],
+      },
+    ],
+  },
+  
+  // 2. AUTHENTICATED ROUTES
   {
     loader: authLoader,
     element: <AuthGuard />,
     children: [
       {
-        path: ROUTES.HOME.url,
         element: <MainLayout />,
         children: [
-          { index: true, element: <HomePage /> },
-          { path: ROUTES.BLOG.url, element: <BlogPage /> },
-          { path: ROUTES.BLOG_DETAIL.url, element: <BlogDetailPage /> },
+          { path: ROUTES.HOME.url, element: <HomePage /> },
           { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
           { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
-          { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
           { path: ROUTES.STATS.url, element: <StatsPage /> },
-          {
-            path: ROUTES.COLLECTION_DETAIL.url,
-            element: <PublicCollectionDetailPage />,
-          },
+          { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
           {
             element: <StudyLayout />,
             children: [
@@ -86,8 +117,6 @@ const router = createBrowserRouter([
           { path: ROUTES.CHAT_TAB_GROUPS.url, element: <ChatPage /> },
           { path: ROUTES.CHAT_TAB_USERS_ID.url, element: <ChatPage /> },
           { path: ROUTES.CHAT_TAB_GROUPS_ID.url, element: <ChatPage /> },
-          { path: ROUTES.SEARCH.url, element: <SearchPage /> },
-          { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
           {
             path: ROUTES.ME_SETTING.url,
             element: <SettingPage />,

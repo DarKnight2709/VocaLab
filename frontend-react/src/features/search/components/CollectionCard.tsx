@@ -40,6 +40,7 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
   const navigate = useNavigate();
   const forkMutation = useForkCollectionMutation();
   const currentUserId = useAuthStore((state) => state.userId);
+  const isAuth = useAuthStore((state) => state.isAuth);
 
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [copySuccessResult, setCopySuccessResult] = useState<{ createdCards: string[]; updatedCards: string[]; skippedCards: string[]; newCollectionId: string } | null>(null);
@@ -54,6 +55,10 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
 
   const handleFork = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isAuth) {
+      navigate(ROUTES.LOGIN.url);
+      return;
+    }
     setCopyName(`${collection.name} (Copy)`);
     setCopyDescription(collection.description || "");
     setIsCopyPublic(false);

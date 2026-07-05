@@ -2,7 +2,7 @@ import { VoteType } from '@prisma/client';
 
 export function mapVoteScore<
   T extends { votes: { type: VoteType; userId?: string }[] },
->(entity: T, currentUserId?: string) {
+>(entity: T, currentUserId?: string | null) {
   let voteScore = 0;
   let userVote: VoteType | null = null;
 

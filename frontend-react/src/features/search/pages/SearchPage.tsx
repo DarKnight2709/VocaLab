@@ -16,6 +16,7 @@ import {
   useSearchInfinite,
   type SearchFilters,
 } from "../api/searchService";
+import { useOptionalAuth } from "@/features/auth/hooks/useOptionalAuth";
 import type {
   SearchCollectionResult as CollectionResult,
   SearchGroupResult as GroupResult,
@@ -75,17 +76,20 @@ const VALID_PROFILE_SORT_VALUES: SearchProfileSortOption[] = [
   "friends",
   "mutual-friends",
 ];
+
 const VALID_GROUP_FILTER_VALUES: SearchGroupFilterOption[] = ["all", "my_groups", "popular"];
 
 const VALID_TIME_VALUES: SearchTimeOption[] = ["all", "24h", "7d", "30d", "1y"];
 
 export default function SearchPage() {
   const { t } = useTranslation();
+  const { isAuth } = useOptionalAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const qParam = searchParams.get("q") || "";
   const typeParam = searchParams.get("type") || "all";
   const sortParam = searchParams.get("sort") || "newest";
   const profileSortParam = searchParams.get("profileSort") || "all";
+
   const groupFilterParam = searchParams.get("filter") || "all";
   const languagesParam = searchParams.get("languages") || "";
   const timeParam = searchParams.get("time") || "all";
@@ -134,6 +138,8 @@ export default function SearchPage() {
   )
     ? (profileSortParam as SearchProfileSortOption)
     : "all";
+
+
 
   const activeGroupFilter = VALID_GROUP_FILTER_VALUES.includes(
     groupFilterParam as SearchGroupFilterOption,
@@ -405,25 +411,30 @@ export default function SearchPage() {
     </div>
   );
 
-  const renderProfileFilters = () => (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-      <Select
-        value={activeProfileSort}
-        onValueChange={(value) => updateSearchParam("profileSort", value)}
-      >
-        <SelectTrigger className="w-full sm:w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {SEARCH_PROFILE_SORT_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
+  const renderProfileFilters = () => {
+    if (!isAuth) return null;
+    return (
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Select
+          value={activeProfileSort}
+          onValueChange={(value) => updateSearchParam("profileSort", value)}
+        >
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SEARCH_PROFILE_SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+
+
 
   const renderCollectionFilters = () => (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -479,7 +490,9 @@ export default function SearchPage() {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {VALID_GROUP_FILTER_VALUES.map((value) => (
+          {VALID_GROUP_FILTER_VALUES.filter((value) => 
+            isAuth || value !== "my_groups"
+          ).map((value) => (
             <SelectItem key={value} value={value}>
               {t(`search.filters.${value.replace('_groups', 'Groups')}`)}
             </SelectItem>

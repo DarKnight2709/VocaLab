@@ -6,7 +6,6 @@ import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 type SearchSort = "relevance" | "newest" | "oldest" | "popular" | "active";
 type SearchTime = "all" | "24h" | "7d" | "30d" | "1y";
 type SearchProfileSort = "all" | "friends" | "mutual-friends";
-
 type SearchGroupFilter = "all" | "my_groups" | "popular";
 
 export type SearchFilters = {

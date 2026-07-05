@@ -236,7 +236,12 @@
     "confirm": "Confirm",
     "missingToken": "Missing token!",
     "invalidToken": "Invalid token!",
-    "pleaseSignInAgain": "Please sign in again."
+    "pleaseSignInAgain": "Please sign in again.",
+    "signInTo": "Sign in to {action}",
+    "signInToAccess": "Sign in to access this feature",
+    "signInDescription": "Create a free account to unlock all features of VocaLab.",
+    "getStarted": "Get Started",
+    "alreadyHaveAccount": "Already have an account?"
   },
   "errors": {
     "INTERNAL_SERVER_ERROR": "Server error, please try again later.",
@@ -1031,5 +1036,26 @@
     "noPosts": "No posts yet.",
     "createCollection": "Create collection",
     "writePost": "Write a post"
+  },
+  "landing": {
+    "heroTitle": "Master English,",
+    "heroTitleHighlight": "Your Way",
+    "heroDescription": "Build vocabulary with smart flashcards, learn grammar through interactive lessons, and connect with a community of learners — all in one place.",
+    "startLearning": "Start Learning — It's Free",
+    "exploreContent": "Explore Content",
+    "featureVocabulary": "Smart Flashcards",
+    "featureVocabularyDesc": "Create custom flashcard collections, study with spaced repetition, and track your progress over time.",
+    "featureGrammar": "Interactive Grammar",
+    "featureGrammarDesc": "Comprehensive grammar lessons organized by level and category, from beginner to advanced.",
+    "featureBlog": "Community Blog",
+    "featureBlogDesc": "Share your learning journey, read tips from other learners, and engage with the community.",
+    "featureChat": "Real-time Chat",
+    "featureChatDesc": "Practice with other learners in real-time, join study groups, and make language learning social.",
+    "statsCollections": "Vocabulary Sets",
+    "statsLessons": "Grammar Lessons",
+    "statsLearners": "Active Learners",
+    "readyToStart": "Ready to Start Learning?",
+    "readyToStartDesc": "Join thousands of learners who are already improving their English with VocaLab.",
+    "joinNow": "Join VocaLab Now"
   }
 }

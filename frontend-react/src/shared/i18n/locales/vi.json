@@ -236,7 +236,12 @@
     "confirm": "Xác nhận",
     "missingToken": "Thiếu token!",
     "invalidToken": "Token không hợp lệ!",
-    "pleaseSignInAgain": "Vui lòng đăng nhập lại."
+    "pleaseSignInAgain": "Vui lòng đăng nhập lại.",
+    "signInTo": "Đăng nhập để {action}",
+    "signInToAccess": "Đăng nhập để sử dụng tính năng này",
+    "signInDescription": "Tạo tài khoản miễn phí để mở khóa toàn bộ tính năng của VocaLab.",
+    "getStarted": "Bắt đầu",
+    "alreadyHaveAccount": "Đã có tài khoản?"
   },
   "errors": {
     "INTERNAL_SERVER_ERROR": "Máy chủ đang gặp sự cố, vui lòng thử lại sau.",
@@ -1022,5 +1027,26 @@
     "noPosts": "Chưa có bài viết nào.",
     "createCollection": "Tạo bộ sưu tập",
     "writePost": "Viết bài"
+  },
+  "landing": {
+    "heroTitle": "Làm chủ tiếng Anh",
+    "heroTitleHighlight": "Theo cách của bạn",
+    "heroDescription": "Xây dựng từ vựng với thẻ ghi nhớ thông minh, học ngữ pháp qua các bài học tương tác và kết nối với cộng đồng học tập — tất cả ở cùng một nơi.",
+    "startLearning": "Bắt đầu học — Miễn phí",
+    "exploreContent": "Khám phá nội dung",
+    "featureVocabulary": "Thẻ ghi nhớ thông minh",
+    "featureVocabularyDesc": "Tạo các bộ thẻ ghi nhớ tùy chỉnh, học với lặp lại ngắt quãng và theo dõi tiến độ của bạn theo thời gian.",
+    "featureGrammar": "Ngữ pháp tương tác",
+    "featureGrammarDesc": "Các bài học ngữ pháp toàn diện được tổ chức theo cấp độ và danh mục, từ cơ bản đến nâng cao.",
+    "featureBlog": "Cộng đồng Blog",
+    "featureBlogDesc": "Chia sẻ hành trình học tập của bạn, đọc các mẹo từ những người học khác và tương tác với cộng đồng.",
+    "featureChat": "Chat theo thời gian thực",
+    "featureChatDesc": "Thực hành với những người học khác theo thời gian thực, tham gia các nhóm học tập và làm cho việc học ngôn ngữ trở nên xã hội.",
+    "statsCollections": "Bộ từ vựng",
+    "statsLessons": "Bài học ngữ pháp",
+    "statsLearners": "Người học tích cực",
+    "readyToStart": "Bạn đã sẵn sàng để bắt đầu học?",
+    "readyToStartDesc": "Tham gia cùng hàng ngàn người học đang cải thiện tiếng Anh của họ với VocaLab.",
+    "joinNow": "Tham gia VocaLab ngay"
   }
 }

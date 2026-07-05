@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { Public } from '@/common/decorators/public.decorator';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import { GetBlogsResponseDto } from '../blog/dto/blog-response.dto';
 import { GroupsSearchResultResponse } from '../group-chat/dto/group-chat-response.dto';
@@ -28,6 +29,7 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get('suggestion')
+  @Public()
   @ApiOperation({ summary: 'Get search suggestions' })
   @ApiResponse({ type: SearchSuggestionResultResponse, isArray: true })
   async getSuggestions(
@@ -40,6 +42,7 @@ export class SearchController {
   }
 
   @Get('sidebar')
+  @Public()
   @ApiOperation({ summary: 'Get sidebar search results' })
   @ApiResponse({ type: SidebarSearchResultResponse })
   @ApiQuery({ name: 'query', required: true })
@@ -60,13 +63,14 @@ export class SearchController {
     @Query() query: SideBarSearchQueryDto,
   ): Promise<ResponseInterceptor<SidebarSearchResultResponse>> {
     const result = await this.searchService.searchSidebar(
-      user.id,
+      user?.id ?? null,
       query.query,
     );
     return { data: result };
   }
 
   @Get('collections')
+  @Public()
   @ApiOperation({ summary: 'Get collections search results' })
   @ApiResponse({ type: CollectionSearchResponseDto })
   async searchCollections(
@@ -74,7 +78,7 @@ export class SearchController {
     @Query() query: CollectionSearchQueryDto,
   ): Promise<ResponseInterceptor<CollectionSearchResponseDto>> {
     const result = await this.searchService.searchCollections(
-      user.id,
+      user?.id ?? null,
       query.page,
       query.limit,
       query.query,
@@ -90,6 +94,7 @@ export class SearchController {
   }
 
   @Get('posts')
+  @Public()
   @ApiOperation({ summary: 'Get posts search results' })
   @ApiResponse({ type: GetBlogsResponseDto })
   @ApiQuery({ name: 'query', required: true })
@@ -112,7 +117,7 @@ export class SearchController {
     @Query() query: PostSearchQueryDto,
   ): Promise<ResponseInterceptor<GetBlogsResponseDto>> {
     const result = await this.searchService.searchPosts(
-      user.id,
+      user?.id ?? null,
       query.page,
       query.limit,
       query.query,
@@ -127,6 +132,7 @@ export class SearchController {
   }
 
   @Get('groups')
+  @Public()
   @ApiOperation({ summary: 'Get groups search results' })
   @ApiResponse({ type: GroupsSearchResultResponse })
   @ApiQuery({ name: 'query', required: true })
@@ -143,7 +149,7 @@ export class SearchController {
     @Query() query: GroupSearchQueryDto,
   ): Promise<ResponseInterceptor<GroupsSearchResultResponse>> {
     const result = await this.searchService.searchGroups(
-      user.id,
+      user?.id ?? null,
       query.page,
       query.limit,
       query.query,
@@ -158,6 +164,7 @@ export class SearchController {
   }
 
   @Get('profiles')
+  @Public()
   @ApiOperation({ summary: 'Get profiles search results' })
   @ApiResponse({ type: ProfileSearchResultResponse })
   @ApiQuery({ name: 'query', required: true })
@@ -174,7 +181,7 @@ export class SearchController {
     @Query() query: ProfileSearchQueryDto,
   ): Promise<ResponseInterceptor<ProfileSearchResultResponse>> {
     const result = await this.searchService.searchProfiles(
-      user.id,
+      user?.id ?? null,
       query.page,
       query.limit,
       query.query,

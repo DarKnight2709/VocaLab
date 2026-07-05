@@ -189,7 +189,13 @@ export function GroupCard({ group }: { group: GroupResult }) {
           size="sm"
           className="absolute bottom-3 right-3 h-8 shrink-0 px-3 text-[11px]"
           disabled={joinMutation.isPending}
-          onClick={() => joinMutation.mutate(group.id)}
+          onClick={() => {
+            if (!currentUserId) {
+              navigate(ROUTES.LOGIN.url);
+              return;
+            }
+            joinMutation.mutate(group.id);
+          }}
         >
           {joinMutation.isPending ? t("search.joining") : t("search.join")}
         </Button>

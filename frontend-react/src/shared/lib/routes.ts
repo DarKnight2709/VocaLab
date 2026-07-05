@@ -1,7 +1,11 @@
 const ROUTES = {
+  LANDING: {
+    title: "Landing",
+    url: "/",
+  },
   HOME: {
     title: "Home",
-    url: "/",
+    url: "/home",
   },
   AUTH_2FA: {
     title: "Two-factor authentication",

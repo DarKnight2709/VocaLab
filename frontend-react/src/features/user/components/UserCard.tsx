@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { UserPlus, Check } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -21,6 +21,7 @@ interface UserCardProps {
 
 export function UserCard({ user }: UserCardProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: me } = useMeQuery();
   const isMe = me?.id === user.id;
 
@@ -30,6 +31,10 @@ export function UserCard({ user }: UserCardProps) {
   const handleFollowAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!me) {
+      navigate(ROUTES.LOGIN.url);
+      return;
+    }
     if (user.isFollowing) {
       unfollowMutation.mutate(user.id);
     } else {

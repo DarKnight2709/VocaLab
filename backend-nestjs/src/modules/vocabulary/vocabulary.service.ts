@@ -668,7 +668,7 @@ export class VocabularyService {
   }
 
   async searchCollections(
-    userId: string,
+    userId: string | null,
     page = 1,
     limit = 10,
     query?: string,
@@ -681,7 +681,7 @@ export class VocabularyService {
       deletedAt: null,
     };
 
-    const blockerIds = await this.userService.getBlockerIdsOf(userId);
+    const blockerIds = userId ? await this.userService.getBlockerIdsOf(userId) : [];
 
     if (blockerIds.length > 0) {
       where.userId = {

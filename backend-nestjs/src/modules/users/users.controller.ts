@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { UpdatePersonalInfoDto, CreateUserSocialDto } from './dto/users.dto';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
@@ -163,6 +164,7 @@ export class UsersController {
   }
 
   @Get('by-username/:username')
+  @Public()
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
   async getByUsername(
     @Param('username') username: string,
@@ -193,6 +195,7 @@ export class UsersController {
   }
 
   @Get(':userId/followers')
+  @Public()
   @ApiOperation({ summary: 'Lấy danh sách người theo dõi' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -206,7 +209,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetFollowersResponseDto>> {
     const result = await this.userService.getFollowers(
       userId,
-      currentUser.id,
+      currentUser?.id,
       Number(page),
       Number(limit),
       search,
@@ -217,6 +220,7 @@ export class UsersController {
   }
 
   @Get(':userId/following')
+  @Public()
   @ApiOperation({ summary: 'Lấy danh sách đang theo dõi' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -230,7 +234,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetFollowingResponseDto>> {
     const result = await this.userService.getFollowing(
       userId,
-      currentUser.id,
+      currentUser?.id,
       Number(page),
       Number(limit),
       search,
@@ -241,6 +245,7 @@ export class UsersController {
   }
 
   @Get(':userId/friends')
+  @Public()
   @ApiOperation({ summary: 'Lấy danh sách bạn bè' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -254,7 +259,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetFriendsResponseDto>> {
     const result = await this.userService.getFriends(
       userId,
-      currentUser.id,
+      currentUser?.id,
       Number(page),
       Number(limit),
       search,
@@ -265,6 +270,7 @@ export class UsersController {
   }
 
   @Get(':userId/posts')
+  @Public()
   @ApiOperation({ summary: 'Lấy danh sách bài viết của người dùng' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -280,7 +286,7 @@ export class UsersController {
   ): Promise<ResponseInterceptor<GetUserPostsResponseDto>> {
     const result = await this.userService.getPosts(
       userId,
-      currentUser.id,
+      currentUser?.id,
       Number(page),
       Number(limit),
       search,

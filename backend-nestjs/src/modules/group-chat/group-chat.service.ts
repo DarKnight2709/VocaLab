@@ -233,7 +233,7 @@ export class GroupChatService {
   }
 
   async searchGroups(
-    userId: string,
+    userId: string | null,
     page: number,
     limit: number,
     query?: string,
@@ -249,13 +249,13 @@ export class GroupChatService {
 
     const filter = filters?.filter || SEARCH_GROUP_FILTER.ALL;
 
-    if (filter === SEARCH_GROUP_FILTER.MY_GROUPS) {
+    if (filter === SEARCH_GROUP_FILTER.MY_GROUPS && userId) {
       where.members = { some: { userId } };
     } else {
       AND.push({
         OR: [
           { isPublic: true },
-          { members: { some: { userId } } },
+          ...(userId ? [{ members: { some: { userId } } }] : []),
         ],
       });
     }
@@ -264,7 +264,7 @@ export class GroupChatService {
       where.languages = { hasSome: filters.languages };
     }
 
-    const blockerIds = await this.userService.getBlockerIdsOf(userId);
+    const blockerIds = userId ? await this.userService.getBlockerIdsOf(userId) : [];
 
     if (blockerIds.length > 0) {
       where.ownerId = {

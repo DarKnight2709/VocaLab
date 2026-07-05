@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { BlogComment } from "@/shared/validations/BlogSchema";
 import { VoteType } from "@/shared/enums/VoteType.enum";
 import { Pencil, Trash2, ArrowBigUp, ArrowBigDown, Reply } from "lucide-react";
@@ -35,6 +35,7 @@ export function CommentItem({
   level = 0,
 }: CommentItemProps) {
   const { t, language } = useTranslation();
+  const navigate = useNavigate();
 
   const [editSectionOpen, setEditSectionOpen] = useState(false);
   const [replySectionOpen, setReplySectionOpen] = useState(false);
@@ -129,7 +130,13 @@ export function CommentItem({
                 <div className="flex items-center">
                   <button
                     type="button"
-                    onClick={() => onVote(comment.id, VoteType.UPVOTE)}
+                    onClick={() => {
+                      if (!currentUserId) {
+                        navigate(ROUTES.LOGIN.url);
+                        return;
+                      }
+                      onVote(comment.id, VoteType.UPVOTE);
+                    }}
                     className={`flex items-center rounded-l-md p-1.5 transition-colors ${
                       isUpvoted
                         ? "bg-green-50 text-green-600 dark:bg-green-950"
@@ -147,7 +154,13 @@ export function CommentItem({
                   </span>
                   <button
                     type="button"
-                    onClick={() => onVote(comment.id, VoteType.DOWNVOTE)}
+                    onClick={() => {
+                      if (!currentUserId) {
+                        navigate(ROUTES.LOGIN.url);
+                        return;
+                      }
+                      onVote(comment.id, VoteType.DOWNVOTE);
+                    }}
                     className={`flex items-center rounded-r-md p-1.5 transition-colors ${
                       isDownvoted
                         ? "bg-red-50 text-red-600 dark:bg-red-950"
@@ -164,7 +177,13 @@ export function CommentItem({
 
                 <button
                   type="button"
-                  onClick={() => setReplySectionOpen(true)}
+                  onClick={() => {
+                    if (!currentUserId) {
+                      navigate(ROUTES.LOGIN.url);
+                      return;
+                    }
+                    setReplySectionOpen(true);
+                  }}
                   className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   aria-label={t("blog.reply")}
                   title={t("blog.reply")}

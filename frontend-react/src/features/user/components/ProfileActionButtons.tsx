@@ -10,6 +10,7 @@ import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useNavigate } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 import { MoreOptionsMenu } from "./MoreOptionsMenu";
+import { useOptionalAuth } from "@/features/auth/hooks/useOptionalAuth";
 
 interface ProfileActionButtonsProps {
   isOwnProfile: boolean;
@@ -38,6 +39,7 @@ export default function ProfileActionButtons({
 }: ProfileActionButtonsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { isAuth } = useOptionalAuth();
 
   // Move all hooks to the top, before any conditional logic
   const followMutation = useFollowUserMutation();
@@ -57,6 +59,10 @@ export default function ProfileActionButtons({
   const handleFollowAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuth) {
+      navigate(ROUTES.LOGIN.url);
+      return;
+    }
     if (isFollowing) {
       unfollowMutation.mutate(profileUserId!);
     } else {
@@ -67,6 +73,10 @@ export default function ProfileActionButtons({
   const handleChatAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuth) {
+      navigate(ROUTES.LOGIN.url);
+      return;
+    }
     if (!profileUserId) return;
     navigate(ROUTES.CHAT_TAB_USERS_ID.url.replace(":id", profileUserId), {
       state: {
@@ -81,6 +91,10 @@ export default function ProfileActionButtons({
   };
 
   const handleBlockUser = () => {
+    if (!isAuth) {
+      navigate(ROUTES.LOGIN.url);
+      return;
+    }
     if (!profileUserId) return;
     if (isBlocking) {
       unblockUserMutation.mutate(profileUserId);
