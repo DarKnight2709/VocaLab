@@ -29,12 +29,17 @@ import {
   DeleteResponseDto,
   CollectionSearchResponseDto,
   ForkCollectionResponseDto,
+  GetCollectionByIdPublicResponseDto,
+  CardDetailDto,
+  ReviewCardResponseDto,
 } from './dto/vocabulary-response.dto';
 import { CollectionSearchFilters, SEARCH_SORT, SEARCH_TIME } from '../search/search.types';
 import { UserService } from '../users/users.service';
 import { BlogService } from '../blog/blog.service';
 import { UpdateCardType } from '@/common/enums/update-card-type';
 import { UpdateCard } from '@/common/enums/update-card';
+import { calculateSM2 } from '@/common/utils/srs.utils';
+import { SrsRating } from '@/common/enums/srs-rating.enum';
 
 const collectionDetailSelect = {
   id: true,
@@ -70,6 +75,10 @@ const collectionDetailSelect = {
       id: true,
       position: true,
       cardTypeId: true,
+      repetitions: true,
+      interval: true,
+      easeFactor: true,
+      nextReviewDate: true,
       cardType: {
         select: {
           id: true,
@@ -155,7 +164,7 @@ export class VocabularyService {
 
   async getCollectionByIdPublic(
     id: string,
-  ): Promise<GetCollectionByIdResponseDto> {
+  ): Promise<GetCollectionByIdPublicResponseDto> {
     const collection = await this.prisma.cardCollection.findFirst({
       where: { id, isPublic: true },
       select: collectionDetailSelect,
@@ -175,7 +184,18 @@ export class VocabularyService {
     });
     if (!collection)
       throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);
-    return collection;
+
+    const now = new Date();
+    const newCount = collection.cards.filter(c => c.repetitions === 0).length;
+    const dueCount = collection.cards.filter(c => c.repetitions > 0 && c.nextReviewDate <= now).length;
+    const totalCount = collection.cards.length;
+
+    return {
+      ...collection,
+      newCount,
+      dueCount,
+      totalCount,
+    };
   }
 
   async createCollection(
@@ -1377,5 +1397,135 @@ export class VocabularyService {
       result.push(current.trim());
       return result;
     });
+  }
+
+  async getDueCards(
+    collectionId: string,
+    userId: string,
+  ): Promise<CardDetailDto[]> {
+    const collection = await this.prisma.cardCollection.findFirst({
+      where: { id: collectionId, userId },
+      select: { id: true },
+    });
+    if (!collection)
+      throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);
+
+    const now = new Date();
+
+    const cards = await this.prisma.card.findMany({
+      where: {
+        cardCollectionId: collectionId,
+        deletedAt: null,
+        OR: [
+          { repetitions: 0 },
+          { nextReviewDate: { lte: now } },
+        ],
+      },
+      select: {
+        id: true,
+        position: true,
+        cardTypeId: true,
+        repetitions: true,
+        interval: true,
+        easeFactor: true,
+        nextReviewDate: true,
+        cardType: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            fields: {
+              select: {
+                id: true,
+                key: true,
+                label: true,
+                fieldType: true,
+                side: true,
+                order: true,
+                color: true,
+                fontSize: true,
+              },
+            },
+          },
+        },
+        values: {
+          select: {
+            id: true,
+            fieldId: true,
+            value: true,
+            field: {
+              select: {
+                id: true,
+                key: true,
+                label: true,
+                fieldType: true,
+                side: true,
+                order: true,
+                color: true,
+                fontSize: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        { nextReviewDate: 'asc' },
+        { createdAt: 'asc' },
+      ],
+    });
+
+    return cards;
+  }
+
+  async reviewCard(
+    cardId: string,
+    userId: string,
+    rating: SrsRating,
+  ): Promise<ReviewCardResponseDto> {
+    const card = await this.prisma.card.findFirst({
+      where: {
+        id: cardId,
+        deletedAt: null,
+        cardCollection: {
+          userId,
+        },
+      },
+      select: {
+        id: true,
+        repetitions: true,
+        interval: true,
+        easeFactor: true,
+        nextReviewDate: true,
+      },
+    });
+
+    if (!card) {
+      throw new NotFoundException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
+    }
+
+    const result = calculateSM2(rating, {
+      repetitions: card.repetitions,
+      interval: card.interval,
+      easeFactor: card.easeFactor,
+    });
+
+    const updatedCard = await this.prisma.card.update({
+      where: { id: card.id },
+      data: {
+        repetitions: result.repetitions,
+        interval: result.interval,
+        easeFactor: result.easeFactor,
+        nextReviewDate: result.nextReviewDate,
+      },
+      select: {
+        id: true,
+        repetitions: true,
+        interval: true,
+        easeFactor: true,
+        nextReviewDate: true,
+      },
+    });
+
+    return updatedCard;
   }
 }

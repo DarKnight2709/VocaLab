@@ -134,6 +134,18 @@ export class CardDetailDto {
   @ApiPropertyOptional({ example: 1, nullable: true })
   position!: number | null;
 
+  @ApiProperty({ example: 0 })
+  repetitions!: number;
+
+  @ApiProperty({ example: 0 })
+  interval!: number;
+
+  @ApiProperty({ example: 2.5 })
+  easeFactor!: number;
+
+  @ApiProperty({ example: '2026-07-05T00:00:00.000Z' })
+  nextReviewDate!: Date;
+
   @ApiProperty({ type: CardTypeWithFieldsDto })
   cardType!: CardTypeWithFieldsDto;
 
@@ -141,8 +153,7 @@ export class CardDetailDto {
   values!: CardFieldValueResponseDto[];
 }
 
-
-export class GetCollectionByIdResponseDto {
+export class GetCollectionByIdPublicResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
 
@@ -172,6 +183,17 @@ export class GetCollectionByIdResponseDto {
 
   @ApiProperty({ example: { cards: 25 } })
   _count!: { cards: number };
+}
+
+export class GetCollectionByIdResponseDto extends GetCollectionByIdPublicResponseDto {
+  @ApiProperty({ example: 5 })
+  newCount!: number;
+
+  @ApiProperty({ example: 10 })
+  dueCount!: number;
+
+  @ApiProperty({ example: 25 })
+  totalCount!: number;
 }
 
 export class CreateCollectionResponseDto {
@@ -260,6 +282,23 @@ export class CreateCardTypeResponseDto extends CardTypeWithFieldsDto{}
 export class DeleteResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
+}
+
+export class ReviewCardResponseDto {
+  @ApiProperty({ example: 'uuid-string' })
+  id!: string;
+
+  @ApiProperty({ example: 1 })
+  repetitions!: number;
+
+  @ApiProperty({ example: 6 })
+  interval!: number;
+
+  @ApiProperty({ example: 2.5 })
+  easeFactor!: number;
+
+  @ApiProperty({ example: '2026-07-05T00:00:00.000Z' })
+  nextReviewDate!: Date;
 }
 
 // ─── Search ─────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import {
 } from "@/shared/validations/VocabularySchema";
 import type { UpdateCardType } from "@/shared/enums/UpdateCardType.enum";
 import type { UpdateCard } from "@/shared/enums/UpdateCard.enum";
+import type { SrsRating } from "@/shared/enums/SrsRating.enum";
 
 export const DuplicatePolicy = {
   SKIP: "SKIP",
@@ -74,6 +75,10 @@ export interface CardItem {
   cardTypeId: string;
   cardCollectionId: string;
   position: number | null;
+  repetitions: number;
+  interval: number;
+  easeFactor: number;
+  nextReviewDate: string;
   createdAt: string;
   updatedAt: string;
   cardType?: CardType;
@@ -82,6 +87,9 @@ export interface CardItem {
 
 export interface VocabCollectionDetail extends VocabCollection {
   cards: CardItem[];
+  newCount: number;
+  dueCount: number;
+  totalCount: number;
 }
 
 // =====================================================
@@ -439,5 +447,37 @@ export const useImportVocabularyMutation = () => {
     },
     onError: (e) =>
       toast.error(getErrorMessage(e, i18n.t("vocabulary.importFailed"))),
+  });
+};
+
+export const useCollectionDueCardsQuery = (collectionId: string, enabled: boolean) =>
+  useQuery<CardItem[]>({
+    queryKey: ["card-collection-due-cards", collectionId],
+    queryFn: async () => {
+      const res = await api.get(API_ROUTES.VOCABULARY.DUE_CARDS(collectionId));
+      return res.data;
+    },
+    enabled: enabled && !!collectionId,
+  });
+
+
+export interface ReviewCardPayload {
+  cardId: string;
+  collectionId: string;
+  rating: SrsRating;
+}
+
+export const useReviewCardMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ReviewCardPayload) =>
+      api.post(API_ROUTES.VOCABULARY.REVIEW_CARD(body.cardId), { rating: body.rating }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({
+        queryKey: ["card-collection-detail", variables.collectionId],
+      });
+    },
+    onError: (e) =>
+      toast.error(getErrorMessage(e, "Failed to submit review")),
   });
 };

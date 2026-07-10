@@ -16,6 +16,7 @@ import { CardFieldType, CardSide } from '@prisma/client';
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
 import { UpdateCardType } from '@/common/enums/update-card-type';
 import { UpdateCard } from '@/common/enums/update-card';
+import { SrsRating } from '@/common/enums/srs-rating.enum';
 
 export class CreateCollectionDto {
   @IsString()
@@ -141,4 +142,10 @@ export class CardFieldDto {
   @IsBoolean()
   @IsOptional()
   isRequired?: boolean;
+}
+
+export class ReviewCardDto {
+  @IsEnum(SrsRating)
+  @IsNotEmpty()
+  rating!: SrsRating;
 }

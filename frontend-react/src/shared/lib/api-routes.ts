@@ -111,6 +111,8 @@ const API_ROUTES = {
     ADD_CARD: (collectionId: string) =>
       `v1/vocabulary/collections/${collectionId}/cards`,
     UPDATE_CARD: (cardId: string) => `v1/vocabulary/cards/${cardId}`,
+    DUE_CARDS: (collectionId: string) => `v1/vocabulary/collections/${collectionId}/due`,
+    REVIEW_CARD: (cardId: string) => `v1/vocabulary/cards/${cardId}/review`,
     // IMPORT_VOCABULARY: "v1/vocabulary/collections/${collectionId}/import",
   },
 

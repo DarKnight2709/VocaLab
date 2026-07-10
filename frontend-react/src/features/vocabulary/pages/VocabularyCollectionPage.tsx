@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   BookOpenText,
@@ -16,8 +16,11 @@ import {
   useCollectionDetailQuery,
   useDeleteCardMutation,
   useUpdateCollectionMutation,
+  useCollectionDueCardsQuery,
+  useReviewCardMutation,
   type CardItem,
 } from "../api/vocabularyService";
+import type { SrsRating } from "@/shared/enums/SrsRating.enum";
 import ImportVocabularyDialog from "../components/ImportVocabularyDialog";
 import EditCardDialog from "../components/EditCardDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
@@ -41,9 +44,63 @@ export default function VocabularyCollectionPage() {
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
+  const [sessionCards, setSessionCards] = useState<CardItem[]>([]);
+  const [sessionInitialized, setSessionInitialized] = useState(false);
+
   const { data, isLoading } = useCollectionDetailQuery(collectionId || null);
   const deleteMutation = useDeleteCardMutation(collectionId || "");
   const updateCollectionMutation = useUpdateCollectionMutation();
+
+  const { data: dueCardsData } = useCollectionDueCardsQuery(
+    collectionId || "",
+    mode === "learn"
+  );
+  const reviewMutation = useReviewCardMutation();
+
+  useEffect(() => {
+    if (mode === "learn" && dueCardsData && !sessionInitialized) {
+      setSessionCards(dueCardsData);
+      setFlashcardIdx(0);
+      setFlipped(false);
+      setSessionInitialized(true);
+    }
+  }, [mode, dueCardsData, sessionInitialized]);
+
+  const handleRating = async (rating: SrsRating) => {
+    const currentCard = sessionCards[flashcardIdx];
+    if (!currentCard || !collectionId) return;
+
+    // Mutate backend
+    reviewMutation.mutate({
+      cardId: currentCard.id,
+      collectionId,
+      rating,
+    });
+
+    // Update local study queue
+    if (rating === "AGAIN") {
+      // Forgotten: move card to the end of the session queue
+      setSessionCards((prev) => {
+        const next = [...prev];
+        next.splice(flashcardIdx, 1);
+        next.push(currentCard);
+        return next;
+      });
+      setFlipped(false);
+    } else {
+      // Recalled: remove it from the session queue
+      setSessionCards((prev) => {
+        const next = [...prev];
+        next.splice(flashcardIdx, 1);
+        return next;
+      });
+      // Adjust index if we were on the last card
+      if (flashcardIdx >= sessionCards.length - 1) {
+        setFlashcardIdx(Math.max(0, sessionCards.length - 2));
+      }
+      setFlipped(false);
+    }
+  };
 
   const handleToggleVisibility = async () => {
     if (data && collectionId) {
@@ -172,9 +229,24 @@ export default function VocabularyCollectionPage() {
               </div>
             )}
           </div>
-          <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
-            <Layers className="h-4 w-4" />
-            <span>{cards.length} {t("vocabulary.cards")}</span>
+          <div className="mt-2 text-sm text-muted-foreground flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <Layers className="h-4 w-4" />
+              <span>{cards.length} {t("vocabulary.cards")}</span>
+            </div>
+            {!isLoading && data && (
+              <>
+                <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                  <span>{data.newCount} {t("vocabulary.new") || "New"}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                  <span>{data.dueCount} {t("vocabulary.due") || "Due"}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -210,9 +282,15 @@ export default function VocabularyCollectionPage() {
             onClick={() => {
               setMode("learn");
               setFlipped(false);
+              setSessionInitialized(false);
             }}
           >
             <BookOpenText className="h-4 w-4" /> {t("vocabulary.learn")}
+            {!isLoading && data && data.dueCount + data.newCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full leading-none">
+                {data.dueCount + data.newCount}
+              </span>
+            )}
           </Button>
           <Button
             variant="outline"
@@ -276,81 +354,112 @@ export default function VocabularyCollectionPage() {
           )}
         </div>
       ) : (
-        <div>
-          {cards.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
-              {t("vocabulary.noCardsToLearn")}
+        <div className="mt-4">
+          {sessionCards.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border bg-card shadow-sm space-y-4 max-w-md mx-auto">
+              <div className="text-4xl animate-bounce">🎉</div>
+              <h2 className="text-xl font-bold">{t("vocabulary.reviewDoneTitle") || "Review Session Completed!"}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t("vocabulary.reviewDoneDesc") || "All caught up! You have completed all due reviews for this collection."}
+              </p>
+              <Button variant="default" onClick={() => setMode("preview")}>
+                {t("vocabulary.backToPreview") || "Back to Preview"}
+              </Button>
             </div>
           ) : (
-            <>
-              <div className="space-y-4">
-                <div
-                  className="relative h-64 perspective-[2000px] cursor-pointer group"
-                  onClick={() => setFlipped((f) => !f)}
-                >
-                  <div 
-                    className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}
-                  >
-                    {/* Front Face */}
-                    <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
-                      <div className="text-center">
-                        <CardFace 
-                          card={cards[flashcardIdx]} 
-                          side="front"
-                          className="text-base font-medium"
-                        />
-                      </div>
-                      <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                        {t("vocabulary.frontFace")}
-                      </div>
+            <div className="max-w-2xl mx-auto space-y-6">
+              <div 
+                className="relative h-72 perspective-[2000px] cursor-pointer group" 
+                onClick={() => setFlipped((f) => !f)}
+              >
+                <div className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
+                  {/* Front Face */}
+                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
+                    <div className="text-center">
+                      <CardFace card={sessionCards[flashcardIdx]} side="front" className="text-xl font-medium" />
                     </div>
+                    <div className="absolute bottom-4 text-xs text-muted-foreground animate-pulse">
+                      {t("vocabulary.clickToFlip") || "Click card to flip"}
+                    </div>
+                    <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                      {t("vocabulary.frontFace")}
+                    </div>
+                  </div>
 
-                    {/* Back Face */}
-                    <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
-                      <div className="text-center">
-                        <CardFace 
-                          card={cards[flashcardIdx]} 
-                          side="back"
-                          className="text-base font-medium"
-                        />
-                      </div>
-                      <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
-                        {t("vocabulary.backFace")}
-                      </div>
+                  {/* Back Face */}
+                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
+                    <div className="text-center">
+                      <CardFace card={sessionCards[flashcardIdx]} side="back" className="text-xl font-medium text-muted-foreground" />
+                    </div>
+                    <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
+                      {t("vocabulary.backFace")}
                     </div>
                   </div>
                 </div>
-                
-                <div className="text-center text-[11px] text-muted-foreground uppercase tracking-widest font-medium">
-                  {t("vocabulary.flashcardProgress")
-                    .replace("{current}", String(flashcardIdx + 1))
-                    .replace("{total}", String(cards.length))}
-                </div>
               </div>
 
-              <div className="flex justify-center gap-3 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setFlashcardIdx((i) => Math.max(0, i - 1));
-                    setFlipped(false);
-                  }}
-                  disabled={flashcardIdx === 0}
-                >
-                  {t("vocabulary.previous")}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setFlashcardIdx((i) => Math.min(cards.length - 1, i + 1));
-                    setFlipped(false);
-                  }}
-                  disabled={flashcardIdx === cards.length - 1}
-                >
-                  {t("vocabulary.next")}
-                </Button>
+              <div className="text-center text-xs text-muted-foreground uppercase tracking-widest font-medium">
+                {t("vocabulary.remainingCards") || "Remaining"}: {sessionCards.length}
               </div>
-            </>
+
+              <div className="flex justify-center gap-3">
+                {!flipped ? (
+                  <Button size="lg" className="w-44" onClick={() => setFlipped(true)}>
+                    {t("vocabulary.revealAnswer") || "Reveal Answer"}
+                  </Button>
+                ) : (
+                  <div className="flex flex-wrap justify-center gap-2 w-full">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="w-24 gap-1 font-semibold"
+                      disabled={reviewMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRating("AGAIN");
+                      }}
+                    >
+                      Again
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-24 gap-1 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 font-semibold"
+                      disabled={reviewMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRating("HARD");
+                      }}
+                    >
+                      Hard
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="w-24 gap-1 font-semibold"
+                      disabled={reviewMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRating("GOOD");
+                      }}
+                    >
+                      Good
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="w-24 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                      disabled={reviewMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRating("EASY");
+                      }}
+                    >
+                      Easy
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}

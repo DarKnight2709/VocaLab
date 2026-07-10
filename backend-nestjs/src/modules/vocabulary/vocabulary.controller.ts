@@ -17,6 +17,7 @@ import {
   ImportCardsDto,
   UpdateCardDto,
   ForkCollectionDto,
+  ReviewCardDto,
 } from './dto/vocabulary.dto';
 import { IsProtected } from '../../common/decorators/protected.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -35,6 +36,9 @@ import {
   CreateCardTypeResponseDto,
   CardTypeWithFieldsDto,
   DeleteResponseDto,
+  CardDetailDto,
+  ReviewCardResponseDto,
+  GetCollectionByIdPublicResponseDto,
 } from './dto/vocabulary-response.dto';
 
 @IsProtected()
@@ -61,7 +65,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Lấy thông tin chi tiết bộ từ vựng công khai' })
   async getPublicCollectionById(
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<GetCollectionByIdResponseDto>> {
+  ): Promise<ResponseInterceptor<GetCollectionByIdPublicResponseDto>> {
     const result = await this.vocabularyService.getCollectionByIdPublic(id);
     return { data: result };
   }
@@ -245,6 +249,31 @@ export class VocabularyController {
     @CurrentUser() user: any,
   ): Promise<ResponseInterceptor<DeleteResponseDto>> {
     const result = await this.vocabularyService.deleteCardType(id, user.id);
+    return { data: result };
+  }
+
+  // ──────────────────────────────────────────────
+  // Spaced Repetition (SRS)
+  // ──────────────────────────────────────────────
+
+  @Get('collections/:id/due')
+  @ApiOperation({ summary: 'Lấy danh sách thẻ cần học/ôn tập theo SRS' })
+  async getDueCards(
+    @Param('id') collectionId: string,
+    @CurrentUser() user: any,
+  ): Promise<ResponseInterceptor<CardDetailDto[]>> {
+    const result = await this.vocabularyService.getDueCards(collectionId, user.id);
+    return { data: result };
+  }
+
+  @Post('cards/:id/review')
+  @ApiOperation({ summary: 'Đánh giá ôn tập thẻ theo SRS (SM-2)' })
+  async reviewCard(
+    @Param('id') cardId: string,
+    @CurrentUser() user: any,
+    @Body() dto: ReviewCardDto,
+  ): Promise<ResponseInterceptor<ReviewCardResponseDto>> {
+    const result = await this.vocabularyService.reviewCard(cardId, user.id, dto.rating);
     return { data: result };
   }
 }
