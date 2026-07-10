@@ -10,6 +10,7 @@ import {
   Trash2,
   Globe,
   Lock,
+  PenLine,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import {
@@ -27,13 +28,14 @@ import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import ROUTES from "@/shared/lib/routes";
+import PracticeMode from "../components/PracticeMode";
 
 export default function VocabularyCollectionPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { collectionId } = useParams<{ collectionId: string }>();
 
-  const [mode, setMode] = useState<"preview" | "learn">("preview");
+  const [mode, setMode] = useState<"preview" | "learn" | "practice">("preview");
   const [flashcardIdx, setFlashcardIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -293,6 +295,13 @@ export default function VocabularyCollectionPage() {
             )}
           </Button>
           <Button
+            variant={mode === "practice" ? "default" : "outline"}
+            className="gap-2"
+            onClick={() => setMode("practice")}
+          >
+            <PenLine className="h-4 w-4" /> {t("vocabulary.practice") || "Practice"}
+          </Button>
+          <Button
             variant="outline"
             className="gap-2"
             onClick={() => setImportOpen(true)}
@@ -308,7 +317,9 @@ export default function VocabularyCollectionPage() {
         </div>
       </div>
 
-      {mode === "preview" ? (
+      {mode === "practice" ? (
+        <PracticeMode cards={cards} />
+      ) : mode === "preview" ? (
         <div className="space-y-2">
           {cards.length === 0 ? (
               <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
@@ -367,12 +378,12 @@ export default function VocabularyCollectionPage() {
               </Button>
             </div>
           ) : (
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="max-w-3xl mx-auto space-y-6 pb-12">
               <div 
-                className="relative h-72 perspective-[2000px] cursor-pointer group" 
+                className="relative min-h-[350px] w-full perspective-[2000px] cursor-pointer group" 
                 onClick={() => setFlipped((f) => !f)}
               >
-                <div className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
+                <div className={`relative w-full h-full min-h-[350px] duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
                   {/* Front Face */}
                   <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
                     <div className="text-center">
