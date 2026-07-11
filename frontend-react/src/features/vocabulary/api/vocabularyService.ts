@@ -368,6 +368,8 @@ export const useCreateCardMutation = (collectionId: string) => {
         queryKey: ["card-collection-detail", collectionId],
       });
       qc.invalidateQueries({ queryKey: ["card-collections"] });
+      qc.invalidateQueries({ queryKey: ["collection-stats", collectionId] });
+      qc.invalidateQueries({ queryKey: ["vocabulary-stats"] });
       toast.success(i18n.t("vocabulary.cardAddSuccess"));
     },
     onError: (e) =>
@@ -388,6 +390,8 @@ export const useDeleteCardMutation = (collectionId: string) => {
         queryKey: ["card-collection-detail", collectionId],
       });
       qc.invalidateQueries({ queryKey: ["card-collections"] });
+      qc.invalidateQueries({ queryKey: ["collection-stats", collectionId] });
+      qc.invalidateQueries({ queryKey: ["vocabulary-stats"] });
       toast.success(i18n.t("vocabulary.cardDeleteSuccess"));
     },
     onError: (e) =>
@@ -413,6 +417,8 @@ export const useUpdateCardMutation = (collectionId: string) => {
         queryKey: ["card-collection-detail", collectionId],
       });
       qc.invalidateQueries({ queryKey: ["card-collections"] });
+      qc.invalidateQueries({ queryKey: ["collection-stats", collectionId] });
+      qc.invalidateQueries({ queryKey: ["vocabulary-stats"] });
       toast.success(i18n.t("vocabulary.updateSuccess"));
     },
     onError: (e) =>
@@ -442,7 +448,9 @@ export const useImportVocabularyMutation = () => {
         qc.invalidateQueries({
           queryKey: ["card-collection-detail", variables.collectionId],
         });
+        qc.invalidateQueries({ queryKey: ["collection-stats", variables.collectionId] });
       }
+      qc.invalidateQueries({ queryKey: ["vocabulary-stats"] });
       toast.success(i18n.t("vocabulary.importSuccess"));
     },
     onError: (e) =>
@@ -476,6 +484,8 @@ export const useReviewCardMutation = () => {
       qc.invalidateQueries({
         queryKey: ["card-collection-detail", variables.collectionId],
       });
+      qc.invalidateQueries({ queryKey: ["collection-stats", variables.collectionId] });
+      qc.invalidateQueries({ queryKey: ["vocabulary-stats"] });
     },
     onError: (e) =>
       toast.error(getErrorMessage(e, "Failed to submit review")),

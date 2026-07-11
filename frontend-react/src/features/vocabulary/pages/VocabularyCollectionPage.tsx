@@ -25,6 +25,8 @@ import type { SrsRating } from "@/shared/enums/SrsRating.enum";
 import ImportVocabularyDialog from "../components/ImportVocabularyDialog";
 import EditCardDialog from "../components/EditCardDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
+import { useCollectionStatsQuery } from "@/features/stats/api/statsService";
+import { HeatMapChart } from "@/features/stats/components/HeatMapChart";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import ROUTES from "@/shared/lib/routes";
@@ -36,6 +38,7 @@ export default function VocabularyCollectionPage() {
   const { collectionId } = useParams<{ collectionId: string }>();
 
   const [mode, setMode] = useState<"preview" | "learn" | "practice">("preview");
+  const [isStudying, setIsStudying] = useState(false);
   const [flashcardIdx, setFlashcardIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -50,6 +53,7 @@ export default function VocabularyCollectionPage() {
   const [sessionInitialized, setSessionInitialized] = useState(false);
 
   const { data, isLoading } = useCollectionDetailQuery(collectionId || null);
+  const { data: statsData } = useCollectionStatsQuery(collectionId || "");
   const deleteMutation = useDeleteCardMutation(collectionId || "");
   const updateCollectionMutation = useUpdateCollectionMutation();
 
@@ -283,6 +287,7 @@ export default function VocabularyCollectionPage() {
             className="gap-2"
             onClick={() => {
               setMode("learn");
+              setIsStudying(false);
               setFlipped(false);
               setSessionInitialized(false);
             }}
@@ -366,7 +371,42 @@ export default function VocabularyCollectionPage() {
         </div>
       ) : (
         <div className="mt-4">
-          {sessionCards.length === 0 ? (
+          {!isStudying ? (
+            <div className="flex flex-col items-center max-w-4xl mx-auto space-y-10 py-10">
+              <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 border-b dark:border-slate-800 pb-8 px-4">
+                <div className="space-y-1.5 text-center md:text-left flex-1">
+                  <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                    {data?.name}
+                  </h1>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-8">
+                  <div className="flex gap-8">
+                    <div className="flex flex-col items-center">
+                      <span className="text-3xl font-bold text-blue-500">{data?.newCount || 0}</span>
+                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">New</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-3xl font-bold text-rose-500">{data?.dueCount || 0}</span>
+                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">Due</span>
+                    </div>
+                  </div>
+
+                  <Button 
+                    size="lg" 
+                    className="h-12 px-8 rounded-full bg-black hover:bg-black/90 text-white font-semibold shadow-sm dark:bg-white dark:text-black dark:hover:bg-white/90"
+                    onClick={() => setIsStudying(true)}
+                  >
+                    Learn now
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="w-full px-4">
+                <HeatMapChart history={statsData?.history || []} />
+              </div>
+            </div>
+          ) : sessionCards.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border bg-card shadow-sm space-y-4 max-w-md mx-auto">
               <div className="text-4xl animate-bounce">🎉</div>
               <h2 className="text-xl font-bold">{t("vocabulary.reviewDoneTitle") || "Review Session Completed!"}</h2>

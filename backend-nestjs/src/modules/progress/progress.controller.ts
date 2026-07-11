@@ -1,8 +1,8 @@
-import { Body, Controller, Post, Get, Query } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ProgressService } from './progress.service';
 import { HeartbeatDto } from './dto/heartbeat.dto';
-import { StatsResponseDto } from './dto/stats-response.dto';
+import { StatsResponseDto, CollectionStatsResponseDto } from './dto/stats-response.dto';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
@@ -29,6 +29,17 @@ export class ProgressController {
     @Query('weekOffset') weekOffset?: string,
   ): Promise<ResponseInterceptor<StatsResponseDto>> {
     const result = await this.progressService.getStats(user.id, parseInt(weekOffset ?? '0', 10) || 0);
+    return {
+      data: result
+    }
+  }
+  @Get('collections/:collectionId/stats')
+  @ApiOperation({ summary: 'Get study stats for a specific collection' })
+  async getCollectionStats(
+    @CurrentUser() user: any,
+    @Param('collectionId') collectionId: string,
+  ): Promise<ResponseInterceptor<CollectionStatsResponseDto>> {
+    const result = await this.progressService.getCollectionStats(user.id, collectionId);
     return {
       data: result
     }

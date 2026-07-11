@@ -492,6 +492,7 @@
     "coverPreviewAlt": "Cover preview"
   },
   "vocabulary": {
+    "readyForReview": "Ready for your review session?",
     "saveAsCopy": "Save as Copy",
     "collectionDesc": "Description",
     "forking": "Saving copy...",
@@ -1027,7 +1028,22 @@
       "Fri": "Fri",
       "Sat": "Sat",
       "Sun": "Sun"
-    }
+    },
+    "streak": "Streak",
+    "currentStreak": "Current Streak",
+    "maxStreak": "Max Streak",
+    "totalTime": "Total Time",
+    "totalDays": "Total Days",
+    "daysCount": "days",
+    "minutes": "min",
+    "hours": "hrs",
+    "cardsReviewedStr": "cards reviewed",
+    "totalCards": "Total Cards",
+    "masteredCards": "Mastered",
+    "learningCards": "Learning",
+    "newCards": "New/Unseen",
+    "activityHeatMap": "Activity Heat Map",
+    "noActivity": "No activity"
   },
 
   "home": {

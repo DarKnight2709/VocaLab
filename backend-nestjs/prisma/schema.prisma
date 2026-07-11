@@ -131,6 +131,7 @@ model User {
 
   learningSetting LearningSetting?
   dailyProgress   DailyProgress[]
+  collectionDailyProgress CollectionDailyProgress[]
 
   @@map("users")
 }
@@ -421,6 +422,7 @@ model CardCollection {
 
   user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards  Card[]
+  dailyProgress CollectionDailyProgress[]
   origin CardCollection?  @relation("CollectionLineage", fields: [originId], references: [id])
   forks  CardCollection[] @relation("CollectionLineage")
 
@@ -569,6 +571,10 @@ model DailyProgress {
   userId         String
   date           String
   secondsStudied Int    @default(0)
+  cardsReviewed  Int    @default(0)
+  cardsAdded     Int    @default(0)
+  cardsUpdated   Int    @default(0)
+  cardsDeleted   Int    @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -579,6 +585,29 @@ model DailyProgress {
   @@index([userId])
   @@index([date])
   @@map("daily_progress")
+}
+
+model CollectionDailyProgress {
+  id             String @id @default(uuid())
+  collectionId   String
+  userId         String
+  date           String
+  cardsReviewed  Int    @default(0)
+  cardsAdded     Int    @default(0)
+  cardsUpdated   Int    @default(0)
+  cardsDeleted   Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collection CardCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, date])
+  @@index([collectionId])
+  @@index([userId])
+  @@index([date])
+  @@map("collection_daily_progress")
 }
 
 model Notification {

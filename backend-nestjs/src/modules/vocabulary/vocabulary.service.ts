@@ -872,6 +872,8 @@ export class VocabularyService {
       },
     });
 
+    await this.recordDailyActivity(userId, targetCollectionId, 'cardsAdded');
+
     return card;
   }
 
@@ -972,6 +974,8 @@ export class VocabularyService {
       });
     });
 
+    await this.recordDailyActivity(userId, card.cardCollectionId, 'cardsUpdated');
+
     return updatedCard;
   }
 
@@ -990,6 +994,8 @@ export class VocabularyService {
     await this.prisma.card.delete({
       where: { id: cardId },
     });
+
+    await this.recordDailyActivity(userId, card.cardCollectionId, 'cardsDeleted');
 
     return { id: cardId };
   }
@@ -1496,6 +1502,7 @@ export class VocabularyService {
         interval: true,
         easeFactor: true,
         nextReviewDate: true,
+        cardCollectionId: true,
       },
     });
 
@@ -1526,6 +1533,43 @@ export class VocabularyService {
       },
     });
 
+    await this.recordDailyActivity(userId, card.cardCollectionId, 'cardsReviewed');
+
     return updatedCard;
+  }
+
+  private async recordDailyActivity(
+    userId: string,
+    collectionId: string,
+    activityType: 'cardsAdded' | 'cardsUpdated' | 'cardsDeleted' | 'cardsReviewed'
+  ) {
+    const today = new Date().toISOString().split('T')[0];
+    const updateData = { [activityType]: { increment: 1 } };
+    
+    try {
+      await Promise.all([
+        this.prisma.dailyProgress.upsert({
+          where: { userId_date: { userId, date: today } },
+          update: updateData,
+          create: {
+            userId,
+            date: today,
+            [activityType]: 1,
+          },
+        }),
+        this.prisma.collectionDailyProgress.upsert({
+          where: { collectionId_date: { collectionId, date: today } },
+          update: updateData,
+          create: {
+            userId,
+            collectionId,
+            date: today,
+            [activityType]: 1,
+          },
+        })
+      ]);
+    } catch (error) {
+      console.error('[recordDailyActivity] Failed:', { userId, collectionId, activityType, error });
+    }
   }
 }

@@ -491,6 +491,7 @@
     }
   },
   "vocabulary": {
+    "readyForReview": "Sẵn sàng cho phiên ôn tập?",
     "saveAsCopy": "Lưu bản sao",
     "collectionDesc": "Mô tả",
     "forking": "Đang lưu bản sao...",
@@ -1018,7 +1019,24 @@
       "Fri": "T6",
       "Sat": "T7",
       "Sun": "CN"
-    }
+    },
+    "todayTime": "Hôm nay: {{time}} phút",
+    "changeGoal": "Đổi mục tiêu",
+    "streak": "Chuỗi",
+    "currentStreak": "Chuỗi hiện tại",
+    "maxStreak": "Chuỗi dài nhất",
+    "totalTime": "Tổng thời gian",
+    "totalDays": "Tổng số ngày",
+    "daysCount": "ngày",
+    "minutes": "phút",
+    "hours": "giờ",
+    "cardsReviewedStr": "thẻ đã ôn",
+    "totalCards": "Tổng số thẻ",
+    "masteredCards": "Đã thành thạo",
+    "learningCards": "Đang học",
+    "newCards": "Mới / Chưa học",
+    "activityHeatMap": "Biểu đồ hoạt động",
+    "noActivity": "Không có hoạt động"
   },
 
   "home": {
