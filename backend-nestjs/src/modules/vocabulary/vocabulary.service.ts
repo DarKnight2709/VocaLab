@@ -2,6 +2,9 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import {
@@ -35,11 +38,13 @@ import {
 } from './dto/vocabulary-response.dto';
 import { CollectionSearchFilters, SEARCH_SORT, SEARCH_TIME } from '../search/search.types';
 import { UserService } from '../users/users.service';
+import { GetUserCollectionsResponseDto } from '../users/dto/users-response.dto';
 import { BlogService } from '../blog/blog.service';
 import { UpdateCardType } from '@/common/enums/update-card-type';
 import { UpdateCard } from '@/common/enums/update-card';
 import { calculateSM2 } from '@/common/utils/srs.utils';
 import { SrsRating } from '@/common/enums/srs-rating.enum';
+import { PostVisibility } from '@/common/enums/post-visibility.enum';
 
 const collectionDetailSelect = {
   id: true,
@@ -126,9 +131,82 @@ const collectionDetailSelect = {
 export class VocabularyService {
   constructor(
     private prisma: PrismaService,
-    private userService: UserService,
-    private blogService: BlogService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
+    private readonly blogService: BlogService,
   ) {}
+
+  async getUserCollections(
+    profileUserId: string,
+    requestingUserId?: string,
+    page = 1,
+    limit = 12,
+    search?: string,
+    visibility?: PostVisibility,
+  ): Promise<GetUserCollectionsResponseDto> {
+    const isOwner = profileUserId === requestingUserId;
+
+    // Call userService.findById (already injected)
+    const user = await this.userService.findById(profileUserId);
+    if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+
+    if (requestingUserId && requestingUserId !== profileUserId) {
+      const blockedByTarget = await this.prisma.block.findFirst({
+        where: {
+          blockingId: profileUserId,
+          blockedId: requestingUserId,
+        },
+      });
+      if (blockedByTarget) {
+        throw new ForbiddenException(ErrorCode.FORBIDDEN);
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      userId: profileUserId,
+      deletedAt: null,
+    };
+
+    if (!isOwner) {
+      where.isPublic = true;
+    } else if (visibility) {
+      if (visibility === PostVisibility.PUBLIC) {
+        where.isPublic = true;
+      } else if (visibility === PostVisibility.PRIVATE) {
+        where.isPublic = false;
+      }
+    }
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const [collections, total] = await Promise.all([
+      this.prisma.cardCollection.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { id: true, username: true, fullName: true, avatar: true } },
+          _count: { select: { cards: true } },
+        },
+      }),
+      this.prisma.cardCollection.count({ where }),
+    ]);
+
+    return {
+      collections,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 
   // ──────────────────────────────────────────────
   // Collections

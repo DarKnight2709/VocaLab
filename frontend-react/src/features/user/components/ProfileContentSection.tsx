@@ -6,6 +6,8 @@ import FollowersTab from "./profile-tabs/FollowersTab";
 import FollowingTab from "./profile-tabs/FollowingTab";
 import FriendsTab from "./profile-tabs/FriendsTab";
 import PostsTab from "./profile-tabs/PostsTab";
+import CollectionsTab from "./profile-tabs/CollectionsTab";
+import GroupsTab from "./profile-tabs/GroupsTab";
 import { ContentTab } from "../../../shared/enums/ContentTab.enum";
 import { PostVisibility } from "../../../shared/enums/PostVisibility.enum";
 
@@ -79,6 +81,8 @@ export default function ProfileContentSection({
     contentTabs.push({ key: ContentTab.FRIENDS, label: t("profile.tabs.friends"), icon: Handshake });
   }
   contentTabs.push({ key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: FileText });
+  contentTabs.push({ key: ContentTab.COLLECTIONS, label: t("profile.tabs.collections"), icon: FileText }); // You might want to use a different icon like Folder or Library here, but sticking to existing ones for now. Let's use FileText
+  contentTabs.push({ key: ContentTab.GROUPS, label: t("profile.tabs.groups"), icon: Users });
 
   const defaultTab = contentTabs.length > 0 ? contentTabs[0].key : ContentTab.POSTS;
   
@@ -143,7 +147,7 @@ export default function ProfileContentSection({
         </div>
 
         <div className="flex items-center gap-2">
-          {activeTab === ContentTab.POSTS && isOwnProfile && (
+          {(activeTab === ContentTab.POSTS || activeTab === ContentTab.COLLECTIONS) && isOwnProfile && (
             <PostVisibilityFilter
               value={postVisibility}
               onChange={setPostVisibility}
@@ -178,6 +182,19 @@ export default function ProfileContentSection({
                     userId={userId} 
                     search={debouncedSearch} 
                     visibility={postVisibility} 
+                />
+              )}
+              {activeTab === ContentTab.COLLECTIONS && (
+                <CollectionsTab 
+                    userId={userId} 
+                    search={debouncedSearch} 
+                    visibility={postVisibility}
+                />
+              )}
+              {activeTab === ContentTab.GROUPS && (
+                <GroupsTab 
+                    userId={userId} 
+                    search={debouncedSearch} 
                 />
               )}
             </>

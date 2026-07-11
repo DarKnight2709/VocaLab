@@ -29,6 +29,7 @@ import {
 import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 import { MessageWithDetails } from '../messages/dto/messages-response.dto';
 import { UserService } from '../users/users.service';
+import { GetUserGroupsResponseDto, UserGroupItemDto } from '../users/dto/users-response.dto';
 
 // Types previously in IGroupRepository
 export type MemberWithUser = Prisma.GroupMemberGetPayload<{
@@ -86,6 +87,87 @@ export class GroupChatService {
     private userService: UserService,
     private cloudinaryService: CloudinaryService,
   ) {}
+
+  async getUserGroups(
+    profileUserId: string,
+    requestingUserId?: string,
+    page = 1,
+    limit = 12,
+    search?: string,
+  ): Promise<GetUserGroupsResponseDto> {
+    const isOwner = profileUserId === requestingUserId;
+
+    const user = await this.userService.findById(profileUserId);
+    if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+
+    if (requestingUserId && requestingUserId !== profileUserId) {
+      const blockedByTarget = await this.prisma.block.findFirst({
+        where: {
+          blockingId: profileUserId,
+          blockedId: requestingUserId,
+        },
+      });
+      if (blockedByTarget) {
+        throw new ForbiddenException(ErrorCode.FORBIDDEN);
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      members: { some: { userId: profileUserId } },
+      deletedAt: null,
+    };
+
+    if (!isOwner) {
+      where.isPublic = true;
+    }
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const [groups, total] = await Promise.all([
+      this.prisma.group.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          owner: {
+            select: { id: true, username: true, fullName: true, avatar: true },
+          },
+          members: requestingUserId
+            ? {
+                where: { userId: requestingUserId },
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      username: true,
+                      fullName: true,
+                      avatar: true,
+                    },
+                  },
+                },
+              }
+            : false,
+          _count: { select: { members: true } },
+        },
+      }),
+      this.prisma.group.count({ where }),
+    ]);
+
+    return {
+      groups: groups as unknown as UserGroupItemDto[],
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 
   async createGroup(
     ownerId: string,

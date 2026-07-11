@@ -9,7 +9,7 @@ import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    MessagesModule,
+    forwardRef(() => MessagesModule),
     forwardRef(() => UsersModule),
     forwardRef(() => NotificationsModule),
   ],

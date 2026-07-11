@@ -98,11 +98,11 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
       <div
         role="button"
         tabIndex={0}
-        onClick={() => navigate(`/collections/${collection.id}`)}
+        onClick={() => navigate(ROUTES.VOCABULARY_COLLECTION.url.replace(":collectionId", collection.id))}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            navigate(`/collections/${collection.id}`);
+            navigate(ROUTES.VOCABULARY_COLLECTION.url.replace(":collectionId", collection.id));
           }
         }}
         className="relative text-left w-full rounded-2xl bg-background/70 p-4 transition-colors cursor-pointer hover:bg-muted/40"

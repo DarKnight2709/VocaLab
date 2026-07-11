@@ -573,7 +573,9 @@ export class UserService {
       followingId: userId,
     };
 
-    const blockerIds = currentUserId ? await this.getBlockerIdsOf(currentUserId) : [];
+    const blockerIds = currentUserId
+      ? await this.getBlockerIdsOf(currentUserId)
+      : [];
     if (blockerIds.length > 0) {
       where.followerId = {
         notIn: blockerIds,
@@ -653,7 +655,9 @@ export class UserService {
       followerId: userId,
     };
 
-    const blockerIds = currentUserId ? await this.getBlockerIdsOf(currentUserId) : [];
+    const blockerIds = currentUserId
+      ? await this.getBlockerIdsOf(currentUserId)
+      : [];
 
     if (blockerIds.length > 0) {
       where.followingId = {
@@ -730,7 +734,9 @@ export class UserService {
     const skip = (page - 1) * limit;
     const baseWhere = this.buildFriendsWhereClause(userId, search);
 
-    const blockerIds = currentUserId ? await this.getBlockerIdsOf(currentUserId) : [];
+    const blockerIds = currentUserId
+      ? await this.getBlockerIdsOf(currentUserId)
+      : [];
 
     if (blockerIds.length > 0) {
       baseWhere.id = {

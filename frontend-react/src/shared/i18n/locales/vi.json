@@ -376,7 +376,9 @@
       "followers": "Người theo dõi",
       "following": "Đang theo dõi",
       "friends": "Bạn bè",
-      "posts": "Bài viết"
+      "posts": "Bài viết",
+      "groups": "Nhóm",
+      "collections": "Bộ sưu tập"
     },
     "visibility": {
       "all": "Tất cả",

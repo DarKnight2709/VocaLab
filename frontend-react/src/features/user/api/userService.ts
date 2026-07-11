@@ -16,6 +16,8 @@ import {
   type CreateUserSocialBody,
   getUpdateProfileResponseSchema,
   UserBlockedUsersResponseSchema,
+  UserCollectionsResponseSchema,
+  UserGroupsResponseSchema,
 } from "@/shared/validations/UserSchema";
 import { toast } from "sonner";
 import i18n from "@/shared/i18n";
@@ -129,6 +131,47 @@ export const useUserPostsQuery = (
           params: { page, limit, search, visibility },
         }),
         UserPostsResponseSchema,
+      );
+      return result.data;
+    },
+    enabled: !!userId,
+  });
+
+export const useUserCollectionsQuery = (
+  userId: string | undefined,
+  page = 1,
+  limit = 12,
+  search?: string,
+  visibility?: PostVisibility,
+) =>
+  useQuery({
+    queryKey: ["users", userId, "collections", page, search, visibility] as const,
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.USER.getContentBy(userId as string, "collections"), {
+          params: { page, limit, search, visibility },
+        }),
+        UserCollectionsResponseSchema,
+      );
+      return result.data;
+    },
+    enabled: !!userId,
+  });
+
+export const useUserGroupsQuery = (
+  userId: string | undefined,
+  page = 1,
+  limit = 12,
+  search?: string,
+) =>
+  useQuery({
+    queryKey: ["users", userId, "groups", page, search] as const,
+    queryFn: async () => {
+      const result = await fetchWithSchema(
+        api.get(API_ROUTES.USER.getContentBy(userId as string, "groups"), {
+          params: { page, limit, search },
+        }),
+        UserGroupsResponseSchema,
       );
       return result.data;
     },

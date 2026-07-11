@@ -378,7 +378,9 @@
       "followers": "Followers",
       "following": "Following",
       "friends": "Friends",
-      "posts": "Posts"
+      "posts": "Posts",
+      "groups": "Groups",
+      "collections": "Collections"
     },
     "visibility": {
       "all": "All",

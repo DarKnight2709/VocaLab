@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { VocabularyController } from './vocabulary.controller';
 import { VocabularyService } from './vocabulary.service';
 import { UsersModule } from '../users/users.module';
 import { BlogModule } from '../blog/blog.module';
 
 @Module({
-  imports: [UsersModule, BlogModule],
+  imports: [forwardRef(() => UsersModule), BlogModule],
   controllers: [VocabularyController],
   providers: [VocabularyService],
   exports: [VocabularyService],

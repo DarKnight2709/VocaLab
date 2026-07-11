@@ -2,6 +2,7 @@ import { z } from "zod";
 import { VoteType } from "../enums/VoteType.enum";
 import { SocialPlatform } from "../enums/SocialPlatform";
 import i18n from "@/shared/i18n";
+import { SearchCollectionResultSchema, SearchGroupResultSchema } from "./SearchSchema";
 
 export const getUpdatePersonalInfoSchema = () =>
   z
@@ -86,6 +87,26 @@ export const UserPostsResponseSchema = z.object({
   }),
 });
 
+export const UserCollectionsResponseSchema = z.object({
+  collections: z.array(z.lazy(() => SearchCollectionResultSchema)),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
+export const UserGroupsResponseSchema = z.object({
+  groups: z.array(z.lazy(() => SearchGroupResultSchema)),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
 export const UserFollowersResponseSchema = z.object({
   followers: z.array(UserFollowerItemSchema),
   meta: z.object({
@@ -119,6 +140,9 @@ export const UserFriendsResponseSchema = z.object({
 
 // Keep the union for compatibility if needed, or remove it once the split is complete.
 export const UserProfileContentResponseSchema = z.union([
+  UserPostsResponseSchema,
+  UserCollectionsResponseSchema,
+  UserGroupsResponseSchema,
   UserFollowersResponseSchema,
   UserFollowingResponseSchema,
   UserFriendsResponseSchema,
@@ -185,6 +209,8 @@ export type UserProfileDataResponse = z.infer<
 export type UserStatsResponse = z.infer<typeof UserStatsResponseSchema>;
 export type UserPostItem = z.infer<typeof UserPostItemSchema>;
 export type UserPostsResponse = z.infer<typeof UserPostsResponseSchema>;
+export type UserCollectionsResponse = z.infer<typeof UserCollectionsResponseSchema>;
+export type UserGroupsResponse = z.infer<typeof UserGroupsResponseSchema>;
 export type UserFollowersResponse = z.infer<typeof UserFollowersResponseSchema>;
 export type UserFollowingResponse = z.infer<typeof UserFollowingResponseSchema>;
 export type UserFriendsResponse = z.infer<typeof UserFriendsResponseSchema>;

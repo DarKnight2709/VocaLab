@@ -9,10 +9,14 @@ import {
   UseInterceptors,
   Delete,
   Post,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { UserService } from './users.service';
+import { VocabularyService } from '../vocabulary/vocabulary.service';
+import { GroupChatService } from '../group-chat/group-chat.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { UpdatePersonalInfoDto, CreateUserSocialDto } from './dto/users.dto';
@@ -33,12 +37,20 @@ import {
   GetBlockedUsersResponseDto,
   GetFriendsSuggestionResponseDto,
   UserChatInfoDto,
+  GetUserCollectionsResponseDto,
+  GetUserGroupsResponseDto,
 } from './dto/users-response.dto';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    @Inject(forwardRef(() => VocabularyService))
+    private readonly vocabularyService: VocabularyService,
+    @Inject(forwardRef(() => GroupChatService))
+    private readonly groupChatService: GroupChatService,
+  ) {}
 
   @Patch('profile')
   @ApiOperation({
@@ -291,6 +303,59 @@ export class UsersController {
       Number(limit),
       search,
       visibility,
+    );
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/collections')
+  @Public()
+  @ApiOperation({ summary: 'Lấy danh sách bộ sưu tập của người dùng' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'visibility', required: false })
+  async getCollections(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('visibility') visibility?: PostVisibility,
+  ): Promise<ResponseInterceptor<GetUserCollectionsResponseDto>> {
+    const result = await this.vocabularyService.getUserCollections(
+      userId,
+      currentUser?.id,
+      Number(page) || 1,
+      Number(limit) || 12,
+      search,
+      visibility,
+    );
+    return {
+      data: result,
+    };
+  }
+
+  @Get(':userId/groups')
+  @Public()
+  @ApiOperation({ summary: 'Lấy danh sách nhóm của người dùng' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  async getGroups(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ResponseInterceptor<GetUserGroupsResponseDto>> {
+    const result = await this.groupChatService.getUserGroups(
+      userId,
+      currentUser?.id,
+      Number(page) || 1,
+      Number(limit) || 12,
+      search,
     );
     return {
       data: result,

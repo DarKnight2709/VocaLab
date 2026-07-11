@@ -294,6 +294,83 @@ export class GetUserPostsResponseDto {
   meta!: UserPaginationMetaDto;
 }
 
+export class UserCollectionCountDto {
+  @ApiProperty({ example: 10 })
+  cards!: number;
+}
+
+export class UserCollectionItemDto {
+  @ApiProperty({ example: 'uuid-string' })
+  id!: string;
+
+  @ApiProperty({ example: 'My Collection' })
+  name!: string;
+
+  @ApiPropertyOptional({ example: 'A great collection', nullable: true })
+  description!: string | null;
+
+  @ApiProperty({ example: true })
+  isPublic!: boolean;
+
+  @ApiProperty({ type: UserSummaryDto })
+  user!: UserSummaryDto;
+
+  @ApiProperty({ type: UserCollectionCountDto })
+  _count!: UserCollectionCountDto;
+}
+
+export class GetUserCollectionsResponseDto {
+  @ApiProperty({ type: [UserCollectionItemDto] })
+  collections!: UserCollectionItemDto[];
+
+  @ApiProperty({ type: UserPaginationMetaDto })
+  meta!: UserPaginationMetaDto;
+}
+
+export class UserGroupCountDto {
+  @ApiProperty({ example: 50 })
+  members!: number;
+}
+
+export class UserGroupMemberDto {
+  @ApiProperty({ type: UserSummaryDto })
+  user!: UserSummaryDto;
+}
+
+export class UserGroupItemDto {
+  @ApiProperty({ example: 'uuid-string' })
+  id!: string;
+
+  @ApiProperty({ example: 'Study Group' })
+  name!: string;
+
+  @ApiPropertyOptional({ example: 'Join us!', nullable: true })
+  description!: string | null;
+
+  @ApiPropertyOptional({ example: 'https://avatar', nullable: true })
+  avatar!: string | null;
+
+  @ApiProperty({ example: true })
+  isPublic!: boolean;
+
+  @ApiProperty({ type: UserSummaryDto })
+  owner!: UserSummaryDto;
+
+  @ApiProperty({ type: UserGroupCountDto })
+  _count!: UserGroupCountDto;
+  
+  @ApiPropertyOptional({ type: [UserGroupMemberDto] })
+  members!: UserGroupMemberDto[];
+}
+
+export class GetUserGroupsResponseDto {
+  @ApiProperty({ type: [UserGroupItemDto] })
+  groups!: UserGroupItemDto[];
+
+  @ApiProperty({ type: UserPaginationMetaDto })
+  meta!: UserPaginationMetaDto;
+}
+
 // ─── Follow Status ──────────────────────────────────────────
 
 export class CheckFollowStatusResponseDto {
@@ -357,12 +434,21 @@ export class UserChatInfoDto {
   @ApiPropertyOptional({ example: 'Trần Duy Quyến', nullable: true })
   fullName!: string | null;
 
-  @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg', nullable: true })
+  @ApiPropertyOptional({
+    example: 'https://example.com/avatar.jpg',
+    nullable: true,
+  })
   avatar!: string | null;
 
-  @ApiProperty({ example: true, description: 'Whether the current user can send messages to this user' })
+  @ApiProperty({
+    example: true,
+    description: 'Whether the current user can send messages to this user',
+  })
   canChat!: boolean;
 
-  @ApiProperty({ example: false, description: 'Whether this user has blocked the current user' })
+  @ApiProperty({
+    example: false,
+    description: 'Whether this user has blocked the current user',
+  })
   isBlocked!: boolean;
 }
