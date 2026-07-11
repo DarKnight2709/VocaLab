@@ -1,5 +1,6 @@
 import { Eye, EyeOff, FileText, Handshake, Search, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import FollowersTab from "./profile-tabs/FollowersTab";
 import FollowingTab from "./profile-tabs/FollowingTab";
@@ -80,12 +81,24 @@ export default function ProfileContentSection({
   contentTabs.push({ key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: FileText });
 
   const defaultTab = contentTabs.length > 0 ? contentTabs[0].key : ContentTab.POSTS;
-  const [activeTab, setActiveTab] = useState<ContentTab>(defaultTab);
-
+  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab") as ContentTab | null;
+  
   // Ensure activeTab is valid when capabilities change
-  if (!contentTabs.find(t => t.key === activeTab)) {
-    setActiveTab(defaultTab);
-  }
+  const activeTab = (urlTab && contentTabs.find(t => t.key === urlTab)) 
+    ? urlTab 
+    : defaultTab;
+
+  const setActiveTab = (tab: ContentTab) => {
+    setSearchParams(
+      (prev) => {
+        prev.set("tab", tab);
+        return prev;
+      },
+      { replace: true }
+    );
+  };
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
