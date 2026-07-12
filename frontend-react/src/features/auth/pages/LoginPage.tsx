@@ -45,7 +45,7 @@ export default function LoginPage() {
   });
 
   const googleAuthUrl = useMemo(
-    () => `${envConfig.VITE_API_URL}/api/v1/auth/google`,
+    () => `${envConfig.VITE_GOOGLE_AUTH_URL}`,
     [],
   );
 

@@ -11,6 +11,7 @@
 .env.local
 .env.*.local
 .env.test
+.env.production
 
 # Build outputs & dependencies
 node_modules/
@@ -29,3 +30,6 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 .aider*
+
+# deployment
+deploy.ps1

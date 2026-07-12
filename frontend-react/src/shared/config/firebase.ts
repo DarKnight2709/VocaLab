@@ -13,4 +13,11 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const messaging: Messaging = getMessaging(app);
+let messagingInstance: Messaging | null = null;
+try {
+  messagingInstance = getMessaging(app);
+} catch (error) {
+  console.warn("Firebase Messaging is not supported (likely due to missing HTTPS).");
+}
+
+export const messaging = messagingInstance;

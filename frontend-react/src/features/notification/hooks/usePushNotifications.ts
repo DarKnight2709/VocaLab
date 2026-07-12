@@ -36,7 +36,8 @@ export const useFcmStore = create<FcmState>((set, get) => ({
   setToken: (token) => set({ fcmToken: token }),
   revokeToken: async (authToken?: string) => {
     try {
-      // Use standard getToken to grab current token reference or use stored state
+      if (!messaging) return true;
+
       const tokenToDelete =
         get().fcmToken || (await getToken(messaging).catch(() => null));
       if (!tokenToDelete) return true;
@@ -57,6 +58,8 @@ export const useFcmStore = create<FcmState>((set, get) => ({
 // ── Helper functions ──────────────────────────────────────────
 
 const fetchToken = async (mutateAsync: (variables: string) => Promise<any>) => {
+  if (!messaging) return null;
+
   const swRegistration = await navigator.serviceWorker.register(
     "/firebase-messaging-sw.js",
   );
@@ -128,6 +131,8 @@ export const useFcmToken = () => {
 
   useEffect(() => {
     requestPermission();
+
+    if (!messaging) return;
 
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log("Foreground message received:", payload);
