@@ -141,19 +141,18 @@ export default function GrammarPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Breadcrumb items={[{ label: t("common.grammar") }]} />
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">{t("grammar.title")}</h1>
             <p className="text-muted-foreground text-sm mt-1">
               {t("grammar.subtitle")}
             </p>
           </div>
-          <Button onClick={openCreate} className="gap-2">
+          <Button onClick={openCreate} className="gap-2 shrink-0 self-start sm:self-auto">
             <Plus className="h-4 w-4" />
             {t("grammar.addStructure")}
           </Button>
         </div>
-
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
@@ -253,7 +252,7 @@ export default function GrammarPage() {
                       className="h-6 w-6 p-0.5"
                       aria-label={t("grammar.delete")}
                     >
-                      <Trash2 className="h-2.5 w-2.5" />
+                       <Trash2 className="h-2.5 w-2.5" />
                     </Button>
                   </div>
                 </div>
@@ -324,7 +323,7 @@ export default function GrammarPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editItem ? t("grammar.editStructure") : t("grammar.addGrammarStructure")}

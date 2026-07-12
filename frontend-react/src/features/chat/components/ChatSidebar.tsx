@@ -113,8 +113,9 @@ export function ChatSidebar({
       {isSidebarVisible && (!embedded || !isEmbeddedChatView) && (
         <aside
           className={
-            (embedded ? "w-full " : "w-80 shrink-0 ") +
-            "border-r bg-card flex flex-col"
+            (embedded ? "w-full " : "w-full md:w-80 shrink-0 ") +
+            ((selectedUser || selectedGroup) && !embedded ? "hidden md:flex " : "flex ") +
+            "border-r bg-card flex-col"
           }
         >
           {!hideSidebarSearch && (

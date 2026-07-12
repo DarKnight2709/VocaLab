@@ -39,19 +39,17 @@ export function ChatHeader({
   return (
     <div className="border-b p-4 bg-card">
       <div className="flex items-center gap-3">
-        {embedded && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            aria-label={t("chat.backToList")}
-            title={t("chat.back")}
-            className="shrink-0"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          aria-label={t("chat.backToList")}
+          title={t("chat.back")}
+          className={`shrink-0 ${!embedded ? "md:hidden" : ""}`}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
         {selectedGroup ? (
           <>
             <Avatar className="h-10 w-10">

@@ -133,7 +133,7 @@ export default function CreateCardTypeDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? t("vocabulary.cardTypesObj.editTitle") : t("vocabulary.cardTypesObj.createTitle")}

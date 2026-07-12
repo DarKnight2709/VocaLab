@@ -6,7 +6,7 @@ import HomeRecentPosts from "../components/HomeRecentPosts";
 
 export default function HomePage() {
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto max-w-6xl space-y-8">
         <WelcomeBanner />
 

@@ -32,4 +32,5 @@ Thumbs.db
 .aider*
 
 # deployment
-deploy.ps1
+deploy-backend.ps1
+deploy-frontend.ps1

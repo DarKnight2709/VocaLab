@@ -71,7 +71,7 @@ export default function CardTypeManagementPage() {
               </div>
 
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"

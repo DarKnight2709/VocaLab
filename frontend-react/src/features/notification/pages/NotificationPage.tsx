@@ -25,7 +25,7 @@ export default function NotificationPage() {
       <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <Breadcrumb items={[{ label: t("notifications.title") }]} />
 
-        <div className="flex items-center justify-between pb-4 border-b">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{t("notifications.title")}</h1>
             <p className="text-muted-foreground mt-1">
@@ -34,7 +34,7 @@ export default function NotificationPage() {
           </div>
           
           <button 
-            className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-full font-medium disabled:opacity-50"
+            className="flex self-start sm:self-auto items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-full font-medium disabled:opacity-50 shrink-0"
             onClick={handleMarkAllAsRead}
             disabled={markAsReadMutation.isPending || notifications.length === 0}
           >

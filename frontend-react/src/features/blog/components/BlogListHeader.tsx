@@ -24,7 +24,7 @@ export default function BlogListHeader({
         </p>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 sm:w-64">
           <Search

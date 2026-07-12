@@ -745,7 +745,7 @@ export default function ChatView({
 
         {/* Chat Area */}
         {(!embedded || isEmbeddedChatView) && (
-          <main className="flex-1 flex flex-col min-h-0">
+          <main className={`flex-1 flex-col min-h-0 ${(!selectedUser && !selectedGroup && !embedded) ? "hidden md:flex" : "flex"}`}>
             {!selectedUser && !selectedGroup ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">

@@ -206,7 +206,7 @@ export default function VocabularyPage() {
     <div className="space-y-6">
 
       <Breadcrumb items={[{ label: t("vocabulary.title") }]} />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">
             {t("vocabulary.collectionsTitle")}
@@ -216,7 +216,7 @@ export default function VocabularyPage() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => setNewColOpen(true)}
             className="gap-2"
@@ -366,7 +366,7 @@ export default function VocabularyPage() {
       )}
 
       <Dialog open={newColOpen} onOpenChange={setNewColOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("vocabulary.newCollection")}</DialogTitle>
           </DialogHeader>
@@ -427,7 +427,7 @@ export default function VocabularyPage() {
       </Dialog>
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("vocabulary.editCollection")}</DialogTitle>
           </DialogHeader>
