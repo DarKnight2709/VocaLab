@@ -29,6 +29,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { DevicesModule } from './modules/devices/devices.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { SearchModule } from './modules/search/search.module';
+import { DictionaryModule } from './modules/dictionary/dictionary.module';
 
 
 
@@ -64,6 +65,7 @@ import { SearchModule } from './modules/search/search.module';
       adapter: ExpressAdapter,
     }),
     SearchModule,
+    DictionaryModule,
   ],
   controllers: [],
   providers: [

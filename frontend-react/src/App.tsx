@@ -1,4 +1,9 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+  Outlet,
+} from "react-router";
 import { Toaster } from "sonner";
 import { ReactQueryProvider } from "@/shared/components/ReactQueryProvider";
 import AuthGuard from "@/features/auth/components/AuthGuard";
@@ -19,10 +24,12 @@ import GrammarPage from "./features/grammar/pages/GrammarPage";
 import VocabularyPage from "./features/vocabulary/pages/VocabularyPage";
 import VocabularyCollectionPage from "./features/vocabulary/pages/VocabularyCollectionPage";
 import VocabularyAddCardPage from "./features/vocabulary/pages/VocabularyAddCardPage";
+
 import CardTypeManagementPage from "./features/vocabulary/pages/CardTypeManagementPage";
 import CardTypePreviewPage from "./features/vocabulary/pages/CardTypePreviewPage";
 import ChatPage from "./features/chat/pages/ChatPage";
 import SearchPage from "./features/search/pages/SearchPage";
+import { DictionaryBubble } from "@/features/dictionary/components/DictionaryBubble";
 import NotificationPage from "./features/notification/pages/NotificationPage";
 import AccountSettingPage from "./features/setting/pages/AccountSettingPage";
 import PrivacySettingPage from "./features/setting/pages/PrivacySettingPage";
@@ -40,157 +47,172 @@ import StatsPage from "./features/stats/pages/StatsPage";
 import PublicCollectionDetailPage from "./features/vocabulary/pages/PublicCollectionDetailPage";
 import HomePage from "./features/home/pages/HomePage";
 
-import { LandingRedirectGuard, OptionalPublicGuard } from "./features/auth/components/OptionalAuthGuard";
+import {
+  LandingRedirectGuard,
+  OptionalPublicGuard,
+} from "./features/auth/components/OptionalAuthGuard";
 import PublicLayout from "./shared/layout/PublicLayout";
 import LandingPage from "./features/home/pages/LandingPage";
 
 const router = createBrowserRouter([
-  // 1. PUBLIC ROUTES (Accessible to both guests and users, but users get redirected from landing)
   {
-    element: <OptionalPublicGuard />,
+    element: (
+      <>
+        <Outlet />
+        <DictionaryBubble />
+      </>
+    ),
     children: [
+      // 1. PUBLIC ROUTES (Accessible to both guests and users, but users get redirected from landing)
       {
-        path: ROUTES.LANDING.url,
-        element: <LandingRedirectGuard />,
+        element: <OptionalPublicGuard />,
         children: [
+          {
+            path: ROUTES.LANDING.url,
+            element: <LandingRedirectGuard />,
+            children: [
+              {
+                element: <PublicLayout />,
+                children: [{ index: true, element: <LandingPage /> }],
+              },
+            ],
+          },
+          // Shared public routes that use PublicLayout for guests (we map them in PublicLayout below)
           {
             element: <PublicLayout />,
             children: [
-              { index: true, element: <LandingPage /> },
+              { path: ROUTES.BLOG.url, element: <BlogPage /> },
+              { path: ROUTES.BLOG_DETAIL.url, element: <BlogDetailPage /> },
+              { path: ROUTES.SEARCH.url, element: <SearchPage /> },
+
+              {
+                path: ROUTES.COLLECTION_DETAIL.url,
+                element: <PublicCollectionDetailPage />,
+              },
+              { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
             ],
           },
         ],
       },
-      // Shared public routes that use PublicLayout for guests (we map them in PublicLayout below)
+
+      // 2. AUTHENTICATED ROUTES
       {
-        element: <PublicLayout />,
+        loader: authLoader,
+        element: <AuthGuard />,
         children: [
-          { path: ROUTES.BLOG.url, element: <BlogPage /> },
-          { path: ROUTES.BLOG_DETAIL.url, element: <BlogDetailPage /> },
-          { path: ROUTES.SEARCH.url, element: <SearchPage /> },
           {
-            path: ROUTES.COLLECTION_DETAIL.url,
-            element: <PublicCollectionDetailPage />,
+            element: <MainLayout />,
+            children: [
+              { path: ROUTES.HOME.url, element: <HomePage /> },
+              { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
+              { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
+              { path: ROUTES.STATS.url, element: <StatsPage /> },
+              { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
+              {
+                element: <StudyLayout />,
+                children: [
+                  { path: ROUTES.VOCABULARY.url, element: <VocabularyPage /> },
+                  {
+                    path: ROUTES.VOCABULARY_COLLECTION.url,
+                    element: <VocabularyCollectionPage />,
+                  },
+                  {
+                    path: ROUTES.VOCABULARY_ADD_CARD.url,
+                    element: <VocabularyAddCardPage />,
+                  },
+                  {
+                    path: ROUTES.VOCABULARY_CARD_TYPES.url,
+                    element: <CardTypeManagementPage />,
+                  },
+                  {
+                    path: ROUTES.VOCABULARY_CARD_TYPE_PREVIEW.url,
+                    element: <CardTypePreviewPage />,
+                  },
+                ],
+              },
+              { path: ROUTES.CHAT_TAB_USERS.url, element: <ChatPage /> },
+              { path: ROUTES.CHAT_TAB_GROUPS.url, element: <ChatPage /> },
+              { path: ROUTES.CHAT_TAB_USERS_ID.url, element: <ChatPage /> },
+              { path: ROUTES.CHAT_TAB_GROUPS_ID.url, element: <ChatPage /> },
+              {
+                path: ROUTES.ME_SETTING.url,
+                element: <SettingPage />,
+                children: [
+                  {
+                    index: true,
+                    element: (
+                      <Navigate to={ROUTES.ME_SETTING_ACCOUNT.url} replace />
+                    ),
+                  },
+                  {
+                    path: ROUTES.ME_SETTING_ACCOUNT.url,
+                    element: <AccountSettingPage />,
+                  },
+                  {
+                    path: ROUTES.ME_SETTING_PREFERENCES.url,
+                    element: <PreferencesSettingTab />,
+                  },
+                  {
+                    path: ROUTES.ME_SETTING_PRIVACY.url,
+                    element: <PrivacySettingPage />,
+                  },
+                  {
+                    path: ROUTES.ME_SETTING_NOTIFICATIONS.url,
+                    element: <NotificationsSettingPage />,
+                  },
+                  {
+                    path: ROUTES.ME_SETTING_LEARNING.url,
+                    element: <LearningSettingTab />,
+                  },
+                ],
+              },
+              {
+                path: ROUTES.ME_NOTIFICATION.url,
+                element: <NotificationPage />,
+              },
+            ],
           },
-          { path: ROUTES.PROFILE.url, element: <ProfilePage /> },
         ],
       },
-    ],
-  },
-  
-  // 2. AUTHENTICATED ROUTES
-  {
-    loader: authLoader,
-    element: <AuthGuard />,
-    children: [
       {
-        element: <MainLayout />,
+        loader: twoFactorAuthLoader,
+        element: <TwoFactorAuthGuard />,
         children: [
-          { path: ROUTES.HOME.url, element: <HomePage /> },
-          { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
-          { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
-          { path: ROUTES.STATS.url, element: <StatsPage /> },
-          { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
           {
-            element: <StudyLayout />,
-            children: [
-              { path: ROUTES.VOCABULARY.url, element: <VocabularyPage /> },
-              {
-                path: ROUTES.VOCABULARY_COLLECTION.url,
-                element: <VocabularyCollectionPage />,
-              },
-              {
-                path: ROUTES.VOCABULARY_ADD_CARD.url,
-                element: <VocabularyAddCardPage />,
-              },
-              {
-                path: ROUTES.VOCABULARY_CARD_TYPES.url,
-                element: <CardTypeManagementPage />,
-              },
-              {
-                path: ROUTES.VOCABULARY_CARD_TYPE_PREVIEW.url,
-                element: <CardTypePreviewPage />,
-              },
-            ],
+            path: ROUTES.AUTH_2FA.url,
+            element: (
+              <ErrorBoundary>
+                <TwoFactorAuthPage />
+              </ErrorBoundary>
+            ),
           },
-          { path: ROUTES.CHAT_TAB_USERS.url, element: <ChatPage /> },
-          { path: ROUTES.CHAT_TAB_GROUPS.url, element: <ChatPage /> },
-          { path: ROUTES.CHAT_TAB_USERS_ID.url, element: <ChatPage /> },
-          { path: ROUTES.CHAT_TAB_GROUPS_ID.url, element: <ChatPage /> },
-          {
-            path: ROUTES.ME_SETTING.url,
-            element: <SettingPage />,
-            children: [
-              {
-                index: true,
-                element: (
-                  <Navigate to={ROUTES.ME_SETTING_ACCOUNT.url} replace />
-                ),
-              },
-              {
-                path: ROUTES.ME_SETTING_ACCOUNT.url,
-                element: <AccountSettingPage />,
-              },
-              {
-                path: ROUTES.ME_SETTING_PREFERENCES.url,
-                element: <PreferencesSettingTab />,
-              },
-              {
-                path: ROUTES.ME_SETTING_PRIVACY.url,
-                element: <PrivacySettingPage />,
-              },
-              {
-                path: ROUTES.ME_SETTING_NOTIFICATIONS.url,
-                element: <NotificationsSettingPage />,
-              },
-              {
-                path: ROUTES.ME_SETTING_LEARNING.url,
-                element: <LearningSettingTab />,
-              },
-            ],
-          },
-          { path: ROUTES.ME_NOTIFICATION.url, element: <NotificationPage /> },
         ],
       },
-    ],
-  },
-  {
-    loader: twoFactorAuthLoader,
-    element: <TwoFactorAuthGuard />,
-    children: [
       {
-        path: ROUTES.AUTH_2FA.url,
+        path: ROUTES.LOGIN.url,
         element: (
           <ErrorBoundary>
-            <TwoFactorAuthPage />
+            <LoginPage />
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: ROUTES.AUTH_CALLBACK.url,
+        element: (
+          <ErrorBoundary>
+            <AuthCallback />
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: "*",
+        element: (
+          <ErrorBoundary>
+            <NotFoundPage />
           </ErrorBoundary>
         ),
       },
     ],
-  },
-  {
-    path: ROUTES.LOGIN.url,
-    element: (
-      <ErrorBoundary>
-        <LoginPage />
-      </ErrorBoundary>
-    ),
-  },
-  {
-    path: ROUTES.AUTH_CALLBACK.url,
-    element: (
-      <ErrorBoundary>
-        <AuthCallback />
-      </ErrorBoundary>
-    ),
-  },
-  {
-    path: "*",
-    element: (
-      <ErrorBoundary>
-        <NotFoundPage />
-      </ErrorBoundary>
-    ),
   },
 ]);
 

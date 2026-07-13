@@ -163,8 +163,16 @@
     "settings": "Cài đặt",
     "help": "Trợ giúp",
     "signOut": "Đăng xuất",
+    "cardType": "Loại thẻ",
+    "manageCardTypes": "Quản lý loại thẻ",
+    "addCardType": "Thêm loại thẻ",
+    "wordNotFound": "Không tìm thấy từ",
+    "wordNotFoundDesc": "Chúng tôi không thể tìm thấy định nghĩa cho \"{{word}}\". Vui lòng kiểm tra lại chính tả.",
+    "goBack": "Quay lại",
+    "back": "Quay lại",
     "viewProfile": "Xem hồ sơ",
     "searchPlaceholder": "Tìm kiếm trên...",
+    "dictionaryPlaceholder": "Tra từ điển...",
     "helpSoon": "Mục Help sẽ được cập nhật sớm",
     "settingsPage": "Trang cài đặt",
     "breadcrumbHome": "Trang chủ",
@@ -1099,5 +1107,29 @@
     "readyToStart": "Bạn đã sẵn sàng để bắt đầu học?",
     "readyToStartDesc": "Tham gia cùng hàng ngàn người học đang cải thiện tiếng Anh của họ với VocaLab.",
     "joinNow": "Tham gia VocaLab ngay"
+  },
+  "dictionary": {
+    "idiomsPhrases": "Thành ngữ & Cụm từ",
+    "synonyms": "Từ đồng nghĩa",
+    "antonyms": "Từ trái nghĩa",
+    "noResults": "Không tìm thấy kết quả.",
+    "recentSearches": "Tìm kiếm gần đây",
+    "clear": "Xóa",
+    "wordNotFound": "Không tìm thấy từ",
+    "wordNotFoundDesc": "Chúng tôi không thể tìm thấy định nghĩa cho \"{{word}}\".",
+    "moreItems": "+ {{count}} nữa",
+    "showLess": "Thu gọn",
+    "definition": "Định nghĩa",
+    "synonymsAntonyms": "Đồng nghĩa & Trái nghĩa",
+    "pos": {
+      "noun": "Danh từ",
+      "verb": "Động từ",
+      "adjective": "Tính từ",
+      "adverb": "Trạng từ",
+      "pronoun": "Đại từ",
+      "preposition": "Giới từ",
+      "conjunction": "Liên từ",
+      "interjection": "Thán từ"
+    }
   }
 }

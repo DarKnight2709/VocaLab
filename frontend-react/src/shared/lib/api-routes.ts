@@ -162,6 +162,10 @@ const API_ROUTES = {
     SUGGESTION: "v1/search/suggestion",
     SIDEBAR: "v1/search/sidebar",
   },
+  DICTIONARY: {
+    SUGGESTION: "v1/dictionary/suggestion",
+    LOOKUP: (word: string) => `v1/dictionary/lookup/${word}`,
+  },
 };
 
 export default API_ROUTES;

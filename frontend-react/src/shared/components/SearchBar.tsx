@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Search as SearchIcon, X } from "lucide-react";
+import { Search as SearchIcon, X, Clock } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import ROUTES from "@/shared/lib/routes";
 import { useTranslation } from "@/shared/hooks/useTranslation";
@@ -144,7 +144,7 @@ export function SearchBar() {
                     onClick={() => handleSearchSubmit(item.query)}
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <SearchIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="truncate">{item.query}</span>
                     </div>
                     <button

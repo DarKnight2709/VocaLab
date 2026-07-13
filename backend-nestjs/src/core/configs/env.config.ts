@@ -148,6 +148,18 @@ export class EnvironmentValidation {
 
   @IsString()
   FIREBASE_SERVICE_ACCOUNT!: string;
+
+  // ─── Dictionary ──────────────────────────────────────────────
+
+  @IsString()
+  MW_DICT_API_KEY!: string;
+
+  @IsString()
+  MW_THESAURUS_API_KEY!: string;
+
+  @IsString()
+  @Transform(({ value }) => value || 'https://www.dictionaryapi.com/api/v3/references')
+  MW_BASE_URL: string = 'https://www.dictionaryapi.com/api/v3/references';
 }
 
 export function validateConfig(config: Record<string, unknown>) {
