@@ -38,6 +38,7 @@ interface PrivacySettingTabProps {
   onUpdateFollowersTabVisibility?: (scope: ScopeVisibilityType) => void;
   onUpdateFollowingTabVisibility?: (scope: ScopeVisibilityType) => void;
   onUpdateFriendTabVisibility?: (scope: ScopeVisibilityType) => void;
+  onUpdateGroupsTabVisibility?: (scope: ScopeVisibilityType) => void;
 }
 
 export default function PrivacySettingTab({
@@ -47,6 +48,7 @@ export default function PrivacySettingTab({
   onUpdateFollowersTabVisibility,
   onUpdateFollowingTabVisibility,
   onUpdateFriendTabVisibility,
+  onUpdateGroupsTabVisibility,
 }: PrivacySettingTabProps) {
   const { t } = useTranslation();
 
@@ -63,6 +65,9 @@ export default function PrivacySettingTab({
   );
   const [friendTabVisibility, setFriendTabVisibility] = useState<ScopeVisibilityType>(
     (me?.privacySettings?.friendTabVisibility as ScopeVisibilityType) ?? ScopeVisibility.EVERYONE,
+  );
+  const [groupsTabVisibility, setGroupsTabVisibility] = useState<ScopeVisibilityType>(
+    (me?.privacySettings?.groupsTabVisibility as ScopeVisibilityType) ?? ScopeVisibility.EVERYONE,
   );
 
   /* ── 2. Blocking UI Management States ── */
@@ -100,6 +105,7 @@ export default function PrivacySettingTab({
       if (me.privacySettings.followersTabVisibility) setFollowersTabVisibility(me.privacySettings.followersTabVisibility as ScopeVisibilityType);
       if (me.privacySettings.followingTabVisibility) setFollowingTabVisibility(me.privacySettings.followingTabVisibility as ScopeVisibilityType);
       if (me.privacySettings.friendTabVisibility) setFriendTabVisibility(me.privacySettings.friendTabVisibility as ScopeVisibilityType);
+      if (me.privacySettings.groupsTabVisibility) setGroupsTabVisibility(me.privacySettings.groupsTabVisibility as ScopeVisibilityType);
     }
   }, [me]);
 
@@ -203,6 +209,24 @@ export default function PrivacySettingTab({
             </div>
             <div className="w-[180px]">
               <Select value={friendTabVisibility} onValueChange={(val) => { setFriendTabVisibility(val as ScopeVisibilityType); onUpdateFriendTabVisibility?.(val as ScopeVisibilityType); }}>
+                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="EVERYONE">{t("settings.privacy.everyone")}</SelectItem>
+                  <SelectItem value="FRIENDS">{t("settings.privacy.friends")}</SelectItem>
+                  <SelectItem value="PRIVATE">{t("settings.privacy.nobody")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Groups Tab Visibility System Configuration */}
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+            <div className="flex-1 pr-4">
+              <p className="font-medium">{t("settings.privacy.groupsTab")}</p>
+              <p className="text-sm text-muted-foreground">{t("settings.privacy.groupsTabDesc")}</p>
+            </div>
+            <div className="w-[180px]">
+              <Select value={groupsTabVisibility} onValueChange={(val) => { setGroupsTabVisibility(val as ScopeVisibilityType); onUpdateGroupsTabVisibility?.(val as ScopeVisibilityType); }}>
                 <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EVERYONE">{t("settings.privacy.everyone")}</SelectItem>

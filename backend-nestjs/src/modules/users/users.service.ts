@@ -168,6 +168,7 @@ export class UserService {
         avatar: true,
         hashedPassword: true,
         privacySettings: true,
+        socials: true,
         _count: {
           select: {
             blogs: { where: { deletedAt: null } },
@@ -233,6 +234,8 @@ export class UserService {
       p?.followingTabVisibility ?? VisibilityScope.EVERYONE;
     const friendTabVisibility =
       p?.friendTabVisibility ?? VisibilityScope.EVERYONE;
+    const groupsTabVisibility =
+      p?.groupsTabVisibility ?? VisibilityScope.EVERYONE;
 
     const checkVisibility = (scope: VisibilityScope) => {
       if (isOwner) return true;
@@ -247,6 +250,7 @@ export class UserService {
       canSeeFollowers: checkVisibility(followersTabVisibility),
       canSeeFollowing: checkVisibility(followingTabVisibility),
       canSeeFriends: checkVisibility(friendTabVisibility),
+      canSeeGroups: checkVisibility(groupsTabVisibility),
     };
 
     const friendsCount =
@@ -268,6 +272,7 @@ export class UserService {
       isFollowing,
       isBlocking,
       capabilities,
+      socials: user.socials,
     };
   }
 
@@ -1156,7 +1161,7 @@ export class UserService {
     return mutualFollows.length === 2;
   }
 
-  private async validateTabAccess(
+  async validateTabAccess(
     targetUserId: string,
     tabScopeField: PrivacyVisibilityField,
     currentUserId?: string,

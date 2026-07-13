@@ -36,3 +36,10 @@ export class UpdateFriendTabVisibilityDto {
   @IsNotEmpty()
   friendTabVisibility!: VisibilityScope;
 }
+
+export class UpdateGroupsTabVisibilityDto {
+  @ApiProperty({ enum: VisibilityScope, example: VisibilityScope.EVERYONE })
+  @IsEnum(VisibilityScope)
+  @IsNotEmpty()
+  groupsTabVisibility!: VisibilityScope;
+}

@@ -174,6 +174,9 @@ export class GetByUsernameResponseDto {
 
   @ApiProperty({ type: UserCapabilitiesDto })
   capabilities!: UserCapabilitiesDto;
+
+  @ApiProperty({ type: () => [UserSocialDto], required: false })
+  socials?: UserSocialDto[];
 }
 
 // ─── Search ─────────────────────────────────────────────────

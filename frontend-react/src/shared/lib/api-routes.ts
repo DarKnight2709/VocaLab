@@ -122,6 +122,7 @@ const API_ROUTES = {
     FOLLOWERS_TAB_VISIBILITY: "v1/settings/followers-tab-visibility",
     FOLLOWING_TAB_VISIBILITY: "v1/settings/following-tab-visibility",
     FRIEND_TAB_VISIBILITY: "v1/settings/friend-tab-visibility",
+    GROUPS_TAB_VISIBILITY: "v1/settings/groups-tab-visibility",
     NOTIFICATION: {
       BASE: "v1/settings/notifications",
       CHAT_MESSAGES: "v1/settings/notifications/chat-messages",

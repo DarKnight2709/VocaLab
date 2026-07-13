@@ -34,3 +34,5 @@ Thumbs.db
 # deployment
 deploy-backend.ps1
 deploy-frontend.ps1
+
+advanced-features.txt

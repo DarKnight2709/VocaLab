@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BaseEntityDTO } from "./CommonSchema";
+import { UserSocialItemSchema } from "./UserSchema";
 import i18n from "@/shared/i18n";
 import { ScopeVisibility } from "../enums/ScopeVisibility.enum";
 
@@ -78,10 +79,12 @@ export const MeResponseSchema = BaseEntityDTO.extend({
       followersTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
       followingTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
       friendTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
+      groupsTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
     })
     .optional(),
   email: z.string().optional(),
   avatar: z.string().optional().nullable(),
+  socials: z.array(z.lazy(() => UserSocialItemSchema)).optional(),
 });
 
 export const getChangePasswordSchema = () =>

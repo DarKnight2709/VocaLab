@@ -10,6 +10,7 @@ import {
   UpdateFollowersTabVisibilityDto,
   UpdateFollowingTabVisibilityDto,
   UpdateFriendTabVisibilityDto,
+  UpdateGroupsTabVisibilityDto,
 } from './dto/setting.dto';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import {
@@ -83,6 +84,15 @@ export class SettingService {
   ): Promise<void> {
     await this.handlePrivacyUpsert(userId, {
       friendTabVisibility: dto.friendTabVisibility,
+    });
+  }
+
+  async updateGroupsTabVisibility(
+    userId: string,
+    dto: UpdateGroupsTabVisibilityDto,
+  ): Promise<void> {
+    await this.handlePrivacyUpsert(userId, {
+      groupsTabVisibility: dto.groupsTabVisibility,
     });
   }
 

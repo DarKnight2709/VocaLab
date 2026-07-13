@@ -9,7 +9,8 @@ export default function PrivacySettingPage() {
     onUpdateMessageScope,
     onUpdateFollowersTabVisibility,
     onUpdateFollowingTabVisibility,
-    onUpdateFriendTabVisibility
+    onUpdateFriendTabVisibility,
+    onUpdateGroupsTabVisibility
   } = useOutletContext<SettingContext>();
 
   return (
@@ -20,6 +21,7 @@ export default function PrivacySettingPage() {
       onUpdateFollowersTabVisibility={onUpdateFollowersTabVisibility}
       onUpdateFollowingTabVisibility={onUpdateFollowingTabVisibility}
       onUpdateFriendTabVisibility={onUpdateFriendTabVisibility}
+      onUpdateGroupsTabVisibility={onUpdateGroupsTabVisibility}
     />
   );
 }

@@ -30,6 +30,7 @@ export const UserCapabilitiesSchema = z.object({
   canSeeFollowers: z.boolean(),
   canSeeFollowing: z.boolean(),
   canSeeFriends: z.boolean(),
+  canSeeGroups: z.boolean(),
 });
 
 export const UserStatsResponseSchema = z.object({
@@ -49,6 +50,7 @@ export const UserProfileDataResponseSchema = z.object({
   isFollowing: z.boolean(),
   isBlocking: z.boolean(),
   capabilities: UserCapabilitiesSchema,
+  socials: z.array(z.lazy(() => UserSocialItemSchema)).optional(),
 });
 
 

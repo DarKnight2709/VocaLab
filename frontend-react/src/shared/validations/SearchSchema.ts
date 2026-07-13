@@ -9,10 +9,10 @@ export const SearchSuggestionResultSchema = z.object({
 
 export const SearchSuggestionListSchema = z.array(SearchSuggestionResultSchema);
 
-export const SearchUserResultSchema = UserSummarySchema;
+export const SearchUserResultSchema = z.lazy(() => UserSummarySchema);
 
 export const SearchGroupMemberSchema = z.object({
-  user: SearchUserResultSchema,
+  user: z.lazy(() => UserSummarySchema),
 });
 
 export const SearchGroupResultSchema = z.object({

@@ -73,6 +73,18 @@ export const useUpdateFriendTabVisibilityMutation = () => {
   });
 };
 
+export const useUpdateGroupsTabVisibilityMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (groupsTabVisibility: ScopeVisibilityType) =>
+      api.patch(API_ROUTES.SETTING.GROUPS_TAB_VISIBILITY, { groupsTabVisibility }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me"] });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, i18n.t("profile.updateFailed"))),
+  });
+};
+
 export const useUpdateMessageScopeMutation = () => {
   const qc = useQueryClient();
   return useMutation({

@@ -15,6 +15,26 @@ import ProfileStatsGrid from "@/features/user/components/ProfileStatsGrid";
 import ProfileContentSection from "@/features/user/components/ProfileContentSection";
 import { useUserByUsernameQuery } from "@/features/user/api/userService";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import {
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
+  Linkedin,
+  Link,
+  Globe,
+} from "lucide-react";
+import { SocialPlatform } from "@/shared/enums/SocialPlatform";
+
+const PLATFORM_ICONS: Record<string, React.ReactNode> = {
+  [SocialPlatform.FACEBOOK]: <Facebook className="w-4 h-4 text-blue-600" />,
+  [SocialPlatform.INSTAGRAM]: <Instagram className="w-4 h-4 text-pink-600" />,
+  [SocialPlatform.TWITTER]: <Twitter className="w-4 h-4 text-sky-500" />,
+  [SocialPlatform.YOUTUBE]: <Youtube className="w-4 h-4 text-red-600" />,
+  [SocialPlatform.TIKTOK]: <Globe className="w-4 h-4" />,
+  [SocialPlatform.LINKEDIN]: <Linkedin className="w-4 h-4 text-blue-700" />,
+  [SocialPlatform.CUSTOM]: <Link className="w-4 h-4 text-gray-600" />,
+};
 
 export default function ProfilePage() {
   const { t } = useTranslation();
@@ -87,6 +107,24 @@ export default function ProfilePage() {
               <h1 className="text-3xl font-bold">{profileUser?.fullName || profileUser?.username}</h1>
               <p className="mt-1 text-muted-foreground">@{profileUser?.username}</p>
             </div>
+
+            {profileUser?.socials && profileUser.socials.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                {profileUser.socials.map((social: any) => (
+                  <a
+                    key={social.id}
+                    href={social.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors shadow-sm"
+                    title={social.name || social.platform}
+                  >
+                    {PLATFORM_ICONS[social.platform] || PLATFORM_ICONS[SocialPlatform.CUSTOM]}
+                    {social.name || social.platform}
+                  </a>
+                ))}
+              </div>
+            )}
 
             <div className="mt-4">
               <ProfileStatsGrid stats={stats} />

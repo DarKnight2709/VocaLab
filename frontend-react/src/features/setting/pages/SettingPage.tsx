@@ -35,7 +35,8 @@ import {
   useUpdateUpvotesMutation, 
   useUpdateNewFollowersMutation, 
   useUpdateActivityFromFollowedMutation, 
-  useNotificationSettingsQuery 
+  useNotificationSettingsQuery,
+  useUpdateGroupsTabVisibilityMutation
 } from "../api/settingService";
 
 
@@ -55,6 +56,7 @@ export interface SettingContext {
   onUpdateFollowersTabVisibility: (scope: any) => void;
   onUpdateFollowingTabVisibility: (scope: any) => void;
   onUpdateFriendTabVisibility: (scope: any) => void;
+  onUpdateGroupsTabVisibility: (scope: any) => void;
   notificationSettings: any;
   isLoadingNotifications: boolean;
   onUpdateChatMessages: (val: string) => void;
@@ -122,6 +124,7 @@ export default function SettingPage() {
   const updateFollowersTabVisibilityMutation = useUpdateFollowersTabVisibilityMutation();
   const updateFollowingTabVisibilityMutation = useUpdateFollowingTabVisibilityMutation();
   const updateFriendTabVisibilityMutation = useUpdateFriendTabVisibilityMutation();
+  const updateGroupsTabVisibilityMutation = useUpdateGroupsTabVisibilityMutation();
   const updateChatMessagesMutation = useUpdateChatMessagesMutation();
   const updateCommentsMutation = useUpdateCommentsMutation();
   const updateUpvotesMutation = useUpdateUpvotesMutation();
@@ -204,6 +207,14 @@ export default function SettingPage() {
       await updateFriendTabVisibilityMutation.mutateAsync(scope);
     } catch (error) {
       console.error("Update friend tab visibility error:", error);
+    }
+  };
+
+  const handleUpdateGroupsTabVisibility = async (scope: ScopeVisibilityType) => {
+    try {
+      await updateGroupsTabVisibilityMutation.mutateAsync(scope);
+    } catch (error) {
+      console.error("Update groups tab visibility error:", error);
     }
   };
 
@@ -336,6 +347,7 @@ export default function SettingPage() {
                   onUpdateFollowersTabVisibility: handleUpdateFollowersTabVisibility,
                   onUpdateFollowingTabVisibility: handleUpdateFollowingTabVisibility,
                   onUpdateFriendTabVisibility: handleUpdateFriendTabVisibility,
+                  onUpdateGroupsTabVisibility: handleUpdateGroupsTabVisibility,
                   notificationSettings,
                   isLoadingNotifications,
                   onUpdateChatMessages: handleUpdateChatMessages,

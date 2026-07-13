@@ -9,6 +9,7 @@ import {
 import { PrismaService } from '../../core/database/prisma.service';
 import { MemberRole, Prisma } from '@prisma/client';
 import { GroupPermission } from '../../common/enums/group-permission.enum';
+import { PrivacyVisibilityField } from '../../common/enums/privacy-visibility-field.enum';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
@@ -99,6 +100,16 @@ export class GroupChatService {
 
     const user = await this.userService.findById(profileUserId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+
+    const hasAccess = await this.userService.validateTabAccess(
+      profileUserId,
+      PrivacyVisibilityField.GROUPS,
+      requestingUserId,
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException(ErrorCode.PRIVATE_GROUPS_ACCESS_DENIED); 
+    }
 
     if (requestingUserId && requestingUserId !== profileUserId) {
       const blockedByTarget = await this.prisma.block.findFirst({

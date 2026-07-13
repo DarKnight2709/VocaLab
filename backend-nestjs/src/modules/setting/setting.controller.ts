@@ -1,6 +1,6 @@
 import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Patch, Query } from '@nestjs/common';
 import { SettingService } from './setting.service';
-import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto } from './dto/setting.dto';
+import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto, UpdateGroupsTabVisibilityDto } from './dto/setting.dto';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -59,6 +59,15 @@ export class SettingController {
     @Body() dto: UpdateFriendTabVisibilityDto,
   ): Promise<void> {
     await this.settingService.updateFriendTabVisibility(user.id, dto);
+  }
+
+  @Patch('groups-tab-visibility')
+  @ApiOperation({ summary: 'Update groups tab visibility setting' })
+  async updateGroupsTabVisibility(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateGroupsTabVisibilityDto,
+  ): Promise<void> {
+    await this.settingService.updateGroupsTabVisibility(user.id, dto);
   }
   
   @Get('notifications')

@@ -61,6 +61,7 @@ export default function ProfileContentSection({
     canSeeFollowers: boolean;
     canSeeFollowing: boolean;
     canSeeFriends: boolean;
+    canSeeGroups: boolean;
   }
 }) {
   const { t } = useTranslation();
@@ -82,7 +83,9 @@ export default function ProfileContentSection({
   }
   contentTabs.push({ key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: FileText });
   contentTabs.push({ key: ContentTab.COLLECTIONS, label: t("profile.tabs.collections"), icon: FileText }); // You might want to use a different icon like Folder or Library here, but sticking to existing ones for now. Let's use FileText
-  contentTabs.push({ key: ContentTab.GROUPS, label: t("profile.tabs.groups"), icon: Users });
+  if (capabilities?.canSeeGroups) {
+    contentTabs.push({ key: ContentTab.GROUPS, label: t("profile.tabs.groups"), icon: Users });
+  }
 
   const defaultTab = contentTabs.length > 0 ? contentTabs[0].key : ContentTab.POSTS;
   
