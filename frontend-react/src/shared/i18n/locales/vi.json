@@ -192,9 +192,9 @@
     "pageNotFound": "Trang không tồn tại",
     "pageNotFoundDesc": "Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.",
     "backToHome": "Quay lại trang chủ",
-    "idiomsPhrases": "Idioms & Phrases",
-    "synonyms": "Synonyms",
-    "antonyms": "Antonyms"
+    "idiomsPhrases": "Thành ngữ & Cụm từ",
+    "synonyms": "Từ đồng nghĩa",
+    "antonyms": "Từ trái nghĩa"
   },
   "auth": {
     "signIn": "Đăng nhập",

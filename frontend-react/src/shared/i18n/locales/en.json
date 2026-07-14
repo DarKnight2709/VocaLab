@@ -194,7 +194,7 @@
     "pageNotFound": "Page Not Found",
     "pageNotFoundDesc": "Sorry, the page you are looking for does not exist or has been moved.",
     "backToHome": "Back to Home",
-    "searchPlaceholder": "Tìm kiếm trên..."
+    "searchPlaceholder": "Search on..."
   },
   "auth": {
     "signIn": "Sign in",
@@ -511,7 +511,7 @@
     "writeComment": "Write a comment...",
     "lastEdited": "Last edited",
     "coverPreviewAlt": "Cover preview",
-    "replyComment": "Trả lời bình luận"
+    "replyComment": "Reply to comment"
   },
   "vocabulary": {
     "readyForReview": "Ready for your review session?",
@@ -538,7 +538,7 @@
     "descriptionPlaceholder": "Short description...",
     "create": "Create",
     "editCollection": "Edit collection",
-    "contentPlaceholder": "Bắt đầu viết nội dung bài viết của bạn...",
+    "contentPlaceholder": "Start writing your post content...",
     "newName": "Name",
     "visibility": "Visibility",
     "public": "Public",
