@@ -124,7 +124,15 @@
       "type": "Frequency",
       "create": "Create",
       "daily": "Daily",
-      "daysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      "daysShort": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
       "never": "Never",
       "editReminder": "Edit Reminder",
       "update": "Update",
@@ -144,7 +152,6 @@
     "easyOnEyes": "Easy on Eyes",
     "active": "Active"
   },
-
   "common": {
     "home": "Home",
     "profile": "Profile",
@@ -174,6 +181,7 @@
     "antonyms": "Antonyms",
     "goBack": "Go back",
     "back": "Back",
+    "viewProfile": "View Profile",
     "helpSoon": "Help will be updated soon",
     "settingsPage": "Settings",
     "breadcrumbHome": "Home",
@@ -185,7 +193,8 @@
     "openAccountMenu": "Open account menu",
     "pageNotFound": "Page Not Found",
     "pageNotFoundDesc": "Sorry, the page you are looking for does not exist or has been moved.",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "searchPlaceholder": "Tìm kiếm trên..."
   },
   "auth": {
     "signIn": "Sign in",
@@ -340,8 +349,6 @@
     "CARD_NOT_FOUND_OR_FORBIDDEN": "Card not found or you do not have permission.",
     "CARD_TYPE_FIELDS_UNDEFINED": "This card type has no defined data fields.",
     "INVALID_ENVIRONMENT_VARIABLES": "Invalid environment variables."
-    
-    
   },
   "profile": {
     "title": "Profile information",
@@ -503,7 +510,8 @@
     "comments": "Comments",
     "writeComment": "Write a comment...",
     "lastEdited": "Last edited",
-    "coverPreviewAlt": "Cover preview"
+    "coverPreviewAlt": "Cover preview",
+    "replyComment": "Trả lời bình luận"
   },
   "vocabulary": {
     "readyForReview": "Ready for your review session?",
@@ -651,7 +659,9 @@
       "supportFormat": "Supports .csv and .txt",
       "dragDrop": "Drag and drop or click to choose a file",
       "encodingAlert": "Use UTF-8 encoding to avoid font issues.",
-      "delimiter": "Delimiter",      "delimiterPlaceholder": "E.g. , ; or |",      "duplicatePolicy": "Duplicate policy",
+      "delimiter": "Delimiter",
+      "delimiterPlaceholder": "E.g. , ; or |",
+      "duplicatePolicy": "Duplicate policy",
       "policy": {
         "skip": "Skip",
         "update": "Update",
@@ -1057,9 +1067,10 @@
     "learningCards": "Learning",
     "newCards": "New/Unseen",
     "activityHeatMap": "Activity Heat Map",
-    "noActivity": "No activity"
+    "noActivity": "No activity",
+    "todayTime": "Hôm nay: {{time}} phút",
+    "changeGoal": "Đổi mục tiêu"
   },
-
   "home": {
     "greeting": {
       "morning": "Good morning",

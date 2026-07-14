@@ -124,7 +124,15 @@
       "type": "Tần suất",
       "create": "Tạo",
       "daily": "Hàng ngày",
-      "daysShort": ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+      "daysShort": [
+        "CN",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7"
+      ],
       "never": "Không bao giờ",
       "editReminder": "Chỉnh sửa nhắc nhở",
       "update": "Cập nhật",
@@ -144,7 +152,6 @@
     "easyOnEyes": "Dịu mắt & Tập trung",
     "active": "Đang dùng"
   },
-
   "common": {
     "home": "Trang chủ",
     "profile": "Hồ sơ",
@@ -184,7 +191,10 @@
     "openAccountMenu": "Mở menu tài khoản",
     "pageNotFound": "Trang không tồn tại",
     "pageNotFoundDesc": "Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.",
-    "backToHome": "Quay lại trang chủ"
+    "backToHome": "Quay lại trang chủ",
+    "idiomsPhrases": "Idioms & Phrases",
+    "synonyms": "Synonyms",
+    "antonyms": "Antonyms"
   },
   "auth": {
     "signIn": "Đăng nhập",
@@ -725,7 +735,11 @@
       "saveChanges": "Lưu thay đổi loại thẻ",
       "removeField": "Gỡ bỏ trường dữ liệu",
       "removeFieldDesc": "Bạn có chắc chắn muốn gỡ bỏ trường này khỏi loại thẻ? Mọi dữ liệu thẻ gắn liền với trường này cũng sẽ bị mất nếu bạn lưu thay đổi."
-    }
+    },
+    "contentPlaceholder": "Bắt đầu viết nội dung bài viết của bạn...",
+    "cardTypeLoadFailed": "Failed to load the card type",
+    "back": "Back",
+    "coverPreviewAlt": "Cover image preview"
   },
   "chat": {
     "title": "Trò chuyện",
@@ -875,7 +889,11 @@
     "loadMessagesFailed": "Tải tin nhắn thất bại",
     "uploadFilesFailed": "Tải tệp lên thất bại",
     "sendMessageFailed": "Gửi tin nhắn thất bại",
-    "recallMessageFailed": "Thu hồi tin nhắn thất bại"
+    "recallMessageFailed": "Thu hồi tin nhắn thất bại",
+    "backToList": "Back to list",
+    "back": "Back",
+    "viewProfileOf": "View profile of {{name}}",
+    "voiceCall": "Voice call"
   },
   "grammar": {
     "title": "Ngữ pháp tiếng Anh",
@@ -1049,9 +1067,10 @@
     "learningCards": "Đang học",
     "newCards": "Mới / Chưa học",
     "activityHeatMap": "Biểu đồ hoạt động",
-    "noActivity": "Không có hoạt động"
+    "noActivity": "Không có hoạt động",
+    "weeksAgo_plural": "{{count}} weeks ago",
+    "weeksAhead_plural": "{{count}} weeks ahead"
   },
-
   "home": {
     "greeting": {
       "morning": "Chào buổi sáng",

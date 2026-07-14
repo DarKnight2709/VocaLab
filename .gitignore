@@ -1,25 +1,7 @@
 # AI & Tooling
 .agent/
 .qodo/
-
-# Keys & Secrets (IMPORTANT)
-*.pem
-**/keys/*.pem
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-.env.test
-.env.production
-
-# Build outputs & dependencies
-node_modules/
-**/node_modules/
-dist/
-**/dist/
-.next/
-build/
+.vscode/
 
 # Logs
 npm-debug.log*
@@ -36,3 +18,4 @@ deploy-backend.ps1
 deploy-frontend.ps1
 
 advanced-features.txt
+refactor.md

@@ -1,134 +1,73 @@
-# Realtime Chat - Frontend React
+# VocaLab Frontend (React)
 
-Frontend được chuyển đổi từ HTML/CSS/JS sang React + TypeScript với các công nghệ hiện đại.
+<p align="center">
+  <img src="https://vitejs.dev/logo.svg" width="100" alt="Vite Logo" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" width="100" alt="React Logo" />
+</p>
 
-## 🚀 Công nghệ sử dụng
+<p align="center">
+  The modern, responsive, and real-time user interface for the <strong>VocaLab</strong> platform.
+</p>
 
-- **React 19** + **TypeScript**
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **Radix UI** - UI components (Button, Input, Dialog, Tabs, Avatar, etc.)
-- **React Hook Form** + **Zod** - Form validation
-- **React Query** - Data fetching
-- **Zustand** - State management
-- **Socket.io-client** - Real-time communication
-- **Sonner** - Toast notifications
-- **React Router** - Routing
+## 🚀 Technology Stack
 
-## 📦 Cài đặt
+- **Core**: React 19 + TypeScript
+- **Build Tool**: [Vite](https://vitejs.dev/) for lightning-fast HMR and optimized builds
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **UI Components**: [Radix UI](https://www.radix-ui.com/) (Headless, accessible components)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) (Global state) + [React Query](https://tanstack.com/query/latest) (Server state)
+- **Routing**: React Router v7
+- **Form Handling**: React Hook Form + Zod validation
+- **Real-time**: Socket.io-client
+- **Internationalization**: i18next
 
-```bash
-npm install
-```
+## ✨ Core Features
 
-## 🏃 Chạy ứng dụng
+- **Rich User Interface**: Beautifully designed components with dark mode support and modern micro-animations.
+- **Real-time Collaboration**: Instant messaging (1-on-1 and group chats), typing indicators, and live notifications powered by WebSockets.
+- **Spaced Repetition Learning**: Interactive flashcard study modes optimized for vocabulary retention.
+- **Multi-language Support**: Full i18n support allowing users to seamlessly switch between English and Vietnamese.
+- **Optimistic UI Updates**: Instant feedback for user actions (like upvoting or sending messages) using React Query mutations.
+- **Secure Authentication**: Integration with Google OAuth, 2FA setup, and secure JWT handling.
 
-```bash
-npm run dev
-```
+## 📦 Prerequisites
 
-Ứng dụng sẽ chạy tại `http://localhost:5173`
+- Node.js (v18 or higher)
+- A running instance of the VocaLab Backend (NestJS)
 
-## 🏗️ Build
+## 🛠️ Installation & Setup
 
-```bash
-npm run build
-```
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## 📁 Cấu trúc dự án
+2. **Environment Configuration:**
+   Create a `.env` file in the root of the frontend directory. Use `.env.example` as a template.
+   ```bash
+   cp .env.example .env
+   ```
+   Ensure `VITE_API_URL` and `VITE_SOCKET_URL` point to your local backend instance (typically `http://localhost:3000`).
 
-```
-src/
-├── api/                    # API clients
-│   ├── api.ts             # Axios instance với interceptors
-│   ├── auth.api.ts
-│   ├── message.api.ts
-│   ├── user.api.ts
-│   └── group.api.ts
-├── features/
-│   ├── auth/              # Authentication features
-│   │   ├── authService.ts
-│   │   ├── authStorage.ts
-│   │   ├── components/
-│   │   │   └── AuthGuard.tsx
-│   │   └── pages/
-│   │       └── LoginPage.tsx
-│   └── chat/              # Chat features
-│       └── pages/
-│           └── ChatPage.tsx
-├── shared/
-│   ├── components/
-│   │   ├── ui/            # UI components (Radix UI)
-│   │   │   ├── button.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── label.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── tabs.tsx
-│   │   │   └── avatar.tsx
-│   │   └── ReactQueryProvider.tsx
-│   ├── config/
-│   │   └── env.ts         # Environment config
-│   └── lib/
-│       └── utils.ts       # Utilities (cn function)
-└── realtime/
-    └── socket.ts           # Socket.io setup
-```
+3. **Start the Development Server:**
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:5173`.
 
-## ✨ Tính năng
+## 📜 Available Scripts
 
-### ✅ Đã hoàn thành
+- `npm run dev` - Starts the Vite development server with Hot Module Replacement (HMR).
+- `npm run build` - Type-checks the codebase and creates a production-ready build in the `dist/` directory.
+- `npm run preview` - Boots up a local static web server that serves the files from `dist/` to preview the production build.
+- `npm run lint` - Runs ESLint to catch code quality and formatting issues.
 
-- [x] Đăng nhập / Đăng ký với validation (React Hook Form + Zod)
-- [x] Google OAuth integration
-- [x] Chat 1-1 với real-time messages
-- [x] Online/Offline status
-- [x] Typing indicators
-- [x] Message status (sent/seen)
-- [x] Tìm kiếm users
-- [x] Unread message count
-- [x] UI đẹp với Tailwind CSS và Radix UI
-- [x] Responsive design
-- [x] Toast notifications
+## 🎨 UI Architecture
 
-### 🔄 Có thể mở rộng
+- **Radix UI Primitives**: We utilize unstyled, accessible components from Radix UI as the foundation for complex interactive elements like Dialogs, Popovers, and Dropdowns.
+- **Tailwind CSS**: Utility-first styling ensures consistency and rapid development. The theme configuration is tightly integrated with CSS variables for dynamic theme switching.
+- **Component Structure**: Shared components live in `src/shared/components`, while feature-specific components are encapsulated within their respective domains in `src/features/`.
 
-- [ ] Group chat features
-- [ ] Profile modal (edit profile, upload avatar)
-- [ ] Message search
-- [ ] File attachments
-- [ ] Emoji picker
-- [ ] Dark mode
+## 📄 License
 
-## 🔧 Cấu hình
-
-Tạo file `.env` trong thư mục `frontend-react`:
-
-```env
-VITE_API_URL=http://localhost:4001
-VITE_SOCKET_URL=http://localhost:4001
-VITE_ENV=development
-```
-
-## 📝 Ghi chú
-
-- Frontend sử dụng proxy trong development mode (`/api` -> backend)
-- Trong production, cần cấu hình đầy đủ domain của backend
-- Socket.io tự động kết nối khi user đã đăng nhập
-
-## 🎨 UI Components
-
-Tất cả UI components được xây dựng dựa trên Radix UI và styled với Tailwind CSS, đảm bảo:
-- Accessibility
-- Responsive
-- Customizable
-- Type-safe
-
-## 📚 Tài liệu tham khảo
-
-- [React](https://react.dev)
-- [TypeScript](https://www.typescriptlang.org)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Radix UI](https://www.radix-ui.com)
-- [React Hook Form](https://react-hook-form.com)
-- [Zod](https://zod.dev)
-- [Socket.io](https://socket.io)
+This project is licensed under the MIT License.
