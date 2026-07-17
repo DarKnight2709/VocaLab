@@ -198,11 +198,12 @@ export class DictionaryService {
     text: string;
     examples: string[];
     grammar: string | null;
+    isUsageNote?: boolean;
   }[] {
-    const results: { text: string; examples: string[]; grammar: string | null }[] = [];
-    let current = { text: '', examples: [] as string[], grammar: null as string | null };
+    const results: { text: string; examples: string[]; grammar: string | null; isUsageNote?: boolean }[] = [];
+    let current = { text: '', examples: [] as string[], grammar: null as string | null, isUsageNote: false };
 
-    const processItem = (item: any) => {
+    const processItem = (item: DefiningTextTuple) => {
       if (Array.isArray(item) && item.length >= 2 && typeof item[0] === 'string') {
         const type = item[0];
         const value = item[1];
@@ -218,18 +219,18 @@ export class DictionaryService {
             current.grammar = value;
           }
         } else if (type === 'vis' && Array.isArray(value)) {
-          value.forEach((visItem: any) => {
+          (value as { t: string }[]).forEach((visItem: { t: string }) => {
             if (visItem && typeof visItem.t === 'string') {
               current.examples.push(this.cleanMwText(visItem.t));
             }
           });
         } else if (type === 'snote' && Array.isArray(value)) {
-          value.forEach((noteItem: any) => {
+          (value as UsageNote[]).forEach((noteItem: UsageNote) => {
             if (Array.isArray(noteItem) && noteItem.length >= 2) {
               if (noteItem[0] === 't' && typeof noteItem[1] === 'string') {
                 current.text += this.cleanMwText(noteItem[1]) + ' ';
               } else if (noteItem[0] === 'vis' && Array.isArray(noteItem[1])) {
-                noteItem[1].forEach((visItem: any) => {
+                (noteItem[1] as { t: string }[]).forEach((visItem: { t: string }) => {
                   if (visItem && typeof visItem.t === 'string') {
                     current.examples.push(this.cleanMwText(visItem.t));
                   }
@@ -237,6 +238,30 @@ export class DictionaryService {
               }
             }
           });
+        } else if (type === 'uns' && Array.isArray(value)) {
+          if (current.text || current.examples.length > 0) {
+            current.text = current.text.trim();
+            results.push({ ...current });
+            current = { text: '', examples: [], grammar: null, isUsageNote: true };
+          } else {
+            current.isUsageNote = true;
+          }
+
+          (value as DefiningTextTuple[][]).forEach((outerArr: DefiningTextTuple[]) => {
+            if (Array.isArray(outerArr)) {
+              outerArr.forEach((innerItem: DefiningTextTuple) => {
+                processItem(innerItem);
+              });
+              
+              if (current.text || current.examples.length > 0) {
+                current.text = current.text.trim();
+                results.push({ ...current });
+                current = { text: '', examples: [], grammar: null, isUsageNote: true }; // any subsequent ones are also usage notes
+              }
+            }
+          });
+          // Reset to normal definition mode after uns? Actually uns is usually at the end, but let's reset it just in case.
+          current.isUsageNote = false;
         }
       }
     };
@@ -292,13 +317,10 @@ export class DictionaryService {
                       if (parsed.text) {
                         const dtGrammar = parsed.grammar;
                         const slsLabels = sense?.sls?.join(', ') || null;
-                        const grammarTokens = [
-                          rootGrammar,
-                          sgram,
-                          dtGrammar,
-                          lbs,
-                          slsLabels,
-                        ].filter(Boolean);
+                        const grammarTokens = parsed.isUsageNote
+                          ? [dtGrammar, slsLabels].filter(Boolean)
+                          : [rootGrammar, sgram, dtGrammar, lbs, slsLabels].filter(Boolean);
+                          
                         const finalGrammar =
                           grammarTokens.length > 0
                             ? `<span class="italic text-muted-foreground mr-2 font-normal">[${grammarTokens.join(', ')}]</span> `
@@ -368,13 +390,10 @@ export class DictionaryService {
                           if (parsed.text) {
                             const dtGrammar = parsed.grammar;
                             const slsLabels = sense?.sls?.join(', ') || null;
-                            const grammarTokens = [
-                              rootGrammar,
-                              sgram,
-                              dtGrammar,
-                              lbs,
-                              slsLabels,
-                            ].filter(Boolean);
+                            const grammarTokens = parsed.isUsageNote
+                              ? [dtGrammar, slsLabels].filter(Boolean)
+                              : [rootGrammar, sgram, dtGrammar, lbs, slsLabels].filter(Boolean);
+                              
                             const finalGrammar =
                               grammarTokens.length > 0
                                 ? `<span class="italic text-muted-foreground mr-2 font-normal">[${grammarTokens.join(', ')}]</span> `
@@ -515,9 +534,10 @@ export class DictionaryService {
       .replace(/{\/inf}/g, '</strong>')
       .replace(/{wi}/g, '<strong class="text-primary font-semibold">')
       .replace(/{\/wi}/g, '</strong>')
+      .replace(/\{(?:sx|dxt|mat)\|([^|}]+).*?\}/g, '$1') // Extract cross-reference words like {sx|automobile||}
+      .replace(/\{(?:a_link|d_link|i_link|et_link)\|([^|}]+)\}/g, '$1') // Extract link words
       .replace(/{p_only}.*?{\/p_only}/g, '')
       .replace(/{dx}.*?{\/dx}/g, '')
-      .replace(/{dxt\|.*?\|\|}/g, '')
       .replace(/\{[^}]+\}/g, '') // catch-all for remaining tags
       .trim();
   }

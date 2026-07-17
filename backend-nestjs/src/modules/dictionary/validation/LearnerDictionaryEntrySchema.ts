@@ -13,24 +13,41 @@ const UsageNoteSchema = z.union([
 export const DefiningTextTupleSchema = z.union([
   z.tuple([z.literal('text'), z.string()]),
   z.tuple([z.literal('vis'), z.array(VerbalIllustrationSchema)]),
+  z.tuple([
+    z.literal('uns'),
+    z.array(
+      z.array(
+        z.union([
+          z.tuple([z.literal('text'), z.string()]),
+          z.tuple([z.literal('vis'), z.array(VerbalIllustrationSchema)]),
+        ]),
+      ),
+    ),
+  ]),
   z.tuple([z.literal('snote'), z.array(UsageNoteSchema)]),
   z.tuple([z.literal('wsgram'), z.string()]),
-  z.tuple([z.literal('uns'), z.array(z.array(z.unknown()))]),
 ]);
 
 export const SensePhrasevariantsSchema = z.object({
-  phrs: z.array(z.object({
-    pva: z.string(),
-    pvl: z.string().optional()
-  }))
-})
+  phrs: z.array(
+    z.object({
+      pva: z.string(),
+      pvl: z.string().optional(),
+    }),
+  ),
+});
 
 export const SenseSchema = z.object({
   sls: z.array(z.string()).optional(),
   sphrasev: SensePhrasevariantsSchema.optional(),
-  dt: z.array(z.unknown()).transform(
-    (arr) => arr.filter((item) => DefiningTextTupleSchema.safeParse(item).success) as z.infer<typeof DefiningTextTupleSchema>[]
-  ),
+  dt: z
+    .array(z.unknown())
+    .transform(
+      (arr) =>
+        arr.filter(
+          (item) => DefiningTextTupleSchema.safeParse(item).success,
+        ) as z.infer<typeof DefiningTextTupleSchema>[],
+    ),
   sgram: z.string().optional(),
   lbs: z.array(z.string()).optional(),
 });
@@ -40,14 +57,21 @@ export const SenseSequenceSchema = z.union([
 ]);
 
 export const DefinitionSchema = z.object({
-  sseq: z.array(z.array(z.unknown())).transform(
-    (outerArr) => outerArr.map(innerArr => {
-      return innerArr
-        .map(item => SenseSequenceSchema.safeParse(item))
-        .filter(parsed => parsed.success)
-        .map(parsed => parsed.data as z.infer<typeof SenseSequenceSchema>);
-    }).filter(innerArr => innerArr.length > 0)
-  ).optional(),
+  sseq: z
+    .array(z.array(z.unknown()))
+    .transform((outerArr) =>
+      outerArr
+        .map((innerArr) => {
+          return innerArr
+            .map((item) => SenseSequenceSchema.safeParse(item))
+            .filter((parsed) => parsed.success)
+            .map(
+              (parsed) => parsed.data as z.infer<typeof SenseSequenceSchema>,
+            );
+        })
+        .filter((innerArr) => innerArr.length > 0),
+    )
+    .optional(),
 });
 
 // 2. Pronunciation & Headword
