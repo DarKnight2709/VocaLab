@@ -16,7 +16,7 @@ export function useDictionarySuggestion(query: string, options: { enabled?: bool
           query: debouncedQuery,
         },
       }), SearchSuggestionListSchema),
-    enabled: (options.enabled ?? true) && debouncedQuery.length > 2,
+    enabled: (options.enabled ?? true) && debouncedQuery.length > 1,
   });
 }
 

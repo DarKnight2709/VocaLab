@@ -1129,6 +1129,8 @@
   },
   "dictionary": {
     "idiomsPhrases": "Idioms & Phrases",
+    "phrasalVerbs": "Phrasal Verbs",
+    "idiomsAndPhrases": "Idioms & Phrases",
     "synonyms": "Synonyms",
     "antonyms": "Antonyms",
     "noResults": "No results found.",
@@ -1140,6 +1142,9 @@
     "showLess": "Show less",
     "definition": "Definition",
     "synonymsAntonyms": "Synonyms & Antonyms",
+    "inflections": "Inflections",
+    "stems": "Stems",
+    "relatedWords": "Related Words",
     "pos": {
       "noun": "Noun",
       "verb": "Verb",
@@ -1148,7 +1153,15 @@
       "pronoun": "Pronoun",
       "preposition": "Preposition",
       "conjunction": "Conjunction",
-      "interjection": "Interjection"
+      "interjection": "Interjection",
+      "abbreviation": "Abbreviation",
+      "idiom": "Idiom",
+      "phrase": "Phrase",
+      "prefix": "Prefix",
+      "suffix": "Suffix",
+      "phrasal_verb": "Phrasal Verb",
+      "trademark": "Trademark",
+      "symbol": "Symbol"
     }
   }
 }

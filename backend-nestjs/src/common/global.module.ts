@@ -14,11 +14,11 @@ import { CloudinaryService } from "./services/cloudinary.service";
 import { CloudinaryProvider } from "@/core/configs/cloudinary.config";
 // import { RedisService } from "src/core/cache/redis.service";
 import { CacheModule } from "@nestjs/cache-manager";
-import { redisStore } from 'cache-manager-redis-yet'
+import { createKeyv } from "@keyv/redis";
+import { RedisService } from "@/core/cache/redis.service";
 
 
-
-const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaService, CloudinaryService]
+const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaService, CloudinaryService, RedisService]
 
 // global module 
 // every module can use its services without importing
@@ -37,19 +37,22 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
         mount: true,
       },
     }),
-    // CacheModule.registerAsync({
-    //   isGlobal: true,
-    //   useFactory: async () => {
-    //     const store = await redisStore({
-    //       socket: {
-    //         host: 'localhost',
-    //         port: 6379,
-    //       },
-    //       ttl: 60 * 60 * 1000,
-    //     });
-    //     return { store };
-    //   },
-    // })
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const host = configService.get('REDIS_HOST');
+        const port = Number(configService.get('REDIS_PORT'));
+        
+        const redisUri = `redis://${host}:${port}`;
+        return {
+          stores: [
+            createKeyv(redisUri),
+          ],
+          ttl: 60 * 60 * 1000, // 1 hour
+        }
+      },
+    })
   ],
   providers: [
     CloudinaryProvider,

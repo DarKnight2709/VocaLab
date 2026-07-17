@@ -1129,6 +1129,8 @@
   },
   "dictionary": {
     "idiomsPhrases": "Thành ngữ & Cụm từ",
+    "phrasalVerbs": "Cụm động từ",
+    "idiomsAndPhrases": "Thành ngữ & Cụm từ",
     "synonyms": "Từ đồng nghĩa",
     "antonyms": "Từ trái nghĩa",
     "noResults": "Không tìm thấy kết quả.",
@@ -1140,6 +1142,9 @@
     "showLess": "Thu gọn",
     "definition": "Định nghĩa",
     "synonymsAntonyms": "Đồng nghĩa & Trái nghĩa",
+    "inflections": "Biến thể",
+    "stems": "Từ gốc",
+    "relatedWords": "Từ liên quan",
     "pos": {
       "noun": "Danh từ",
       "verb": "Động từ",
@@ -1148,7 +1153,15 @@
       "pronoun": "Đại từ",
       "preposition": "Giới từ",
       "conjunction": "Liên từ",
-      "interjection": "Thán từ"
+      "interjection": "Thán từ",
+      "abbreviation": "Viết tắt",
+      "idiom": "Thành ngữ",
+      "phrase": "Cụm từ",
+      "prefix": "Tiền tố",
+      "suffix": "Hậu tố",
+      "phrasal_verb": "Cụm động từ",
+      "trademark": "Thương hiệu",
+      "symbol": "Ký hiệu"
     }
   }
 }

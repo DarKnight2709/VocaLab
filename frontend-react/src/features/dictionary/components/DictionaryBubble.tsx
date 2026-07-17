@@ -21,9 +21,7 @@ function ExpandableExamples({ examples }: { examples: string[] }) {
   return (
     <div className="space-y-1 mt-1 pl-3 border-l-2 border-muted">
       {visibleExamples.map((ex, exIdx) => (
-        <p key={exIdx} className="text-xs text-muted-foreground italic">
-          "{ex}"
-        </p>
+        <p key={exIdx} className="text-xs text-muted-foreground italic" dangerouslySetInnerHTML={{ __html: `"${ex}"` }} />
       ))}
       {!showAll ? (
         <button 
@@ -93,15 +91,16 @@ export function DictionaryBubble() {
   const [searchInput, setSearchInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchedWord, setSearchedWord] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'definitions' | 'idioms' | 'synonyms'>('definitions');
-  const [activePosTab, setActivePosTab] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'definitions' | 'idioms' | 'synonyms' | 'inflections'>('definitions');
+  const [activePosTab, setActivePosTab] = useState<string | null>('');
+  const [activeIdiomTab, setActiveIdiomTab] = useState<'idiom' | 'phrasal-verb'>('idiom');
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const { history, addToHistory, clearHistory, removeFromHistory } = useDictionarySearchHistory();
 
   const { data: searchSuggestion, isLoading: isLoadingSuggestions } = useDictionarySuggestion(
     searchInput,
-    { enabled: showSuggestions && isOpen && !searchedWord },
+    { enabled: showSuggestions && isOpen },
   );
 
   const { data: wordData, isLoading: isLoadingWord, error: wordError } = useDictionaryWordLookup(searchedWord || '', {
@@ -114,6 +113,9 @@ export function DictionaryBubble() {
   useEffect(() => {
     if (wordData?.meanings && wordData.meanings.length > 0) {
       setActivePosTab(wordData.meanings[0].partOfSpeech);
+    }
+    if (wordData?.idioms && wordData.idioms.length > 0) {
+      setActiveIdiomTab(wordData.idioms[0].isPhrasalVerb ? 'phrasal-verb' : 'idiom');
     }
   }, [wordData]);
 
@@ -317,18 +319,23 @@ export function DictionaryBubble() {
                 <div className="space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">
+                      <h2 className="text-3xl font-extrabold text-foreground tracking-tight mb-2 flex items-center gap-3">
                         {wordData.word}
+                        {wordData.isOffensive && (
+                          <span className="text-[10px] font-bold bg-destructive/10 text-destructive px-2 py-0.5 rounded uppercase tracking-wider">
+                            Offensive
+                          </span>
+                        )}
                       </h2>
-                      {wordData.phonetic && (
-                        <span className="font-mono text-sm bg-muted/50 px-2 py-1 rounded text-muted-foreground">
-                          /{wordData.phonetic}/
+                      {wordData.pronunciations && wordData.pronunciations.length > 0 && wordData.pronunciations[0].phonetic && (
+                        <span className="font-mono text-sm bg-muted/50 px-2 py-1 rounded text-muted-foreground inline-block mt-1">
+                          /{wordData.pronunciations[0].phonetic}/
                         </span>
                       )}
                     </div>
-                    {wordData.audioUrl && (
+                    {wordData.pronunciations && wordData.pronunciations.length > 0 && wordData.pronunciations[0].audioUrl && (
                       <>
-                        <audio ref={audioRef} src={wordData.audioUrl} />
+                        <audio ref={audioRef} src={wordData.pronunciations[0].audioUrl} />
                         <button
                           onClick={playAudio}
                           className="group flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0"
@@ -364,7 +371,10 @@ export function DictionaryBubble() {
                         {t('dictionary.idiomsPhrases') || 'Idioms & Phrases'}
                       </button>
                     )}
-                    {((wordData.synonyms && wordData.synonyms.length > 0) || (wordData.antonyms && wordData.antonyms.length > 0)) && (
+                    {((wordData.synonyms && wordData.synonyms.length > 0) || 
+                       (wordData.antonyms && wordData.antonyms.length > 0) || 
+                       (wordData.relatedWords && wordData.relatedWords.length > 0) || 
+                       (wordData.stems && wordData.stems.length > 0)) && (
                       <button
                         onClick={() => setActiveTab('synonyms')}
                         className={cn(
@@ -377,13 +387,26 @@ export function DictionaryBubble() {
                         {t('dictionary.synonymsAntonyms') || 'Synonyms & Antonyms'}
                       </button>
                     )}
+                    {wordData.inflections && wordData.inflections.length > 0 && (
+                      <button
+                        onClick={() => setActiveTab('inflections')}
+                        className={cn(
+                          "whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-all border-b-2",
+                          activeTab === 'inflections' 
+                            ? "border-primary text-primary" 
+                            : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+                        )}
+                      >
+                        {t('dictionary.inflections') || 'Inflections'}
+                      </button>
+                    )}
                   </div>
 
                   <div className="mt-4 pb-4">
                     {activeTab === 'definitions' && (
                       <div className="space-y-4">
                         {/* POS Tabs */}
-                        {wordData.meanings.length > 1 && (
+                        {wordData.meanings.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-2">
                             {wordData.meanings.map((meaning: any) => (
                               <button
@@ -396,7 +419,7 @@ export function DictionaryBubble() {
                                     : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                                 )}
                               >
-                                {t(`dictionary.pos.${meaning.partOfSpeech.toLowerCase()}`) || meaning.partOfSpeech}
+                                {t(`dictionary.pos.${(meaning.partOfSpeech || 'unknown').toLowerCase().replace(/\s+/g, '_')}`, { defaultValue: meaning.partOfSpeech || 'Unknown' })}
                               </button>
                             ))}
                           </div>
@@ -411,9 +434,7 @@ export function DictionaryBubble() {
                           {meaning.definitions.map((def: any, defIdx: number) => (
                             <li key={defIdx} className="space-y-1 relative">
                               <div className="absolute -left-3 top-2 w-1.5 h-1.5 rounded-full bg-primary/40"></div>
-                              <p className="text-sm text-foreground/90 font-medium">
-                                {def.text}
-                              </p>
+                              <p className="text-sm text-foreground/90 font-medium" dangerouslySetInnerHTML={{ __html: def.text }} />
                               
                               {def.examples && def.examples.length > 0 && (
                                 <ExpandableExamples examples={def.examples} />
@@ -427,28 +448,50 @@ export function DictionaryBubble() {
                   )}
 
                   {activeTab === 'idioms' && wordData.idioms && wordData.idioms.length > 0 && (
-                      <div className="space-y-5">
-                        {wordData.idioms.map((idiom: any, index: number) => (
-                          <div key={index} className="space-y-2">
-                            <h4 className="font-semibold text-primary">{idiom.phrase}</h4>
-                            <ul className="space-y-3 pl-3">
-                              {idiom.definitions.map((def: any, defIdx: number) => (
-                                <li key={defIdx} className="space-y-1 relative">
-                                  <div className="absolute -left-3 top-2 w-1.5 h-1.5 rounded-full bg-primary/40"></div>
-                                  <p className="text-sm text-foreground/90">{def.text}</p>
-                                  {def.examples && def.examples.length > 0 && (
-                                    <ExpandableExamples examples={def.examples} />
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {Array.from(new Set(wordData.idioms.map((i: any) => i.isPhrasalVerb ? 'phrasal-verb' : 'idiom'))).map((type: any) => (
+                            <button
+                              key={type}
+                              onClick={() => setActiveIdiomTab(type)}
+                              className={cn(
+                                "px-3 py-1 text-xs font-semibold rounded-full capitalize transition-colors",
+                                activeIdiomTab === type
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                              )}
+                            >
+                              {type === 'phrasal-verb' ? t('dictionary.phrasalVerbs') || 'Phrasal Verbs' : t('dictionary.idiomsAndPhrases') || 'Idioms & Phrases'}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="space-y-5">
+                          {wordData.idioms
+                            .filter((i: any) => (i.isPhrasalVerb ? 'phrasal-verb' : 'idiom') === activeIdiomTab)
+                            .map((idiom: any, index: number) => (
+                            <div key={index} className="space-y-2">
+                              <h4 className="font-semibold text-primary">{idiom.phrase}</h4>
+                              <ul className="space-y-3 pl-3">
+                                {idiom.definitions.map((def: any, defIdx: number) => (
+                                  <li key={defIdx} className="space-y-1 relative">
+                                    <div className="absolute -left-3 top-2 w-1.5 h-1.5 rounded-full bg-primary/40"></div>
+                                    <p className="text-sm text-foreground/90" dangerouslySetInnerHTML={{ __html: def.text }} />
+
+                                    {def.examples && def.examples.length > 0 && (
+                                      <ExpandableExamples examples={def.examples} />
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
 
-                    {activeTab === 'synonyms' && ((wordData.synonyms && wordData.synonyms.length > 0) || (wordData.antonyms && wordData.antonyms.length > 0)) && (
-                      <div className="space-y-4">
+                    {activeTab === 'synonyms' && (
+                      <div className="space-y-6">
                         {wordData.synonyms && wordData.synonyms.length > 0 && (
                           <div className="space-y-2">
                             <h3 className="text-sm font-bold text-foreground">
@@ -473,8 +516,44 @@ export function DictionaryBubble() {
                             />
                           </div>
                         )}
+                        {wordData.relatedWords && wordData.relatedWords.length > 0 && (
+                          <div className="space-y-2">
+                            <h3 className="text-sm font-bold text-foreground">
+                              {t('dictionary.relatedWords') || 'Related Words'}
+                            </h3>
+                            <ExpandableTags 
+                              tags={wordData.relatedWords} 
+                              type="synonym" 
+                              onClick={handleSearchSubmit} 
+                            />
+                          </div>
+                        )}
+                        {wordData.stems && wordData.stems.length > 0 && (
+                          <div className="space-y-2">
+                            <h3 className="text-sm font-bold text-foreground">
+                              {t('dictionary.stems') || 'Stems'}
+                            </h3>
+                            <ExpandableTags 
+                              tags={wordData.stems} 
+                              type="synonym" 
+                              onClick={handleSearchSubmit} 
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
+
+                    {activeTab === 'inflections' && wordData.inflections && wordData.inflections.length > 0 && (
+                      <div className="flex flex-wrap gap-x-6 gap-y-3 mt-4">
+                        {wordData.inflections.map((inf: any, idx: number) => (
+                          <div key={idx} className="text-base text-foreground">
+                            {inf.label && <span className="italic text-muted-foreground mr-2">{inf.label}</span>}
+                            <span className="font-bold">{inf.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                   </div>
 
                 </div>

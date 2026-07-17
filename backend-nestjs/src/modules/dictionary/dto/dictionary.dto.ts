@@ -1,48 +1,154 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DictionaryDefinitionDto {
-  @ApiProperty()
-  text!: string;
+  @ApiPropertyOptional({
+    description: 'The actual definition text',
+    example:
+      "used to attract someone's attention or to express surprise, joy, or anger",
+    nullable: true,
+  })
+  text!: string | null;
 
-  @ApiProperty({ type: [String] })
-  examples!: string[];
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Examples of the word in context',
+    example: ['Hey, wait for me!'],
+  })
+  examples: string[] = [];
 }
 
 export class DictionaryMeaningDto {
-  @ApiProperty()
-  partOfSpeech!: string;
+  @ApiPropertyOptional({
+    description: 'Functional label for this specific meaning block',
+    example: 'interjection',
+    nullable: true,
+  })
+  partOfSpeech!: string | null;
 
-  @ApiProperty({ type: [DictionaryDefinitionDto] })
-  definitions!: DictionaryDefinitionDto[];
+  @ApiPropertyOptional({
+    type: [DictionaryDefinitionDto],
+  })
+  definitions: DictionaryDefinitionDto[] = [];
 }
 
 export class DictionaryIdiomDto {
-  @ApiProperty()
-  phrase!: string;
+  @ApiPropertyOptional({
+    description: 'Whether this phrase is a phrasal verb or an idiom',
+    example: true,
+  })
+  isPhrasalVerb!: boolean;
 
-  @ApiProperty({ type: [DictionaryDefinitionDto] })
-  definitions!: DictionaryDefinitionDto[];
+  @ApiPropertyOptional({
+    description: 'The idiomatic phrase',
+    example: 'upset the apple cart',
+    nullable: true,
+  })
+  phrase!: string | null;
+
+  @ApiPropertyOptional({
+    type: [DictionaryDefinitionDto],
+  })
+  definitions: DictionaryDefinitionDto[] = [];
+}
+
+export class InflectionDto {
+  @ApiPropertyOptional({
+    description: 'Inflection label (e.g., plural, past tense)',
+    example: 'plural',
+    nullable: true,
+  })
+  label!: string | null;
+
+  @ApiPropertyOptional({
+    description: 'The inflected form of the word',
+    example: 'apples',
+    nullable: true,
+  })
+  value!: string | null;
+}
+
+export class PronunciationDto {
+  @ApiPropertyOptional({
+    description: 'The IPA phonetic spelling',
+    example: 'ˈheɪ',
+    nullable: true,
+  })
+  phonetic!: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Direct URL to the playable mp3 file',
+    example:
+      'https://media.merriam-webster.com/audio/prons/en/us/mp3/h/hey00001.mp3',
+    nullable: true,
+  })
+  audioUrl!: string | null;
 }
 
 export class DictionaryLookupResponse {
-  @ApiProperty()
-  word!: string;
+  @ApiPropertyOptional({
+    description: 'The headword being defined',
+    example: 'hey',
+    nullable: true,
+  })
+  word!: string | null;
 
-  @ApiProperty()
-  phonetic!: string;
+  @ApiPropertyOptional({
+    description:
+      'Whether the word is considered offensive or profane (useful for content filtering)',
+    example: false,
+    nullable: true,
+  })
+  isOffensive!: boolean | null;
 
-  @ApiProperty()
-  audioUrl!: string;
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'All morphological stems of the word for backend search indexing',
+    example: ['hey'],
+  })
+  stems: string[] = [];
 
-  @ApiProperty({ type: [DictionaryMeaningDto] })
-  meanings!: DictionaryMeaningDto[];
+  @ApiPropertyOptional({
+    type: [PronunciationDto],
+    description:
+      'List of pronunciations (handles words with multiple valid pronunciations)',
+  })
+  pronunciations: PronunciationDto[] = [];
 
-  @ApiProperty({ type: [DictionaryIdiomDto] })
-  idioms!: DictionaryIdiomDto[];
+  @ApiPropertyOptional({
+    type: [InflectionDto],
+    description: 'Morphological inflections like plurals or past participles',
+  })
+  inflections: InflectionDto[] = [];
 
-  @ApiProperty({ type: [String] })
-  synonyms!: string[];
+  @ApiPropertyOptional({
+    type: [DictionaryMeaningDto],
+    description: 'Detailed definitions grouped by part of speech',
+  })
+  meanings: DictionaryMeaningDto[] = [];
 
-  @ApiProperty({ type: [String] })
-  antonyms!: string[];
+  @ApiPropertyOptional({
+    type: [DictionaryIdiomDto],
+    description: 'Idioms and run-on phrases associated with the word',
+  })
+  idioms: DictionaryIdiomDto[] = [];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Direct synonyms from the Thesaurus API',
+  })
+  synonyms: string[] = [];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Direct antonyms from the Thesaurus API',
+  })
+  antonyms: string[] = [];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'Words conceptually related to the headword, but not direct synonyms',
+  })
+  relatedWords: string[] = [];
 }
