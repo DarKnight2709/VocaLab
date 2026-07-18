@@ -91,5 +91,9 @@ jobs:
             # Pull the latest images
             docker compose -f docker-compose.prod.yml pull
             
+            # Run database migrations before starting the app
+            # This uses a temporary container to safely run migrations even if the main app is crashing
+            docker compose -f docker-compose.prod.yml run --rm backend npx prisma migrate deploy
+            
             # Restart containers with the new images
             docker compose -f docker-compose.prod.yml up -d
