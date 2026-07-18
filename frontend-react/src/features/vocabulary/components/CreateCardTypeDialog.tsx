@@ -177,7 +177,7 @@ export default function CreateCardTypeDialog({
               {fields.length > 0 && (
                 <div className="space-y-2">
                   <Label>{t("vocabulary.cardTypesObj.selectedFields")}</Label>
-                <div className="border rounded-lg p-3 space-y-2 bg-card">
+                <div className="rounded-lg p-3 space-y-2 bg-card shadow-sm">
                   {fields.map((field, index) => (
                     <div
                       key={index}

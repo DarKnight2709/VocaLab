@@ -149,22 +149,22 @@ export default function ImportVocabularyDialog({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
+              <div className="p-4 rounded-xl bg-card shadow-sm flex flex-col items-center gap-1">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
                 <span className="text-2xl font-bold">{importResult.imported.count}</span>
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.new")}</span>
               </div>
-              <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
+              <div className="p-4 rounded-xl bg-card shadow-sm flex flex-col items-center gap-1">
                 <RefreshCw className="h-5 w-5 text-blue-500" />
                 <span className="text-2xl font-bold">{importResult.updated.count}</span>
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.updated")}</span>
               </div>
-              <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
+              <div className="p-4 rounded-xl bg-card shadow-sm flex flex-col items-center gap-1">
                 <SkipForward className="h-5 w-5 text-yellow-500" />
                 <span className="text-2xl font-bold">{importResult.skipped.count}</span>
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.skipped")}</span>
               </div>
-              <div className="p-4 rounded-xl border bg-card flex flex-col items-center gap-1">
+              <div className="p-4 rounded-xl bg-card shadow-sm flex flex-col items-center gap-1">
                 <XCircle className="h-5 w-5 text-red-500" />
                 <span className="text-2xl font-bold">{importResult.errors.count}</span>
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{t("vocabulary.import.errors")}</span>
@@ -179,7 +179,7 @@ export default function ImportVocabularyDialog({
                 <TabsTrigger value="errors" className="text-xs">{t("vocabulary.import.errors")}</TabsTrigger>
               </TabsList>
               
-              <div className="mt-4 border rounded-xl overflow-hidden bg-muted/20">
+              <div className="mt-4 rounded-xl overflow-hidden bg-muted/20 shadow-sm">
                 <div className="max-h-50 overflow-y-auto p-2 custom-scrollbar">
                   <TabsContent value="imported" className="m-0 space-y-1">
                     {importResult.imported.cards.length > 0 ? (
@@ -259,7 +259,7 @@ export default function ImportVocabularyDialog({
             </TabsContent>
 
             <TabsContent value="file" className="mt-4 space-y-4">
-              <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-10 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer relative">
+              <div className="flex flex-col items-center justify-center rounded-lg p-10 bg-muted/30 shadow-sm hover:bg-muted/50 transition-colors cursor-pointer relative">
                 <input
                   type="file"
                   accept=".txt,.csv"
@@ -349,7 +349,7 @@ export default function ImportVocabularyDialog({
           {previewData && (
             <div className="space-y-3">
               <Label className="text-primary font-bold">{t("vocabulary.import.preview")}</Label>
-              <div className="border rounded-xl p-4 bg-muted/20">
+              <div className="rounded-xl p-4 bg-muted/20 shadow-sm">
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                   {previewData.fields.map((field, idx) => (
                     <div key={field.id} className="space-y-1">

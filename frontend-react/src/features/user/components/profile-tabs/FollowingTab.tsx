@@ -62,7 +62,7 @@ export default function FollowingTab({ userId, search }: FollowingTabProps) {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border bg-card/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card shadow-sm/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
           >
             <ChevronLeft size={18} />
           </button>
@@ -72,7 +72,7 @@ export default function FollowingTab({ userId, search }: FollowingTabProps) {
           <button
             onClick={() => setPage((p) => Math.min(data!.meta.totalPages, p + 1))}
             disabled={page === data!.meta.totalPages}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border bg-card/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card shadow-sm/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
           >
             <ChevronRight size={18} />
           </button>

@@ -4,7 +4,6 @@ import {
   MoreVertical,
   Plus,
   BookMarked,
-  Layers,
   Pencil,
   Trash2,
   Download,
@@ -255,7 +254,7 @@ export default function VocabularyPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {colsData?.collections.length === 0 && (
-            <div className="col-span-full text-center py-16 border rounded-2xl bg-card text-muted-foreground">
+            <div className="col-span-full text-center py-16 rounded-2xl bg-card shadow-sm text-muted-foreground">
               <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p>{t("vocabulary.noCollections")}</p>
             </div>
@@ -273,24 +272,32 @@ export default function VocabularyPage() {
                   navigate(`/vocabulary/${col.id}`);
                 }
               }}
-              className="text-left w-full p-4 rounded-2xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+              className="text-left w-full p-4 rounded-2xl bg-card shadow-sm hover:bg-muted/50 transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold truncate flex items-center gap-2">
-                    {col.name}
+                    <BookMarked className="h-4 w-4 text-primary shrink-0" />
+                    <span className="truncate">{col.name}</span>
+                    <span className="font-normal text-sm text-muted-foreground shrink-0">
+                      ({col._count?.cards ?? 0} {t("vocabulary.cards")})
+                    </span>
                     {col.isPublic ? (
                       <span title={t("vocabulary.public")}>
-                        <Globe className="h-3 w-3 text-muted-foreground" />
+                        <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
                       </span>
                     ) : (
                       <span title={t("vocabulary.private")}>
-                        <Lock className="h-3 w-3 text-muted-foreground" />
+                        <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
                       </span>
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {col.description}
+                    {col.description || (
+                      <span className="italic opacity-70">
+                        {t("common.noDescription")}
+                      </span>
+                    )}
                   </div>
                   {col.originId && (
                     <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
@@ -352,13 +359,6 @@ export default function VocabularyPage() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-
-              <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-                <Layers className="h-4 w-4" />
-                <span>
-                  {col._count?.cards ?? 0} {t("vocabulary.cards")}
-                </span>
               </div>
             </div>
           ))}

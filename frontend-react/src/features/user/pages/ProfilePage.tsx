@@ -74,10 +74,10 @@ export default function ProfilePage() {
 
   if (shouldShowNotFound) {
     return (
-      <div className="h-full overflow-y-auto p-6">
+      <div className="h-full overflow-y-scroll p-6 md:p-8">
         <div className="mx-auto max-w-6xl space-y-6">
           <Breadcrumb items={[{ label: t("common.profile") }]} />
-          <div className="rounded-xl border bg-muted/20 p-8 text-center">
+          <div className="rounded-xl bg-muted/20 shadow-sm p-8 text-center">
             <h2 className="text-2xl font-semibold">{t("profile.userNotFound")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {t("profile.userNotFoundHint")}
@@ -89,8 +89,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="h-full overflow-y-scroll p-6 md:p-8">
+      <div className="w-full max-w-[1600px] mx-auto space-y-6">
         <Breadcrumb items={[{ label: t("common.profile") }]} />
 
         {/* Profile Header */}

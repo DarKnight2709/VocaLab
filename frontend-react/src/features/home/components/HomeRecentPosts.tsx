@@ -35,7 +35,7 @@ export default function HomeRecentPosts() {
           ))}
         </div>
       ) : blogs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-card/50 py-10 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl bg-card/50 py-10 text-center">
           <PenSquare size={32} className="mb-2 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground">
             {t("home.noPosts")}
@@ -64,7 +64,7 @@ export default function HomeRecentPosts() {
                     navigate(detailUrl);
                   }
                 }}
-                className="group/blog flex items-start gap-4 rounded-2xl border bg-card p-4 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+                className="group/blog flex items-start gap-4 rounded-2xl bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
               >
                 <div className="min-w-0 flex-1">
                   <h3 className="line-clamp-1 text-sm font-semibold leading-tight group-hover/blog:text-primary transition-colors">

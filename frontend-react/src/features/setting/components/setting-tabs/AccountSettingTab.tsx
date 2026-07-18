@@ -35,7 +35,7 @@ export default function AccountSettingTab({
           <h2 className="text-xl font-semibold">{t("profile.title")}</h2>
         </div>
         <div className="grid gap-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div>
               <p className="font-medium">{t("settings.publicProfile")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.publicProfileDesc")}</p>
@@ -45,7 +45,7 @@ export default function AccountSettingTab({
             </Button>
           </div>
           
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div>
               <p className="font-medium">{t("settings.socialLinks")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.socialLinksDesc")}</p>
@@ -65,7 +65,7 @@ export default function AccountSettingTab({
           <h2 className="text-xl font-semibold">{t("settings.security")}</h2>
         </div>
         <div className="grid gap-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div>
               <p className="font-medium">{t("auth.password")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.securityDesc")}</p>
@@ -84,7 +84,7 @@ export default function AccountSettingTab({
             }
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div>
               <div className="flex items-center gap-2">
                 <p className="font-medium">{t("settings.twoFactorAuth")}</p>

@@ -115,11 +115,11 @@ export function ChatSidebar({
           className={
             (embedded ? "w-full " : "w-full md:w-80 shrink-0 ") +
             ((selectedUser || selectedGroup) && !embedded ? "hidden md:flex " : "flex ") +
-            "border-r bg-card flex-col"
+            "border-r flex-col"
           }
         >
           {!hideSidebarSearch && (
-            <div className="p-4 border-b" ref={searchRef}>
+            <div className="px-4 border-b h-[76px] flex flex-col justify-center" ref={searchRef}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -248,7 +248,7 @@ export function ChatSidebar({
                       key={u.id}
                       className={`w-full text-left rounded-lg p-3 mb-2 transition-colors ${
                         active
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary/10 text-primary"
                           : "hover:bg-muted"
                       }`}
                       onClick={() => onUserClick(u)}
@@ -277,7 +277,7 @@ export function ChatSidebar({
                             )}
                           </div>
                           <div
-                            className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                            className={`text-xs truncate ${active ? "text-primary/80" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
                           >
                             {u.lastMessage
                               ? `${u.lastMessage.isMine ? `${t("chat.you")}: ` : ""}${u.lastMessage.content?.slice(0, 30)}${u.lastMessage.content && u.lastMessage.content.length > 30 ? "..." : ""}`
@@ -334,7 +334,7 @@ export function ChatSidebar({
                         key={g.id}
                         className={`w-full text-left rounded-lg p-3 mb-2 transition-colors ${
                           active
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-primary/10 text-primary"
                             : "hover:bg-muted"
                         }`}
                         onClick={() => onGroupClick(g)}
@@ -365,13 +365,13 @@ export function ChatSidebar({
                               )}
                             </div>
                             <div
-                              className={`text-xs truncate ${active ? "opacity-90" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                              className={`text-xs truncate ${active ? "text-primary/80" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
                             >
                               {isGroupActive && !last?.content ? (
                                 <span
                                   className={
                                     active
-                                      ? "text-primary-foreground/80"
+                                      ? "text-primary/80 font-medium"
                                       : "text-green-600 font-medium"
                                   }
                                 >

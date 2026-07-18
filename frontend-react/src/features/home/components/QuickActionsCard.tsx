@@ -51,7 +51,7 @@ export default function QuickActionsCard() {
           <Link
             key={action.href}
             to={action.href}
-            className="group/card flex items-start gap-3 rounded-2xl border bg-card p-4 transition-all hover:shadow-md hover:-translate-y-0.5"
+            className="group/card flex items-start gap-3 rounded-2xl bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
           >
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${action.color}`}

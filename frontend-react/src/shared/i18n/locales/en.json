@@ -170,6 +170,8 @@
     "settings": "Settings",
     "help": "Help",
     "signOut": "Sign out",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
     "cardType": "Card Type",
     "manageCardTypes": "Manage Card Types",
     "addCardType": "Add Card Type",
@@ -194,7 +196,9 @@
     "pageNotFound": "Page Not Found",
     "pageNotFoundDesc": "Sorry, the page you are looking for does not exist or has been moved.",
     "backToHome": "Back to Home",
-    "searchPlaceholder": "Search on..."
+    "searchPlaceholder": "Search on...",
+    "noData": "No data available",
+    "noDescription": "No description"
   },
   "auth": {
     "signIn": "Sign in",

@@ -301,14 +301,14 @@ export default function PublicCollectionDetailPage() {
         {mode === "preview" ? (
           <div className="space-y-2">
             {cards.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+              <div className="rounded-xl bg-card shadow-sm p-10 text-center text-muted-foreground">
                 {t("vocabulary.noCards")}
               </div>
             ) : (
               cards.map((card) => (
                 <div
                   key={card.id}
-                  className="group relative rounded-xl border bg-card p-4 hover:bg-muted/40 transition-colors"
+                  className="group relative rounded-xl bg-card shadow-sm p-4 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="text-xs text-muted-foreground mb-1">
@@ -341,7 +341,7 @@ export default function PublicCollectionDetailPage() {
         ) : (
           <div>
             {cards.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+              <div className="rounded-xl bg-card shadow-sm p-10 text-center text-muted-foreground">
                 {t("vocabulary.noCardsToLearn")}
               </div>
             ) : (
@@ -355,7 +355,7 @@ export default function PublicCollectionDetailPage() {
                       className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? "transform-[rotateY(180deg)]" : ""}`}
                     >
                       {/* Front Face */}
-                      <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
+                      <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden">
                         <div className="text-center">
                           <CardFace
                             card={cards[flashcardIdx]}
@@ -369,7 +369,7 @@ export default function PublicCollectionDetailPage() {
                       </div>
 
                       {/* Back Face */}
-                      <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
+                      <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
                         <div className="text-center">
                           <CardFace
                             card={cards[flashcardIdx]}

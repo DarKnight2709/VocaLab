@@ -66,7 +66,7 @@ export default function StudyProgressCard() {
   const progressPct = dailyGoal > 0 ? (todayMinutes / dailyGoal) * 100 : 0;
 
   return (
-    <section className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-shadow hover:shadow-md">
+    <section className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">
           {t("home.studyProgress")}

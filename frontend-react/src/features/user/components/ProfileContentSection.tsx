@@ -26,7 +26,7 @@ function PostVisibilityFilter({
   ];
 
   return (
-    <div className="flex items-center gap-1 overflow-hidden rounded-xl border bg-muted/30 p-1">
+    <div className="inline-flex items-center gap-1 rounded-full bg-muted/50 p-1">
       {options.map((opt) => {
         const Icon = opt.icon;
         const isActive = value === opt.value;
@@ -35,13 +35,13 @@ function PostVisibilityFilter({
             key={opt.value}
             onClick={() => onChange(opt.value)}
             className={[
-              "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all",
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200",
               isActive
-                ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-                : "text-muted-foreground hover:bg-background/50 hover:text-foreground",
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground",
             ].join(" ")}
           >
-            <Icon className="h-3 w-3" />
+            <Icon className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{opt.label}</span>
           </button>
         );

@@ -87,7 +87,7 @@
 
         {/* Daily Goal Section */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-sm">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-card shadow-sm">
             <div className="space-y-0.5">
               <h3 className="text-sm font-medium leading-none">
                 {t("settings.dailyGoal.title")}
@@ -163,7 +163,7 @@
           </div>
 
           <div className="grid gap-4">
-            <div className="flex flex-col rounded-lg border bg-muted/30 overflow-hidden">
+            <div className="flex flex-col rounded-lg bg-muted/30 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between p-4">
                 <div>
                   <p className="font-normal text-foreground">
@@ -197,7 +197,7 @@
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
                   ) : !Array.isArray(reminders) || reminders.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3 rounded-md border border-dashed bg-muted/10 mt-4">
+                    <div className="flex flex-col items-center justify-center py-12 gap-3 rounded-md bg-muted/10 shadow-sm mt-4">
                       <Bell size={24} className="text-muted-foreground/50" />
                       <p className="text-sm text-muted-foreground font-normal">
                         {t("settings.reminder.noReminders")}

@@ -3,8 +3,8 @@ import { useNavigate } from "react-router";
 import {
   Plus,
   Pencil,
-  Eye,
   Trash2,
+  LayoutTemplate,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { Button } from "@/shared/components/ui/button";
@@ -47,7 +47,7 @@ export default function CardTypeManagementPage() {
       </div>
 
       {cardTypes.length === 0 ? (
-        <div className="text-center py-16 border rounded-2xl bg-card text-muted-foreground">
+        <div className="text-center py-16 rounded-2xl bg-card shadow-sm text-muted-foreground">
           <p>{t("vocabulary.noCardTypes")}</p>
         </div>
       ) : (
@@ -55,73 +55,80 @@ export default function CardTypeManagementPage() {
           {cardTypes.map((cardType) => (
             <div
               key={cardType.id}
-              className="p-4 rounded-2xl border bg-card hover:bg-muted/50 transition-colors"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/vocabulary/card-types/${cardType.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/vocabulary/card-types/${cardType.id}`);
+                }
+              }}
+              className="text-left w-full p-4 rounded-2xl bg-card shadow-sm hover:bg-muted/50 transition-colors cursor-pointer group relative"
             >
-              <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="font-semibold truncate">{cardType.name}</div>
+                  <div className="font-semibold flex items-center gap-2 truncate">
+                    <LayoutTemplate className="h-4 w-4 text-primary shrink-0" />
+                    <span className="truncate">{cardType.name}</span>
+                    <span className="font-normal text-sm text-muted-foreground shrink-0">
+                      ({t("vocabulary.cardsCount", { count: cardType.fields?.length || 0 })})
+                    </span>
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {cardType.description}
+                    {cardType.description || (
+                      <span className="italic opacity-70">
+                        {t("common.noDescription")}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </div>
-
-              <div className="text-sm text-muted-foreground mb-4">
-                {t("vocabulary.cardsCount", { count: cardType.fields?.length || 0 })}
-              </div>
-
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-2 text-xs gap-1"
-                  onClick={() =>
-                    navigate(`/vocabulary/card-types/${cardType.id}`)
-                  }
-                >
-                  <Eye className="h-3.5 w-3.5" /> {t("vocabulary.view")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-2 text-xs gap-1"
-                  onClick={() => {
-                    setEditingCardType({
-                      id: cardType.id,
-                      name: cardType.name,
-                      description: cardType.description,
-                      fields: [...(cardType.fields ?? [])]
-                        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
-                        .map((field: any, index: number) => ({
-                          id: field.id, // RẤT QUAN TRỌNG: Phải giữ ID để Backend không xóa mất field
-                          key: field.key,
-                          label: field.label,
-                          fieldType: field.fieldType,
-                          side: String(field.side).toUpperCase(),
-                          order: field.order ?? index,
-                          color: field.color,
-                          fontSize: field.fontSize,
-                          isRequired: field.isRequired,
-                        })),
-                    });
-                    setEditDialogOpen(true);
-                  }}
-                >
-                  <Pencil className="h-3.5 w-3.5" /> {t("vocabulary.edit")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => {
-                    setDeletingId(cardType.id);
-                    setDeleteConfirmOpen(true);
-                  }}
-                  disabled={deleteCardTypeMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingCardType({
+                        id: cardType.id,
+                        name: cardType.name,
+                        description: cardType.description,
+                        fields: [...(cardType.fields ?? [])]
+                          .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+                          .map((field: any, index: number) => ({
+                            id: field.id,
+                            key: field.key,
+                            label: field.label,
+                            fieldType: field.fieldType,
+                            side: String(field.side).toUpperCase(),
+                            order: field.order ?? index,
+                            color: field.color,
+                            fontSize: field.fontSize,
+                            isRequired: field.isRequired,
+                          })),
+                      });
+                      setEditDialogOpen(true);
+                    }}
+                    title={t("vocabulary.edit")}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingId(cardType.id);
+                      setDeleteConfirmOpen(true);
+                    }}
+                    disabled={deleteCardTypeMutation.isPending}
+                    title={t("vocabulary.delete")}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

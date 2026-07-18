@@ -61,7 +61,7 @@ function PostCard({ post }: { post: any }) {
           navigate(detailUrl);
         }
       }}
-      className="group flex flex-col overflow-hidden rounded-4xl border border-white/10 bg-white/50 transition-all duration-300 hover:bg-white dark:bg-white/2 dark:hover:bg-white/5 backdrop-blur-xl shadow-sm hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer"
+      className="group flex flex-col overflow-hidden rounded-2xl border bg-card transition-colors duration-200 hover:bg-muted/50 cursor-pointer"
     >
       <div className="relative h-48 shrink-0 overflow-hidden">
         {post.coverImage ? (
@@ -175,7 +175,7 @@ export default function PostsTab({ userId, search, visibility = PostVisibility.A
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border bg-card/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card shadow-sm/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
           >
             <ChevronLeft size={18} />
           </button>
@@ -185,7 +185,7 @@ export default function PostsTab({ userId, search, visibility = PostVisibility.A
           <button
             onClick={() => setPage((p) => Math.min(data!.meta.totalPages, p + 1))}
             disabled={page === data!.meta.totalPages}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border bg-card/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card shadow-sm/50 backdrop-blur shadow-sm transition-all hover:bg-muted disabled:opacity-30 disabled:pointer-events-none active:scale-90"
           >
             <ChevronRight size={18} />
           </button>

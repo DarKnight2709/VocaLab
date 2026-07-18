@@ -86,7 +86,7 @@ export default function PracticeCard({
         </span>
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm p-8 min-h-[350px] space-y-6 flex flex-col justify-center">
+      <div className="rounded-2xl bg-card shadow-sm p-8 min-h-[350px] space-y-6 flex flex-col justify-center">
         {allFields.map((field) => {
           const isPractice = practiceFieldIds.has(field.id);
           const isShow = showFieldIds.has(field.id);

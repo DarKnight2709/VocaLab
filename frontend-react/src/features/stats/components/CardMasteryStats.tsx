@@ -22,7 +22,7 @@ export const CardMasteryStats = ({
   const newPercent = totalCards > 0 ? Math.round((newCards / totalCards) * 100) : 0;
 
   return (
-    <Card className="rounded-[32px] border bg-card p-6 shadow-sm flex flex-col gap-6 w-full h-full justify-center">
+    <Card className="rounded-2xl bg-card shadow-sm p-6 shadow-sm flex flex-col gap-6 w-full h-full justify-center">
       <div className="flex items-center gap-4">
         <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-blue-500/10 text-blue-500">
           <Layers className="h-8 w-8" />

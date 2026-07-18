@@ -77,7 +77,7 @@ export function VoteDisplay({ blog }: { blog: BlogItem }) {
 
 export function SkeletonCard() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border bg-card animate-pulse">
+    <div className="flex flex-col overflow-hidden rounded-2xl bg-card shadow-sm animate-pulse">
       <div className="h-44 bg-muted" />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="space-y-2">
@@ -114,7 +114,7 @@ export default function BlogCard({ blog }: { blog: BlogItem }) {
           navigate(detailUrl);
         }
       }}
-      className="group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+      className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
     >
       {/* Cover */}
       <div className="relative h-44 shrink-0 overflow-hidden">

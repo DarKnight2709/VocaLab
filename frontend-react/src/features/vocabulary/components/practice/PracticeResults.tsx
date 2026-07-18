@@ -36,7 +36,7 @@ export default function PracticeResults({
   return (
     <div className="max-w-3xl mx-auto space-y-8 mt-4">
       {/* Score header */}
-      <div className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border bg-card shadow-sm space-y-3">
+      <div className="flex flex-col items-center justify-center p-8 text-center rounded-2xl bg-card shadow-sm space-y-3">
         <div className="text-4xl">{percentage >= 80 ? "🎉" : percentage >= 50 ? "💪" : "📝"}</div>
         <h2 className="text-xl font-bold">
           {t("vocabulary.practiceComplete") || "Practice Complete!"}

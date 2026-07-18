@@ -15,7 +15,7 @@ export default function WelcomeBanner() {
   const greeting = useMemo(() => getGreeting(t), [t]);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border bg-card p-6 sm:p-8">
+    <section className="relative overflow-hidden rounded-2xl bg-card p-6 sm:p-8 shadow-sm">
       <div className="absolute inset-y-0 left-0 w-1 rounded-l-2xl bg-gradient-to-b from-emerald-500 to-teal-400" />
       <div className="pl-4">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">

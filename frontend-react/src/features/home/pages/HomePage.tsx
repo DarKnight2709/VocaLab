@@ -6,8 +6,8 @@ import HomeRecentPosts from "../components/HomeRecentPosts";
 
 export default function HomePage() {
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6">
-      <div className="mx-auto max-w-6xl space-y-8">
+    <div className="h-full overflow-y-scroll p-6 md:p-8">
+      <div className="w-full max-w-[1600px] mx-auto space-y-8">
         <WelcomeBanner />
 
         <div className="grid gap-6 lg:grid-cols-[1fr_1.6fr]">

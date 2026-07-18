@@ -25,10 +25,10 @@ export default function StatsPage() {
           <div className="h-6 w-32 bg-muted rounded" />
           <div className="h-10 w-64 bg-muted rounded" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="w-full h-48 bg-card rounded-[32px] border" />
-            <div className="w-full h-48 bg-card rounded-[32px] border" />
+            <div className="w-full h-48 bg-card rounded-2xl border" />
+            <div className="w-full h-48 bg-card rounded-2xl border" />
           </div>
-          <div className="w-full h-64 bg-card rounded-[32px] border" />
+          <div className="w-full h-64 bg-card rounded-2xl border" />
         </div>
       </div>
     );
@@ -41,8 +41,8 @@ export default function StatsPage() {
   const history = stats?.history ?? [];
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-8 pb-12">
+    <div className="h-full overflow-y-scroll p-6 md:p-8">
+      <div className="w-full max-w-[1600px] mx-auto space-y-8 pb-12">
         <Breadcrumb items={[
           { label: t("vocabulary.title"), href: "/vocabulary" },
           { label: t("stats.title") }
@@ -50,7 +50,7 @@ export default function StatsPage() {
 
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">{t("stats.title")}</h1>
+            <h1 className="text-2xl font-bold">{t("stats.title")}</h1>
             <p className="text-base text-muted-foreground mt-1">
               {t("stats.description")}
             </p>
@@ -60,7 +60,7 @@ export default function StatsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Time & Weekly Activity */}
           <div className="flex flex-col gap-6">
-            <Card className="rounded-[32px] border bg-card p-6 shadow-sm flex flex-col gap-6">
+            <Card className="rounded-2xl bg-card shadow-sm p-6 shadow-sm flex flex-col gap-6">
               <StudySummary todayMinutes={todayMinutes} />
               
               <WeeklyActivityChart 

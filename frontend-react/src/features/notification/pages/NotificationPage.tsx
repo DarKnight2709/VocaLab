@@ -21,13 +21,13 @@ export default function NotificationPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-background">
-      <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="h-full overflow-y-scroll p-6 md:p-8 bg-background">
+      <div className="w-full max-w-[1600px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <Breadcrumb items={[{ label: t("notifications.title") }]} />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t("notifications.title")}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t("notifications.title")}</h1>
             <p className="text-muted-foreground mt-1">
               {t("notifications.description")}
             </p>

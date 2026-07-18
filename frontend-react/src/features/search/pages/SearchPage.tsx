@@ -39,6 +39,9 @@ import {
 
 type Tab = "all" | "collections" | "posts" | "groups" | "profiles";
 
+const filterTriggerClass = "h-9 w-full sm:w-auto sm:min-w-[130px] rounded-full bg-zinc-100 dark:bg-zinc-800/80 border-none hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors px-4 text-sm font-medium shadow-none focus:ring-0 focus:ring-offset-0";
+const languageTriggerClass = "min-h-9 w-full sm:w-auto sm:min-w-[160px] rounded-3xl bg-zinc-100 dark:bg-zinc-800/80 border-none hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors px-4 py-1.5 text-sm font-medium shadow-none focus:ring-0 focus:ring-offset-0";
+
 type SearchSortOption = "newest" | "oldest" | "popular";
 type SearchProfileSortOption = "all" | "friends" | "mutual-friends";
 type SearchGroupFilterOption = "all" | "my_groups" | "popular";
@@ -381,7 +384,7 @@ export default function SearchPage() {
         value={activeSort}
         onValueChange={(value) => updateSearchParam("sort", value)}
       >
-        <SelectTrigger className="w-full sm:w-44">
+        <SelectTrigger className={filterTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -397,7 +400,7 @@ export default function SearchPage() {
         value={activeTime}
         onValueChange={(value) => updateSearchParam("time", value)}
       >
-        <SelectTrigger className="w-full sm:w-44">
+        <SelectTrigger className={filterTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -419,7 +422,7 @@ export default function SearchPage() {
           value={activeProfileSort}
           onValueChange={(value) => updateSearchParam("profileSort", value)}
         >
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className={filterTriggerClass}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -442,7 +445,7 @@ export default function SearchPage() {
         value={activeSort}
         onValueChange={(value) => updateSearchParam("sort", value)}
       >
-        <SelectTrigger className="w-full sm:w-44">
+        <SelectTrigger className={filterTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -458,7 +461,7 @@ export default function SearchPage() {
         value={activeTime}
         onValueChange={(value) => updateSearchParam("time", value)}
       >
-        <SelectTrigger className="w-full sm:w-44">
+        <SelectTrigger className={filterTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -470,11 +473,12 @@ export default function SearchPage() {
         </SelectContent>
       </Select>
 
-      <div className="w-full sm:w-[400px]">
+      <div className="w-full sm:w-auto">
         <LanguagePicker
           selected={languagesParam ? languagesParam.split(",") : []}
           onChange={(selected) => updateSearchParam("languages", selected.join(","))}
           maxDisplayed={2}
+          triggerClassName={languageTriggerClass}
         />
       </div>
     </div>
@@ -486,7 +490,7 @@ export default function SearchPage() {
         value={activeGroupFilter}
         onValueChange={(value) => updateSearchParam("filter", value)}
       >
-        <SelectTrigger className="w-full sm:w-44">
+        <SelectTrigger className={filterTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -500,33 +504,34 @@ export default function SearchPage() {
         </SelectContent>
       </Select>
       
-      <div className="w-full sm:w-[400px]">
+      <div className="w-full sm:w-auto">
         <LanguagePicker
           selected={languagesParam ? languagesParam.split(",") : []}
           onChange={(selected) => updateSearchParam("languages", selected.join(","))}
           maxDisplayed={2}
+          triggerClassName={languageTriggerClass}
         />
       </div>
     </div>
   );
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-background">
-      <div className="mx-auto w-full max-w-6xl">
+    <div className="h-full overflow-y-scroll p-6 md:p-8 bg-background">
+      <div className="w-full max-w-[1600px] mx-auto">
         <div className="mb-6">
           <Breadcrumb items={[{ label: t("search.title") }]} />
         </div>
 
         {/* Tabs */}
-        <div className="mb-2 flex gap-1 overflow-x-auto rounded-xl p-1 no-scrollbar">
+        <div className="mb-4 flex gap-6 overflow-x-auto overflow-y-hidden border-b border-border/60 no-scrollbar">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => handleTabChange(tab.key)}
-              className={`flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-base font-medium transition-all ${
+              className={`flex shrink-0 items-center justify-center gap-2 pb-3 text-[15px] transition-all border-b-2 -mb-[1px] ${
                 activeTab === tab.key
-                  ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-foreground text-foreground font-semibold"
+                  : "border-transparent text-muted-foreground font-medium hover:text-foreground hover:border-muted-foreground/30"
               }`}
             >
               {tab.icon}

@@ -262,12 +262,12 @@ export default function SettingPage() {
 
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-background">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="h-full overflow-y-scroll p-6 md:p-8 bg-background">
+      <div className="w-full max-w-[1600px] mx-auto space-y-6">
         <Breadcrumb items={[{ label: t("common.settingsPage") }]} />
 
-        <div className="pb-4 border-b">
-          <h1 className="text-3xl font-bold tracking-tight">{t("common.settingsPage")}</h1>
+        <div className="pb-4">
+          <h1 className="text-2xl font-bold tracking-tight">{t("common.settingsPage")}</h1>
           <p className="text-muted-foreground mt-1">
             {t("settings.displayLanguageDesc")}
           </p>

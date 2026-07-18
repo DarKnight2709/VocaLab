@@ -71,7 +71,7 @@ export const HeatMapChart = ({ history }: HeatMapChartProps) => {
   };
 
   return (
-    <Card className="rounded-[32px] border bg-card p-6 shadow-sm flex flex-col w-full">
+    <Card className="rounded-2xl bg-card shadow-sm p-6 shadow-sm flex flex-col w-full">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-bold">{t("stats.activityHeatMap") || "Activity Heat Map"}</h3>
         

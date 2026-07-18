@@ -104,7 +104,7 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-t-xl border border-b-0 bg-muted/30 px-2 py-1.5">
+    <div className="flex flex-wrap items-center gap-0.5 rounded-t-xl shadow-sm border-b-0 bg-muted/30 px-2 py-1.5">
       <ToolbarBtn
         onClick={() => editor.chain().focus().toggleBold().run()}
         active={editor.isActive("bold")}

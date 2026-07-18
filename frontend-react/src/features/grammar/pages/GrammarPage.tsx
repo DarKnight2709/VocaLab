@@ -137,8 +137,8 @@ export default function GrammarPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="h-full overflow-y-scroll p-6 md:p-8">
+      <div className="w-full max-w-[1600px] mx-auto space-y-6">
         <Breadcrumb items={[{ label: t("common.grammar") }]} />
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -227,7 +227,7 @@ export default function GrammarPage() {
             {data?.items.map((item) => (
               <div
                 key={item.id}
-                className="border rounded-xl p-4 bg-card hover:shadow-md transition-shadow group"
+                className="rounded-xl p-4 bg-card shadow-sm hover:shadow-md transition-shadow group"
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="font-semibold text-base leading-tight">

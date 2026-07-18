@@ -5,7 +5,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
-import { ArrowLeft, Phone } from "lucide-react";
+import { ArrowLeft, Phone, MoreHorizontal } from "lucide-react";
 import { Link } from "react-router";
 import ROUTES from "@/shared/lib/routes";
 import { getInitials } from "../utils";
@@ -37,7 +37,7 @@ export function ChatHeader({
     : t("chat.chooseSomeone");
 
   return (
-    <div className="border-b p-4 bg-card">
+    <div className="border-b p-4 h-[76px] flex flex-col justify-center">
       <div className="flex items-center gap-3">
         <Button
           type="button"
@@ -73,13 +73,13 @@ export function ChatHeader({
             </div>
             <Button
               type="button"
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
               onClick={onGroupInfoClick}
               aria-label={t("chat.groupInfo")}
               title={t("chat.groupInfo")}
             >
-              ...
+              <MoreHorizontal className="h-5 w-5" />
             </Button>
           </>
         ) : (

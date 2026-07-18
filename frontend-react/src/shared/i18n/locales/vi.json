@@ -170,6 +170,8 @@
     "settings": "Cài đặt",
     "help": "Trợ giúp",
     "signOut": "Đăng xuất",
+    "lightMode": "Chế độ sáng",
+    "darkMode": "Chế độ tối",
     "cardType": "Loại thẻ",
     "manageCardTypes": "Quản lý loại thẻ",
     "addCardType": "Thêm loại thẻ",
@@ -194,7 +196,9 @@
     "backToHome": "Quay lại trang chủ",
     "idiomsPhrases": "Thành ngữ & Cụm từ",
     "synonyms": "Từ đồng nghĩa",
-    "antonyms": "Từ trái nghĩa"
+    "antonyms": "Từ trái nghĩa",
+    "noData": "Không có dữ liệu",
+    "noDescription": "Không có mô tả"
   },
   "auth": {
     "signIn": "Đăng nhập",

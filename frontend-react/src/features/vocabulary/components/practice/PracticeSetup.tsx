@@ -22,33 +22,32 @@ export default function PracticeSetup({
   const hasPracticeFields = fieldConfigs.some((fc) => fc.mode === "practice");
 
   return (
-    <div className="max-w-xl mx-auto space-y-6 mt-4">
-      <div className="text-center space-y-1">
-        <h2 className="text-lg font-bold">{t("vocabulary.practiceSetup") || "Practice Setup"}</h2>
+    <div className="max-w-xl mx-auto space-y-8 mt-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-xl font-bold tracking-tight">{t("vocabulary.practiceSetup") || "Practice Setup"}</h2>
         <p className="text-sm text-muted-foreground">
           {t("vocabulary.selectFieldsDesc") || "Choose which fields to practice (type answers), show (visible), or hide."}
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {fieldConfigs.map((fc) => {
           const isImage = fc.field.fieldType === CardFieldType.IMAGE;
           return (
             <div
               key={fc.field.id}
-              className="flex items-center justify-between rounded-xl border bg-card px-4 py-3 transition-colors hover:bg-muted/40"
+              className="flex items-center justify-between rounded-2xl bg-card border border-border/50 shadow-sm px-5 py-4 transition-colors hover:bg-muted/40"
             >
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">{fc.field.label}</span>
-                <span className="text-xs text-muted-foreground">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[15px] font-semibold">{fc.field.label}</span>
+                <span className="text-[13px] text-muted-foreground">
                   {fc.field.side === "FRONT" ? t("vocabulary.frontFace") : t("vocabulary.backFace")}
                   {isImage && ` · ${t("vocabulary.imageField") || "Image"}`}
                 </span>
               </div>
               <Button
                 variant="outline"
-                size="sm"
-                className={`gap-1.5 min-w-[110px] justify-center font-semibold text-xs ${
+                className={`gap-1.5 min-w-[110px] h-9 justify-center font-semibold text-[13px] rounded-xl ${
                   fc.mode === "practice"
                     ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-950/20"
                     : fc.mode === "show"
@@ -59,19 +58,19 @@ export default function PracticeSetup({
               >
                 {fc.mode === "show" && (
                   <>
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="h-4 w-4" />
                     {t("vocabulary.practiceFieldShow") || "Show"}
                   </>
                 )}
                 {fc.mode === "practice" && (
                   <>
-                    <PenLine className="h-3.5 w-3.5" />
+                    <PenLine className="h-4 w-4" />
                     {t("vocabulary.practiceFieldPractice") || "Practice"}
                   </>
                 )}
                 {fc.mode === "hide" && (
                   <>
-                    <EyeOff className="h-3.5 w-3.5" />
+                    <EyeOff className="h-4 w-4" />
                     {t("vocabulary.practiceFieldHide") || "Hide"}
                   </>
                 )}
@@ -81,10 +80,10 @@ export default function PracticeSetup({
         })}
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center pt-2">
         <Button
           size="lg"
-          className="w-52 font-semibold"
+          className="w-56 h-11 font-bold text-[15px] rounded-xl"
           disabled={!hasPracticeFields || cards.length === 0}
           onClick={onStartPractice}
         >

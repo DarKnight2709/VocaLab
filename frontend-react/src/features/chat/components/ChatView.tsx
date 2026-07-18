@@ -684,8 +684,8 @@ export default function ChatView({
     <div
       className={
         embedded
-          ? "h-full flex flex-col bg-background"
-          : "h-full flex flex-col bg-background"
+          ? "h-full flex flex-col"
+          : "h-full flex flex-col"
       }
     >
       <GroupCreateDialog

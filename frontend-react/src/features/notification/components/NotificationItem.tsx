@@ -117,7 +117,7 @@ export function NotificationItem({
       onClick={() => onClick(notification.id)}
       className={`flex items-start gap-4 p-4 rounded-xl transition-colors hover:bg-muted/50 ${
         isUnread ? "bg-primary/5" : "bg-card"
-      } border`}
+      }`}
     >
       <Avatar className="h-10 w-10 border shrink-0">
         <AvatarImage

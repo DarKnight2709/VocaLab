@@ -92,15 +92,20 @@ function MessageBubble({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="relative inline-flex items-center group/message">
-      <div
-        className={`rounded-lg px-3 py-1.5 ${isMine ? "bg-primary text-primary-foreground" : "bg-card border"}`}
-      >
-        {content}
+    <div className="relative inline-flex flex-col group/message">
+      <div className={`flex flex-col ${isMine ? "items-end" : "items-start"} gap-1`}>
+        {content && (
+          <div
+            className={`rounded-2xl px-4 py-2 ${isMine ? "bg-primary/10 text-primary" : "bg-card border text-foreground"}`}
+            style={{ wordBreak: "break-word" }}
+          >
+            {content}
+          </div>
+        )}
         {attachments?.map((attachment, index) => (
-          <div key={index} className="mt-1">
+          <div key={index} className="overflow-hidden rounded-2xl relative mt-0.5">
             {attachment._uploading ? (
-              <div className="flex items-center gap-2 text-xs opacity-70">
+              <div className={`flex items-center gap-2 text-xs opacity-70 px-4 py-2 rounded-2xl ${isMine ? "bg-primary/10 text-primary" : "bg-card border"}`}>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 <span>{t("chat.uploading", { name: attachment.name })}</span>
               </div>
@@ -108,17 +113,17 @@ function MessageBubble({
               <img
                 src={attachment.url}
                 onClick={() => attachment.url && onOpenImage(attachment.url)}
-                className="max-w-50 cursor-pointer rounded-lg transition-opacity hover:opacity-90"
+                className="max-w-64 cursor-pointer object-cover transition-opacity hover:opacity-90 bg-muted"
                 alt=""
               />
             ) : attachment.type === "video" ? (
-              <video src={attachment.url} controls className="max-w-50 rounded-lg" />
+              <video src={attachment.url} controls className="max-w-64 bg-black" />
             ) : (
               <a
                 href={attachment.url}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 text-xs underline"
+                className={`flex items-center gap-1 text-xs underline px-4 py-2 rounded-2xl ${isMine ? "bg-primary/10 text-primary" : "bg-card border"}`}
               >
                 {attachment.name || t("common.download")}
               </a>
@@ -128,7 +133,7 @@ function MessageBubble({
       </div>
 
       <div
-        className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-55 whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-auto ${isMine ? "right-full mr-2 text-right" : "left-full ml-2 text-left"}`}
+        className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-55 whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-none ${isMine ? "right-full mr-2 text-right" : "left-full ml-2 text-left"}`}
       >
         <div className="flex flex-col gap-0.5">
           <span>{formatHoverDateTime(currentDate)}</span>
@@ -297,7 +302,7 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 min-h-0 overflow-auto overscroll-contain bg-muted/30 p-4 flex flex-col"
+      className="flex-1 min-h-0 overflow-auto overscroll-contain p-4 flex flex-col"
     >
       {lightboxUrl && (
         <div

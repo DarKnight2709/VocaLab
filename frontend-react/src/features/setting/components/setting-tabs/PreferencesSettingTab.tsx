@@ -38,7 +38,7 @@ export default function PreferencesSettingTab() {
 
         <div className="grid gap-4">
           {/* Display Language */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.displayLanguage")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.displayLanguageDesc")}</p>
@@ -67,7 +67,7 @@ export default function PreferencesSettingTab() {
           </div>
 
           {/* Theme selection */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.theme")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.themeDesc")}</p>

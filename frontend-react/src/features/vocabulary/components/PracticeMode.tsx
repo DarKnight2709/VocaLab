@@ -23,7 +23,7 @@ export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
   const [fieldConfigs, setFieldConfigs] = useState<FieldConfig[]>(() =>
     uniqueFields.map((field) => ({
       field,
-      mode: field.side === "FRONT" ? "show" : "practice",
+      mode: "show",
     }))
   );
 

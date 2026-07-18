@@ -138,7 +138,7 @@ export default function VocabularyAddCardPage() {
 
 
         <form onSubmit={handleCreateCard} className="space-y-5">
-          <div className="rounded-2xl border bg-card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-2xl bg-card shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>{t("vocabulary.cardType")}</Label>
@@ -213,7 +213,7 @@ export default function VocabularyAddCardPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-card p-4 space-y-4">
+          <div className="rounded-2xl bg-card shadow-sm p-4 space-y-4">
             <h2 className="font-semibold">{t("vocabulary.createCardHelp")}</h2>
 
             {(selectedType?.fields ?? []).length === 0 && (

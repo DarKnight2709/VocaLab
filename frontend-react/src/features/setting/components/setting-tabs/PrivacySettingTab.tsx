@@ -139,7 +139,7 @@ export default function PrivacySettingTab({
 
         <div className="grid gap-4">
           {/* Allow standard followers configuration switch */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.privacy.whoCanFollow")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.privacy.whoCanFollowDesc")}</p>
@@ -148,7 +148,7 @@ export default function PrivacySettingTab({
           </div>
 
           {/* Messaging Scope Access Selection */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.privacy.whoCanMessage")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.privacy.whoCanMessageDesc")}</p>
@@ -166,7 +166,7 @@ export default function PrivacySettingTab({
           </div>
 
           {/* Followers NavTab TabVisibility Configuration */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.privacy.followersTab")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.privacy.followersTabDesc")}</p>
@@ -184,7 +184,7 @@ export default function PrivacySettingTab({
           </div>
 
           {/* Following Tab Visibility Option */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.privacy.followingTab")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.privacy.followingTabDesc")}</p>
@@ -202,7 +202,7 @@ export default function PrivacySettingTab({
           </div>
 
           {/* Friend Tab Visibility System Configuration */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.privacy.friendTab")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.privacy.friendTabDesc")}</p>
@@ -220,7 +220,7 @@ export default function PrivacySettingTab({
           </div>
 
           {/* Groups Tab Visibility System Configuration */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
             <div className="flex-1 pr-4">
               <p className="font-medium">{t("settings.privacy.groupsTab")}</p>
               <p className="text-sm text-muted-foreground">{t("settings.privacy.groupsTabDesc")}</p>
@@ -247,7 +247,7 @@ export default function PrivacySettingTab({
         </div>
 
         <div className="grid gap-4">
-          <div className="flex flex-col rounded-lg border bg-muted/30 overflow-hidden">
+          <div className="flex flex-col rounded-lg bg-muted/30 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between p-4">
               <div>
                 <p className="font-medium">{t("settings.privacy.blockedAccounts")}</p>
@@ -295,7 +295,7 @@ export default function PrivacySettingTab({
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : blockedList.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 gap-2 rounded-md border border-dashed bg-muted/10">
+                  <div className="flex flex-col items-center justify-center py-8 gap-2 rounded-md bg-muted/10 shadow-sm">
                     <Shield size={20} className="text-muted-foreground/50" />
                     <p className="text-xs text-muted-foreground font-medium">
                       {blockSearch ? t("settings.privacy.noBlockedSearchResults") : t("settings.privacy.noBlockedAccounts")}

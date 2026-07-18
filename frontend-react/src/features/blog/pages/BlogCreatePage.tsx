@@ -132,15 +132,16 @@ StarterKit.configure({
 
   if (editId && isLoading) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-8">
-        <div className="text-center text-muted-foreground">{t("blog.loadingPostData")}</div>
+      <div className="h-full overflow-y-scroll p-6 md:p-8">
+        <div className="w-full max-w-[1600px] mx-auto text-center text-muted-foreground">{t("blog.loadingPostData")}</div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <Breadcrumb 
+    <div className="h-full overflow-y-scroll p-6 md:p-8">
+      <div className="w-full max-w-[1600px] mx-auto">
+        <Breadcrumb 
         items={[
           { label: t("common.blog"), href: ROUTES.BLOG.url },
           { label: editId ? t("blog.editPost") : t("blog.createPost") }
@@ -195,7 +196,7 @@ StarterKit.configure({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadImage.isPending}
-                className="flex items-center gap-2 rounded-xl border bg-muted/50 px-4 py-2.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-muted/50 shadow-sm px-4 py-2.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
               >
                 <UploadCloud size={16} />
                 <span className="hidden sm:inline">{t("blog.uploadImage")}</span>
@@ -212,7 +213,7 @@ StarterKit.configure({
               <p className="text-xs text-muted-foreground animate-pulse">{t("blog.uploadingImage")}</p>
             )}
             {coverImage && (
-              <div className="mt-2 flex justify-center rounded-xl border bg-muted/30 p-2">
+              <div className="mt-2 flex justify-center rounded-xl bg-muted/30 shadow-sm p-2">
                 <img
                   src={coverImage}
                   alt={t("blog.coverPreviewAlt")}
@@ -283,6 +284,7 @@ StarterKit.configure({
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }

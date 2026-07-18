@@ -36,9 +36,10 @@ interface LanguagePickerProps {
   selected: string[];
   onChange: (selected: string[]) => void;
   maxDisplayed?: number;
+  triggerClassName?: string;
 }
 
-export function LanguagePicker({ selected, onChange, maxDisplayed }: LanguagePickerProps) {
+export function LanguagePicker({ selected, onChange, maxDisplayed, triggerClassName }: LanguagePickerProps) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
 
@@ -62,7 +63,7 @@ export function LanguagePicker({ selected, onChange, maxDisplayed }: LanguagePic
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-auto min-h-10 px-3 py-2"
+          className={cn("w-full justify-between h-auto min-h-10 px-3 py-2", triggerClassName)}
         >
           <div className="flex flex-wrap gap-1 items-center">
             {selected.length > 0 ? (

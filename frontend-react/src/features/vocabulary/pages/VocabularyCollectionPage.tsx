@@ -298,7 +298,11 @@ export default function VocabularyCollectionPage() {
           >
             <BookOpenText className="h-4 w-4" /> {t("vocabulary.learn")}
             {!isLoading && data && data.dueCount + data.newCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full leading-none">
+              <span className={`ml-1 px-2 py-0.5 text-[10px] font-medium rounded-full leading-none flex items-center justify-center ${
+                mode === "learn" 
+                  ? "bg-primary-foreground text-primary" 
+                  : "bg-primary text-primary-foreground"
+              }`}>
                 {data.dueCount + data.newCount}
               </span>
             )}
@@ -331,14 +335,14 @@ export default function VocabularyCollectionPage() {
       ) : mode === "preview" ? (
         <div className="space-y-2">
           {cards.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+              <div className="rounded-xl bg-card shadow-sm p-10 text-center text-muted-foreground">
               {t("vocabulary.noCards")}
             </div>
           ) : (
             cards.map((card) => (
               <div
                 key={card.id}
-                className="group relative rounded-xl border bg-card p-4 hover:bg-muted/40 transition-colors"
+                className="group relative rounded-xl bg-card shadow-sm p-4 hover:bg-muted/40 transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div className="text-xs text-muted-foreground mb-1">
@@ -415,7 +419,7 @@ export default function VocabularyCollectionPage() {
               </div>
             </div>
           ) : sessionCards.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border bg-card shadow-sm space-y-4 max-w-md mx-auto">
+            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl bg-card shadow-sm space-y-4 max-w-md mx-auto">
               <div className="text-4xl animate-bounce">🎉</div>
               <h2 className="text-xl font-bold">{t("vocabulary.reviewDoneTitle") || "Review Session Completed!"}</h2>
               <p className="text-sm text-muted-foreground">
@@ -433,7 +437,7 @@ export default function VocabularyCollectionPage() {
               >
                 <div className={`relative w-full h-full min-h-[350px] duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
                   {/* Front Face */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden">
+                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden">
                     <div className="text-center">
                       <CardFace card={sessionCards[flashcardIdx]} side="front" className="text-xl font-medium" />
                     </div>
@@ -446,7 +450,7 @@ export default function VocabularyCollectionPage() {
                   </div>
 
                   {/* Back Face */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl border bg-card flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
+                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
                     <div className="text-center">
                       <CardFace card={sessionCards[flashcardIdx]} side="back" className="text-xl font-medium text-muted-foreground" />
                     </div>

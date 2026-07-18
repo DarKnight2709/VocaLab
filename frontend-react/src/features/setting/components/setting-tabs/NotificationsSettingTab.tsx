@@ -90,7 +90,7 @@ export default function NotificationsSettingTab({
     descKey: string;
     settingKey: keyof typeof notificationStates;
   }) => (
-    <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
       <div className="flex-1 pr-4">
         <p className="font-medium">{t(titleKey)}</p>
         <p className="text-sm text-muted-foreground">{t(descKey)}</p>

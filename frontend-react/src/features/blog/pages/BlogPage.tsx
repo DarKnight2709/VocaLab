@@ -28,8 +28,8 @@ export default function BlogPage() {
   const blogs = blogData?.data?.blogs ?? [];
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="h-full overflow-y-scroll p-6 md:p-8">
+      <div className="w-full max-w-[1600px] mx-auto space-y-6">
         <Breadcrumb items={[{ label: t("common.blog") }]} />
 
         <BlogListHeader

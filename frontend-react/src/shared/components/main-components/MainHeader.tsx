@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { Sun, Moon, Menu, Bell } from "lucide-react";
-import { useTheme } from "@/shared/components/ThemeProvider";
+import { Menu, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 import { AccountMenu } from "@/features/auth/components/account-menu/AccountMenu";
@@ -59,13 +58,12 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
 
 
 
-  const { theme, setTheme } = useTheme();
   const { data: unreadCount = 0 } = useUnreadCountQuery();
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-sm shadow-xs transition-colors">
-        <div className="h-16 md:h-18 px-3 md:px-6 flex items-center gap-2 md:gap-4">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm transition-colors">
+        <div className="h-14 pl-3 pr-3 md:pr-6 flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-1 md:gap-3 shrink-0">
             <button
               type="button"
@@ -106,18 +104,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
                 </span>
               )}
             </button>
-            <button
-              type="button"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground"
-              aria-label={t("common.toggleTheme")}
-            >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5 text-yellow-500" />
-              ) : (
-                <Moon className="h-5 w-5 text-indigo-600" />
-              )}
-            </button>
+
 
             <AccountMenu
               me={me}

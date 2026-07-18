@@ -100,10 +100,12 @@ export default function BlogDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-8">
-        <div className="space-y-4">
-          <div className="h-8 w-2/3 animate-pulse rounded-xl bg-muted" />
-          <div className="h-64 animate-pulse rounded-2xl bg-muted" />
+      <div className="h-full overflow-y-scroll p-6 md:p-8">
+        <div className="w-full max-w-[1600px] mx-auto">
+          <div className="space-y-4">
+            <div className="h-8 w-2/3 animate-pulse rounded-xl bg-muted" />
+            <div className="h-64 animate-pulse rounded-2xl bg-muted" />
+          </div>
         </div>
       </div>
     );
@@ -111,8 +113,10 @@ export default function BlogDetailPage() {
 
   if (!blog) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-8 text-center text-muted-foreground">
-        {t("blog.postNotFound")}
+      <div className="h-full overflow-y-scroll p-6 md:p-8">
+        <div className="w-full max-w-[1600px] mx-auto text-center text-muted-foreground">
+          {t("blog.postNotFound")}
+        </div>
       </div>
     );
   }
@@ -139,8 +143,9 @@ export default function BlogDetailPage() {
   const isOwner = currentUserId === blog.author.id;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <Breadcrumb
+    <div className="h-full overflow-y-scroll p-6 md:p-8">
+      <div className="w-full max-w-[1600px] mx-auto">
+        <Breadcrumb
         items={[
           { label: t("common.blog"), href: ROUTES.BLOG.url },
           { label: blog.title },
@@ -332,6 +337,7 @@ export default function BlogDetailPage() {
               {t("blog.noComments")}
             </p>
           )}
+        </div>
         </div>
       </div>
     </div>

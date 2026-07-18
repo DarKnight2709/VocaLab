@@ -230,7 +230,7 @@ export default function CardFieldDragDrop({
       draggable
       onDragStart={(e) => handleDragStart(e, field)}
       onDragEnd={handleDragEnd}
-      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 cursor-move transition-colors"
+      className="flex items-center gap-3 p-3 rounded-lg bg-card shadow-sm hover:bg-muted/50 cursor-move transition-colors group"
     >
       <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
       <div className="flex-1 min-w-0">
@@ -244,7 +244,7 @@ export default function CardFieldDragDrop({
           {field.label}
         </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
           variant="ghost"
           size="icon"
@@ -275,7 +275,7 @@ export default function CardFieldDragDrop({
     <div
       onDragOver={(e) => handleZoneDragOver(e, side)}
       onDrop={(e) => handleDrop(e, side)}
-      className="flex-1 p-4 rounded-lg border-2 border-dashed bg-card/50 flex flex-col"
+      className="flex-1 p-4 rounded-lg bg-card/50 shadow-sm flex flex-col"
       style={{ minHeight: "300px" }}
     >
       <div className="font-semibold text-sm mb-2">

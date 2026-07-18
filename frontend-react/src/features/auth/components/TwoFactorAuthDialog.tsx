@@ -63,7 +63,7 @@ export function TwoFactorAuthDialog({
 
           <div className="flex flex-col items-center justify-center space-y-4">
             {qrCode ? (
-              <div className="p-2 rounded-lg shadow-inner border bg-muted/20">
+              <div className="p-2 rounded-lg shadow-inner bg-muted/20 shadow-sm">
                 <img 
                   src={qrCode} 
                   alt="2FA QR Code" 

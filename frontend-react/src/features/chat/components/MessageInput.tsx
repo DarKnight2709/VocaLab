@@ -81,7 +81,7 @@ export function MessageInput({
   }
 
   return (
-    <div className="border-t p-4 bg-card">
+    <div className="border-t p-4">
       {/* Emoji Picker */}
       {showEmojiPicker && (
         <div className="absolute bottom-20 z-50">

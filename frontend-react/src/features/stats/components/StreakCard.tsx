@@ -24,7 +24,7 @@ export const StreakCard = ({
     : `${totalMinutes} ${t("stats.minutes") || "min"}`;
 
   return (
-    <Card className="rounded-[32px] border bg-card p-6 shadow-sm flex flex-col gap-6 w-full h-full justify-center">
+    <Card className="rounded-2xl bg-card shadow-sm p-6 shadow-sm flex flex-col gap-6 w-full h-full justify-center">
       <div className="flex items-center gap-4">
         <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-orange-500/10 text-orange-500">
           <Flame className="h-8 w-8" />
