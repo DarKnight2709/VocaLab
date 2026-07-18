@@ -244,6 +244,10 @@ export default function VocabularyCollectionPage() {
               <>
                 <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                 <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <span>{data.newCount + data.dueCount} {t("vocabulary.total") || "Total"}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
                   <span>{data.newCount} {t("vocabulary.new") || "New"}</span>
                 </div>
@@ -373,15 +377,19 @@ export default function VocabularyCollectionPage() {
         <div className="mt-4">
           {!isStudying ? (
             <div className="flex flex-col items-center max-w-4xl mx-auto space-y-10 py-10">
-              <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 border-b dark:border-slate-800 pb-8 px-4">
+              <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 px-4">
                 <div className="space-y-1.5 text-center md:text-left flex-1">
                   <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                    {data?.name}
+                    {t("vocabulary.today") || "Today"}
                   </h1>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-8">
                   <div className="flex gap-8">
+                    <div className="flex flex-col items-center">
+                      <span className="text-3xl font-bold text-emerald-500">{(data?.newCount || 0) + (data?.dueCount || 0)}</span>
+                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">Total</span>
+                    </div>
                     <div className="flex flex-col items-center">
                       <span className="text-3xl font-bold text-blue-500">{data?.newCount || 0}</span>
                       <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">New</span>

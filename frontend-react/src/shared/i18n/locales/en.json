@@ -567,6 +567,8 @@
     "revealAnswer": "Reveal Answer",
     "new": "New",
     "due": "Due",
+    "total": "Total",
+    "today": "Today",
     "remainingCards": "Remaining Cards",
     "reviewDoneTitle": "Review Session Completed!",
     "reviewDoneDesc": "All caught up! You have completed all due reviews for this collection.",
