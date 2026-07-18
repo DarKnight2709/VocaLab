@@ -547,7 +547,7 @@ export class GroupChatService {
       data: { isActive: false },
     });
 
-    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
+    this.groupChatGateway.notifyReloadGroups(memberIds);
 
     return {
       id: deletedGroup.id,
@@ -563,11 +563,14 @@ export class GroupChatService {
     const group = await this.getActiveGroupOrThrow(groupId);
     const memberIds = group.members?.map((m) => m.userId) || [];
 
+    const remainingMemberIds = memberIds.filter(id => id !== userId);
+
     await this.prisma.groupMember.deleteMany({
       where: { groupId, userId },
     });
 
-    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
+    this.groupChatGateway.notifyReloadGroups([userId]);
+    this.groupChatGateway.notifyReloadGroups(remainingMemberIds, groupId);
   }
 
   async joinGroup(groupId: string, userId: string): Promise<void> {
@@ -707,11 +710,14 @@ export class GroupChatService {
       throw new NotFoundException(ErrorCode.GROUP_MEMBER_NOT_FOUND);
     }
 
+    const remainingMemberIds = memberIds.filter(id => id !== memberId);
+
     await this.prisma.groupMember.deleteMany({
       where: { groupId, userId: memberId },
     });
 
-    this.groupChatGateway.notifyReloadGroups(memberIds, groupId);
+    this.groupChatGateway.notifyReloadGroups([memberId]);
+    this.groupChatGateway.notifyReloadGroups(remainingMemberIds, groupId);
 
     return {
       id: memberId,

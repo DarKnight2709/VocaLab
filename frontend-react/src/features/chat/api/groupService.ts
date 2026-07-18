@@ -182,8 +182,7 @@ export function useDeleteGroupMutation() {
         DeleteResponseSchema,
       );
     },
-    onSuccess: (_, groupId) => {
-      queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
+    onSuccess: (_, __) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       toast.success(i18n.t("chat.groupDeleted"));
     },
@@ -199,8 +198,7 @@ export function useLeaveGroupMutation() {
     mutationFn: async (groupId: string) => {
       return await api.post(API_ROUTES.GROUP.LEAVE(groupId));
     },
-    onSuccess: (_, groupId) => {
-      queryClient.removeQueries({ queryKey: groupKeys.detail(groupId) });
+    onSuccess: (_, __) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       toast.success(i18n.t("chat.leftGroup"));
     },
