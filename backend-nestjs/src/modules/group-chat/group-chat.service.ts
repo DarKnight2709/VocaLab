@@ -336,6 +336,7 @@ export class GroupChatService {
 
     const where: Prisma.GroupWhereInput = {
       deletedAt: null,
+      isActive: true,
     };
 
     const AND: Prisma.GroupWhereInput[] = [];
