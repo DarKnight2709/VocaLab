@@ -52,13 +52,6 @@ export interface VocabCollection {
 }
 
 // =====================================================
-// Domain: Card Type (types)
-// =====================================================
-
-// CardFieldType and CardSide are now imported from shared/enums
-// CardField and CardType are now imported from shared/validations/VocabularySchema
-
-// =====================================================
 // Domain: Card (types)
 // =====================================================
 
@@ -272,7 +265,6 @@ export const useCreateCardTypeMutation = () => {
       description?: string;
       fields: Array<{
         label: string;
-        fieldType: string;
         side: string;
         order: number;
         color?: string | null;
@@ -306,7 +298,6 @@ export const useUpdateCardTypeMutation = () => {
         fields?: Array<{
           id?: string;
           label: string;
-          fieldType: string;
           side: string;
           order: number;
           color?: string | null;

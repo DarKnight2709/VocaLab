@@ -1,7 +1,7 @@
 import { PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
 import { UserResponse } from '@/modules/users/dto/users-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CardFieldType, CardSide } from '@prisma/client';
+import { CardSide } from '@prisma/client';
 
 // ─── Shared / Reusable DTOs ─────────────────────────────────
 
@@ -14,9 +14,6 @@ export class CardFieldResponseDto {
 
   @ApiProperty({ example: 'Từ vựng' })
   label!: string;
-
-  @ApiProperty({ enum: CardFieldType, example: 'TEXT' })
-  fieldType!: CardFieldType;
 
   @ApiProperty({ enum: CardSide, example: 'FRONT' })
   side!: CardSide;

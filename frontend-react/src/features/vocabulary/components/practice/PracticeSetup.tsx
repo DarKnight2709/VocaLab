@@ -1,7 +1,6 @@
 import { Eye, EyeOff, PenLine } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { CardFieldType } from "@/shared/enums/CardFieldType.enum";
 import type { FieldConfig } from "../../types";
 import type { CardItem } from "../../api/vocabularyService";
 
@@ -32,7 +31,6 @@ export default function PracticeSetup({
 
       <div className="space-y-3">
         {fieldConfigs.map((fc) => {
-          const isImage = fc.field.fieldType === CardFieldType.IMAGE;
           return (
             <div
               key={fc.field.id}
@@ -42,7 +40,6 @@ export default function PracticeSetup({
                 <span className="text-[15px] font-semibold">{fc.field.label}</span>
                 <span className="text-[13px] text-muted-foreground">
                   {fc.field.side === "FRONT" ? t("vocabulary.frontFace") : t("vocabulary.backFace")}
-                  {isImage && ` · ${t("vocabulary.imageField") || "Image"}`}
                 </span>
               </div>
               <Button

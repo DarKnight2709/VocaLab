@@ -32,7 +32,6 @@ interface CreateCardTypeDialogProps {
 interface Field {
   id?: string;
   label: string;
-  fieldType: "TEXT" | "TEXTAREA" | "IMAGE";
   side: "FRONT" | "BACK";
   order: number;
   fontSize?: number | null;
@@ -186,7 +185,7 @@ export default function CreateCardTypeDialog({
                       <div className="flex-1">
                         <div className="font-medium text-sm">{field.label}</div>
                         <div className="text-xs text-muted-foreground">
-                          {t(`vocabulary.fieldsObj.types.${field.fieldType.toLowerCase()}`)} • {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
+                          {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
                         </div>
                       </div>
                       <Button

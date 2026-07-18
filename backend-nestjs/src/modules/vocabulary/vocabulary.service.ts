@@ -94,7 +94,6 @@ const collectionDetailSelect = {
               id: true,
               key: true,
               label: true,
-              fieldType: true,
               side: true,
               order: true,
               color: true,
@@ -113,7 +112,6 @@ const collectionDetailSelect = {
               id: true,
               key: true,
               label: true,
-              fieldType: true,
               side: true,
               order: true,
               color: true,
@@ -416,7 +414,6 @@ export class VocabularyService {
                     cardTypeId: targetCardType.id,
                     key: cardField.key,
                     label: cardField.label,
-                    fieldType: cardField.fieldType,
                     side: cardField.side,
                     order: cardField.order,
                     color: cardField.color,
@@ -443,7 +440,6 @@ export class VocabularyService {
                     cardTypeId: existingCardType.id,
                     key: cardField.key,
                     label: cardField.label,
-                    fieldType: cardField.fieldType,
                     side: cardField.side,
                     order: cardField.order,
                     color: cardField.color,
@@ -484,7 +480,6 @@ export class VocabularyService {
                     data: {
                       cardTypeId: existingCardType.id,
                       label: cardField.label,
-                      fieldType: cardField.fieldType,
                       side: cardField.side,
                       order: cardField.order,
                       color: cardField.color,
@@ -525,7 +520,6 @@ export class VocabularyService {
                       data: {
                         cardTypeId: existingCardType.id,
                         label: cardField.label,
-                        fieldType: cardField.fieldType,
                         side: cardField.side,
                         order: cardField.order,
                         color: cardField.color,
@@ -1239,9 +1233,6 @@ export class VocabularyService {
             const side = field.side
               ? String(field.side).toUpperCase()
               : 'FRONT';
-            const fieldType = field.fieldType
-              ? String(field.fieldType).toUpperCase()
-              : 'TEXT';
 
             const parsedFontSize = field.fontSize
               ? parseInt(String(field.fontSize), 10)
@@ -1255,7 +1246,6 @@ export class VocabularyService {
                 usedKeys,
               ),
               label: field.label || 'New Field',
-              fieldType: fieldType as any,
               side: side as any,
               order:
                 typeof field.order === 'number' && !isNaN(field.order)
@@ -1362,7 +1352,6 @@ export class VocabularyService {
 
           const cleanData = {
             label: fieldData.label,
-            fieldType: String(fieldData.fieldType).toUpperCase() as any,
             side: String(fieldData.side).toUpperCase() as any,
             order:
               typeof fieldData.order === 'number' && !isNaN(fieldData.order)
@@ -1523,7 +1512,6 @@ export class VocabularyService {
                 id: true,
                 key: true,
                 label: true,
-                fieldType: true,
                 side: true,
                 order: true,
                 color: true,
@@ -1542,7 +1530,6 @@ export class VocabularyService {
                 id: true,
                 key: true,
                 label: true,
-                fieldType: true,
                 side: true,
                 order: true,
                 color: true,

@@ -1,9 +1,7 @@
 import { z } from "zod";
-import { CardFieldType } from "../enums/CardFieldType.enum";
 import { CardSide } from "../enums/CardSide.enum";
 
 // Enums for Zod
-export const CardFieldTypeEnum = z.nativeEnum(CardFieldType);
 export const CardSideEnum = z.nativeEnum(CardSide);
 
 // Card Field
@@ -12,7 +10,6 @@ export const CardFieldSchema = z.object({
   cardTypeId: z.string().optional(),
   key: z.string(),
   label: z.string(),
-  fieldType: CardFieldTypeEnum,
   side: CardSideEnum,
   order: z.number(),
   color: z.string().nullable().optional(),

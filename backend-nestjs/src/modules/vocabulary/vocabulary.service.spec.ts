@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { VocabularyService } from './vocabulary.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { UserService } from '../users/users.service';
+import { BlogService } from '../blog/blog.service';
 import { BadRequestException } from '@nestjs/common';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import { UpdateCardType } from '@/common/enums/update-card-type';
@@ -54,6 +55,7 @@ describe('VocabularyService - forkCollection', () => {
         VocabularyService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: UserService, useValue: mockUserService },
+        { provide: BlogService, useValue: {} },
       ],
     }).compile();
 

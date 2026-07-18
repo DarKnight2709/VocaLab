@@ -35,12 +35,6 @@ enum MessageStatus {
   DELETED
 }
 
-enum CardFieldType {
-  TEXT
-  TEXTAREA
-  IMAGE
-}
-
 enum CardSide {
   FRONT
   BACK
@@ -452,9 +446,7 @@ model CardField {
   cardTypeId String
   key        String
   label      String
-  fieldType  CardFieldType
-
-  side CardSide
+  side       CardSide
 
   order     Int
   color     String?

@@ -1,8 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import type { CardItem } from "../api/vocabularyService";
 import type { CardField } from "@/shared/validations/VocabularySchema";
-import { CardFieldType } from "@/shared/enums/CardFieldType.enum";
-
 import PracticeSetup from "./practice/PracticeSetup";
 import PracticeCard from "./practice/PracticeCard";
 import PracticeResults from "./practice/PracticeResults";
@@ -55,7 +53,7 @@ export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
     setFieldConfigs((prev) =>
       prev.map((fc) => {
         if (fc.field.id !== fieldId) return fc;
-        const isImage = fc.field.fieldType === CardFieldType.IMAGE;
+        const isImage = false; // All fields are text for now
         const order: FieldMode[] = isImage ? ["show", "hide"] : ["show", "practice", "hide"];
         const nextIdx = (order.indexOf(fc.mode) + 1) % order.length;
         return { ...fc, mode: order[nextIdx] };

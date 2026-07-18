@@ -100,7 +100,6 @@ export default function CardTypeManagementPage() {
                             id: field.id,
                             key: field.key,
                             label: field.label,
-                            fieldType: field.fieldType,
                             side: String(field.side).toUpperCase(),
                             order: field.order ?? index,
                             color: field.color,

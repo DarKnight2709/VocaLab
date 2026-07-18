@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
-import { CardFieldType, CardSide } from '@prisma/client';
+import { CardSide } from '@prisma/client';
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
 import { UpdateCardType } from '@/common/enums/update-card-type';
 import { UpdateCard } from '@/common/enums/update-card';
@@ -119,10 +119,6 @@ export class CardFieldDto {
   @IsString()
   @IsNotEmpty()
   label!: string;
-
-  @IsEnum(CardFieldType)
-  @IsNotEmpty()
-  fieldType!: CardFieldType;
 
   @IsEnum(CardSide)
   @IsNotEmpty()

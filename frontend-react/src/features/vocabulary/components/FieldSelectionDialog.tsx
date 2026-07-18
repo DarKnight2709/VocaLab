@@ -22,7 +22,6 @@ import { useTranslation } from "@/shared/hooks/useTranslation";
 interface Field {
   id?: string;
   label: string;
-  fieldType: "TEXT" | "TEXTAREA" | "IMAGE";
   side: "FRONT" | "BACK";
   order: number;
   fontSize?: number | null;
@@ -48,13 +47,11 @@ export default function FieldSelectionDialog({
   const PREDEFINED_FIELDS: Field[] = [
     {
       label: t("vocabulary.fieldsObj.front"),
-      fieldType: "TEXT",
       side: "FRONT",
       order: 0,
     },
     {
       label: t("vocabulary.fieldsObj.back"),
-      fieldType: "TEXT",
       side: "BACK",
       order: 1,
     },
@@ -63,9 +60,6 @@ export default function FieldSelectionDialog({
   const [defaultFields, setDefaultFields] = useState<Field[]>(PREDEFINED_FIELDS);
   const [selectedFields, setSelectedFields] = useState<Set<string>>(new Set());
   const [customFieldName, setCustomFieldName] = useState("");
-  const [customFieldType, setCustomFieldType] = useState<
-    "TEXT" | "TEXTAREA" | "IMAGE"
-  >("TEXT");
   const [customFieldSide, setCustomFieldSide] = useState<"FRONT" | "BACK">(
     "FRONT"
   );
@@ -92,7 +86,6 @@ export default function FieldSelectionDialog({
         ...baseField,
         id: existing.id,
         label: existing.label,
-        fieldType: existing.fieldType,
         side: existing.side,
         color: existing.color,
         fontSize: existing.fontSize,
@@ -107,7 +100,6 @@ export default function FieldSelectionDialog({
     setCustomFields(nextCustomFields);
     setSelectedFields(new Set(fields.map((field) => field.label)));
     setCustomFieldName("");
-    setCustomFieldType("TEXT");
     setCustomFieldSide("FRONT");
     setEditingField(null);
   };
@@ -141,7 +133,6 @@ export default function FieldSelectionDialog({
 
     const newField: Field = {
       label: trimmedName,
-      fieldType: customFieldType,
       side: customFieldSide,
       color: customFieldColor || undefined,
       fontSize: customFieldFontSize || 16,
@@ -156,7 +147,6 @@ export default function FieldSelectionDialog({
             ? {
                 ...field,
                 label: trimmedName,
-                fieldType: customFieldType,
                 side: customFieldSide,
                 color: customFieldColor || undefined,
                 fontSize: customFieldFontSize || 16,
@@ -195,7 +185,6 @@ export default function FieldSelectionDialog({
 
     setEditingField(null);
     setCustomFieldName("");
-    setCustomFieldType("TEXT");
     setCustomFieldSide("FRONT");
   };
 
@@ -212,7 +201,6 @@ export default function FieldSelectionDialog({
     if (editingField?.source === "custom" && editingField.label === field.label) {
       setEditingField(null);
       setCustomFieldName("");
-      setCustomFieldType("TEXT");
       setCustomFieldSide("FRONT");
     }
   };
@@ -220,7 +208,6 @@ export default function FieldSelectionDialog({
   const handleEditField = (field: Field, source: "default" | "custom") => {
     setEditingField({ label: field.label, source });
     setCustomFieldName(field.label);
-    setCustomFieldType(field.fieldType);
     setCustomFieldSide(field.side);
     setCustomFieldColor(field.color || "");
     setCustomFieldFontSize(field.fontSize || 16);
@@ -265,7 +252,7 @@ export default function FieldSelectionDialog({
                   <div className="flex-1">
                     <div className="font-medium text-sm">{field.label}</div>
                     <div className="text-xs text-muted-foreground">
-                      {t(`vocabulary.fieldsObj.types.${field.fieldType.toLowerCase()}`)} • {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
+                      {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
                     </div>
                   </div>
 
@@ -315,25 +302,6 @@ export default function FieldSelectionDialog({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="field-type" className="text-xs">
-                    {t("vocabulary.fieldsObj.fieldType")}
-                  </Label>
-                  <Select
-                    value={customFieldType}
-                    onValueChange={(value: any) => setCustomFieldType(value)}
-                  >
-                    <SelectTrigger id="field-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="TEXT">{t("vocabulary.fieldsObj.types.text")}</SelectItem>
-                      <SelectItem value="TEXTAREA">{t("vocabulary.fieldsObj.types.textarea")}</SelectItem>
-                      <SelectItem value="IMAGE">{t("vocabulary.fieldsObj.types.image")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <div>
                   <Label htmlFor="field-side" className="text-xs">
                     {t("vocabulary.fieldsObj.side")}
@@ -421,7 +389,6 @@ export default function FieldSelectionDialog({
                   onClick={() => {
                     setEditingField(null);
                     setCustomFieldName("");
-                    setCustomFieldType("TEXT");
                     setCustomFieldSide("FRONT");
                   }}
                 >
