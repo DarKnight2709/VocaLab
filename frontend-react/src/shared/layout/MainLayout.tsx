@@ -32,7 +32,7 @@ export default function MainLayout() {
 
   if (isLoading || isPending) {
     return (
-      <div className="fixed inset-0 z-50 flex h-dvh w-dvw items-center justify-center bg-[url(/debut-light.png)] bg-fixed">
+      <div className="fixed inset-0 z-50 flex h-dvh w-dvw items-center justify-center">
         <LoadingSpinner isLoading />
       </div>
     );

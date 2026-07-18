@@ -125,7 +125,6 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <section className="mt-20 py-24 bg-primary text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url(/debut-light.png)] opacity-10 bg-fixed" />
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center flex flex-col items-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">{t("landing.readyToStart")}</h2>
           <p className="text-xl text-primary-foreground/80 mb-10 max-w-2xl">
