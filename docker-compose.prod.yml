@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: always
+    container_name: voca_lab_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgredb
+      POSTGRES_PASSWORD: postgredb
+      POSTGRES_DB: voca_lab
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    container_name: voca_lab_redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    image: ghcr.io/darknight2709/vocalab-backend:latest
+    restart: always
+    container_name: voca_lab_backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    # We will mount the .env file from the server
+    env_file:
+      - .env.production
+
+  frontend:
+    image: ghcr.io/darknight2709/vocalab-frontend:latest
+    restart: always
+    container_name: voca_lab_frontend
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:
