@@ -50,6 +50,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create frontend env file
+        run: echo "${{ secrets.FRONTEND_ENV_PRODUCTION }}" > ./frontend-react/.env.production
+
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
