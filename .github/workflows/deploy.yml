@@ -7,8 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/vocalab-backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/vocalab-frontend
+  BACKEND_IMAGE: ghcr.io/darknight2709/vocalab-backend
+  FRONTEND_IMAGE: ghcr.io/darknight2709/vocalab-frontend
 
 jobs:
   build-and-push-backend:
@@ -81,7 +81,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # Log in to GHCR on the server
-            echo ${{ secrets.GH_PAT }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            echo ${{ secrets.GH_PAT }} | docker login ghcr.io -u darknight2709 --password-stdin
             
             cd ~/app
             
