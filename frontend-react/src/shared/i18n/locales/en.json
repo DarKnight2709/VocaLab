@@ -678,7 +678,7 @@
       "collection": "Collection",
       "selectCollection": "Select a collection",
       "preview": "Preview (first card)",
-      "fieldLabel": "Field: {{label}} ({{key}})",
+      "fieldLabel": "Field: {{label}} ({{side}})",
       "empty": "(Empty)",
       "fieldMismatch": "Number of values ({{count}}) is greater than the number of fields in the card type ({{fieldsCount}}).",
       "processing": "Processing...",

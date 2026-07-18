@@ -674,7 +674,7 @@
       "collection": "Bộ sưu tập",
       "selectCollection": "Chọn bộ sưu tập",
       "preview": "Xem trước (thẻ đầu tiên)",
-      "fieldLabel": "Trường: {{label}} ({{key}})",
+      "fieldLabel": "Trường: {{label}} ({{side}})",
       "empty": "(Trống)",
       "fieldMismatch": "Số lượng giá trị ({{count}}) nhiều hơn số lượng trường trong loại thẻ ({{fieldsCount}}).",
       "processing": "Đang xử lý...",

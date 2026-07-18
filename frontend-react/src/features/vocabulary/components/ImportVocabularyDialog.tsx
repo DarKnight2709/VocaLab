@@ -235,7 +235,15 @@ export default function ImportVocabularyDialog({
             </DialogHeader>
 
         <div className="grid gap-6 py-4">
-          <Tabs value={importMode} onValueChange={(v) => setImportMode(v as any)} className="w-full">
+          <Tabs 
+            value={importMode} 
+            onValueChange={(v) => {
+              setImportMode(v as any);
+              setRawText("");
+              setFileName(null);
+            }} 
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="text" className="gap-2">
                 <FileText className="h-4 w-4" /> {t("vocabulary.import.pasteText")}
@@ -347,17 +355,18 @@ export default function ImportVocabularyDialog({
           </div>
 
           {previewData && (
-            <div className="space-y-3">
-              <Label className="text-primary font-bold">{t("vocabulary.import.preview")}</Label>
-              <div className="rounded-xl p-4 bg-muted/20 shadow-sm">
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                  {previewData.fields.map((field, idx) => (
-                    <div key={field.id} className="space-y-1">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                        {t("vocabulary.import.fieldLabel", { label: field.label, key: field.key })}
-                      </span>
-                      <div className="p-2 border rounded-md bg-background min-h-10 flex items-center text-sm">
-                        {previewData.parts[idx] || (
+            <div className="space-y-4 mt-6">
+              <h4 className="font-semibold">{t("vocabulary.import.preview")}</h4>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                {previewData.fields.map((field, idx) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label>
+                        {t("vocabulary.import.fieldLabel", { label: field.label, side: field.side })}
+                      </Label>
+                      <div className="flex min-h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs items-center">
+                        {previewData.parts[idx] ? (
+                          <span className="truncate">{previewData.parts[idx]}</span>
+                        ) : (
                           <span className="text-muted-foreground italic">{t("vocabulary.import.empty")}</span>
                         )}
                       </div>
@@ -370,7 +379,6 @@ export default function ImportVocabularyDialog({
                     {t("vocabulary.import.fieldMismatch", { count: previewData.parts.length, fieldsCount: previewData.fields.length })}
                   </div>
                 )}
-              </div>
             </div>
           )}
         </div>

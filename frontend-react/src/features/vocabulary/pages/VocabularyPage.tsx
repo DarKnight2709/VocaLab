@@ -120,13 +120,13 @@ export default function VocabularyPage() {
       const field = item.field ?? fieldsById.get(item.fieldId);
       return {
         value: item.value,
-        side: field?.side ?? (index === 0 ? "front" : "back"),
+        side: (field?.side ?? (index === 0 ? "front" : "back")).toLowerCase(),
         position: field?.order ?? index,
       };
     });
 
     return enriched
-      .filter((item) => item.side === side)
+      .filter((item) => item.side === side.toLowerCase())
       .sort((a, b) => a.position - b.position)
       .map((item) => item.value)
       .join(" | ");
@@ -134,27 +134,27 @@ export default function VocabularyPage() {
 
   async function handleExportCollection(collection: VocabCollection) {
     try {
-      const res = await api.get<{ collection: VocabCollectionDetail }>(
+      const res = await api.get<VocabCollectionDetail>(
         API_ROUTES.VOCABULARY.COLLECTION_DETAIL(collection.id),
       );
 
-      const cards = res.data.collection.cards || [];
+      const cards = res.data?.cards || [];
       if (cards.length === 0) {
         toast.info(t("vocabulary.noCardsToLearn"));
         return;
       }
 
-      const toCsvCell = (value: string) => `"${value.replaceAll('"', '""')}"`;
+      const toCsvCell = (value: string) => `"${(value || "").replaceAll('"', '""')}"`;
       const csvRows = [
         "front,back",
-        ...cards.map((card) =>
+        ...cards.map((card: CardItem) =>
           [getCardText(card, "front"), getCardText(card, "back")]
             .map(toCsvCell)
             .join(","),
         ),
       ];
 
-      const blob = new Blob([csvRows.join("\n")], {
+      const blob = new Blob(["\uFEFF" + csvRows.join("\n")], {
         type: "text/csv;charset=utf-8;",
       });
       const url = URL.createObjectURL(blob);
