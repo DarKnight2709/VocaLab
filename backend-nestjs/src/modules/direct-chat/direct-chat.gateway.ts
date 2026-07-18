@@ -22,6 +22,7 @@ import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
 import { PrismaService } from '@/core/database/prisma.service';
 import { NotificationsService } from '../notifications/services/notifications.service';
+import { RedisService } from '@/core/cache/redis.service';
 
 @WebSocketGateway({
   cors: {
@@ -40,14 +41,23 @@ export class DirectChatGateway
   @WebSocketServer()
   server!: Server;
 
-  // Track unique socket IDs per userId to avoid duplicate counting
-  private onlineUsers = new Map<string, Set<string>>();
+  private readonly ONLINE_USERS_KEY = 'direct_chat_online_users';
+
+  private async getOnlineUsersMap(): Promise<Record<string, string[]>> {
+    const data = await this.redisService.getCache<Record<string, string[]>>(this.ONLINE_USERS_KEY);
+    return data || {};
+  }
+
+  private async saveOnlineUsersMap(map: Record<string, string[]>): Promise<void> {
+    await this.redisService.setCache(this.ONLINE_USERS_KEY, map);
+  }
 
   constructor(
     private messagesService: MessagesService,
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
     private prisma: PrismaService,
+    private redisService: RedisService,
     @InjectQueue('email-notification') private readonly emailQueue: Queue,
   ) {}
 
@@ -55,46 +65,53 @@ export class DirectChatGateway
     console.log(`[Socket] New connection: ${client.id}`);
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     const user = (client as any).user;
     const socketId = client.id;
 
     if (!user) return;
 
     const userId = user.id;
-    const socketSet = this.onlineUsers.get(userId);
+    const onlineMap = await this.getOnlineUsersMap();
+    let socketArray = onlineMap[userId];
 
-    if (socketSet) {
-      socketSet.delete(socketId);
-      if (socketSet.size === 0) {
-        this.onlineUsers.delete(userId);
+    if (socketArray) {
+      socketArray = socketArray.filter((id) => id !== socketId);
+      if (socketArray.length === 0) {
+        delete onlineMap[userId];
         this.server.emit('noti-offline', { id: userId });
+      } else {
+        onlineMap[userId] = socketArray;
       }
+      await this.saveOnlineUsersMap(onlineMap);
     }
   }
 
   @SubscribeMessage('entering')
-  handleEntering(@SocketUser() user: any, @ConnectedSocket() client: Socket) {
+  async handleEntering(@SocketUser() user: any, @ConnectedSocket() client: Socket) {
     if (!user) return;
 
     const userId = user.id;
     const socketId = client.id;
     client.join(userId);
 
-    let socketSet = this.onlineUsers.get(userId);
-    if (!socketSet) {
-      socketSet = new Set<string>();
-      this.onlineUsers.set(userId, socketSet);
+    const onlineMap = await this.getOnlineUsersMap();
+    let socketArray = onlineMap[userId];
+
+    if (!socketArray) {
+      socketArray = [];
+      onlineMap[userId] = socketArray;
     }
 
-    if (!socketSet.has(socketId)) {
-      socketSet.add(socketId);
-      if (socketSet.size === 1) {
+    if (!socketArray.includes(socketId)) {
+      socketArray.push(socketId);
+      if (socketArray.length === 1) {
         this.server.emit('noti-online', { id: userId });
       }
+      await this.saveOnlineUsersMap(onlineMap);
     }
 
-    client.emit('noti-onlineList-toMe', Array.from(this.onlineUsers.keys()));
+    client.emit('noti-onlineList-toMe', Object.keys(onlineMap));
   }
 
   @SubscribeMessage('send-message')
@@ -234,11 +251,12 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('call-user')
-  handleCallUser(@SocketUser() user: any, @MessageBody() payload: any) {
+  async handleCallUser(@SocketUser() user: any, @MessageBody() payload: any) {
     const { receiverId } = payload;
     if (!receiverId) return;
 
-    const isOnline = this.onlineUsers.has(receiverId);
+    const onlineMap = await this.getOnlineUsersMap();
+    const isOnline = !!onlineMap[receiverId] && onlineMap[receiverId].length > 0;
     if (!isOnline) {
       return { success: false, message: 'Người dùng không trực tuyến' };
     }
