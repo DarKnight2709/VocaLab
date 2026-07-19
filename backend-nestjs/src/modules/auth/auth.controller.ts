@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Post,
@@ -148,7 +149,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Lấy thông tin user từ access token (Protect)',
   })
-  async getCurrentUser(@CurrentUser() user: any): Promise<ResponseInterceptor<PublicUser>> {
+  async getCurrentUser(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<PublicUser>> {
     const result =  await this.authService.getCurrentUser(user.id);
     return {
       data: result
@@ -165,7 +166,7 @@ export class AuthController {
   @ApiOkResponse({ type: Object })
   async setPassword(
     @Body() setPasswordDto: SetPasswordDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<void> {
     await this.authService.setPassword(user.id, setPasswordDto);
   }
@@ -176,7 +177,7 @@ export class AuthController {
     summary: 'Đổi mật khẩu (Protect)',
   })
   async changePassword(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<void> {
     await this.authService.changePassword(user.id, changePasswordDto);
@@ -237,7 +238,7 @@ export class AuthController {
     summary: 'Tạo mã 2FA (Protect)',
   })
   async generateTwoFactorAuth(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<TwoFactorGenerateResponseDto>> {
     const result = await this.authService.generateTwoFactorSecret(user.id);
 
@@ -252,7 +253,7 @@ export class AuthController {
     summary: 'Xác thực mã 2FA (Protect)',
   })
   async verifyTwoFactorAuth(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() verifyDto: TwoFactorVerifyDto,
   ): Promise<void> {
     await this.authService.verifyTwoFactorAuth(user.id, verifyDto.code);
@@ -264,7 +265,7 @@ export class AuthController {
     summary: 'Tắt mã 2FA (Protect)',
   })
   async disableTwoFactorAuth(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<void> {
     await this.authService.disableTwoFactorAuth(user.id);
   }

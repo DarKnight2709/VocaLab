@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Get,
@@ -41,12 +42,12 @@ export class BlogController {
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'search', required: false })
   async getBlogs(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
   ): Promise<ResponseInterceptor<GetBlogsResponseDto>> {
-    const result = await this.blogService.getBlogs(user?.id ?? null, page, limit, search);
+    const result = await this.blogService.getBlogs(user?.id, page, limit, search);
     return {
       data: result
     }
@@ -55,7 +56,7 @@ export class BlogController {
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Xem chi tiết bài viết' })
-  async getBlogById(@Param('id') id: string, @CurrentUser() user: any): Promise<ResponseInterceptor<GetBlogByIdResponseDto>> {
+  async getBlogById(@Param('id') id: string, @CurrentUser() user: RequestUser): Promise<ResponseInterceptor<GetBlogByIdResponseDto>> {
     const result = await this.blogService.getBlogById(id, user?.id);
     return {
       data: result
@@ -65,7 +66,7 @@ export class BlogController {
   @Get('me/list')
   @ApiOperation({ summary: 'Lấy blog của tôi' })
   async getMyBlogs(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ): Promise<ResponseInterceptor<GetMyBlogsResponseDto>> {
@@ -77,7 +78,7 @@ export class BlogController {
 
   @Post()
   @ApiOperation({ summary: 'Tạo bài viết mới' })
-  async createBlog(@CurrentUser() user: any, @Body() dto: CreateBlogDto): Promise<ResponseInterceptor<CreateBlogResponseDto>> {
+  async createBlog(@CurrentUser() user: RequestUser, @Body() dto: CreateBlogDto): Promise<ResponseInterceptor<CreateBlogResponseDto>> {
     const result = await this.blogService.createBlog(user.id, dto);
     return {
       data: result
@@ -88,7 +89,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Cập nhật bài viết' })
   async updateBlog(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateBlogDto,
   ): Promise<ResponseInterceptor<UpdateBlogResponseDto>> {
     const result = await this.blogService.updateBlog(id, user.id, dto);
@@ -99,7 +100,7 @@ export class BlogController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Xóa bài viết' })
-  async deleteBlog(@Param('id') id: string, @CurrentUser() user: any): Promise<ResponseInterceptor<DeleteResponseDto>> {
+  async deleteBlog(@Param('id') id: string, @CurrentUser() user: RequestUser): Promise<ResponseInterceptor<DeleteResponseDto>> {
     const result = await this.blogService.deleteBlog(id, user.id);
     return {
       data: result
@@ -112,7 +113,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Upvote/Downvote bài viết' })
   async voteBlog(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: VoteBlogDto,
   ): Promise<void> {
     await this.blogService.voteBlog(id, user.id, dto.type);
@@ -124,7 +125,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Thêm bình luận' })
   async createComment(
     @Param('id') blogId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: CreateCommentDto,
   ): Promise<ResponseInterceptor<CreateCommentResponseDto>> {
     const result = await this.blogService.createComment(blogId, user.id, dto);
@@ -137,7 +138,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Chỉnh sửa bình luận' })
   async editComment(
     @Param('commentId') commentId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateCommentDto,
   ): Promise<ResponseInterceptor<UpdateCommentResponseDto>> {
     const result = await this.blogService.editComment(commentId, user.id, dto);
@@ -150,7 +151,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Xóa bình luận' })
   async deleteComment(
     @Param('commentId') commentId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<DeleteResponseDto>> {
     const result = await this.blogService.deleteComment(commentId, user.id);
     return {
@@ -164,7 +165,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Phản hồi bình luận' })
   async replyComment(
     @Param('commentId') commentId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: ReplyCommentDto
   ): Promise<ResponseInterceptor<CreateCommentResponseDto>> {
     const result = await this.blogService.replyComment(commentId, user.id, dto);
@@ -177,7 +178,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Upvote/Downvote bình luận' })
   async voteComment(
     @Param('commentId') commentId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: VoteBlogDto,
   ): Promise<void> {
     await this.blogService.voteComment(commentId, user.id, dto.type);

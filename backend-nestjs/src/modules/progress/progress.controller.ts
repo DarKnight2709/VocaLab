@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import { Body, Controller, Post, Get, Query, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ProgressService } from './progress.service';
@@ -16,7 +17,7 @@ export class ProgressController {
   @Post('heartbeat')
   @ApiOperation({ summary: 'Send a heartbeat to increment study time' })
   async heartbeat(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: HeartbeatDto,
   ): Promise<void> {
     await this.progressService.handleHeartbeat(user.id, dto.seconds);
@@ -25,7 +26,7 @@ export class ProgressController {
   @Get('stats')
   @ApiOperation({ summary: 'Get study stats' })
   async getStats(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query('weekOffset') weekOffset?: string,
   ): Promise<ResponseInterceptor<StatsResponseDto>> {
     const result = await this.progressService.getStats(user.id, parseInt(weekOffset ?? '0', 10) || 0);
@@ -36,7 +37,7 @@ export class ProgressController {
   @Get('collections/:collectionId/stats')
   @ApiOperation({ summary: 'Get study stats for a specific collection' })
   async getCollectionStats(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('collectionId') collectionId: string,
   ): Promise<ResponseInterceptor<CollectionStatsResponseDto>> {
     const result = await this.progressService.getCollectionStats(user.id, collectionId);

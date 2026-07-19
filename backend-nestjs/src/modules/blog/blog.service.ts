@@ -40,7 +40,7 @@ export class BlogService {
   // ==================== BLOG CRUD ====================
 
   async getBlogs(
-    userId: string | null,
+    userId?: string,
     page = 1,
     limit = 10,
     search?: string,

@@ -52,6 +52,8 @@ export class SocketAuthGuard implements CanActivate {
           id: true,
           email: true,
           fullName: true,
+          username: true,
+          avatar: true,
         },
       });
 
@@ -63,6 +65,8 @@ export class SocketAuthGuard implements CanActivate {
         id: payload.sub,
         email: payload.email,
         fullName: user.fullName,
+        username: user.username,
+        avatar: user.avatar,
       };
       return true;
     } catch (error) {

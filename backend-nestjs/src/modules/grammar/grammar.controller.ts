@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Get,
@@ -70,7 +71,7 @@ export class GrammarController {
   @Post()
   @ApiOperation({ summary: 'Tạo mới ngữ pháp' })
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: CreateGrammarDto,
   ): Promise<ResponseInterceptor<CreateGrammarResponseDto>> {
     const result = await this.grammarService.create(user.id, dto);
@@ -83,7 +84,7 @@ export class GrammarController {
   @ApiOperation({ summary: 'Cập nhật ngữ pháp theo id' })
   async update(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateGrammarDto,
   ): Promise<ResponseInterceptor<UpdateGrammarResponseDto>> {
     const result = await this.grammarService.update(id, user.id, dto);
@@ -96,7 +97,7 @@ export class GrammarController {
   @ApiOperation({ summary: 'Xóa ngữ pháp theo id' })
   async delete(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<DeleteGrammarResponseDto>> {
     const result = await this.grammarService.delete(id, user.id);
     return {

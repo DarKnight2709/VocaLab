@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Get,
@@ -22,7 +23,7 @@ export class NotificationsController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   async getNotifications(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ): Promise<ResponseInterceptor<GetNotificationResponseDto>> {
@@ -37,7 +38,7 @@ export class NotificationsController {
   @Get('unread-count')
   @ApiOperation({ summary: 'Số lượng thông báo chưa đọc' })
   async getUnreadCount(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<number>> {
     const result = await this.notificationsService.getUnreadCount(user.id);
     return { data: result };
@@ -46,7 +47,7 @@ export class NotificationsController {
   @Patch(['read', 'read/:id'])
   @ApiOperation({ summary: "Đánh dấu đã đọc"})
   async markAsRead(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') notificationId?: string,
   ): Promise<void> {
     await this.notificationsService.markAsRead(

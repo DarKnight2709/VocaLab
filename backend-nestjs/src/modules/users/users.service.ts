@@ -468,9 +468,9 @@ export class UserService {
   }
 
   async getProfiles(
-    userId: string | null,
-    page: number,
-    limit: number,
+    userId?: string,
+    page = 1,
+    limit = 10,
     query?: string,
     filters?: { profileSort?: string },
   ): Promise<ProfileSearchResultResponse> {

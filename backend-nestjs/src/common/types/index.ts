@@ -1,26 +1,15 @@
 import { Request } from 'express';
 
+export interface RequestUser {
+  id: string,
+  email: string,
+  fullName: string,
+  username: string,
+  avatar: string | null,
+}
+
 export interface IRequest extends Request {
-  user: {
-    id: string,
-    email: string,
-    fullName: string,
-    // roles: {
-    //   id: string,
-    //   name: string,
-    //   isActive: boolean,
-    //   isSystemRole: boolean,
-    //   description: string,
-    //   permissions: {
-    //     id: string,
-    //     name: string,
-    //     description: string,
-    //     path: string,
-    //     method: string,
-    //     module: string
-    //   }[]
-    // }[]
-  }
+  user: RequestUser
 }
 
 export interface IRouteInfo {

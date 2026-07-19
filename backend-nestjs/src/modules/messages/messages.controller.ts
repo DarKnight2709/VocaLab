@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Get,
@@ -19,7 +20,7 @@ export class MessagesController {
 
   @Get('users')
   @ApiOperation({ summary: 'Lấy danh sách người dùng đã từng nhắn tin (Dashboard)' })
-  async getUsers(@CurrentUser() user: any): Promise<ResponseInterceptor<GetConversationsResponseDto>> {
+  async getUsers(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<GetConversationsResponseDto>> {
     const result = await this.messagesService.getConversations(user.id);
     return {
       data: result
@@ -28,7 +29,7 @@ export class MessagesController {
 
   @Get('friends')
   @ApiOperation({ summary: 'Lấy danh sách bạn bè (mutual follow)' })
-  async getFriends(@CurrentUser() user: any): Promise<ResponseInterceptor<UserResponse[]>> {
+  async getFriends(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<UserResponse[]>> {
     const result = await this.messagesService.getFriends(user.id);
     return { data: result };
   }
@@ -36,7 +37,7 @@ export class MessagesController {
   @Get('groups')
   @ApiOperation({ summary: 'Lấy danh sách nhóm đã tham gia' })
   async getGroups(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<GetGroupsResponseDto[]>> {
     const result = await this.messagesService.getGroups(user.id);
     return { data: result };
@@ -44,7 +45,7 @@ export class MessagesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Lấy tin nhắn giữa tôi và người này' })
-  async getMessages(@CurrentUser() user: any, @Param('id') friendId: string): Promise<ResponseInterceptor<GetMessagesResponseDto>> {
+  async getMessages(@CurrentUser() user: RequestUser, @Param('id') friendId: string): Promise<ResponseInterceptor<GetMessagesResponseDto>> {
     const result = await this.messagesService.getMessages(user.id, friendId);
     return {
       data: result

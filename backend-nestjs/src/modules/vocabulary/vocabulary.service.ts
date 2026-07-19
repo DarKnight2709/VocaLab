@@ -760,7 +760,7 @@ export class VocabularyService {
   }
 
   async searchCollections(
-    userId: string | null,
+    userId?: string,
     page = 1,
     limit = 10,
     query?: string,

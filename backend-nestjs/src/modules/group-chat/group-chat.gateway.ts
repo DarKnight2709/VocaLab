@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -61,7 +62,7 @@ export class GroupChatGateway {
   @SubscribeMessage('send-group-message')
   @UsePipes(WsValidationPipe)
   async handleSendGroupMessage(
-    @SocketUser() user: any,
+    @SocketUser() user: RequestUser,
     @MessageBody() payload: SendGroupMessageDto,
   ) {
     try {
@@ -186,7 +187,7 @@ export class GroupChatGateway {
 
   @SubscribeMessage('seen-group-message')
   async handleSeenGroupMessage(
-    @SocketUser() user: any,
+    @SocketUser() user: RequestUser,
     @MessageBody() payload: any,
   ) {
     try {
@@ -216,7 +217,7 @@ export class GroupChatGateway {
 
   @SubscribeMessage('update-message-status')
   async handleUpdateMessageStatus(
-    @SocketUser() user: any,
+    @SocketUser() user: RequestUser,
     @MessageBody() payload: any,
   ) {
     try {
@@ -245,7 +246,7 @@ export class GroupChatGateway {
   }
 
   @SubscribeMessage('group-typing-start')
-  handleGroupTypingStart(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleGroupTypingStart(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { groupId } = payload;
     if (!groupId) return;
 
@@ -256,7 +257,7 @@ export class GroupChatGateway {
   }
 
   @SubscribeMessage('group-typing-stop')
-  handleGroupTypingStop(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleGroupTypingStop(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { groupId } = payload;
     if (!groupId) return;
 
@@ -267,7 +268,7 @@ export class GroupChatGateway {
 
   @SubscribeMessage('join-group')
   handleJoinGroup(
-    @SocketUser() user: any,
+    @SocketUser() user: RequestUser,
     @MessageBody() payload: any,
     @ConnectedSocket() client: Socket,
   ) {
@@ -280,7 +281,7 @@ export class GroupChatGateway {
 
   @SubscribeMessage('leave-group')
   handleLeavGroup(
-    @SocketUser() user: any,
+    @SocketUser() user: RequestUser,
     @MessageBody() payload: any,
     @ConnectedSocket() client: Socket,
   ) {

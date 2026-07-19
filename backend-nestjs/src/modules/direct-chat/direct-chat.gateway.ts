@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -88,7 +89,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('entering')
-  async handleEntering(@SocketUser() user: any, @ConnectedSocket() client: Socket) {
+  async handleEntering(@SocketUser() user: RequestUser, @ConnectedSocket() client: Socket) {
     if (!user) return;
 
     const userId = user.id;
@@ -117,7 +118,7 @@ export class DirectChatGateway
   @SubscribeMessage('send-message')
   @UsePipes(WsValidationPipe)
   async handleSendMessage(
-    @SocketUser() user: any,
+    @SocketUser() user: RequestUser,
     @MessageBody() payload: SendDirectMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
@@ -206,7 +207,7 @@ export class DirectChatGateway
 
   @SubscribeMessage('seen-message')
   async handleSeenMessage(
-    @SocketUser() user: any,
+    @SocketUser() user: RequestUser,
     @MessageBody() payload: any,
   ) {
     try {
@@ -230,7 +231,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('typing-start')
-  handleTypingStart(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleTypingStart(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { receiverId } = payload;
     if (!receiverId) return;
 
@@ -241,7 +242,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('typing-stop')
-  handleTypingStop(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleTypingStop(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { receiverId } = payload;
     if (!receiverId) return;
 
@@ -251,7 +252,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('call-user')
-  async handleCallUser(@SocketUser() user: any, @MessageBody() payload: any) {
+  async handleCallUser(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { receiverId } = payload;
     if (!receiverId) return;
 
@@ -271,7 +272,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('call-answer')
-  handleCallAnswer(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleCallAnswer(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { callerId } = payload;
     if (!callerId) return;
 
@@ -282,7 +283,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('call-reject')
-  handleCallReject(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleCallReject(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { callerId } = payload;
     if (!callerId) return;
 
@@ -292,7 +293,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('call-end')
-  handleCallEnd(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleCallEnd(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { peerId } = payload;
     if (!peerId) return;
 
@@ -302,7 +303,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('webrtc-offer')
-  handleWebRTCOffer(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleWebRTCOffer(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { receiverId, offer } = payload;
     if (!receiverId || !offer) return;
 
@@ -313,7 +314,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('webrtc-answer')
-  handleWebRTCAnswer(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleWebRTCAnswer(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { receiverId, answer } = payload;
     if (!receiverId || !answer) return;
 
@@ -324,7 +325,7 @@ export class DirectChatGateway
   }
 
   @SubscribeMessage('ice-candidate')
-  handleICECandidate(@SocketUser() user: any, @MessageBody() payload: any) {
+  handleICECandidate(@SocketUser() user: RequestUser, @MessageBody() payload: any) {
     const { receiverId, candidate } = payload;
     if (!receiverId || !candidate) return;
 

@@ -19,7 +19,10 @@ import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 import { GroupChatGateway } from './group-chat.gateway';
 import { CloudinaryService } from '@/common/services/cloudinary.service';
 import { MessagesService } from '../messages/messages.service';
-import { SEARCH_GROUP_FILTER, GroupSearchFilters } from '../search/search.types';
+import {
+  SEARCH_GROUP_FILTER,
+  GroupSearchFilters,
+} from '../search/search.types';
 import {
   CreateGroupResponseDto,
   GroupDetailDto,
@@ -30,7 +33,10 @@ import {
 import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 import { MessageWithDetails } from '../messages/dto/messages-response.dto';
 import { UserService } from '../users/users.service';
-import { GetUserGroupsResponseDto, UserGroupItemDto } from '../users/dto/users-response.dto';
+import {
+  GetUserGroupsResponseDto,
+  UserGroupItemDto,
+} from '../users/dto/users-response.dto';
 
 // Types previously in IGroupRepository
 export type MemberWithUser = Prisma.GroupMemberGetPayload<{
@@ -108,7 +114,7 @@ export class GroupChatService {
     );
 
     if (!hasAccess) {
-      throw new ForbiddenException(ErrorCode.PRIVATE_GROUPS_ACCESS_DENIED); 
+      throw new ForbiddenException(ErrorCode.PRIVATE_GROUPS_ACCESS_DENIED);
     }
 
     if (requestingUserId && requestingUserId !== profileUserId) {
@@ -326,9 +332,9 @@ export class GroupChatService {
   }
 
   async searchGroups(
-    userId: string | null,
-    page: number,
-    limit: number,
+    userId?: string,
+    page = 1,
+    limit = 10,
     query?: string,
     filters?: GroupSearchFilters,
   ): Promise<GroupsSearchResultResponse> {
@@ -358,7 +364,9 @@ export class GroupChatService {
       where.languages = { hasSome: filters.languages };
     }
 
-    const blockerIds = userId ? await this.userService.getBlockerIdsOf(userId) : [];
+    const blockerIds = userId
+      ? await this.userService.getBlockerIdsOf(userId)
+      : [];
 
     if (blockerIds.length > 0) {
       where.ownerId = {
@@ -564,7 +572,7 @@ export class GroupChatService {
     const group = await this.getActiveGroupOrThrow(groupId);
     const memberIds = group.members?.map((m) => m.userId) || [];
 
-    const remainingMemberIds = memberIds.filter(id => id !== userId);
+    const remainingMemberIds = memberIds.filter((id) => id !== userId);
 
     await this.prisma.groupMember.deleteMany({
       where: { groupId, userId },
@@ -711,7 +719,7 @@ export class GroupChatService {
       throw new NotFoundException(ErrorCode.GROUP_MEMBER_NOT_FOUND);
     }
 
-    const remainingMemberIds = memberIds.filter(id => id !== memberId);
+    const remainingMemberIds = memberIds.filter((id) => id !== memberId);
 
     await this.prisma.groupMember.deleteMany({
       where: { groupId, userId: memberId },

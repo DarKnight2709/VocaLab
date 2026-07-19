@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Post,
@@ -46,7 +47,7 @@ export class GroupChatController {
   @Post('create')
   @ApiOperation({ summary: 'Tạo nhóm mới' })
   async createGroup(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() createDto: CreateGroupDto,
   ): Promise<ResponseInterceptor<CreateGroupResponseDto>> {
     const result = await this.groupChatService.createGroup(user.id, createDto);
@@ -60,7 +61,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Xem thông tin nhóm' })
   async getInfoGroup(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<ResponseInterceptor<GroupDetailDto>> {
     const result = await this.groupChatService.getInfoGroup(id);
@@ -73,7 +74,7 @@ export class GroupChatController {
   @ApiOperation({ summary: 'Sửa thông tin nhóm' })
   @UseInterceptors(FileInterceptor('avatar'))
   async updateGroup(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() updateDto: UpdateGroupDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -94,7 +95,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Update group public visibility' })
   async updateGroupVisibility(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() dto: UpdateGroupVisibilityDto,
   ): Promise<ResponseInterceptor<CreateGroupResponseDto>> {
@@ -112,7 +113,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Rời nhóm hoặc xóa nhóm' })
   async deleteGroup(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<ResponseInterceptor<DeleteResponseDto>> {
     const result = await this.groupChatService.deleteGroup(id, user.id);
@@ -126,7 +127,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Rời nhóm ' })
   async leaveGroup(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<void> {
     await this.groupChatService.leaveGroup(id, user.id);
@@ -135,7 +136,7 @@ export class GroupChatController {
   @Post('join/:id')
   @ApiOperation({ summary: 'Tham gia nhóm ' })
   async joinGroup(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<void> {
     await this.groupChatService.joinGroup(id, user.id);
@@ -146,7 +147,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Chuyển quyền sở hữu nhóm' })
   async transferOwnership(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() dto: TransferOwnershipDto,
   ): Promise<void> {
@@ -162,7 +163,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Lấy tin nhắn trong nhóm' })
   async getGroupMessages(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<ResponseInterceptor<MessageWithDetails[]>> {
     const result = await this.groupChatService.getGroupMessages(id);
@@ -174,7 +175,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Thêm thành viên nhóm' })
   async addMember(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() addMemberDto: AddMemberDto,
   ): Promise<void> {
@@ -190,7 +191,6 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Lấy danh sách thành viên' })
   async getMembers(
-    @CurrentUser() user: any,
     @Param('id') id: string,
   ): Promise<ResponseInterceptor<GroupMemberDto[]>> {
     const result = await this.groupChatService.getMembers(id);
@@ -202,7 +202,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Xóa thành viên nhóm' })
   async deleteMember(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Param('memberId') memberId: string,
   ): Promise<void> {
@@ -218,7 +218,7 @@ export class GroupChatController {
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Đổi role thành viên' })
   async changeRole(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Param('memberId') memberId: string,
     @Body() changeRoleDto: ChangeRoleDto,

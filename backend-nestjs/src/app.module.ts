@@ -79,10 +79,6 @@ import { DictionaryModule } from './modules/dictionary/dictionary.module';
       useClass: JwtGuard,
     },
     // {
-    //   provide: APP_GUARD,
-    //   useClass: PermissionGuard,
-    // },
-    // {
     //   provide: APP_INTERCEPTOR,
     //   useClass: AuditContextInterceptor,
     // },

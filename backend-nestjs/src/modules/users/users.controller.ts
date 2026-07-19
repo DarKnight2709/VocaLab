@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Patch,
@@ -60,7 +61,7 @@ export class UsersController {
   })
   @UseInterceptors(FileInterceptor('avatar'))
   async updateProfile(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() updateDto: UpdatePersonalInfoDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseInterceptor<UpdateProfileResponseDto>> {
@@ -79,7 +80,7 @@ export class UsersController {
     summary: 'Xóa tài khoản',
     description: 'Xóa tài khoản cá nhân (Xóa mềm)',
   })
-  async deleteProfile(@CurrentUser() user: any): Promise<void> {
+  async deleteProfile(@CurrentUser() user: RequestUser): Promise<void> {
     await this.userService.deleteAccount(user.id);
   }
 
@@ -87,7 +88,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Tìm kiếm người dùng và nhóm' })
   @ApiQuery({ name: 'keyword', required: true })
   async search(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query('keyword') keyword: string,
   ): Promise<ResponseInterceptor<SearchResponseDto>> {
     const result = await this.userService.search(keyword, user.id);
@@ -108,7 +109,7 @@ export class UsersController {
   @Get('me/socials')
   @ApiOperation({ summary: 'Lấy danh sách liên kết mạng xã hội của tôi' })
   async getMySocials(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<UserSocialDto[]>> {
     const result = await this.userService.getMySocials(user.id);
     return {
@@ -119,7 +120,7 @@ export class UsersController {
   @Post('me/socials')
   @ApiOperation({ summary: 'Thêm mới một liên kết mạng xã hội' })
   async createSocial(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() createDto: CreateUserSocialDto,
   ): Promise<ResponseInterceptor<UserSocialDto>> {
     const result = await this.userService.createSocial(user.id, createDto);
@@ -131,7 +132,7 @@ export class UsersController {
   @Patch('me/socials/:id')
   @ApiOperation({ summary: 'Cập nhật một liên kết mạng xã hội' })
   async updateSocial(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() updateDto: CreateUserSocialDto,
   ): Promise<ResponseInterceptor<UserSocialDto>> {
@@ -144,7 +145,7 @@ export class UsersController {
   @Delete('me/socials/:id')
   @ApiOperation({ summary: 'Xóa một liên kết mạng xã hội' })
   async deleteSocial(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<ResponseInterceptor<DeleteSocialResponseDto>> {
     const result = await this.userService.deleteSocial(user.id, id);
@@ -159,7 +160,7 @@ export class UsersController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   async searchFriendsSuggestion(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query('q') query: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -180,7 +181,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
   async getByUsername(
     @Param('username') username: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
   ): Promise<ResponseInterceptor<GetByUsernameResponseDto>> {
     const result = await this.userService.getByUsername(
       username,
@@ -197,7 +198,7 @@ export class UsersController {
   })
   async getUserChatInfo(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
   ): Promise<ResponseInterceptor<UserChatInfoDto>> {
     const result = await this.userService.getUserChatInfo(
       userId,
@@ -214,7 +215,7 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getFollowers(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
@@ -239,7 +240,7 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getFollowing(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
@@ -264,7 +265,7 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getFriends(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
@@ -290,7 +291,7 @@ export class UsersController {
   @ApiQuery({ name: 'visibility', required: false, enum: PostVisibility })
   async getPosts(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
@@ -318,7 +319,7 @@ export class UsersController {
   @ApiQuery({ name: 'visibility', required: false })
   async getCollections(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
@@ -345,7 +346,7 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getGroups(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
@@ -366,7 +367,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Theo dõi người dùng' })
   async followUser(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
   ): Promise<ResponseInterceptor<FollowResponseDto>> {
     const result = await this.userService.followUser(userId, currentUser.id);
     return {
@@ -378,7 +379,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Bỏ theo dõi người dùng' })
   async unfollowUser(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
   ): Promise<ResponseInterceptor<FollowResponseDto>> {
     const result = await this.userService.unfollowUser(userId, currentUser.id);
     return {
@@ -390,7 +391,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Chặn người dùng' })
   async blockUser(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
   ): Promise<ResponseInterceptor<FollowResponseDto>> {
     const result = await this.userService.blockUser(userId, currentUser.id);
     return {
@@ -402,7 +403,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Bỏ chặn người dùng' })
   async unblockUser(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
   ): Promise<ResponseInterceptor<FollowResponseDto>> {
     const result = await this.userService.unblockUser(userId, currentUser.id);
     return {
@@ -417,7 +418,7 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   async getBlockedUsers(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: RequestUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,

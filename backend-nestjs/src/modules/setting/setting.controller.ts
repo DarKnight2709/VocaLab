@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Patch, Query } from '@nestjs/common';
 import { SettingService } from './setting.service';
 import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto, UpdateGroupsTabVisibilityDto } from './dto/setting.dto';
@@ -19,7 +20,7 @@ export class SettingController {
   @Patch('allow-follow')
   @ApiOperation({ summary: 'Update allow follow setting' })
   async updateAllowFollow(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateAllowFollowDto,
   ): Promise<void> {
     await this.settingService.updateAllowFollow(user.id, dto);
@@ -28,7 +29,7 @@ export class SettingController {
   @Patch('message-scope')
   @ApiOperation({ summary: 'Update message scope setting' })
   async updateMessageScope(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateMessageScopeDto,
   ): Promise<void> {
     await this.settingService.updateMessageScope(user.id, dto);
@@ -37,7 +38,7 @@ export class SettingController {
   @Patch('followers-tab-visibility')
   @ApiOperation({ summary: 'Update followers tab visibility setting' })
   async updateFollowersTabVisibility(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateFollowersTabVisibilityDto,
   ): Promise<void> {
     await this.settingService.updateFollowersTabVisibility(user.id, dto);
@@ -46,7 +47,7 @@ export class SettingController {
   @Patch('following-tab-visibility')
   @ApiOperation({ summary: 'Update following tab visibility setting' })
   async updateFollowingTabVisibility(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateFollowingTabVisibilityDto,
   ): Promise<void> {
     await this.settingService.updateFollowingTabVisibility(user.id, dto);
@@ -55,7 +56,7 @@ export class SettingController {
   @Patch('friend-tab-visibility')
   @ApiOperation({ summary: 'Update friend tab visibility setting' })
   async updateFriendTabVisibility(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateFriendTabVisibilityDto,
   ): Promise<void> {
     await this.settingService.updateFriendTabVisibility(user.id, dto);
@@ -64,7 +65,7 @@ export class SettingController {
   @Patch('groups-tab-visibility')
   @ApiOperation({ summary: 'Update groups tab visibility setting' })
   async updateGroupsTabVisibility(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateGroupsTabVisibilityDto,
   ): Promise<void> {
     await this.settingService.updateGroupsTabVisibility(user.id, dto);
@@ -73,7 +74,7 @@ export class SettingController {
   @Get('notifications')
   @ApiOperation({ summary: 'Get notification settings' })
   async getSettings(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<NotificationSettingDto>> {
     const result = await this.settingService.getSettings(user.id);
     return { data: result };
@@ -82,7 +83,7 @@ export class SettingController {
   @Patch('notifications/chat-messages')
   @ApiOperation({ summary: 'Update chat messages notification setting' })
   async updateChatMessages(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateChatMessagesDto,
   ): Promise<void> {
     await this.settingService.updateChatMessages(user.id, dto);
@@ -91,7 +92,7 @@ export class SettingController {
   @Patch('notifications/comments')
   @ApiOperation({ summary: 'Update comments notification setting' })
   async updateComments(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateCommentsDto,
   ): Promise<void> {
     await this.settingService.updateComments(user.id, dto);
@@ -100,7 +101,7 @@ export class SettingController {
   @Patch('notifications/upvotes')
   @ApiOperation({ summary: 'Update upvotes notification setting' })
   async updateUpvotes(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateUpvotesDto,
   ): Promise<void> {
     await this.settingService.updateUpvotes(user.id, dto);
@@ -111,7 +112,7 @@ export class SettingController {
   @Patch('notifications/new-followers')
   @ApiOperation({ summary: 'Update new followers notification setting' })
   async updateNewFollowers(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateNewFollowersDto,
   ): Promise<void> {
     await this.settingService.updateNewFollowers(user.id, dto);
@@ -120,7 +121,7 @@ export class SettingController {
   @Patch('notifications/activity-from-followed')
   @ApiOperation({ summary: 'Update activity from followed notification setting' })
   async updateActivityFromFollowed(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateActivityFromFollowedDto,
   ): Promise<void> {
     await this.settingService.updateActivityFromFollowed(user.id, dto);
@@ -132,7 +133,7 @@ export class SettingController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'search', required: false })
-  async getReminders(@CurrentUser() user: any,
+  async getReminders(@CurrentUser() user: RequestUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,): Promise<ResponseInterceptor<ReminderListResponseDto>> {
@@ -145,7 +146,7 @@ export class SettingController {
   @Post('reminders')
   @ApiOperation({ summary: 'Create a reminder' })
   async createReminder(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: CreateReminderDto,
   ): Promise<ResponseInterceptor<ReminderResponseDto>> {
     const result = await this.settingService.createReminder(user.id, dto);
@@ -157,7 +158,7 @@ export class SettingController {
   @Patch('reminders/:id')
   @ApiOperation({ summary: 'Update a reminder' })
   async updateReminder(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() dto: CreateReminderDto,
   ): Promise<ResponseInterceptor<ReminderResponseDto>> {
@@ -170,7 +171,7 @@ export class SettingController {
   @Patch('reminders/:id/toggle')
   @ApiOperation({ summary: 'Toggle a reminder' })
   async toggleReminder(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<void> {
     await this.settingService.toggleReminder(user.id, id);
@@ -179,7 +180,7 @@ export class SettingController {
   @Delete('reminders/:id')
   @ApiOperation({ summary: 'Delete a reminder' })
   async deleteReminder(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<ResponseInterceptor<ReminderDeleteResponseDto>> {
     const result = await this.settingService.deleteReminder(user.id, id);
@@ -190,7 +191,7 @@ export class SettingController {
 
   @Get('daily-goal')
   @ApiOperation({ summary: 'Get user daily goals' })
-  async getDailyProgress(@CurrentUser() user: any): Promise<ResponseInterceptor<DailyGoalResponseDto>> {
+  async getDailyProgress(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<DailyGoalResponseDto>> {
     const result = await this.settingService.getDailyGoal(user.id);
     return {
       data: result
@@ -199,7 +200,7 @@ export class SettingController {
 
   @Patch('daily-goal')
   @ApiOperation({ summary: 'Update user daily goals' })
-  async updateDailyProgress(@CurrentUser() user: any,
+  async updateDailyProgress(@CurrentUser() user: RequestUser,
     @Body() updateDto: UpdateDailyGoalDto): Promise<ResponseInterceptor<DailyGoalResponseDto>> {
     const result = await this.settingService.updateDailyGoal(user.id, updateDto);
     return {

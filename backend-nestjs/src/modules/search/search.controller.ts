@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -59,11 +60,11 @@ export class SearchController {
     default: SEARCH_TIME.ALL,
   })
   async searchSidebar(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query() query: SideBarSearchQueryDto,
   ): Promise<ResponseInterceptor<SidebarSearchResultResponse>> {
     const result = await this.searchService.searchSidebar(
-      user?.id ?? null,
+      user?.id,
       query.query,
     );
     return { data: result };
@@ -74,11 +75,11 @@ export class SearchController {
   @ApiOperation({ summary: 'Get collections search results' })
   @ApiResponse({ type: CollectionSearchResponseDto })
   async searchCollections(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query() query: CollectionSearchQueryDto,
   ): Promise<ResponseInterceptor<CollectionSearchResponseDto>> {
     const result = await this.searchService.searchCollections(
-      user?.id ?? null,
+      user?.id,
       query.page,
       query.limit,
       query.query,
@@ -113,11 +114,11 @@ export class SearchController {
     default: SEARCH_TIME.ALL,
   })
   async searchPosts(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query() query: PostSearchQueryDto,
   ): Promise<ResponseInterceptor<GetBlogsResponseDto>> {
     const result = await this.searchService.searchPosts(
-      user?.id ?? null,
+      user?.id,
       query.page,
       query.limit,
       query.query,
@@ -145,11 +146,11 @@ export class SearchController {
     default: SEARCH_GROUP_FILTER_VALUES.ALL,
   })
   async searchGroups(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query() query: GroupSearchQueryDto,
   ): Promise<ResponseInterceptor<GroupsSearchResultResponse>> {
     const result = await this.searchService.searchGroups(
-      user?.id ?? null,
+      user?.id,
       query.page,
       query.limit,
       query.query,
@@ -177,11 +178,11 @@ export class SearchController {
     default: SEARCH_PROFILE_SORT.ALL,
   })
   async searchProfiles(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Query() query: ProfileSearchQueryDto,
   ): Promise<ResponseInterceptor<ProfileSearchResultResponse>> {
     const result = await this.searchService.searchProfiles(
-      user?.id ?? null,
+      user?.id,
       query.page,
       query.limit,
       query.query,

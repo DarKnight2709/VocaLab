@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -30,9 +31,7 @@ export class NotificationsGateway implements OnGatewayDisconnect {
   private onlineUsers = new Map<string, Set<string>>();
 
   @SubscribeMessage('entering')
-  handleEntering(@SocketUser() user: any, @ConnectedSocket() client: Socket) {
-    if (!user) return;
-
+  handleEntering(@SocketUser() user: RequestUser, @ConnectedSocket() client: Socket) {
     const userId = user.id;
     const socketId = client.id;
     client.join(userId);

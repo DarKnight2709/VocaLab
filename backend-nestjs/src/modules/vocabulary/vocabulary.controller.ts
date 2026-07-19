@@ -1,3 +1,4 @@
+import type { RequestUser } from '@/common/types';
 import {
   Controller,
   Get,
@@ -54,7 +55,7 @@ export class VocabularyController {
   @Get('collections')
   @ApiOperation({ summary: 'Lấy danh sách bộ từ vựng' })
   async getCollections(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<GetCollectionsResponseDto>> {
     const result = await this.vocabularyService.getCollections(user.id);
     return { data: result };
@@ -74,7 +75,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Lấy chi tiết bộ từ vựng' })
   async getCollectionDetail(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<GetCollectionByIdResponseDto>> {
     const result = await this.vocabularyService.getCollectionById(id, user.id);
     return { data: result };
@@ -83,7 +84,7 @@ export class VocabularyController {
   @Post('collections')
   @ApiOperation({ summary: 'Tạo bộ từ vựng mới' })
   async createCollection(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: CreateCollectionDto,
   ): Promise<ResponseInterceptor<CreateCollectionResponseDto>> {
     const result = await this.vocabularyService.createCollection(user.id, dto);
@@ -94,7 +95,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Cập nhật bộ từ vựng' })
   async updateCollection(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateCollectionDto,
   ): Promise<ResponseInterceptor<CreateCollectionResponseDto>> {
     const result = await this.vocabularyService.updateCollection(
@@ -109,7 +110,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Fork bộ từ vựng' })
   async forkCollection(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: ForkCollectionDto,
   ): Promise<ResponseInterceptor<ForkCollectionResponseDto>> {
     const result = await this.vocabularyService.forkCollection(
@@ -124,7 +125,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Xóa bộ từ vựng' })
   async deleteCollection(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<DeleteResponseDto>> {
     const result = await this.vocabularyService.deleteCollection(id, user.id);
     return {
@@ -140,7 +141,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Tạo thẻ mới trong bộ từ vựng' })
   async addCard(
     @Param('collectionId') collectionId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: CreateCardDto,
   ): Promise<ResponseInterceptor<AddCardResponseDto>> {
     const result = await this.vocabularyService.addCard(
@@ -155,7 +156,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Import hàng loạt thẻ vào bộ từ vựng' })
   async importCards(
     @Param('collectionId') collectionId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: ImportCardsDto,
   ): Promise<ResponseInterceptor<ImportCardsResponseDto>> {
     const result = await this.vocabularyService.importCards(
@@ -170,7 +171,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Cập nhật thẻ' })
   async updateCard(
     @Param('cardId') cardId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: UpdateCardDto,
   ): Promise<ResponseInterceptor<UpdateCardResponseDto | null>> {
     const result = await this.vocabularyService.updateCard(
@@ -185,7 +186,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Xóa thẻ' })
   async deleteCard(
     @Param('cardId') cardId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<DeleteResponseDto>> {
     const result = await this.vocabularyService.deleteCard(cardId, user.id);
     return { data: result };
@@ -198,7 +199,7 @@ export class VocabularyController {
   @Get('card-types')
   @ApiOperation({ summary: 'Lấy danh sách kiểu thẻ' })
   async getCardTypes(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<GetCardTypesResponseDto>> {
     const result = await this.vocabularyService.getCardTypes(user.id);
     return { data: result };
@@ -208,7 +209,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Lấy chi tiết kiểu thẻ' })
   async getCardTypeById(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<GetCardTypeByIdResponseDto>> {
     const result = await this.vocabularyService.getCardTypeById(id, user.id);
     return { data: result };
@@ -217,7 +218,7 @@ export class VocabularyController {
   @Post('card-types')
   @ApiOperation({ summary: 'Tạo kiểu thẻ mới' })
   async createCardType(
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() createCardTypeDto: CreateCardTypeDto,
   ): Promise<ResponseInterceptor<CreateCardTypeResponseDto | null>> {
     const result = await this.vocabularyService.createCardType(
@@ -231,7 +232,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Cập nhật kiểu thẻ' })
   async updateCardType(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: Partial<CreateCardTypeDto>,
   ): Promise<ResponseInterceptor<CardTypeWithFieldsDto | null>> {
     const result = await this.vocabularyService.updateCardType(
@@ -246,7 +247,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Xóa kiểu thẻ' })
   async deleteCardType(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<DeleteResponseDto>> {
     const result = await this.vocabularyService.deleteCardType(id, user.id);
     return { data: result };
@@ -260,7 +261,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Lấy danh sách thẻ cần học/ôn tập theo SRS' })
   async getDueCards(
     @Param('id') collectionId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<CardDetailDto[]>> {
     const result = await this.vocabularyService.getDueCards(collectionId, user.id);
     return { data: result };
@@ -270,7 +271,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Đánh giá ôn tập thẻ theo SRS (SM-2)' })
   async reviewCard(
     @Param('id') cardId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: RequestUser,
     @Body() dto: ReviewCardDto,
   ): Promise<ResponseInterceptor<ReviewCardResponseDto>> {
     const result = await this.vocabularyService.reviewCard(cardId, user.id, dto.rating);

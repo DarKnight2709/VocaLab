@@ -72,6 +72,8 @@ export class JwtGuard implements CanActivate {
               id: payload.sub,
               email: payload.email,
               fullName: user.fullName,
+              username: user.username,
+              avatar: user.avatar,
             };
           }
         } catch (e: any) {
@@ -114,6 +116,8 @@ export class JwtGuard implements CanActivate {
         id: payload.sub,
         email: payload.email,
         fullName: user.fullName,
+        username: user.username,
+        avatar: user.avatar,
       };
 
       return true;
