@@ -2,11 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import { ConfigService } from '@/common/services/config.service';
-
 @Injectable()
 export class PrismaService extends PrismaClient {
-  constructor(private readonly configService: ConfigService) {
+  constructor() {
     // 1. Setup the native driver pool
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -16,10 +14,7 @@ export class PrismaService extends PrismaClient {
     // 3. Pass the adapter to the parent PrismaClient
     super({
       adapter,
-      log:
-        configService.nodeEnv === 'development'
-          ? ['query', 'info', 'warn', 'error']
-          : ['error', 'warn'],
+      log: ['info', 'error', 'warn'],
     });
 
     let extendedClient: any;
