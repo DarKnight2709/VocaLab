@@ -2,7 +2,13 @@ import 'dotenv/config';
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
-import { GroupPermission } from "../../src/common/enums/group-permission.enum";
+
+const enum GroupPermission {
+  UPDATE_GROUP_INFO = 'UPDATE_GROUP_INFO',
+  ADD_MEMBER = 'ADD_MEMBER',
+  REMOVE_MEMBER = 'REMOVE_MEMBER',
+  UPDATE_ROLE_PERMISSION = "UPDATE_ROLE_PERMISSION",
+}
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
