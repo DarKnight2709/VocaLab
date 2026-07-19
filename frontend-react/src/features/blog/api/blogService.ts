@@ -120,7 +120,8 @@ export const useDeleteBlogMutation = () => {
   return useMutation({
     mutationFn: (id: string) => api.delete(API_ROUTES.BLOG.DELETE(id)),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: blogKeys.all });
+      qc.invalidateQueries({ queryKey: ["blogs", "list"] });
+      qc.invalidateQueries({ queryKey: ["blogs", "my"] });
       toast.success(i18n.t("blog.postDeleted"));
     },
     onError: (err) => toast.error(getErrorMessage(err, i18n.t("blog.postDeleteFailed"))),
