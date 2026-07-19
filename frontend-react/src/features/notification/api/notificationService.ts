@@ -37,7 +37,6 @@ export function useUnreadCountQuery() {
       );
       return result.data;
     },
-    refetchInterval: 1000 * 60, // Refresh every minute
   });
 }
 
