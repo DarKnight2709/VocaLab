@@ -9,7 +9,6 @@ import {
 import { PrismaService } from '../../../core/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import { ErrorCode } from '@/common/enums/error-code.enum';
@@ -104,7 +103,7 @@ export class AuthService {
     }
 
     // Kiểm tra mật khẩu
-    const isPasswordValid = this.hashingService.compare(
+    const isPasswordValid = await this.hashingService.compare(
       password,
       user.hashedPassword,
     );
@@ -310,7 +309,7 @@ export class AuthService {
     }
 
     // Hash password
-    const hashedPassword = bcrypt.hashSync(signupDto.password, 10);
+    const hashedPassword = await this.hashingService.hash(signupDto.password);
 
     // Create user
     await this.userService.create({
@@ -455,7 +454,7 @@ export class AuthService {
       throw new BadRequestException(ErrorCode.PASSWORD_ALREADY_EXISTS);
     }
 
-    const hashedPassword = bcrypt.hashSync(setPasswordDto.password, 10);
+    const hashedPassword = await this.hashingService.hash(setPasswordDto.password);
 
     await this.prisma.user.update({
       where: {
@@ -485,7 +484,7 @@ export class AuthService {
       throw new BadRequestException(ErrorCode.PASSWORD_NOT_SET);
     }
 
-    const isPasswordValid = bcrypt.compareSync(
+    const isPasswordValid = await this.hashingService.compare(
       changePasswordDto.oldPassword,
       user.hashedPassword,
     );
@@ -495,7 +494,7 @@ export class AuthService {
     }
 
     // check new password if it's the same as old password
-    const isNewPasswordValid = bcrypt.compareSync(
+    const isNewPasswordValid = await this.hashingService.compare(
       changePasswordDto.newPassword,
       user.hashedPassword,
     );
@@ -504,9 +503,8 @@ export class AuthService {
       throw new UnauthorizedException(ErrorCode.NEW_PASSWORD_SAME_AS_OLD);
     }
 
-    const hashedNewPassword = bcrypt.hashSync(
+    const hashedNewPassword = await this.hashingService.hash(
       changePasswordDto.newPassword,
-      10,
     );
 
     await this.prisma.user.update({
