@@ -30,6 +30,8 @@ import { DevicesModule } from './modules/devices/devices.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { SearchModule } from './modules/search/search.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
+import { VideoModule } from './modules/video/video.module';
+
 
 
 
@@ -66,6 +68,7 @@ import { DictionaryModule } from './modules/dictionary/dictionary.module';
     }),
     SearchModule,
     DictionaryModule,
+    VideoModule,
   ],
   controllers: [],
   providers: [

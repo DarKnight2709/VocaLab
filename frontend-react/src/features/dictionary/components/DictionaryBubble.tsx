@@ -140,12 +140,30 @@ export function DictionaryBubble() {
 
   // Focus input when popover opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !searchedWord) {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, searchedWord]);
+
+  useEffect(() => {
+    const handleOpenDictionary = (e: CustomEvent) => {
+      const word = e.detail;
+      if (!word.trim()) return;
+      setIsOpen(true);
+      addToHistory.mutate({ query: word.trim() });
+      setShowSuggestions(false);
+      setSearchInput("");
+      setSearchedWord(word.trim());
+      setActiveTab('definitions');
+    };
+
+    window.addEventListener('open-dictionary', handleOpenDictionary as EventListener);
+    return () => {
+      window.removeEventListener('open-dictionary', handleOpenDictionary as EventListener);
+    };
+  }, [addToHistory]);
 
   // Hide the dictionary bubble on login and auth pages
   if (location.pathname.startsWith('/login') || location.pathname.startsWith('/auth')) {

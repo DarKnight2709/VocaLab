@@ -6,27 +6,56 @@ import {
   MessageCircle,
   PenSquare,
   ChartNoAxesCombined,
+  MonitorPlay,
 } from "lucide-react";
 import ROUTES from "@/shared/lib/routes";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 
-export default function LeftSidebar({ isMinimized = false }: { isMinimized?: boolean }) {
+export default function LeftSidebar({
+  isMinimized = false,
+}: {
+  isMinimized?: boolean;
+}) {
   const { t } = useTranslation();
   const location = useLocation();
 
   const coreItems = [
     { label: t("common.home"), url: ROUTES.HOME.url, icon: Home },
-    { label: t("common.vocabulary"), url: ROUTES.VOCABULARY.url, icon: BookMarked },
+    {
+      label: t("common.vocabulary"),
+      url: ROUTES.VOCABULARY.url,
+      icon: BookMarked,
+    },
     { label: t("common.grammar"), url: ROUTES.GRAMMAR.url, icon: BookOpen },
-    { label: t("common.stats"), url: ROUTES.STATS.url, icon: ChartNoAxesCombined },
+    {
+      label: t("common.stats"),
+      url: ROUTES.STATS.url,
+      icon: ChartNoAxesCombined,
+    },
   ];
 
   const socialItems = [
-    { label: t("common.chat"), url: ROUTES.CHAT_TAB_USERS.url, icon: MessageCircle, activePrefix: "/chat" },
+    {
+      label: t("common.chat"),
+      url: ROUTES.CHAT_TAB_USERS.url,
+      icon: MessageCircle,
+      activePrefix: "/chat",
+    },
     { label: t("common.blog"), url: ROUTES.BLOG.url, icon: PenSquare },
+    { label: t("common.video"), url: ROUTES.VIDEO.url, icon: MonitorPlay },
   ];
 
-  const renderNavItem = ({ label, url, icon: Icon, activePrefix }: { label: string; url: string; icon: React.ComponentType<{ className?: string }>; activePrefix?: string }) => (
+  const renderNavItem = ({
+    label,
+    url,
+    icon: Icon,
+    activePrefix,
+  }: {
+    label: string;
+    url: string;
+    icon: React.ComponentType<{ className?: string }>;
+    activePrefix?: string;
+  }) => (
     <NavLink
       key={url}
       to={url}
@@ -48,16 +77,18 @@ export default function LeftSidebar({ isMinimized = false }: { isMinimized?: boo
       <div className="flex justify-center items-center shrink-0 w-5 h-5">
         <Icon className="h-5 w-5" />
       </div>
-      <span className={`whitespace-nowrap transition-all duration-300 ${isMinimized ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
+      <span
+        className={`whitespace-nowrap transition-all duration-300 ${isMinimized ? "w-0 opacity-0" : "w-auto opacity-100"}`}
+      >
         {label}
       </span>
     </NavLink>
   );
 
-
-
   return (
-    <aside className={`bg-card h-full min-h-0 flex flex-col transition-all duration-300 ${isMinimized ? "w-16" : "w-64"}`}>
+    <aside
+      className={`bg-card h-full min-h-0 flex flex-col transition-all duration-300 ${isMinimized ? "w-16" : "w-64"}`}
+    >
       <nav className="flex flex-col gap-1 p-3 pt-4.5 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain transition-all duration-300">
         {/* Core Navigation */}
         <div className="flex flex-col gap-0.5">
@@ -72,8 +103,6 @@ export default function LeftSidebar({ isMinimized = false }: { isMinimized?: boo
           {socialItems.map(renderNavItem)}
         </div>
       </nav>
-
-
     </aside>
   );
 }

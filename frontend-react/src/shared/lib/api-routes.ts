@@ -62,6 +62,12 @@ const API_ROUTES = {
     GET_GROUPS: "v1/messages/groups",
     GET_MESSAGES: (friendId: string) => `v1/messages/${friendId}`,
     GET_FRIENDS: "v1/messages/friends",
+    SEND: "v1/messages/send",
+    EDIT: (messageId: string) => `v1/messages/${messageId}`,
+    DELETE: (messageId: string) => `v1/messages/${messageId}`,
+  },
+  VIDEO: {
+    EXTRACT: "v1/video/extract",
   },
   UPLOAD: {
     FILE: "v1/upload",

@@ -20,6 +20,7 @@ import {
   ThesaurusEntrySchema,
 } from './validation/ThesaurusEntrySchema';
 import { SearchSuggestionResultResponse } from '../search/dto/search.dto';
+import { validateWithSchema } from '@/common/validation/validate-schema';
 
 @Injectable()
 export class DictionaryService {
@@ -56,7 +57,7 @@ export class DictionaryService {
         }));
       }
       const { data } = await firstValueFrom(this.httpService.get(url));
-      const validatedData = this.validateWithSchema(
+      const validatedData = validateWithSchema(
         data,
         LearnerDictionaryEntrySchema,
       );
@@ -124,11 +125,11 @@ export class DictionaryService {
       const dictData = dictRes.data;
       const thesaurusData = thesaurusRes.data;
 
-      const validatedDictData = this.validateWithSchema(
+      const validatedDictData = validateWithSchema(
         dictData,
         LearnerDictionaryEntrySchema,
       );
-      const validatedThesaurusData = this.validateWithSchema(
+      const validatedThesaurusData = validateWithSchema(
         thesaurusData,
         ThesaurusEntrySchema,
       );
@@ -540,22 +541,5 @@ export class DictionaryService {
       .replace(/{dx}.*?{\/dx}/g, '')
       .replace(/\{[^}]+\}/g, '') // catch-all for remaining tags
       .trim();
-  }
-
-  validateWithSchema<T>(data: unknown, schema: ZodType<T>): T {
-    try {
-      const validatedData = schema.parse(data);
-      return validatedData;
-    } catch (error) {
-      if (error instanceof ZodError) {
-        console.error('❌ Schema Validation Error:', {
-          path: error.issues[0]?.path,
-          message: error.issues[0]?.message,
-          received: error.issues,
-          data,
-        });
-      }
-      throw error;
-    }
   }
 }

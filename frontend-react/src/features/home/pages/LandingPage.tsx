@@ -75,7 +75,7 @@ export default function LandingPage() {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent rounded-3xl blur-2xl" />
             <div className="relative border rounded-3xl shadow-2xl aspect-[4/3] flex items-center justify-center overflow-hidden bg-white">
-              <img src="/images/smart_flashcards_demo.png" alt="Flashcards feature" className="w-full h-full object-cover" />
+              <img src="/logo1.png" alt="Default photo" className="w-1/3 h-1/3 object-contain opacity-20 grayscale" />
             </div>
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function LandingPage() {
           <div className="order-2 md:order-1 relative">
             <div className="absolute inset-0 bg-gradient-to-tl from-blue-500/20 to-transparent rounded-3xl blur-2xl" />
             <div className="relative border rounded-3xl shadow-2xl aspect-[4/3] flex items-center justify-center overflow-hidden bg-white">
-               <img src="/images/interactive_grammar_demo.png" alt="Grammar feature" className="w-full h-full object-cover" />
+               <img src="/logo1.png" alt="Default photo" className="w-1/3 h-1/3 object-contain opacity-20 grayscale" />
             </div>
           </div>
           <div className="order-1 md:order-2 space-y-8">
@@ -117,7 +117,7 @@ export default function LandingPage() {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-transparent rounded-3xl blur-2xl" />
             <div className="relative border rounded-3xl shadow-2xl aspect-[4/3] flex items-center justify-center overflow-hidden bg-white">
-               <img src="/images/community_chat_demo.png" alt="Community Chat feature" className="w-full h-full object-cover" />
+               <img src="/logo1.png" alt="Default photo" className="w-1/3 h-1/3 object-contain opacity-20 grayscale" />
             </div>
           </div>
         </div>

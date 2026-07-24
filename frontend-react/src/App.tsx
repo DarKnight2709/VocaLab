@@ -46,13 +46,14 @@ import { StudyLayout } from "./shared/layout/StudyLayout";
 import StatsPage from "./features/stats/pages/StatsPage";
 import PublicCollectionDetailPage from "./features/vocabulary/pages/PublicCollectionDetailPage";
 import HomePage from "./features/home/pages/HomePage";
-
+import { VideoPage } from "./features/video/pages/VideoPage";
 import {
   LandingRedirectGuard,
   OptionalPublicGuard,
 } from "./features/auth/components/OptionalAuthGuard";
 import PublicLayout from "./shared/layout/PublicLayout";
 import LandingPage from "./features/home/pages/LandingPage";
+import { ExtractedVideoPage } from "./features/video/pages/VideoTranscriptPage";
 
 const router = createBrowserRouter([
   {
@@ -107,6 +108,8 @@ const router = createBrowserRouter([
               { path: ROUTES.BLOG_CREATE.url, element: <BlogCreatePage /> },
               { path: ROUTES.BLOG_EDIT.url, element: <BlogCreatePage /> },
               { path: ROUTES.STATS.url, element: <StatsPage /> },
+              { path: ROUTES.VIDEO.url, element: <VideoPage /> },
+              { path: "/video/:videoId", element: <ExtractedVideoPage /> },
               { path: ROUTES.GRAMMAR.url, element: <GrammarPage /> },
               {
                 element: <StudyLayout />,

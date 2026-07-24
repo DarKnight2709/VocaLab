@@ -162,6 +162,7 @@
     "stats": "Stats",
     "chat": "Chat",
     "blog": "Blog",
+    "video": "Video",
     "view": "View",
     "manage": "Manage",
     "cancel": "Cancel",
@@ -1169,5 +1170,22 @@
       "trademark": "Trademark",
       "symbol": "Symbol"
     }
+  },
+  "video": {
+    "pasteYouTubeUrl": "Paste YouTube URL here...",
+    "extract": "Extract",
+    "invalidYouTubeUrl": "Invalid YouTube URL",
+    "transcript": "Transcript",
+    "copyEntireTranscript": "Copy entire transcript",
+    "autoSyncOn": "Auto-Sync: On",
+    "autoSyncOff": "Auto-Sync: Off",
+    "sentences": "{{count}} Sentences",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "views": "views",
+    "failedToExtract": "Failed to extract transcript. Ensure the video has closed captions.",
+    "copySentence": "Copy sentence",
+    "extractSuccess": "Video extracted successfully",
+    "extractFailed": "Failed to extract video. Ensure the video has closed captions."
   }
 }

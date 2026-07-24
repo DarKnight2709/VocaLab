@@ -55,6 +55,12 @@ export class EnvironmentValidation {
   @IsString()
   GOOGLE_CALLBACK_URL!: string;
 
+  @IsString()
+  YOUTUBE_API_KEY!: string;
+
+  @IsString()
+  YOUTUBE_BASE_URL!: string;
+
   // Swagger
   @IsString()
   SWAGGER_TITLE!: string;

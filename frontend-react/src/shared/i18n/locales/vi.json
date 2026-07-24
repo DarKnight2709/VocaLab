@@ -162,6 +162,7 @@
     "stats": "Thống kê",
     "chat": "Nhắn tin",
     "blog": "Blog",
+    "video": "Video",
     "view": "Xem",
     "manage": "Quản lý",
     "cancel": "Hủy",
@@ -1169,5 +1170,22 @@
       "trademark": "Thương hiệu",
       "symbol": "Ký hiệu"
     }
+  },
+  "video": {
+    "pasteYouTubeUrl": "Dán URL YouTube vào đây...",
+    "extract": "Trích xuất",
+    "invalidYouTubeUrl": "URL YouTube không hợp lệ",
+    "transcript": "Phụ đề",
+    "copyEntireTranscript": "Sao chép toàn bộ phụ đề",
+    "autoSyncOn": "Tự động đồng bộ: Bật",
+    "autoSyncOff": "Tự động đồng bộ: Tắt",
+    "sentences": "{{count}} câu",
+    "showMore": "Xem thêm",
+    "showLess": "Thu gọn",
+    "views": "lượt xem",
+    "failedToExtract": "Không thể trích xuất phụ đề. Hãy đảm bảo video có phụ đề.",
+    "copySentence": "Sao chép câu",
+    "extractSuccess": "Trích xuất video thành công",
+    "extractFailed": "Không thể trích xuất video. Hãy đảm bảo video có phụ đề."
   }
 }

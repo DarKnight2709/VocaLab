@@ -119,6 +119,10 @@ const ROUTES = {
     title: "Statistics",
     url: "/stats",
   },
+  VIDEO: {
+    title: "Video",
+    url: "/video",
+  },
 };
 
 export default ROUTES;
