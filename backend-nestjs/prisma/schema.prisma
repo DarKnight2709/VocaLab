@@ -123,9 +123,10 @@ model User {
   reminders            Reminder[]
   devices              UserDevice[]
 
-  learningSetting LearningSetting?
-  dailyProgress   DailyProgress[]
+  learningSetting         LearningSetting?
+  dailyProgress           DailyProgress[]
   collectionDailyProgress CollectionDailyProgress[]
+  videos                  Video[]
 
   @@map("users")
 }
@@ -308,17 +309,17 @@ model GroupRolePermission {
 // ==================== BLOG ====================
 
 model Blog {
-  id         String    @id @default(uuid())
-  title      String
-  content    String
-  excerpt    String?
-  coverImage String?
-  authorId   String
-  popularityScore Int     @default(0)
-  isPublic   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
+  id              String    @id @default(uuid())
+  title           String
+  content         String
+  excerpt         String?
+  coverImage      String?
+  authorId        String
+  popularityScore Int       @default(0)
+  isPublic        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   author   User       @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   comments Comment[]
@@ -414,11 +415,11 @@ model CardCollection {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cards  Card[]
+  user          User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards         Card[]
   dailyProgress CollectionDailyProgress[]
-  origin CardCollection?  @relation("CollectionLineage", fields: [originId], references: [id])
-  forks  CardCollection[] @relation("CollectionLineage")
+  origin        CardCollection?           @relation("CollectionLineage", fields: [originId], references: [id])
+  forks         CardCollection[]          @relation("CollectionLineage")
 
   @@index([userId])
   @@map("card_collections")
@@ -442,7 +443,7 @@ model CardType {
 }
 
 model CardField {
-  id         String        @id @default(uuid())
+  id         String   @id @default(uuid())
   cardTypeId String
   key        String
   label      String
@@ -472,10 +473,10 @@ model Card {
   cardCollectionId String
   position         Int?
 
-  repetitions      Int      @default(0)
-  interval         Int      @default(0)
-  easeFactor       Float    @default(2.5)
-  nextReviewDate   DateTime @default(now())
+  repetitions    Int      @default(0)
+  interval       Int      @default(0)
+  easeFactor     Float    @default(2.5)
+  nextReviewDate DateTime @default(now())
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -581,14 +582,14 @@ model DailyProgress {
 }
 
 model CollectionDailyProgress {
-  id             String @id @default(uuid())
-  collectionId   String
-  userId         String
-  date           String
-  cardsReviewed  Int    @default(0)
-  cardsAdded     Int    @default(0)
-  cardsUpdated   Int    @default(0)
-  cardsDeleted   Int    @default(0)
+  id            String @id @default(uuid())
+  collectionId  String
+  userId        String
+  date          String
+  cardsReviewed Int    @default(0)
+  cardsAdded    Int    @default(0)
+  cardsUpdated  Int    @default(0)
+  cardsDeleted  Int    @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -680,4 +681,28 @@ model UserDevice {
 
   @@index([userId])
   @@map("user_devices")
+}
+
+model Video {
+  id           String    @id @default(uuid())
+  youtubeId    String    @unique
+  title        String
+  description  String?
+  channelTitle String?
+  publishedAt  DateTime?
+  thumbnail    String?
+  duration     String?
+  viewCount    String?
+  userId       String
+
+  transcript Json?
+  chapters   Json?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("videos")
 }
