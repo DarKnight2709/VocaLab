@@ -4,6 +4,12 @@ export interface TranscriptItem {
   duration: number;
 }
 
+export interface ChapterItem {
+  title: string;
+  start: number;
+  end: number;
+}
+
 export interface VideoInfo {
   title: string;
   description: string;
@@ -16,5 +22,6 @@ export interface VideoInfo {
 
 export interface ExtractVideoResponse {
   transcript: TranscriptItem[];
+  chapters: ChapterItem[];
   videoInfo: VideoInfo | null;
 }

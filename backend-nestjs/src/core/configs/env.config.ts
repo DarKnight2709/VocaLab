@@ -61,6 +61,13 @@ export class EnvironmentValidation {
   @IsString()
   YOUTUBE_BASE_URL!: string;
 
+  // Video
+  @IsString()
+  SERPAPI_URL!: string;
+
+  @IsString()
+  SERPAPI_API_KEY!: string;
+
   // Swagger
   @IsString()
   SWAGGER_TITLE!: string;

@@ -1,18 +1,19 @@
 import {
   Injectable,
   Logger,
-  BadRequestException,
   Inject,
+  BadRequestException,
+  HttpException,
 } from '@nestjs/common';
-import { TranscriptResponse, YoutubeTranscript } from 'youtube-transcript';
 import { ExtractVideoDto } from './dto/extract-video.dto';
-import { TranscriptItem, ExtractVideoResponse } from './interfaces/extract-video.interface';
+import { TranscriptItem, ChapterItem, ExtractVideoResponse } from './interfaces/extract-video.interface';
 import { ConfigService } from '@/common/services/config.service';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { RedisService } from '@/core/cache/redis.service';
 import { validateWithSchema } from '@/common/validation/validate-schema';
 import { VideoInfoResSchema, type VideoInfoRes } from './validation/VideoInfoResponseSchema';
+import { SerpApiTranscriptResponseSchema, type SerpApiTranscriptItem } from './validation/SerpApiTranscriptSchema';
 
 @Injectable()
 export class VideoService {
@@ -25,42 +26,70 @@ export class VideoService {
   ) {}
 
   async extract(userId: string, dto: ExtractVideoDto): Promise<ExtractVideoResponse> {
-    const videoUrl = dto.url;
     const baseURL = this.configService.get('YOUTUBE_BASE_URL');
     const key = this.configService.get('YOUTUBE_API_KEY');
     const videoId = dto.url.split('v=')[1];
     const videoInformationURL = `${baseURL}/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${key}`;
+    const serpApiBaseUrl = this.configService.get('SERPAPI_URL');
+    const separator = serpApiBaseUrl.includes('?') ? '&' : '?';
+    const transcriptURL = `${serpApiBaseUrl}${separator}engine=youtube_video_transcript&v=${videoId}&api_key=${this.configService.get('SERPAPI_API_KEY')}`;
 
     try {
       const [rawTranscript, videoInfoRes] = await Promise.all([
-        YoutubeTranscript.fetchTranscript(videoUrl),
-        firstValueFrom(this.httpService.get(videoInformationURL)).catch(() => ({
-          data: [],
-        })),
+        firstValueFrom(this.httpService.get(transcriptURL)),
+        firstValueFrom(this.httpService.get(videoInformationURL)),
       ]);
-      const formattedTranscript = this.formatTranscript(rawTranscript);
+
+      if (rawTranscript.data?.error) {
+        throw new BadRequestException(`SerpAPI error: ${rawTranscript.data.error}`);
+      }
+      if (videoInfoRes.data?.error) {
+        throw new BadRequestException(`YouTube API error: ${JSON.stringify(videoInfoRes.data.error)}`);
+      }
+
+      const validatedTranscript = validateWithSchema(
+        rawTranscript.data,
+        SerpApiTranscriptResponseSchema,
+      );
       const validatedVideoInfoRes = validateWithSchema(
         videoInfoRes.data,
         VideoInfoResSchema,
       );
+      const formattedTranscript = this.formatTranscript(validatedTranscript.transcript);
+      const formattedChapters: ChapterItem[] = (validatedTranscript.chapters || []).map((ch) => ({
+        title: ch.chapter,
+        start: ch.start_ms,
+        end: ch.end_ms,
+      }));
       const formattedVideoInfo = this.formatVideoInfo(validatedVideoInfoRes);
       return {
         transcript: formattedTranscript,
+        chapters: formattedChapters,
         videoInfo: formattedVideoInfo,
       };
-    } catch (error: unknown) {
+    } catch (error: any) {
+      const apiError = error?.response?.data;
       const errorMessage =
-        error instanceof Error ? error.message : String(error);
+        apiError?.error ||
+        apiError?.message ||
+        (typeof apiError === 'string' ? apiError : null) ||
+        error?.message ||
+        'Failed to extract video';
+
       this.logger.error(`Error extracting video: ${errorMessage}`);
-      return {
-        transcript: [],
-        videoInfo: null,
-      };
+      if (apiError) {
+        this.logger.error(`API Error details: ${JSON.stringify(apiError, null, 2)}`);
+      }
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException(errorMessage);
     }
   }
 
   // HELPER
-  formatTranscript(rawTranscript: TranscriptResponse[]): TranscriptItem[] {
+  formatTranscript(rawTranscript: SerpApiTranscriptItem[]): TranscriptItem[] {
     const formattedTranscript: TranscriptItem[] = [];
 
     const cleanText = (raw: string) =>
@@ -71,7 +100,7 @@ export class VideoService {
         .trim();
 
     const hasPunctuation = rawTranscript.some((item) =>
-      /[.!?]/.test(item.text),
+      /[.!?]/.test(item.snippet),
     );
 
     let groupText = '';
@@ -91,13 +120,13 @@ export class VideoService {
     };
 
     for (const item of rawTranscript) {
-      const text = cleanText(item.text);
+      const text = cleanText(item.snippet);
       if (!text) continue;
 
-      const chunkEnd = item.offset + item.duration;
+      const chunkEnd = item.end_ms;
 
       if (!hasPunctuation) {
-        if (groupText === '') groupStart = item.offset;
+        if (groupText === '') groupStart = item.start_ms;
         groupText += (groupText ? ' ' : '') + text;
         groupDurationEnd = chunkEnd;
 
@@ -108,7 +137,7 @@ export class VideoService {
         continue;
       }
 
-      if (groupText === '') groupStart = item.offset;
+      if (groupText === '') groupStart = item.start_ms;
       groupText += (groupText ? ' ' : '') + text;
       groupDurationEnd = chunkEnd;
 
