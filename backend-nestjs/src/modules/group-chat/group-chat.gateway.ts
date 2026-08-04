@@ -180,7 +180,7 @@ export class GroupChatGateway {
 
       return { success: true };
     } catch (error: any) {
-      console.error('Error sending group message:', error);
+      this.logger.error('Error sending group message', error?.message ?? error);
       return { success: false, message: error.message };
     }
   }
@@ -210,7 +210,7 @@ export class GroupChatGateway {
       });
       return { success: true };
     } catch (error: any) {
-      console.error('Error marking seen:', error);
+      this.logger.error('Error marking seen', error?.message ?? error);
       return { success: false, message: error.message };
     }
   }
@@ -240,7 +240,7 @@ export class GroupChatGateway {
       });
       return { success: true };
     } catch (error: any) {
-      console.error('Error updating message status:', error);
+      this.logger.error('Error updating message status', error?.message ?? error);
       return { success: false, message: error.message };
     }
   }
@@ -275,7 +275,7 @@ export class GroupChatGateway {
     const groupId = typeof payload === 'string' ? payload : payload.groupId;
     if (groupId && client) {
       client.join(`group-${groupId}`);
-      console.log(`[Socket] User ${user.id} joined group-${groupId}`);
+      this.logger.log(`User ${user.id} joined group-${groupId}`);
     }
   }
 
@@ -288,7 +288,7 @@ export class GroupChatGateway {
     const groupId = typeof payload === 'string' ? payload : payload.groupId;
     if (groupId && client) {
       client.leave(`group-${groupId}`);
-      console.log(`[Socket] User ${user.id} left group-${groupId}`);
+      this.logger.log(`User ${user.id} left group-${groupId}`);
     }
   }
 

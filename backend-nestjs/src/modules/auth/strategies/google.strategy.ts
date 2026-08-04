@@ -18,9 +18,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(accessToken: string, refreshToken: string, profile: Profile) {
     const { id, emails, displayName, photos } = profile;
 
-    console.log('profile', profile);
     const email = emails?.[0]?.value;
-    console.log('email', email);
 
     if (!email) {
       throw new Error(ErrorCode.GOOGLE_EMAIL_NOT_FOUND);

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -25,7 +25,7 @@ export class PrismaService extends PrismaClient {
           // In Prisma 7 with adapters, $connect is often implicit,
           // but calling it ensures the pool is alive.
           await (this as any).$connect();
-          console.log('✅ Prisma connected via Driver Adapter');
+          Logger.log('Prisma connected via Driver Adapter', 'PrismaService');
         },
 
         async onModuleDestroy() {

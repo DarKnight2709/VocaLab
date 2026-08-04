@@ -1,4 +1,4 @@
-import { Global, Module, Logger } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ClsModule } from "nestjs-cls";
 import envConfig from "@/core/configs/env.config";
@@ -71,14 +71,9 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
       provide: APP_PIPE,
       useClass: ApiValidationPipe,
     },
-    {
-      provide: "LOGGER_SERVICE",
-      useClass: Logger
-    }
   ],
   exports: [
     ...globalService,
-    "LOGGER_SERVICE"
   ]
 })
 

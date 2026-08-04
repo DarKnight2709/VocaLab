@@ -1,4 +1,4 @@
-import { Provider } from '@nestjs/common';
+import { Provider, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { ConfigService } from '@/common/services/config.service';
 
@@ -12,7 +12,7 @@ export const FirebaseProvider: Provider = {
 
     const serviceAccountRaw = configService.get('FIREBASE_SERVICE_ACCOUNT');
     if (!serviceAccountRaw) {
-      console.warn("⚠️ Missing FIREBASE_SERVICE_ACCOUNT environment variable! Firebase features will not work.");
+      Logger.warn('Missing FIREBASE_SERVICE_ACCOUNT env variable — Firebase features will be disabled', 'FirebaseProvider');
       return null;
     }
 
@@ -21,10 +21,10 @@ export const FirebaseProvider: Provider = {
       const app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      console.log("🔥 Firebase Admin SDK initialized successfully!");
+      Logger.log('Firebase Admin SDK initialized successfully', 'FirebaseProvider');
       return app;
     } catch (error) {
-      console.error("❌ Failed to parse Firebase Service Account JSON string:", error);
+      Logger.error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON', error, 'FirebaseProvider');
       return null;
     }
   },

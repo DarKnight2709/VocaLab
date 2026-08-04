@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ZodError, ZodType } from 'zod';
 
 export const validateWithSchema = <T>(data: unknown, schema: ZodType<T>): T => {
@@ -6,12 +7,11 @@ export const validateWithSchema = <T>(data: unknown, schema: ZodType<T>): T => {
     return validatedData;
   } catch (error) {
     if (error instanceof ZodError) {
-      console.error('❌ Schema Validation Error:', {
+      Logger.error('Schema Validation Error', JSON.stringify({
         path: error.issues[0]?.path,
         message: error.issues[0]?.message,
         received: error.issues,
-        data,
-      });
+      }), 'validateWithSchema');
     }
     throw error;
   }

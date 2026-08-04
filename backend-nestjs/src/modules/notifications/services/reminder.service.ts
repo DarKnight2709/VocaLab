@@ -22,7 +22,7 @@ export class ReminderService {
           currentMinutes < Number(data.startTime) ||
           currentMinutes > Number(data.endTime)
         ) {
-          console.log(`Job skipped: current time is outside exact boundaries.`);
+          this.logger.log(`Job skipped: current time is outside exact boundaries.`);
           return;
         }
       }

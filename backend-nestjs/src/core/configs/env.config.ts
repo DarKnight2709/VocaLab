@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import { Transform, plainToClass } from 'class-transformer';
 
@@ -188,9 +189,10 @@ export function validateConfig(config: Record<string, unknown>) {
 
   if (errors.length > 0) {
     errors.map((error) =>
-      console.error(
-        'Biến môi trường không hợp lệ:',
-        Object.values(error.constraints ?? {}).join(', '),
+      Logger.error(
+        `Invalid environment variable: ${Object.values(error.constraints ?? {}).join(', ')}`,
+        undefined,
+        'EnvConfig',
       ),
     );
     throw new Error(ErrorCode.INVALID_ENVIRONMENT_VARIABLES);
@@ -212,7 +214,7 @@ export default () => {
     const env = validateConfig(process.env);
     return env;
   } catch (error) {
-    console.log('Biến môi trường không hợp lệ: ', error);
+    Logger.error('Invalid environment variables', error instanceof Error ? error.message : String(error), 'EnvConfig');
     throw new Error(ErrorCode.INVALID_ENVIRONMENT_VARIABLES);
   }
 };

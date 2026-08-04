@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseGuards, UsePipes, UseFilters } from '@nestjs/common';
+import { UseGuards, UsePipes, UseFilters, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { SocketUser } from '../../common/decorators/socket-user.decorator';
@@ -43,6 +43,7 @@ export class DirectChatGateway
   server!: Server;
 
   private readonly ONLINE_USERS_KEY = 'direct_chat_online_users';
+  private readonly logger = new Logger(DirectChatGateway.name);
 
   private async getOnlineUsersMap(): Promise<Record<string, string[]>> {
     const data = await this.redisService.getCache<Record<string, string[]>>(this.ONLINE_USERS_KEY);
@@ -63,7 +64,7 @@ export class DirectChatGateway
   ) {}
 
   handleConnection(client: Socket) {
-    console.log(`[Socket] New connection: ${client.id}`);
+    this.logger.log(`New connection: ${client.id}`);
   }
 
   async handleDisconnect(client: Socket) {
@@ -200,7 +201,7 @@ export class DirectChatGateway
 
       return { success: true };
     } catch (error: any) {
-      console.error('Send message error:', error);
+      this.logger.error('Send message error', error?.message ?? error);
       return { success: false, message: error.message };
     }
   }
@@ -225,7 +226,7 @@ export class DirectChatGateway
       }
       return { success: true };
     } catch (error: any) {
-      console.error('Error marking seen:', error);
+      this.logger.error('Error marking seen', error?.message ?? error);
       return { success: false, message: error.message };
     }
   }

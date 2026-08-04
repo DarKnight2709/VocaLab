@@ -6,7 +6,7 @@ import {
   SubscribeMessage,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { UseFilters, UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SocketAuthGuard } from '../../common/guards/socket-auth.guard';
 import { NotificationDto } from './dto/notifications-response.dto';
@@ -28,6 +28,7 @@ export class NotificationsGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
+  private readonly logger = new Logger(NotificationsGateway.name);
   private onlineUsers = new Map<string, Set<string>>();
 
   @SubscribeMessage('entering')
@@ -43,7 +44,7 @@ export class NotificationsGateway implements OnGatewayDisconnect {
     }
     socketSet.add(socketId);
     
-    console.log(`[NotificationsGateway] User ${userId} is online (${socketSet.size} sockets)`);
+    this.logger.log(`User ${userId} connected (${socketSet.size} sockets)`);
   }
 
   handleDisconnect(client: Socket) {
@@ -58,7 +59,7 @@ export class NotificationsGateway implements OnGatewayDisconnect {
         socketSet.delete(socketId);
         if (socketSet.size === 0) {
           this.onlineUsers.delete(userId);
-          console.log(`[NotificationsGateway] User ${userId} is offline`);
+          this.logger.log(`User ${userId} disconnected (all sockets closed)`);
         }
       }
     }

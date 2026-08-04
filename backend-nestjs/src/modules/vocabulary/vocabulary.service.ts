@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
@@ -127,6 +128,8 @@ const collectionDetailSelect = {
 
 @Injectable()
 export class VocabularyService {
+  private readonly logger = new Logger(VocabularyService.name);
+
   constructor(
     private prisma: PrismaService,
     @Inject(forwardRef(() => UserService))
@@ -1184,7 +1187,7 @@ export class VocabularyService {
             importedCards.push(row.join(dto.delimiter));
           }
         } catch (e) {
-          console.error('Import line error:', e);
+          this.logger.error(`Import line error: ${e instanceof Error ? e.message : e}`);
           errors++;
           errorLines.push(row.join(dto.delimiter));
         }
@@ -1634,7 +1637,7 @@ export class VocabularyService {
         })
       ]);
     } catch (error) {
-      console.error('[recordDailyActivity] Failed:', { userId, collectionId, activityType, error });
+      this.logger.error(`[recordDailyActivity] Failed for userId=${userId} collectionId=${collectionId} activity=${activityType}`, error instanceof Error ? error.stack : error);
     }
   }
 }
