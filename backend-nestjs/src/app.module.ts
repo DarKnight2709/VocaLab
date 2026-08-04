@@ -29,8 +29,8 @@ import { ProgressModule } from './modules/progress/progress.module';
 import { SearchModule } from './modules/search/search.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { VideoModule } from './modules/video/video.module';
-
-
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 
 @Module({
@@ -68,8 +68,9 @@ import { VideoModule } from './modules/video/video.module';
     DictionaryModule,
     VideoModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [
+    AppService,
     // dùng để serialize response data (loại bỏ các field không cần thiết - các field có decorator @Exclude())
     {
       provide: APP_INTERCEPTOR,
