@@ -16,8 +16,7 @@ async function bootstrap() {
   const API_DEFAULT_VERSION = configService.get('API_DEFAULT_VERSION');
   const PORT = configService.get('PORT');
   const API_URL = configService.get('API_URL');
-
-
+  const NODE_ENV = configService.get('NODE_ENV');
 
   // Set global prefix and versioning (/api/v1)
   app.setGlobalPrefix(API_PREFIX, {
@@ -29,7 +28,7 @@ async function bootstrap() {
   });
 
   // Setup Swagger
-  const { swaggerEnabled, swaggerUrl } = configSwagger(app, configService);
+  const { swaggerEnabled, swaggerUrl } = NODE_ENV === "development" ? configSwagger(app, configService): {swaggerEnabled: false, swaggerUrl: ""};
 
 
   // Setup CORS
