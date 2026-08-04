@@ -5,7 +5,6 @@ import {
   NestModule,
 } from '@nestjs/common';
 import { AuthModule } from './modules/auth/auth.module';
-import compression from 'compression';
 import { UsersModule } from './modules/users/users.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { DirectChatModule } from './modules/direct-chat/direct-chat.module';
@@ -18,7 +17,6 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtGuard } from './common/guards/jwt-auth.guard';
 import { UploadModule } from './modules/upload/upload.module';
-import helmet from 'helmet';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SettingModule } from './modules/setting/setting.module';
 import { BullModule } from '@nestjs/bullmq';
@@ -89,6 +87,6 @@ import { VideoModule } from './modules/video/video.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(helmet(), compression(), LoggerMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

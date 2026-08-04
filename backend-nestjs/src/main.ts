@@ -6,6 +6,8 @@ import { ConfigService } from './common/services/config.service';
 import { configSwagger } from './core/configs/swagger.config';
 import { Logger } from '@nestjs/common';
 import { corsConfig } from './core/configs/cors.config';
+import helmet from 'helmet';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,6 +19,46 @@ async function bootstrap() {
   const PORT = configService.get('PORT');
   const API_URL = configService.get('API_URL');
   const NODE_ENV = configService.get('NODE_ENV');
+
+  // Register global 3rd-party middlewares here
+  app.use(
+    helmet(
+      NODE_ENV === 'development'
+        ? {
+            contentSecurityPolicy: {
+              directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", 'data:', 'https:'],
+                scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Required for Swagger UI
+              },
+            },
+            frameguard: { action: 'deny' },
+            hidePoweredBy: true,
+            hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+            noSniff: true,
+            dnsPrefetchControl: { allow: false },
+            referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+          }
+        : {
+            contentSecurityPolicy: {
+              directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", 'data:', 'https:'],
+                scriptSrc: ["'self'"],
+              },
+            },
+            frameguard: { action: 'deny' },
+            hidePoweredBy: true,
+            hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+            noSniff: true,
+            dnsPrefetchControl: { allow: false },
+            referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+          },
+    ),
+  );
+  app.use(compression());
 
   // Set global prefix and versioning (/api/v1)
   app.setGlobalPrefix(API_PREFIX, {
