@@ -74,9 +74,6 @@ export const GetGroupInfoResponseSchema = GroupInfoSchema;
 
 export const GetGroupMembersResponseSchema = z.array(GroupMemberSchema);
 
-export const DeleteResponseSchema = z.object({
-  id: z.string(),
-});
 
 export const PermissionSchema = z.array(
   z.object({

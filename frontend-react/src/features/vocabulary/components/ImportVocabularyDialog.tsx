@@ -77,8 +77,8 @@ export default function ImportVocabularyDialog({
 
   // Set default collection if not set yet
   useEffect(() => {
-    if (!collectionId && collectionsData?.collections?.length) {
-      setCollectionId(collectionsData.collections[0].id);
+    if (!collectionId && collectionsData?.length) {
+      setCollectionId(collectionsData[0].id);
     }
   }, [collectionsData, collectionId]);
 
@@ -344,7 +344,7 @@ export default function ImportVocabularyDialog({
                   <SelectValue placeholder={t("vocabulary.import.selectCollection")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {collectionsData?.collections.map((col) => (
+                  {collectionsData?.map((col) => (
                     <SelectItem key={col.id} value={col.id}>
                       {col.name}
                     </SelectItem>

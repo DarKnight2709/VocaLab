@@ -3,8 +3,7 @@ import { UserResponse } from '@/modules/users/dto/users-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CardSide } from '@prisma/client';
 
-// ─── Shared / Reusable DTOs ─────────────────────────────────
-
+// ─── Card field / Card field value ────────────────────────────────────────────
 export class CardFieldResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
@@ -60,7 +59,7 @@ export class CollectionOriginDto {
   user!: OriginUserDto;
 }
 
-export class CollectionListItemDto {
+export class CollectionItemDto {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
 
@@ -86,12 +85,7 @@ export class CollectionListItemDto {
   _count!: { cards: number };
 }
 
-export class GetCollectionsResponseDto {
-  @ApiProperty({ type: [CollectionListItemDto] })
-  collections!: CollectionListItemDto[];
-}
-
-export class CollectionSearchItemDto extends CollectionListItemDto {
+export class CollectionSearchItemDto extends CollectionItemDto {
   @ApiProperty({ type: UserResponse })
   user!: UserResponse;
 
@@ -150,39 +144,15 @@ export class CardDetailDto {
   values!: CardFieldValueResponseDto[];
 }
 
-export class GetCollectionByIdPublicResponseDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
-
-  @ApiProperty({ example: 'Bộ từ IELTS' })
-  name!: string;
-
-  @ApiPropertyOptional({ example: 'Mô tả bộ từ vựng', nullable: true })
-  description!: string | null;
-
-  @ApiProperty({ example: 'uuid-string' })
-  userId!: string;
-
-  @ApiProperty({ example: true })
-  isPublic!: boolean;
-
-  @ApiPropertyOptional({ example: 'uuid-string', nullable: true })
-  originId!: string | null;
-
-  @ApiPropertyOptional({ type: CollectionOriginDto, nullable: true })
-  origin!: CollectionOriginDto | null;
-
+export class PublicCollectionResponseDto extends CollectionItemDto{
   @ApiProperty({ type: UserResponse })
   user!: UserResponse;
 
   @ApiProperty({ type: [CardDetailDto] })
   cards!: CardDetailDto[];
-
-  @ApiProperty({ example: { cards: 25 } })
-  _count!: { cards: number };
 }
 
-export class GetCollectionByIdResponseDto extends GetCollectionByIdPublicResponseDto {
+export class CollectionByIdResponseDto extends PublicCollectionResponseDto {
   @ApiProperty({ example: 5 })
   newCount!: number;
 
@@ -208,12 +178,6 @@ export class CreateCollectionResponseDto {
 
   @ApiProperty({ example: true })
   isPublic!: boolean;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
 }
 
 export class ForkCollectionResponseDto extends CreateCollectionResponseDto {
@@ -226,12 +190,6 @@ export class ForkCollectionResponseDto extends CreateCollectionResponseDto {
   @ApiProperty({ type: [String], example: ['skipped'] })
   skippedCards!: string[];
 }
-
-// ─── Cards ──────────────────────────────────────────────────
-
-export class AddCardResponseDto extends CardDetailDto {}
-
-export class UpdateCardResponseDto extends CardDetailDto {}
 
 // ─── Import ─────────────────────────────────────────────────
 
@@ -267,18 +225,9 @@ export class ImportCardsResponseDto {
 
 // ─── Card Types ─────────────────────────────────────────────
 
-export class GetCardTypesResponseDto {
+export class CardTypesResponseDto {
   @ApiProperty({ type: [CardTypeWithFieldsDto] })
   cardTypes!: CardTypeWithFieldsDto[];
-}
-
-export class GetCardTypeByIdResponseDto extends CardTypeWithFieldsDto{}
-
-export class CreateCardTypeResponseDto extends CardTypeWithFieldsDto{}
-
-export class DeleteResponseDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
 }
 
 export class ReviewCardResponseDto {
@@ -297,33 +246,3 @@ export class ReviewCardResponseDto {
   @ApiProperty({ example: '2026-07-05T00:00:00.000Z' })
   nextReviewDate!: Date;
 }
-
-// ─── Search ─────────────────────────────────────────────────
-// export class CollectionSearchItemDto {
-//   @ApiProperty({ example: 'uuid-string' })
-//   id!: string;
-
-//   @ApiProperty({ example: 'Bộ từ IELTS' })
-//   name!: string;
-
-//   @ApiPropertyOptional({ example: 'Mô tả bộ từ vựng', nullable: true })
-//   description!: string | null;
-
-//   @ApiProperty({ type: UserResponse })
-//   user!: UserResponse;
-
-//   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-//   createdAt!: Date;
-
-//   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-//   updatedAt!: Date;
-// }
-
-
-// export class CollectionsSearchResultResponse {
-//   @ApiProperty({ type: [CollectionSearchItemDto] })
-//   collections!: CollectionSearchItemDto[];
-
-//   @ApiProperty({ type: PaginationMetaDto })
-//   meta!: PaginationMetaDto;
-// }

@@ -10,7 +10,6 @@ import {
   GetGroupMessagesResponseSchema,
   GetGroupMembersResponseSchema,
   UpdateGroupResponseSchema,
-  DeleteResponseSchema,
   PermissionSchema,
 } from "@/shared/validations/GroupSchema";
 
@@ -177,10 +176,7 @@ export function useDeleteGroupMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (groupId: string) => {
-      return await fetchWithSchema(
-        api.delete(API_ROUTES.GROUP.DELETE(groupId)),
-        DeleteResponseSchema,
-      );
+      await api.delete(API_ROUTES.GROUP.DELETE(groupId));
     },
     onSuccess: (_, __) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
@@ -262,11 +258,8 @@ export function useDeleteGroupMemberMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: { groupId: string; memberId: string }) => {
-      return await fetchWithSchema(
-        api.delete(
-          API_ROUTES.GROUP.DELETE_MEMBER(params.groupId, params.memberId),
-        ),
-        DeleteResponseSchema,
+      await api.delete(
+        API_ROUTES.GROUP.DELETE_MEMBER(params.groupId, params.memberId),
       );
     },
     onSuccess: (_, vars) => {

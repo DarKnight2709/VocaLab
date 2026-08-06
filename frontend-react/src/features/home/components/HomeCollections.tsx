@@ -9,7 +9,7 @@ export default function HomeCollections() {
   const { t } = useTranslation();
   const { data: collectionsData, isLoading } = useCollectionsQuery(true);
 
-  const collections = collectionsData?.collections?.slice(0, 4) ?? [];
+  const collections = collectionsData?.slice(0, 4) ?? [];
 
   return (
     <section>

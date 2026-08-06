@@ -171,9 +171,6 @@ export const getCreateUserSocialSchema = () =>
 export const UserSocialsResponseSchema = z.array(UserSocialItemSchema);
 export const CreateUserSocialResponseSchema = UserSocialItemSchema;
 export const UpdateUserSocialResponseSchema = UserSocialItemSchema;
-export const DeleteUserSocialResponseSchema = z.object({
-  id: z.string(),
-});
 
 export const UserBlockedUsersResponseSchema = z.object({
   blockedUsers: z.array(z.object({

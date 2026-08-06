@@ -11,7 +11,6 @@ import {
   UserSocialsResponseSchema,
   CreateUserSocialResponseSchema,
   UpdateUserSocialResponseSchema,
-  DeleteUserSocialResponseSchema,
   type UpdatePersonalInfoBodyType,
   type CreateUserSocialBody,
   getUpdateProfileResponseSchema,
@@ -272,10 +271,7 @@ export const useDeleteSocialMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      fetchWithSchema(
         api.delete(API_ROUTES.USER.DELETE_SOCIAL(id)),
-        DeleteUserSocialResponseSchema,
-      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me", "socials"] });
       toast.success(i18n.t("profile.socialDeleteSuccess"));

@@ -253,14 +253,14 @@ export default function VocabularyPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {colsData?.collections.length === 0 && (
+          {colsData?.length === 0 && (
             <div className="col-span-full text-center py-16 rounded-2xl bg-card shadow-sm text-muted-foreground">
               <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p>{t("vocabulary.noCollections")}</p>
             </div>
           )}
 
-          {colsData?.collections.map((col) => (
+          {colsData?.map((col) => (
             <div
               key={col.id}
               role="button"

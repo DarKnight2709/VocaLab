@@ -10,7 +10,6 @@ import {
 import { PrismaService } from '../../core/database/prisma.service';
 import {
   CreateCollectionDto,
-  UpdateCollectionDto,
   CreateCardDto,
   UpdateCardDto,
   ImportCardsDto,
@@ -20,22 +19,17 @@ import {
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import {
-  GetCollectionsResponseDto,
-  GetCollectionByIdResponseDto,
   CreateCollectionResponseDto,
-  AddCardResponseDto,
-  UpdateCardResponseDto,
   ImportCardsResponseDto,
-  GetCardTypesResponseDto,
-  GetCardTypeByIdResponseDto,
-  CreateCardTypeResponseDto,
   CardTypeWithFieldsDto,
-  DeleteResponseDto,
   CollectionSearchResponseDto,
   ForkCollectionResponseDto,
-  GetCollectionByIdPublicResponseDto,
   CardDetailDto,
   ReviewCardResponseDto,
+  CollectionItemDto,
+  PublicCollectionResponseDto,
+  CollectionByIdResponseDto,
+  CardTypesResponseDto,
 } from './dto/vocabulary-response.dto';
 import { CollectionSearchFilters, SEARCH_SORT, SEARCH_TIME } from '../search/search.types';
 import { UserService } from '../users/users.service';
@@ -213,7 +207,7 @@ export class VocabularyService {
   // Collections
   // ──────────────────────────────────────────────
 
-  async getCollections(userId: string): Promise<GetCollectionsResponseDto> {
+  async getCollections(userId: string): Promise<CollectionItemDto[]> {
     const collections = await this.prisma.cardCollection.findMany({
       where: { userId },
       select: {
@@ -238,12 +232,12 @@ export class VocabularyService {
       },
       orderBy: { createdAt: 'desc' },
     });
-    return { collections };
+    return collections;
   }
 
   async getCollectionByIdPublic(
     id: string,
-  ): Promise<GetCollectionByIdPublicResponseDto> {
+  ): Promise<PublicCollectionResponseDto> {
     const collection = await this.prisma.cardCollection.findFirst({
       where: { id, isPublic: true },
       select: collectionDetailSelect,
@@ -256,7 +250,7 @@ export class VocabularyService {
   async getCollectionById(
     id: string,
     userId: string,
-  ): Promise<GetCollectionByIdResponseDto> {
+  ): Promise<CollectionByIdResponseDto> {
     const collection = await this.prisma.cardCollection.findFirst({
       where: { id, userId },
       select: collectionDetailSelect,
@@ -741,7 +735,7 @@ export class VocabularyService {
   async updateCollection(
     id: string,
     userId: string,
-    dto: UpdateCollectionDto,
+    dto: CreateCollectionDto,
   ): Promise<CreateCollectionResponseDto> {
     await this.findCollectionOrFail(id, userId);
     const collection = await this.prisma.cardCollection.update({
@@ -754,12 +748,9 @@ export class VocabularyService {
   async deleteCollection(
     id: string,
     userId: string,
-  ): Promise<DeleteResponseDto> {
+  ): Promise<void> {
     await this.findCollectionOrFail(id, userId);
     await this.prisma.cardCollection.delete({ where: { id } });
-    return {
-      id,
-    };
   }
 
   async searchCollections(
@@ -871,7 +862,7 @@ export class VocabularyService {
     collectionId: string,
     userId: string,
     dto: CreateCardDto,
-  ): Promise<AddCardResponseDto> {
+  ): Promise<CardDetailDto> {
     const targetCollectionId = collectionId || dto.cardCollectionId;
     if (!targetCollectionId) {
       throw new BadRequestException(ErrorCode.COLLECTION_ID_REQUIRED);
@@ -956,7 +947,7 @@ export class VocabularyService {
     cardId: string,
     userId: string,
     dto: UpdateCardDto,
-  ): Promise<UpdateCardResponseDto | null> {
+  ): Promise<CardDetailDto | null> {
     // 1. Kiểm tra quyền sở hữu
     const card = await this.prisma.card.findFirst({
       where: {
@@ -1054,7 +1045,7 @@ export class VocabularyService {
     return updatedCard;
   }
 
-  async deleteCard(cardId: string, userId: string): Promise<DeleteResponseDto> {
+  async deleteCard(cardId: string, userId: string): Promise<void> {
     const card = await this.prisma.card.findFirst({
       where: {
         id: cardId,
@@ -1071,8 +1062,6 @@ export class VocabularyService {
     });
 
     await this.recordDailyActivity(userId, card.cardCollectionId, 'cardsDeleted');
-
-    return { id: cardId };
   }
 
   async importCards(
@@ -1208,7 +1197,7 @@ export class VocabularyService {
   // CardTypes
   // ──────────────────────────────────────────────
 
-  async getCardTypes(userId: string): Promise<GetCardTypesResponseDto> {
+  async getCardTypes(userId: string): Promise<CardTypesResponseDto> {
     const cardTypes = await this.prisma.cardType.findMany({
       where: { userId },
       include: {
@@ -1223,7 +1212,7 @@ export class VocabularyService {
   async createCardType(
     userId: string,
     createCardTypeDto: CreateCardTypeDto,
-  ): Promise<CreateCardTypeResponseDto | null> {
+  ): Promise<CardTypeWithFieldsDto | null> {
     const usedKeys = new Set<string>();
 
     const cardType = await this.prisma.cardType.create({
@@ -1278,7 +1267,7 @@ export class VocabularyService {
   async getCardTypeById(
     id: string,
     userId: string,
-  ): Promise<GetCardTypeByIdResponseDto> {
+  ): Promise<CardTypeWithFieldsDto> {
     const cardType = await this.prisma.cardType.findFirst({
       where: { id, userId },
       include: {
@@ -1399,10 +1388,9 @@ export class VocabularyService {
     return cardType;
   }
 
-  async deleteCardType(id: string, userId: string): Promise<DeleteResponseDto> {
+  async deleteCardType(id: string, userId: string): Promise<void> {
     await this.findCardTypeOrFail(id, userId);
     await this.prisma.cardType.delete({ where: { id } });
-    return { id };
   }
 
   // ──────────────────────────────────────────────

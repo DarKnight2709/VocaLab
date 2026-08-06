@@ -109,12 +109,12 @@ const API_ROUTES = {
     UPDATE_CARD_TYPE: (id: string) => `v1/vocabulary/card-types/${id}`,
     DELETE_CARD_TYPE: (id: string) => `v1/vocabulary/card-types/${id}`,
     CREATE_CARD: (collectionId: string) =>
-      `v1/vocabulary/collections/${collectionId}/cards`,
+      `v1/vocabulary/collections/${collectionId}/card`,
     DELETE_CARD: (cardId: string) => `v1/vocabulary/cards/${cardId}`,
     IMPORT_CARDS: (collectionId: string) =>
       `v1/vocabulary/collections/${collectionId}/import`,
     ADD_CARD: (collectionId: string) =>
-      `v1/vocabulary/collections/${collectionId}/cards`,
+      `v1/vocabulary/collections/${collectionId}/card`,
     UPDATE_CARD: (cardId: string) => `v1/vocabulary/cards/${cardId}`,
     DUE_CARDS: (collectionId: string) => `v1/vocabulary/collections/${collectionId}/due`,
     REVIEW_CARD: (cardId: string) => `v1/vocabulary/cards/${cardId}/review`,

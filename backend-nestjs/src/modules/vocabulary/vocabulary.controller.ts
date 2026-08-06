@@ -12,7 +12,6 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { VocabularyService } from './vocabulary.service';
 import {
   CreateCollectionDto,
-  UpdateCollectionDto,
   CreateCardTypeDto,
   CreateCardDto,
   ImportCardsDto,
@@ -25,21 +24,16 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import {
-  GetCollectionsResponseDto,
-  GetCollectionByIdResponseDto,
   CreateCollectionResponseDto,
   ForkCollectionResponseDto,
-  AddCardResponseDto,
-  UpdateCardResponseDto,
   ImportCardsResponseDto,
-  GetCardTypesResponseDto,
-  GetCardTypeByIdResponseDto,
-  CreateCardTypeResponseDto,
   CardTypeWithFieldsDto,
-  DeleteResponseDto,
   CardDetailDto,
   ReviewCardResponseDto,
-  GetCollectionByIdPublicResponseDto,
+  CollectionByIdResponseDto,
+  CollectionItemDto,
+  PublicCollectionResponseDto,
+  CardTypesResponseDto,
 } from './dto/vocabulary-response.dto';
 
 @IsProtected()
@@ -56,7 +50,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Lấy danh sách bộ từ vựng' })
   async getCollections(
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<GetCollectionsResponseDto>> {
+  ): Promise<ResponseInterceptor<CollectionItemDto[]>> {
     const result = await this.vocabularyService.getCollections(user.id);
     return { data: result };
   }
@@ -66,7 +60,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Lấy thông tin chi tiết bộ từ vựng công khai' })
   async getPublicCollectionById(
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<GetCollectionByIdPublicResponseDto>> {
+  ): Promise<ResponseInterceptor<PublicCollectionResponseDto>> {
     const result = await this.vocabularyService.getCollectionByIdPublic(id);
     return { data: result };
   }
@@ -76,7 +70,7 @@ export class VocabularyController {
   async getCollectionDetail(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<GetCollectionByIdResponseDto>> {
+  ): Promise<ResponseInterceptor<CollectionByIdResponseDto>> {
     const result = await this.vocabularyService.getCollectionById(id, user.id);
     return { data: result };
   }
@@ -92,11 +86,11 @@ export class VocabularyController {
   }
 
   @Patch('collections/:id')
-  @ApiOperation({ summary: 'Cập nhật bộ từ vựng' })
+  @ApiOperation({ summary: 'Cập nhật thông tin bộ từ vựng' })
   async updateCollection(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-    @Body() dto: UpdateCollectionDto,
+    @Body() dto: CreateCollectionDto,
   ): Promise<ResponseInterceptor<CreateCollectionResponseDto>> {
     const result = await this.vocabularyService.updateCollection(
       id,
@@ -126,24 +120,20 @@ export class VocabularyController {
   async deleteCollection(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<DeleteResponseDto>> {
-    const result = await this.vocabularyService.deleteCollection(id, user.id);
-    return {
-      data: result,
-    };
+  ): Promise<void> {
+    await this.vocabularyService.deleteCollection(id, user.id);
   }
 
   // ──────────────────────────────────────────────
   // Cards
   // ──────────────────────────────────────────────
-
-  @Post('collections/:collectionId/cards')
-  @ApiOperation({ summary: 'Tạo thẻ mới trong bộ từ vựng' })
+  @Post('collections/:id/card')
+  @ApiOperation({ summary: 'Thêm thẻ mới vào bộ từ vựng' })
   async addCard(
-    @Param('collectionId') collectionId: string,
+    @Param('id') collectionId: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: CreateCardDto,
-  ): Promise<ResponseInterceptor<AddCardResponseDto>> {
+  ): Promise<ResponseInterceptor<CardDetailDto>> {
     const result = await this.vocabularyService.addCard(
       collectionId,
       user.id,
@@ -152,55 +142,53 @@ export class VocabularyController {
     return { data: result };
   }
 
-  @Post('collections/:collectionId/import')
+  @Post('collections/:id/import')
   @ApiOperation({ summary: 'Import hàng loạt thẻ vào bộ từ vựng' })
   async importCards(
-    @Param('collectionId') collectionId: string,
+    @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: ImportCardsDto,
   ): Promise<ResponseInterceptor<ImportCardsResponseDto>> {
     const result = await this.vocabularyService.importCards(
-      collectionId,
+      id,
       user.id,
       dto,
     );
     return { data: result };
   }
 
-  @Patch('cards/:cardId')
+  @Patch('cards/:id')
   @ApiOperation({ summary: 'Cập nhật thẻ' })
   async updateCard(
-    @Param('cardId') cardId: string,
+    @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateCardDto,
-  ): Promise<ResponseInterceptor<UpdateCardResponseDto | null>> {
+  ): Promise<ResponseInterceptor<CardDetailDto | null>> {
     const result = await this.vocabularyService.updateCard(
-      cardId,
+      id,
       user.id,
       dto,
     );
     return { data: result };
   }
 
-  @Delete('cards/:cardId')
+  @Delete('cards/:id')
   @ApiOperation({ summary: 'Xóa thẻ' })
   async deleteCard(
-    @Param('cardId') cardId: string,
+    @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<DeleteResponseDto>> {
-    const result = await this.vocabularyService.deleteCard(cardId, user.id);
-    return { data: result };
+  ): Promise<void> {
+    await this.vocabularyService.deleteCard(id, user.id);
   }
 
   // ──────────────────────────────────────────────
   // CardType
   // ──────────────────────────────────────────────
-
   @Get('card-types')
   @ApiOperation({ summary: 'Lấy danh sách kiểu thẻ' })
   async getCardTypes(
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<GetCardTypesResponseDto>> {
+  ): Promise<ResponseInterceptor<CardTypesResponseDto>> {
     const result = await this.vocabularyService.getCardTypes(user.id);
     return { data: result };
   }
@@ -210,7 +198,7 @@ export class VocabularyController {
   async getCardTypeById(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<GetCardTypeByIdResponseDto>> {
+  ): Promise<ResponseInterceptor<CardTypeWithFieldsDto>> {
     const result = await this.vocabularyService.getCardTypeById(id, user.id);
     return { data: result };
   }
@@ -220,7 +208,7 @@ export class VocabularyController {
   async createCardType(
     @CurrentUser() user: RequestUser,
     @Body() createCardTypeDto: CreateCardTypeDto,
-  ): Promise<ResponseInterceptor<CreateCardTypeResponseDto | null>> {
+  ): Promise<ResponseInterceptor<CardTypeWithFieldsDto | null>> {
     const result = await this.vocabularyService.createCardType(
       user.id,
       createCardTypeDto,
@@ -248,9 +236,8 @@ export class VocabularyController {
   async deleteCardType(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<DeleteResponseDto>> {
-    const result = await this.vocabularyService.deleteCardType(id, user.id);
-    return { data: result };
+  ): Promise<void> {
+    await this.vocabularyService.deleteCardType(id, user.id);
   }
 
   // ──────────────────────────────────────────────
@@ -263,7 +250,10 @@ export class VocabularyController {
     @Param('id') collectionId: string,
     @CurrentUser() user: RequestUser,
   ): Promise<ResponseInterceptor<CardDetailDto[]>> {
-    const result = await this.vocabularyService.getDueCards(collectionId, user.id);
+    const result = await this.vocabularyService.getDueCards(
+      collectionId,
+      user.id,
+    );
     return { data: result };
   }
 
@@ -274,7 +264,11 @@ export class VocabularyController {
     @CurrentUser() user: RequestUser,
     @Body() dto: ReviewCardDto,
   ): Promise<ResponseInterceptor<ReviewCardResponseDto>> {
-    const result = await this.vocabularyService.reviewCard(cardId, user.id, dto.rating);
+    const result = await this.vocabularyService.reviewCard(
+      cardId,
+      user.id,
+      dto.rating,
+    );
     return { data: result };
   }
 }

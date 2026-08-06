@@ -28,10 +28,6 @@ export const ReminderSchema = z.object({
   createdAt: z.string(),
 });
 
-export const ReminderDeleteResponseSchema = z.object({
-  id: z.string(),
-});
-
 export const PaginationMetaSchema = z.object({
   page: z.number(),
   limit: z.number(),

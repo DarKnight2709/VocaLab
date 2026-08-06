@@ -8,7 +8,6 @@ import {
   NotificationSettingSchema, 
   ReminderListResponseSchema,
   ReminderResponseSchema,
-  ReminderDeleteResponseSchema,
   DailyGoalResponseSchema
 } from "@/shared/validations/SettingSchema";
 
@@ -240,11 +239,7 @@ export const useDeleteReminderMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const result = await fetchWithSchema(
-        api.delete(API_ROUTES.SETTING.REMINDER.BY_ID(id)),
-        ReminderDeleteResponseSchema
-      );
-      return result.data;
+      await api.delete(API_ROUTES.SETTING.REMINDER.BY_ID(id));
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: REMINDER_KEYS.all() });

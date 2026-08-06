@@ -90,7 +90,7 @@ export interface VocabCollectionDetail extends VocabCollection {
 // =====================================================
 
 export const useCollectionsQuery = (enabled: boolean) =>
-  useQuery<{ collections: VocabCollection[] }>({
+  useQuery<VocabCollection[]>({
     queryKey: ["card-collections"],
     queryFn: async () => {
       const res = await api.get(API_ROUTES.VOCABULARY.COLLECTIONS);
