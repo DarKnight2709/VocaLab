@@ -17,7 +17,7 @@ export default function PublicHeader({ toggleLeftSidebar }: PublicHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm transition-colors">
-      <div className="h-14 px-3 md:px-6 flex items-center gap-2 md:gap-4">
+      <div className="h-16 md:h-20 px-3 md:px-6 flex items-center gap-2 md:gap-4">
         <div className="flex items-center gap-1 md:gap-3 shrink-0">
           <button
             type="button"
@@ -35,7 +35,7 @@ export default function PublicHeader({ toggleLeftSidebar }: PublicHeaderProps) {
             <img
               src="/logo1.png"
               alt={t("common.logoAlt") || "VocaLab Logo"}
-              className="h-8 w-8 md:h-10 md:w-10 object-contain"
+              className="h-14 md:h-20 w-auto object-contain scale-110 md:scale-125 origin-left"
             />
           </Link>
         </div>
