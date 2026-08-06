@@ -5,11 +5,10 @@ import {
   IsEmail,
   IsOptional,
   IsNotEmpty,
-  ValidateNested,
   IsEnum,
   IsUrl,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { SocialPlatform } from '@prisma/client';
 
 export class CreateUserDto {
@@ -74,29 +73,6 @@ export class UpdatePersonalInfoDto {
   @IsOptional()
   avatar?: string;
 }
-
-// response dto chỉ cần đơn giản vậy.
-// nếu muốn nâng cấp có thể dùng @Expose(), @Exclude(), @Transform()
-// Lúc đó:
-// - phải dùng plainToInstance
-// - ClassSerializerInterceptor mới có ý nghĩa
-export class UpdatePersonalInfoResponseDto {
-  @ApiProperty({ example: '1' })
-  id!: string;
-
-  @ApiProperty({ example: 'quyentran' })
-  username!: string;
-
-  @ApiProperty({ example: 'Trần Duy Quyến' })
-  fullName!: string;
-
-  @ApiProperty({ example: '[EMAIL_ADDRESS]' })
-  email!: string;
-
-  @ApiProperty({ example: 'https://example.com/avatar.jpg' })
-  avatar?: string | null;
-}
-
 
 export class CreateUserSocialDto {
   @ApiProperty({ enum: SocialPlatform, example: SocialPlatform.FACEBOOK })

@@ -34,8 +34,8 @@ import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 import { MessageWithDetails } from '../messages/dto/messages-response.dto';
 import { UserService } from '../users/users.service';
 import {
-  GetUserGroupsResponseDto,
   UserGroupItemDto,
+  UserGroupsResponseDto,
 } from '../users/dto/users-response.dto';
 
 // Types previously in IGroupRepository
@@ -101,7 +101,7 @@ export class GroupChatService {
     page = 1,
     limit = 12,
     search?: string,
-  ): Promise<GetUserGroupsResponseDto> {
+  ): Promise<UserGroupsResponseDto> {
     const isOwner = profileUserId === requestingUserId;
 
     const user = await this.userService.findById(profileUserId);

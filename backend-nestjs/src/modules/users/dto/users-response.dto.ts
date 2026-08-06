@@ -1,75 +1,8 @@
-import { PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
+import { MyBlogListItemDto, PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SocialPlatform, VoteType } from '@prisma/client';
 
 // ─── Shared / Reusable DTOs ─────────────────────────────────
-
-export class UserPaginationMetaDto {
-  @ApiProperty({ example: 1 })
-  page!: number;
-
-  @ApiProperty({ example: 12 })
-  limit!: number;
-
-  @ApiProperty({ example: 100 })
-  total!: number;
-
-  @ApiProperty({ example: 9 })
-  totalPages!: number;
-}
-
-export class UserSummaryDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
-
-  @ApiProperty({ example: 'quyentran' })
-  username!: string;
-
-  @ApiProperty({ example: 'Trần Duy Quyến' })
-  fullName!: string;
-
-  @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    nullable: true,
-  })
-  avatar!: string | null;
-
-  @ApiPropertyOptional({ example: true })
-  isFollowing?: boolean;
-
-  @ApiPropertyOptional({ example: true })
-  canFollow?: boolean;
-}
-
-export class PublicUserDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
-
-  @ApiProperty({ example: 'quyentran' })
-  username!: string;
-
-  @ApiProperty({ example: 'Trần Duy Quyến' })
-  fullName!: string;
-
-  @ApiProperty({ example: 'user@example.com' })
-  email!: string;
-
-  @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    nullable: true,
-  })
-  avatar?: string | null;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
-
-  @ApiPropertyOptional({ example: true })
-  hasPassword?: boolean;
-}
-
 export class UserResponse {
   @ApiProperty({ example: 'uuid-string' })
   id!: string;
@@ -87,26 +20,27 @@ export class UserResponse {
   avatar!: string | null;
 }
 
-// ─── Update Profile ─────────────────────────────────────────
+export class UserSummaryDto extends UserResponse {
+  @ApiPropertyOptional({ example: true })
+  isFollowing?: boolean;
 
-export class UpdateProfileResponseDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
+  @ApiPropertyOptional({ example: true })
+  canFollow?: boolean;
+}
 
-  @ApiProperty({ example: 'quyentran' })
-  username!: string;
-
-  @ApiProperty({ example: 'Trần Duy Quyến' })
-  fullName!: string;
-
+export class PublicUserDto extends UserResponse {
   @ApiProperty({ example: 'user@example.com' })
   email!: string;
 
-  @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    nullable: true,
-  })
-  avatar!: string | null;
+  @ApiPropertyOptional({ example: true })
+  hasPassword?: boolean;
+}
+
+// ─── Update Profile ─────────────────────────────────────────
+
+export class UpdateProfileResponseDto extends UserResponse {
+  @ApiProperty({ example: 'user@example.com' })
+  email!: string;
 }
 
 // ─── Get By Username ────────────────────────────────────────
@@ -130,7 +64,7 @@ export class UserCapabilitiesDto {
 
 // ─── User Stats ─────────────────────────────────────────────
 
-export class GetUserStatsResponseDto {
+export class UserStatsResponseDto {
   @ApiProperty({ example: 10 })
   followers!: number;
 
@@ -144,27 +78,12 @@ export class GetUserStatsResponseDto {
   posts!: number;
 }
 
-export class GetByUsernameResponseDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
-
-  @ApiProperty({ example: 'quyentran' })
-  username!: string;
-
-  @ApiProperty({ example: 'Trần Duy Quyến' })
-  fullName!: string;
-
-  @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    nullable: true,
-  })
-  avatar?: string | null;
-
+export class UserDetailsDto extends UserResponse{
   @ApiPropertyOptional({ example: true })
   hasPassword?: boolean;
 
-  @ApiProperty({ type: GetUserStatsResponseDto })
-  stats!: GetUserStatsResponseDto;
+  @ApiProperty({ type: UserStatsResponseDto })
+  stats!: UserStatsResponseDto;
 
   @ApiProperty({ example: true })
   isFollowing!: boolean;
@@ -179,122 +98,53 @@ export class GetByUsernameResponseDto {
   socials?: UserSocialDto[];
 }
 
-// ─── Search ─────────────────────────────────────────────────
-
-export class SearchResponseDto {
-  @ApiProperty({ type: [PublicUserDto] })
-  users!: PublicUserDto[];
-
-  @ApiProperty({ example: [], description: 'Group results (reserved)' })
-  groups!: any[];
-}
-
-// ─── Get All Users ──────────────────────────────────────────
-
-export class GetAllUsersResponseDto {
-  @ApiProperty({ type: [PublicUserDto] })
-  users!: PublicUserDto[];
-}
-
 // ─── Followers / Following / Friends ────────────────────────
-
-export class GetFollowersResponseDto {
+export class FollowersResponseDto {
   @ApiProperty({ type: [UserSummaryDto] })
   followers!: UserSummaryDto[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
-export class GetFollowingResponseDto {
+export class FollowingResponseDto {
   @ApiProperty({ type: [UserSummaryDto] })
   following!: UserSummaryDto[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
-export class GetFriendsResponseDto {
+export class FriendsResponseDto {
   @ApiProperty({ type: [UserSummaryDto] })
   friends!: UserSummaryDto[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
-export class GetFriendsSuggestionResponseDto {
+export class FriendsSuggestionResponseDto {
   @ApiProperty({ type: [UserResponse] })
   friends!: UserResponse[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
-export class BlockedUserDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
+export class BlockedUsersResponseDto {
+  @ApiProperty({ type: [UserResponse] })
+  blockedUsers!: UserResponse[];
 
-  @ApiProperty({ example: 'quyentran' })
-  username!: string;
-
-  @ApiProperty({ example: 'Trần Duy Quyến' })
-  fullName!: string;
-
-  @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    nullable: true,
-  })
-  avatar!: string | null;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
-export class GetBlockedUsersResponseDto {
-  @ApiProperty({ type: [BlockedUserDto] })
-  blockedUsers!: BlockedUserDto[];
+export class UserPostsResponseDto {
+  @ApiProperty({ type: [MyBlogListItemDto] })
+  posts!: MyBlogListItemDto[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
-}
-
-// ─── User Posts ─────────────────────────────────────────────
-
-export class UserPostItemDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
-
-  @ApiProperty({ example: 'Cách dùng Present Perfect' })
-  title!: string;
-
-  @ApiPropertyOptional({ example: 'Tóm tắt ngắn...', nullable: true })
-  excerpt!: string | null;
-
-  @ApiPropertyOptional({ example: 'https://image.url', nullable: true })
-  coverImage!: string | null;
-
-  @ApiProperty({ example: true })
-  isPublic!: boolean;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
-
-  @ApiProperty({ example: { comments: 5 } })
-  _count!: { comments: number };
-
-  @ApiProperty({ example: 3 })
-  voteScore!: number;
-
-  @ApiPropertyOptional({ enum: VoteType, example: 'UPVOTE', nullable: true })
-  userVote!: VoteType | null;
-}
-
-export class GetUserPostsResponseDto {
-  @ApiProperty({ type: [UserPostItemDto] })
-  posts!: UserPostItemDto[];
-
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
 export class UserCollectionCountDto {
@@ -322,12 +172,12 @@ export class UserCollectionItemDto {
   _count!: UserCollectionCountDto;
 }
 
-export class GetUserCollectionsResponseDto {
+export class UserCollectionsResponseDto {
   @ApiProperty({ type: [UserCollectionItemDto] })
   collections!: UserCollectionItemDto[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
 export class UserGroupCountDto {
@@ -366,17 +216,17 @@ export class UserGroupItemDto {
   members!: UserGroupMemberDto[];
 }
 
-export class GetUserGroupsResponseDto {
+export class UserGroupsResponseDto {
   @ApiProperty({ type: [UserGroupItemDto] })
   groups!: UserGroupItemDto[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
 // ─── Follow Status ──────────────────────────────────────────
 
-export class CheckFollowStatusResponseDto {
+export class FollowStatusResponseDto {
   @ApiProperty({ example: true })
   isFollowing!: boolean;
 }
@@ -405,44 +255,17 @@ export class UserSocialDto {
 
   @ApiProperty({ example: 'https://facebook.com/myprofile' })
   link!: string;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
 }
-
-export class DeleteSocialResponseDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
-}
-
 
 export class ProfileSearchResultResponse {
   @ApiProperty({ type: [UserSummaryDto] })
   profiles!: UserSummaryDto[];
 
-  @ApiProperty({ type: UserPaginationMetaDto })
-  meta!: UserPaginationMetaDto;
+  @ApiProperty({ type: PaginationMetaDto })
+  meta!: PaginationMetaDto;
 }
 
-export class UserChatInfoDto {
-  @ApiProperty({ example: 'uuid-string' })
-  id!: string;
-
-  @ApiProperty({ example: 'quyentran' })
-  username!: string;
-
-  @ApiPropertyOptional({ example: 'Trần Duy Quyến', nullable: true })
-  fullName!: string | null;
-
-  @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    nullable: true,
-  })
-  avatar!: string | null;
-
+export class UserChatInfoDto extends UserResponse {
   @ApiProperty({
     example: true,
     description: 'Whether the current user can send messages to this user',

@@ -211,7 +211,7 @@ export const useUnfollowUserMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) =>
-      api.delete(API_ROUTES.USER.UNFOLLOW(userId)),
+      api.post(API_ROUTES.USER.UNFOLLOW(userId)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["me"] });
@@ -317,7 +317,7 @@ export const useUnblockUserMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) =>
-      api.delete(API_ROUTES.USER.UNBLOCK_USER(userId)),
+      api.post(API_ROUTES.USER.UNBLOCK_USER(userId)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["me"] });

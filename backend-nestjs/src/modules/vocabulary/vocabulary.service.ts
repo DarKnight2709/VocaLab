@@ -39,13 +39,13 @@ import {
 } from './dto/vocabulary-response.dto';
 import { CollectionSearchFilters, SEARCH_SORT, SEARCH_TIME } from '../search/search.types';
 import { UserService } from '../users/users.service';
-import { GetUserCollectionsResponseDto } from '../users/dto/users-response.dto';
 import { BlogService } from '../blog/blog.service';
 import { UpdateCardType } from '@/common/enums/update-card-type';
 import { UpdateCard } from '@/common/enums/update-card';
 import { calculateSM2 } from '@/common/utils/srs.utils';
 import { SrsRating } from '@/common/enums/srs-rating.enum';
 import { PostVisibility } from '@/common/enums/post-visibility.enum';
+import { UserCollectionsResponseDto } from '../users/dto/users-response.dto';
 
 const collectionDetailSelect = {
   id: true,
@@ -144,7 +144,7 @@ export class VocabularyService {
     limit = 12,
     search?: string,
     visibility?: PostVisibility,
-  ): Promise<GetUserCollectionsResponseDto> {
+  ): Promise<UserCollectionsResponseDto> {
     const isOwner = profileUserId === requestingUserId;
 
     // Call userService.findById (already injected)

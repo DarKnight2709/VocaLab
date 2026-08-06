@@ -159,8 +159,6 @@ export const UserSocialItemSchema = z.object({
   platform: z.nativeEnum(SocialPlatform),
   name: z.string().nullable(),
   link: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 export const getCreateUserSocialSchema = () =>

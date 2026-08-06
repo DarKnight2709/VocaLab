@@ -17,12 +17,11 @@ const API_ROUTES = {
   },
   USER: {
     PROFILE: "v1/users/profile",
-    DELETE_ACCOUNT: "v1/users/profile",
-    SEARCH: "v1/users/search",
-    SEARCH_FRIENDS: "v1/users/me/friends/search",
+    DELETE_ACCOUNT: "v1/users/account",
+    SEARCH: "v1/users",
+    SEARCH_FRIENDS: "v1/users/me/friends",
     UPLOAD_AVATAR: "v1/users/upload-avatar",
-    GET_USERS: "v1/users/all",
-    BY_USERNAME: (username: string) => `v1/users/by-username/${username}`,
+    BY_USERNAME: (username: string) => `v1/users/${username}`,
     CHAT_INFO: (userId: string) => `v1/users/${userId}/chat-info`,
     getContentBy: (userId: string, type: ContentTab) =>
       `v1/users/${userId}/${type}`,

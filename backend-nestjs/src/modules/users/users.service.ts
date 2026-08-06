@@ -15,25 +15,23 @@ import {
   CreateUserSocialDto,
 } from './dto/users.dto';
 
-import { PublicUser } from './user.types';
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import {
   UpdateProfileResponseDto,
-  GetByUsernameResponseDto,
-  SearchResponseDto,
-  GetFollowersResponseDto,
-  GetFollowingResponseDto,
-  GetFriendsResponseDto,
-  GetUserPostsResponseDto,
   FollowResponseDto,
   UserSocialDto,
-  DeleteSocialResponseDto,
   UserSummaryDto,
-  GetBlockedUsersResponseDto,
   ProfileSearchResultResponse,
   UserChatInfoDto,
+  PublicUserDto,
+  UserDetailsDto,
+  FollowersResponseDto,
+  FollowingResponseDto,
+  FriendsResponseDto,
+  UserPostsResponseDto,
+  BlockedUsersResponseDto,
 } from './dto/users-response.dto';
 import { Follow, Prisma, VisibilityScope } from '@prisma/client';
 import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.enum';
@@ -62,7 +60,7 @@ export class UserService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async findById(id: string): Promise<PublicUser | null> {
+  async findById(id: string): Promise<PublicUserDto | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -158,7 +156,7 @@ export class UserService {
   async getByUsername(
     username: string,
     currentUserId?: string,
-  ): Promise<GetByUsernameResponseDto> {
+  ): Promise<UserDetailsDto> {
     const user = await this.prisma.user.findUnique({
       where: { username },
       select: {
@@ -276,7 +274,7 @@ export class UserService {
     };
   }
 
-  async findByUsername(username: string): Promise<PublicUser | null> {
+  async findByUsername(username: string): Promise<PublicUserDto | null> {
     return this.prisma.user.findUnique({
       where: { username },
       select: {
@@ -291,7 +289,7 @@ export class UserService {
     });
   }
 
-  async findByEmail(email: string): Promise<PublicUser | null> {
+  async findByEmail(email: string): Promise<PublicUserDto | null> {
     return this.prisma.user.findUnique({
       where: { email },
       select: {
@@ -306,42 +304,31 @@ export class UserService {
     });
   }
 
-  async searchUsers(keyword: string, userId: string): Promise<PublicUser[]> {
+  async findUserByKeyword(userId: string, keyword?: string): Promise<PublicUserDto[]> {
+    const where: Prisma.UserWhereInput = {
+      id: { not: userId }
+    };
+
+    if (keyword && keyword.trim()) {
+      where.OR = [
+        { username: { contains: keyword, mode: 'insensitive' } },
+        { fullName: { contains: keyword, mode: 'insensitive' } },
+      ];
+    }
+
     return this.prisma.user.findMany({
-      where: {
-        id: { not: userId },
-        OR: [
-          { username: { contains: keyword, mode: 'insensitive' } },
-          { fullName: { contains: keyword, mode: 'insensitive' } },
-        ],
-      },
+      where,
       select: {
         id: true,
         username: true,
         fullName: true,
         email: true,
         avatar: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
   }
 
-  async findAll(): Promise<PublicUser[]> {
-    return this.prisma.user.findMany({
-      select: {
-        id: true,
-        username: true,
-        fullName: true,
-        email: true,
-        avatar: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-  }
-
-  async create(data: CreateUserDto): Promise<PublicUser> {
+  async create(data: CreateUserDto): Promise<PublicUserDto> {
     return this.prisma.user.create({
       data: {
         ...data,
@@ -412,12 +399,9 @@ export class UserService {
     });
   }
 
-  async search(keyword: string, userId: string): Promise<SearchResponseDto> {
-    const users = await this.searchUsers(keyword, userId);
-    return {
-      users,
-      groups: [],
-    };
+  async searchUsers(userId: string, keyword?: string): Promise<PublicUserDto[]> {
+    const users = await this.findUserByKeyword(userId, keyword);
+    return users;
   }
 
   async searchFriendsSuggestion(
@@ -461,10 +445,6 @@ export class UserService {
         totalPages: Math.ceil(total / limit),
       },
     };
-  }
-
-  async getAllUsers(): Promise<PublicUser[]> {
-    return this.findAll();
   }
 
   async getProfiles(
@@ -555,13 +535,13 @@ export class UserService {
     };
   }
 
-  async getFollowers(
+  async getUserFollowers(
     userId: string,
     currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
-  ): Promise<GetFollowersResponseDto> {
+  ): Promise<FollowersResponseDto> {
     const hasAccess = await this.validateTabAccess(
       userId,
       PrivacyVisibilityField.FOLLOWERS,
@@ -637,13 +617,13 @@ export class UserService {
     };
   }
 
-  async getFollowing(
+  async getUserFollowing(
     userId: string,
     currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
-  ): Promise<GetFollowingResponseDto> {
+  ): Promise<FollowingResponseDto> {
     const hasAccess = await this.validateTabAccess(
       userId,
       PrivacyVisibilityField.FOLLOWING,
@@ -720,13 +700,13 @@ export class UserService {
     };
   }
 
-  async getFriends(
+  async getUserFriends(
     userId: string,
     currentUserId?: string,
     page: number = 1,
     limit: number = 12,
     search?: string,
-  ): Promise<GetFriendsResponseDto> {
+  ): Promise<FriendsResponseDto> {
     const hasAccess = await this.validateTabAccess(
       userId,
       PrivacyVisibilityField.FRIENDS,
@@ -786,14 +766,14 @@ export class UserService {
     };
   }
 
-  async getPosts(
+  async getUserPosts(
     profileUserId: string,
     requestingUserId?: string,
     page = 1,
     limit = 12,
     search?: string,
     visibility?: PostVisibility,
-  ): Promise<GetUserPostsResponseDto> {
+  ): Promise<UserPostsResponseDto> {
     const isOwner = profileUserId === requestingUserId;
 
     const user = await this.findById(profileUserId);
@@ -1004,7 +984,7 @@ export class UserService {
   async deleteSocial(
     userId: string,
     id: string,
-  ): Promise<DeleteSocialResponseDto> {
+  ): Promise<void> {
     // Check ownership
     const social = await this.prisma.userSocial.findUnique({
       where: { id },
@@ -1017,8 +997,6 @@ export class UserService {
     await this.prisma.userSocial.delete({
       where: { id },
     });
-
-    return { id };
   }
 
   async blockUser(
@@ -1084,7 +1062,7 @@ export class UserService {
     page = 1,
     limit = 12,
     search?: string,
-  ): Promise<GetBlockedUsersResponseDto> {
+  ): Promise<BlockedUsersResponseDto> {
     if (userId !== currentUserId) {
       throw new ForbiddenException(ErrorCode.FORBIDDEN);
     }

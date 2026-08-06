@@ -63,7 +63,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm transition-colors">
-        <div className="h-14 pl-3 pr-3 md:pr-6 flex items-center gap-2 md:gap-4">
+        <div className="h-16 md:h-20 pl-3 pr-3 md:pr-6 flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-1 md:gap-3 shrink-0">
             <button
               type="button"
@@ -81,7 +81,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
               <img
                 src="/logo1.png"
                 alt={t("common.logoAlt")}
-                className="h-10 w-10 md:h-16 md:w-16 object-contain"
+                className="h-14 md:h-20 w-auto object-contain scale-110 md:scale-125 origin-left"
               />
             </Link>
           </div>

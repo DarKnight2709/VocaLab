@@ -40,7 +40,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@/common/services/config.service';
-import { PublicUser } from '../users/user.types';
+import { PublicUserDto } from '../users/dto/users-response.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -149,7 +149,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Lấy thông tin user từ access token (Protect)',
   })
-  async getCurrentUser(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<PublicUser>> {
+  async getCurrentUser(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<PublicUserDto>> {
     const result =  await this.authService.getCurrentUser(user.id);
     return {
       data: result

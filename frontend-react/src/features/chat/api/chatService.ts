@@ -40,7 +40,7 @@ export const useSearchUsersQuery = (keyword: string) => {
     queryFn: async () => {
       if (!normalized) return [];
       const result = await fetchWithSchema(
-        api.get(`${API_ROUTES.USER.SEARCH}?keyword=${encodeURIComponent(keyword)}`),
+        api.get(API_ROUTES.USER.SEARCH, { params: { keyword } }),
         GetUsersResponseSchema
       );
 

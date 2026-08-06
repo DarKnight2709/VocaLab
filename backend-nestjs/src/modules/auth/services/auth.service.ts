@@ -28,9 +28,10 @@ import {
 import { HashingService } from '@/common/services/hashing.service';
 import { RsaKeyManager } from '@/common/utils/RsaKeyManager';
 import { UserService } from '@/modules/users/users.service';
-import { PublicUser, TokenUser } from '@/modules/users/user.types';
+
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
+import { PublicUserDto } from '@/modules/users/dto/users-response.dto';
 
 export interface JWTRefreshPayLoad {
   sub: string;
@@ -50,7 +51,7 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
-  async getCurrentUser(userId: string): Promise<PublicUser> {
+  async getCurrentUser(userId: string): Promise<PublicUserDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -631,7 +632,7 @@ export class AuthService {
     });
   }
 
-  private generateAccessToken(user: TokenUser): string {
+  private generateAccessToken(user: PublicUserDto): string {
     // mã hóa(sign) dữ liệu bằng private access key.
     const payload = {
       sub: user.id,
@@ -649,7 +650,7 @@ export class AuthService {
   }
 
   private async generateRefreshToken(
-    user: TokenUser,
+    user: PublicUserDto,
     ipAddress?: string,
     userAgent?: string,
     manager?: Prisma.TransactionClient,
@@ -691,7 +692,7 @@ export class AuthService {
     return refreshToken;
   }
 
-  private generateTempToken(user: TokenUser) {
+  private generateTempToken(user: PublicUserDto) {
     const payload = {
       sub: user.id,
       email: user.email,
