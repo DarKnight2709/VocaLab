@@ -3,10 +3,6 @@ import { ConfigModule } from "@nestjs/config";
 import { ClsModule } from "nestjs-cls";
 import envConfig from "@/core/configs/env.config";
 import { ConfigService } from "./services/config.service";
-import { ApiExceptionFilter } from "./filters/http-exception.filter";
-import { TransformInterceptor } from "./interceptors/transform.interceptor";
-import { APP_FILTER, APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
-import { ApiValidationPipe } from "./pipes/validation.pipe"
 import { HashingService } from "./services/hashing.service";
 import { RsaKeyManager } from "./utils/RsaKeyManager";
 import { PrismaService } from "@/core/database/prisma.service";
@@ -58,19 +54,6 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
     CloudinaryProvider,
     // phải export thì mới inject nơi khác
     ...globalService,
-    // không cần export vẫn hoạt động toàn cục
-    {
-      provide: APP_FILTER,
-      useClass: ApiExceptionFilter
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor,
-    },
-    {
-      provide: APP_PIPE,
-      useClass: ApiValidationPipe,
-    },
   ],
   exports: [
     ...globalService,

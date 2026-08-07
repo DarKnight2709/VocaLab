@@ -10,7 +10,7 @@ import {
   ValidateNested,
   IsEnum,
 } from 'class-validator';
-import { OmitType } from '@nestjs/mapped-types';
+import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { CardSide } from '@prisma/client';
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
@@ -76,6 +76,7 @@ export class CardValueDto {
 }
 
 export class UpdateCardDto extends OmitType(CreateCardDto, ['cardTypeId'] as const) { }
+export class UpdateCollectionDto extends PartialType(CreateCollectionDto) {}
 export class ImportCardsDto {
   @IsString()
   @IsNotEmpty()

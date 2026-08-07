@@ -14,7 +14,7 @@ import { BlogModule } from './modules/blog/blog.module';
 import { GrammarModule } from './modules/grammar/grammar.module';
 import { VocabularyModule } from './modules/vocabulary/vocabulary.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { JwtGuard } from './common/guards/jwt-auth.guard';
 import { UploadModule } from './modules/upload/upload.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -29,8 +29,11 @@ import { ProgressModule } from './modules/progress/progress.module';
 import { SearchModule } from './modules/search/search.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { VideoModule } from './modules/video/video.module';
+import { ApiExceptionFilter } from './common/filters/http-exception.filter';
+import { ApiValidationPipe } from './common/pipes/validation.pipe';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 
 @Module({
@@ -71,7 +74,11 @@ import { AppService } from './app.service';
   controllers: [AppController],
   providers: [
     AppService,
-    // dùng để serialize response data (loại bỏ các field không cần thiết - các field có decorator @Exclude())
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+    // dùng để serialize response data (loại bỏ các field không cần thiết - các field có decorator @Exclude() hoặc sử dụng @Expose() với option excludeExtraneousValues = true
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
@@ -84,6 +91,14 @@ import { AppService } from './app.service';
     //   provide: APP_INTERCEPTOR,
     //   useClass: AuditContextInterceptor,
     // },
+    {
+      provide: APP_PIPE,
+      useClass: ApiValidationPipe,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ApiExceptionFilter,
+    },
   ],
 })
 export class AppModule implements NestModule {

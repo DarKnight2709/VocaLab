@@ -15,6 +15,7 @@ import {
   ImportCardsDto,
   CreateCardTypeDto,
   ForkCollectionDto,
+  UpdateCollectionDto,
 } from './dto/vocabulary.dto';
 import { DuplicatePolicy } from '@/common/enums/duplicate-policy.enum';
 import { ErrorCode } from '@/common/enums/error-code.enum';
@@ -30,6 +31,7 @@ import {
   PublicCollectionResponseDto,
   CollectionByIdResponseDto,
   CardTypesResponseDto,
+  CollectionInfo,
 } from './dto/vocabulary-response.dto';
 import { CollectionSearchFilters, SEARCH_SORT, SEARCH_TIME } from '../search/search.types';
 import { UserService } from '../users/users.service';
@@ -130,6 +132,11 @@ export class VocabularyService {
     private readonly userService: UserService,
     private readonly blogService: BlogService,
   ) {}
+
+  async test(): Promise<CollectionInfo | null> {
+    const collection = await this.prisma.cardCollection.findFirst();
+    return collection;
+  }
 
   async getUserCollections(
     profileUserId: string,
@@ -735,7 +742,7 @@ export class VocabularyService {
   async updateCollection(
     id: string,
     userId: string,
-    dto: CreateCollectionDto,
+    dto: UpdateCollectionDto,
   ): Promise<CreateCollectionResponseDto> {
     await this.findCollectionOrFail(id, userId);
     const collection = await this.prisma.cardCollection.update({

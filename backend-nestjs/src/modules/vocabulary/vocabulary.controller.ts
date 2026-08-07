@@ -7,6 +7,7 @@ import {
   Delete,
   Param,
   Body,
+  SerializeOptions,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { VocabularyService } from './vocabulary.service';
@@ -18,11 +19,11 @@ import {
   UpdateCardDto,
   ForkCollectionDto,
   ReviewCardDto,
+  UpdateCollectionDto,
 } from './dto/vocabulary.dto';
 import { IsProtected } from '../../common/decorators/protected.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
 import {
   CreateCollectionResponseDto,
   ForkCollectionResponseDto,
@@ -48,71 +49,77 @@ export class VocabularyController {
 
   @Get('collections')
   @ApiOperation({ summary: 'Lấy danh sách bộ từ vựng' })
+  @SerializeOptions({ type: CollectionItemDto, excludeExtraneousValues: true })
   async getCollections(
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<CollectionItemDto[]>> {
+  ): Promise<CollectionItemDto[]> {
     const result = await this.vocabularyService.getCollections(user.id);
-    return { data: result };
+    return result;
   }
 
   @Get('collections/:id/public')
   @Public()
   @ApiOperation({ summary: 'Lấy thông tin chi tiết bộ từ vựng công khai' })
+  @SerializeOptions({ type: PublicCollectionResponseDto, excludeExtraneousValues: true })
   async getPublicCollectionById(
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<PublicCollectionResponseDto>> {
+  ): Promise<PublicCollectionResponseDto> {
     const result = await this.vocabularyService.getCollectionByIdPublic(id);
-    return { data: result };
+    return result;
   }
 
   @Get('collections/:id')
   @ApiOperation({ summary: 'Lấy chi tiết bộ từ vựng' })
+  @SerializeOptions({ type: CollectionByIdResponseDto, excludeExtraneousValues: true })
   async getCollectionDetail(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<CollectionByIdResponseDto>> {
+  ): Promise<CollectionByIdResponseDto> {
     const result = await this.vocabularyService.getCollectionById(id, user.id);
-    return { data: result };
+    return result;
   }
 
   @Post('collections')
   @ApiOperation({ summary: 'Tạo bộ từ vựng mới' })
+  @SerializeOptions({ type: CreateCollectionResponseDto, excludeExtraneousValues: true })
   async createCollection(
     @CurrentUser() user: RequestUser,
     @Body() dto: CreateCollectionDto,
-  ): Promise<ResponseInterceptor<CreateCollectionResponseDto>> {
+  ): Promise<CreateCollectionResponseDto> {
     const result = await this.vocabularyService.createCollection(user.id, dto);
-    return { data: result };
+    return result;
   }
 
   @Patch('collections/:id')
   @ApiOperation({ summary: 'Cập nhật thông tin bộ từ vựng' })
+  @SerializeOptions({ type: CreateCollectionResponseDto, excludeExtraneousValues: true })
   async updateCollection(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-    @Body() dto: CreateCollectionDto,
-  ): Promise<ResponseInterceptor<CreateCollectionResponseDto>> {
+    @Body() dto: UpdateCollectionDto,
+  ): Promise<CreateCollectionResponseDto> {
     const result = await this.vocabularyService.updateCollection(
       id,
       user.id,
       dto,
     );
-    return { data: result };
+    return result;
   }
 
   @Post('collections/:id/fork')
   @ApiOperation({ summary: 'Fork bộ từ vựng' })
+  @SerializeOptions({ type: ForkCollectionResponseDto, excludeExtraneousValues: true })
   async forkCollection(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: ForkCollectionDto,
-  ): Promise<ResponseInterceptor<ForkCollectionResponseDto>> {
+  ): Promise<ForkCollectionResponseDto> {
     const result = await this.vocabularyService.forkCollection(
       user.id,
       id,
       dto,
     );
-    return { data: result };
+    return result;
   }
 
   @Delete('collections/:id')
@@ -129,47 +136,50 @@ export class VocabularyController {
   // ──────────────────────────────────────────────
   @Post('collections/:id/card')
   @ApiOperation({ summary: 'Thêm thẻ mới vào bộ từ vựng' })
+  @SerializeOptions({ type: CardDetailDto, excludeExtraneousValues: true })
   async addCard(
     @Param('id') collectionId: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: CreateCardDto,
-  ): Promise<ResponseInterceptor<CardDetailDto>> {
+  ): Promise<CardDetailDto> {
     const result = await this.vocabularyService.addCard(
       collectionId,
       user.id,
       dto,
     );
-    return { data: result };
+    return result;
   }
 
   @Post('collections/:id/import')
   @ApiOperation({ summary: 'Import hàng loạt thẻ vào bộ từ vựng' })
+  @SerializeOptions({ type: ImportCardsResponseDto, excludeExtraneousValues: true })
   async importCards(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: ImportCardsDto,
-  ): Promise<ResponseInterceptor<ImportCardsResponseDto>> {
+  ): Promise<ImportCardsResponseDto> {
     const result = await this.vocabularyService.importCards(
       id,
       user.id,
       dto,
     );
-    return { data: result };
+    return result;
   }
 
   @Patch('cards/:id')
   @ApiOperation({ summary: 'Cập nhật thẻ' })
+  @SerializeOptions({ type: CardDetailDto, excludeExtraneousValues: true })
   async updateCard(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateCardDto,
-  ): Promise<ResponseInterceptor<CardDetailDto | null>> {
+  ): Promise<CardDetailDto | null> {
     const result = await this.vocabularyService.updateCard(
       id,
       user.id,
       dto,
     );
-    return { data: result };
+    return result;
   }
 
   @Delete('cards/:id')
@@ -186,49 +196,53 @@ export class VocabularyController {
   // ──────────────────────────────────────────────
   @Get('card-types')
   @ApiOperation({ summary: 'Lấy danh sách kiểu thẻ' })
+  @SerializeOptions({ type: CardTypesResponseDto, excludeExtraneousValues: true })
   async getCardTypes(
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<CardTypesResponseDto>> {
+  ): Promise<CardTypesResponseDto> {
     const result = await this.vocabularyService.getCardTypes(user.id);
-    return { data: result };
+    return result;
   }
 
   @Get('card-types/:id')
   @ApiOperation({ summary: 'Lấy chi tiết kiểu thẻ' })
+  @SerializeOptions({ type: CardTypeWithFieldsDto, excludeExtraneousValues: true })
   async getCardTypeById(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<CardTypeWithFieldsDto>> {
+  ): Promise<CardTypeWithFieldsDto> {
     const result = await this.vocabularyService.getCardTypeById(id, user.id);
-    return { data: result };
+    return result;
   }
 
   @Post('card-types')
   @ApiOperation({ summary: 'Tạo kiểu thẻ mới' })
+  @SerializeOptions({ type: CardTypeWithFieldsDto, excludeExtraneousValues: true })
   async createCardType(
     @CurrentUser() user: RequestUser,
     @Body() createCardTypeDto: CreateCardTypeDto,
-  ): Promise<ResponseInterceptor<CardTypeWithFieldsDto | null>> {
+  ): Promise<CardTypeWithFieldsDto | null> {
     const result = await this.vocabularyService.createCardType(
       user.id,
       createCardTypeDto,
     );
-    return { data: result };
+    return result;
   }
 
   @Patch('card-types/:id')
   @ApiOperation({ summary: 'Cập nhật kiểu thẻ' })
+  @SerializeOptions({ type: CardTypeWithFieldsDto, excludeExtraneousValues: true })
   async updateCardType(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: Partial<CreateCardTypeDto>,
-  ): Promise<ResponseInterceptor<CardTypeWithFieldsDto | null>> {
+  ): Promise<CardTypeWithFieldsDto | null> {
     const result = await this.vocabularyService.updateCardType(
       id,
       user.id,
       dto,
     );
-    return { data: result };
+    return result;
   }
 
   @Delete('card-types/:id')
@@ -246,29 +260,31 @@ export class VocabularyController {
 
   @Get('collections/:id/due')
   @ApiOperation({ summary: 'Lấy danh sách thẻ cần học/ôn tập theo SRS' })
+  @SerializeOptions({ type: CardDetailDto, excludeExtraneousValues: true })
   async getDueCards(
     @Param('id') collectionId: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<CardDetailDto[]>> {
+  ): Promise<CardDetailDto[]> {
     const result = await this.vocabularyService.getDueCards(
       collectionId,
       user.id,
     );
-    return { data: result };
+    return result;
   }
 
   @Post('cards/:id/review')
   @ApiOperation({ summary: 'Đánh giá ôn tập thẻ theo SRS (SM-2)' })
+  @SerializeOptions({ type: ReviewCardResponseDto, excludeExtraneousValues: true })
   async reviewCard(
     @Param('id') cardId: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: ReviewCardDto,
-  ): Promise<ResponseInterceptor<ReviewCardResponseDto>> {
+  ): Promise<ReviewCardResponseDto> {
     const result = await this.vocabularyService.reviewCard(
       cardId,
       user.id,
       dto.rating,
     );
-    return { data: result };
+    return result;
   }
 }
