@@ -48,6 +48,10 @@ export class BlogListItemDto {
   @Expose()
   title!: string;
 
+  @ApiProperty({ example: '<p>Nội dung bài viết...</p>' })
+  @Expose()
+  content!: string;
+
   @ApiPropertyOptional({ example: 'Tóm tắt ngắn...' })
   @Expose()
   excerpt!: string | null;
@@ -271,6 +275,10 @@ export class MyBlogListItemDto {
   @ApiProperty({ example: 'Cách dùng Present Perfect' })
   @Expose()
   title!: string;
+
+  @ApiProperty({ example: '<p>Nội dung bài viết...</p>' })
+  @Expose()
+  content!: string;
 
   @ApiPropertyOptional({ example: 'Tóm tắt ngắn...' })
   @Expose()

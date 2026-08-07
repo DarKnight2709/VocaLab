@@ -23,7 +23,7 @@ export const AuthorSchema = z.object({
 export const BlogItemSchema = z.object({
   id: z.string(),
   title: z.string(),
-  content: z.string().nullable().optional(),
+  content: z.string(),
   excerpt: z.string().nullable().optional(),
   coverImage: z.string().nullable().optional(),
   isPublic: z.boolean(),
