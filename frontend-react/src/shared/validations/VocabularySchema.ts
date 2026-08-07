@@ -24,9 +24,9 @@ export const CardTypeSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  userId: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  userId: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
   fields: z.array(CardFieldSchema),
 });
 
