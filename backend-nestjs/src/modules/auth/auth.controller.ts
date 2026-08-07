@@ -10,6 +10,7 @@ import {
   Patch,
   UseGuards,
   Res,
+  SerializeOptions,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,28 +20,17 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './services/auth.service';
-import {
-  ChangePasswordDto,
-  LoginDto,
-  LoginResponseDto,
-  RefreshTokenDto,
-  RefreshTokenResponseDto,
-  SetPasswordDto,
-  SignupDto,
-  TempTokenResponseDto,
-  TwoFactorGenerateResponseDto,
-  TwoFactorLoginDto,
-  TwoFactorVerifyDto,
-} from './auth.dto';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { type Request, type Response } from 'express';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { Public } from '@/common/decorators/public.decorator';
-import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
+
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@/common/services/config.service';
 import { PublicUserDto } from '../users/dto/users-response.dto';
+import { LoginResponseDto, RefreshTokenResponseDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from './dto/auth-response.dto';
+import { ChangePasswordDto, LoginDto, RefreshTokenDto, SetPasswordDto, SignupDto, TwoFactorLoginDto, TwoFactorVerifyDto } from './dto/auth.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -63,41 +53,39 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Req() request: Request,
-  ): Promise<ResponseInterceptor<LoginResponseDto | TempTokenResponseDto>> {
+  ): Promise<LoginResponseDto | TempTokenResponseDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
     const result = await this.authService.login(loginDto, ipAddress, userAgent);
 
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Post('two-factor-auth/login')
+  @SerializeOptions({ type: LoginResponseDto, excludeExtraneousValues: true })
   @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: LoginResponseDto })
   @ApiOperation({
-    summary: 'Đăng nhập (Public)',
-    description: 'Đăng nhập với email và password',
+    summary: 'Đăng nhập 2FA (Public)',
+    description: 'Đăng nhập với temp token và mã OTP',
   })
   async loginTwoFa(
     @Body() twoFactorLoginDto: TwoFactorLoginDto,
     @Req() request: Request,
-  ): Promise<ResponseInterceptor<LoginResponseDto>> {
+  ): Promise<LoginResponseDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
     const result = await this.authService.loginTwoFa(twoFactorLoginDto, ipAddress, userAgent);
 
-    return {
-      data: result
-    }
+    return result;
   }
 
   // refresh token
   @Post('refresh-token')
+  @SerializeOptions({ type: RefreshTokenResponseDto, excludeExtraneousValues: true })
   @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: RefreshTokenResponseDto })
@@ -108,15 +96,13 @@ export class AuthController {
   async refreshToken(
     @Body() refreshTokenDto: RefreshTokenDto,
     @Req() request: Request,
-  ): Promise<ResponseInterceptor<RefreshTokenResponseDto>> {
+  ): Promise<RefreshTokenResponseDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
     const result = await this.authService.refreshToken(refreshTokenDto, ipAddress, userAgent);
 
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Post('logout')
@@ -145,15 +131,14 @@ export class AuthController {
 
   // lấy người dùng hiện tại
   @Get('me')
-  @ApiOkResponse({ type: Object })
+  @SerializeOptions({ type: PublicUserDto, excludeExtraneousValues: true })
+  @ApiOkResponse({ type: PublicUserDto })
   @ApiOperation({
     summary: 'Lấy thông tin user từ access token (Protect)',
   })
-  async getCurrentUser(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<PublicUserDto>> {
-    const result =  await this.authService.getCurrentUser(user.id);
-    return {
-      data: result
-    }
+  async getCurrentUser(@CurrentUser() user: RequestUser): Promise<PublicUserDto> {
+    const result = await this.authService.getCurrentUser(user.id);
+    return result;
   }
 
   @Patch('set-password')
@@ -233,18 +218,16 @@ export class AuthController {
   }
 
   @Post('two-factor-auth/generate')
-  @ApiOkResponse({ type: Object })
+  @SerializeOptions({ type: TwoFactorGenerateResponseDto, excludeExtraneousValues: true })
+  @ApiOkResponse({ type: TwoFactorGenerateResponseDto })
   @ApiOperation({
     summary: 'Tạo mã 2FA (Protect)',
   })
   async generateTwoFactorAuth(
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<TwoFactorGenerateResponseDto>> {
+  ): Promise<TwoFactorGenerateResponseDto> {
     const result = await this.authService.generateTwoFactorSecret(user.id);
-
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Post('two-factor-auth/verify')

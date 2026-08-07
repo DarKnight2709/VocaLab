@@ -1,14 +1,40 @@
 import type { RequestUser } from '@/common/types';
-import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Patch, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Get,
+  ParseIntPipe,
+  Patch,
+  Query,
+  SerializeOptions,
+} from '@nestjs/common';
 import { SettingService } from './setting.service';
-import { UpdateAllowFollowDto, UpdateMessageScopeDto, UpdateFollowersTabVisibilityDto, UpdateFollowingTabVisibilityDto, UpdateFriendTabVisibilityDto, UpdateGroupsTabVisibilityDto } from './dto/setting.dto';
+import {
+  UpdateAllowFollowDto,
+  UpdateMessageScopeDto,
+  UpdateFollowersTabVisibilityDto,
+  UpdateFollowingTabVisibilityDto,
+  UpdateFriendTabVisibilityDto,
+  UpdateGroupsTabVisibilityDto,
+  UpdateNewFollowersDto,
+  UpdateUpvotesDto,
+  UpdateCommentsDto,
+  UpdateActivityFromFollowedDto,
+  CreateReminderDto,
+  UpdateDailyGoalDto,
+  UpdateChatMessagesDto,
+} from './dto/setting.dto';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { NotificationSettingDto, UpdateChatMessagesDto, UpdateCommentsDto, UpdateUpvotesDto, UpdateNewFollowersDto, UpdateActivityFromFollowedDto } from './dto/notication-settings.dto';
-import { CreateReminderDto, DailyGoalResponseDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto, UpdateDailyGoalDto } from './dto/learning-setting.dto';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Post, Delete, Param } from '@nestjs/common';
-import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
+import { DailyGoalResponseDto, NotificationSettingDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/setting-response.dto';
 
 @ApiTags('settings')
 @Controller('settings')
@@ -70,14 +96,18 @@ export class SettingController {
   ): Promise<void> {
     await this.settingService.updateGroupsTabVisibility(user.id, dto);
   }
-  
+
   @Get('notifications')
+  @SerializeOptions({
+    type: NotificationSettingDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOperation({ summary: 'Get notification settings' })
   async getSettings(
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<NotificationSettingDto>> {
+  ): Promise<NotificationSettingDto> {
     const result = await this.settingService.getSettings(user.id);
-    return { data: result };
+    return result;
   }
 
   @Patch('notifications/chat-messages')
@@ -107,8 +137,6 @@ export class SettingController {
     await this.settingService.updateUpvotes(user.id, dto);
   }
 
-
-
   @Patch('notifications/new-followers')
   @ApiOperation({ summary: 'Update new followers notification setting' })
   async updateNewFollowers(
@@ -119,7 +147,9 @@ export class SettingController {
   }
 
   @Patch('notifications/activity-from-followed')
-  @ApiOperation({ summary: 'Update activity from followed notification setting' })
+  @ApiOperation({
+    summary: 'Update activity from followed notification setting',
+  })
   async updateActivityFromFollowed(
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateActivityFromFollowedDto,
@@ -129,43 +159,56 @@ export class SettingController {
 
   // Reminders
   @Get('reminders')
+  @SerializeOptions({
+    type: ReminderListResponseDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOperation({ summary: 'Get user reminders' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'search', required: false })
-  async getReminders(@CurrentUser() user: RequestUser,
+  async getReminders(
+    @CurrentUser() user: RequestUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('search') search?: string,): Promise<ResponseInterceptor<ReminderListResponseDto>> {
-    const result = await this.settingService.getReminders(user.id, page, limit, search);
-    return {
-      data: result
-    }
+    @Query('search') search?: string,
+  ): Promise<ReminderListResponseDto> {
+    const result = await this.settingService.getReminders(
+      user.id,
+      page,
+      limit,
+      search,
+    );
+    return result;
   }
 
   @Post('reminders')
+  @SerializeOptions({
+    type: ReminderResponseDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOperation({ summary: 'Create a reminder' })
   async createReminder(
     @CurrentUser() user: RequestUser,
     @Body() dto: CreateReminderDto,
-  ): Promise<ResponseInterceptor<ReminderResponseDto>> {
+  ): Promise<ReminderResponseDto> {
     const result = await this.settingService.createReminder(user.id, dto);
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Patch('reminders/:id')
+  @SerializeOptions({
+    type: ReminderResponseDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOperation({ summary: 'Update a reminder' })
   async updateReminder(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() dto: CreateReminderDto,
-  ): Promise<ResponseInterceptor<ReminderResponseDto>> {
+  ): Promise<ReminderResponseDto> {
     const result = await this.settingService.updateReminder(user.id, id, dto);
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Patch('reminders/:id/toggle')
@@ -178,33 +221,46 @@ export class SettingController {
   }
 
   @Delete('reminders/:id')
+  @SerializeOptions({
+    type: ReminderDeleteResponseDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOperation({ summary: 'Delete a reminder' })
   async deleteReminder(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<ReminderDeleteResponseDto>> {
+  ): Promise<ReminderDeleteResponseDto> {
     const result = await this.settingService.deleteReminder(user.id, id);
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Get('daily-goal')
+  @SerializeOptions({
+    type: DailyGoalResponseDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOperation({ summary: 'Get user daily goals' })
-  async getDailyProgress(@CurrentUser() user: RequestUser): Promise<ResponseInterceptor<DailyGoalResponseDto>> {
+  async getDailyProgress(
+    @CurrentUser() user: RequestUser,
+  ): Promise<DailyGoalResponseDto> {
     const result = await this.settingService.getDailyGoal(user.id);
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Patch('daily-goal')
+  @SerializeOptions({
+    type: DailyGoalResponseDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOperation({ summary: 'Update user daily goals' })
-  async updateDailyProgress(@CurrentUser() user: RequestUser,
-    @Body() updateDto: UpdateDailyGoalDto): Promise<ResponseInterceptor<DailyGoalResponseDto>> {
-    const result = await this.settingService.updateDailyGoal(user.id, updateDto);
-    return {
-      data: result
-    }
+  async updateDailyProgress(
+    @CurrentUser() user: RequestUser,
+    @Body() updateDto: UpdateDailyGoalDto,
+  ): Promise<DailyGoalResponseDto> {
+    const result = await this.settingService.updateDailyGoal(
+      user.id,
+      updateDto,
+    );
+    return result;
   }
 }

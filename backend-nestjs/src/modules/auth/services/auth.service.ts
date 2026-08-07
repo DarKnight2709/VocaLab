@@ -12,19 +12,6 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import { ErrorCode } from '@/common/enums/error-code.enum';
-
-import {
-  ChangePasswordDto,
-  LoginDto,
-  LoginResponseDto,
-  RefreshTokenDto,
-  RefreshTokenResponseDto,
-  SetPasswordDto,
-  SignupDto,
-  TempTokenResponseDto,
-  TwoFactorGenerateResponseDto,
-  TwoFactorLoginDto,
-} from '../auth.dto';
 import { HashingService } from '@/common/services/hashing.service';
 import { RsaKeyManager } from '@/common/utils/RsaKeyManager';
 import { UserService } from '@/modules/users/users.service';
@@ -32,6 +19,8 @@ import { UserService } from '@/modules/users/users.service';
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
 import { PublicUserDto } from '@/modules/users/dto/users-response.dto';
+import { LoginResponseDto, RefreshTokenResponseDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from '../dto/auth-response.dto';
+import { ChangePasswordDto, LoginDto, RefreshTokenDto, SetPasswordDto, SignupDto, TwoFactorLoginDto } from '../dto/auth.dto';
 
 export interface JWTRefreshPayLoad {
   sub: string;

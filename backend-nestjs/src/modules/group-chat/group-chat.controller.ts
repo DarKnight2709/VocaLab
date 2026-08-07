@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  SerializeOptions,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GroupChatService } from './group-chat.service';
@@ -29,7 +30,7 @@ import { AddMemberDto } from './dto/add-member.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
+
 import {
   CreateGroupResponseDto,
   GroupDetailDto,
@@ -45,30 +46,31 @@ export class GroupChatController {
   constructor(private readonly groupChatService: GroupChatService) {}
 
   @Post('create')
+  @SerializeOptions({ type: CreateGroupResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Tạo nhóm mới' })
   async createGroup(
     @CurrentUser() user: RequestUser,
     @Body() createDto: CreateGroupDto,
-  ): Promise<ResponseInterceptor<CreateGroupResponseDto>> {
+  ): Promise<CreateGroupResponseDto> {
     const result = await this.groupChatService.createGroup(user.id, createDto);
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Get(':id')
+  @SerializeOptions({ type: GroupDetailDto, excludeExtraneousValues: true })
   @RequireGroupMember()
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Xem thông tin nhóm' })
   async getInfoGroup(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<GroupDetailDto>> {
+  ): Promise<GroupDetailDto> {
     const result = await this.groupChatService.getInfoGroup(id);
-    return { data: result };
+    return result;
   }
 
   @Patch('update/:id')
+  @SerializeOptions({ type: CreateGroupResponseDto, excludeExtraneousValues: true })
   @RequireGroupPermission(GroupPermission.UPDATE_GROUP_INFO)
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Sửa thông tin nhóm' })
@@ -78,19 +80,18 @@ export class GroupChatController {
     @Param('id') id: string,
     @Body() updateDto: UpdateGroupDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<ResponseInterceptor<CreateGroupResponseDto>> {
+  ): Promise<CreateGroupResponseDto> {
     const result = await this.groupChatService.updateGroup(
       id,
       user.id,
       updateDto,
       file,
     );
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Patch(':id/visibility')
+  @SerializeOptions({ type: CreateGroupResponseDto, excludeExtraneousValues: true })
   @IsOwner()
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Update group public visibility' })
@@ -98,28 +99,26 @@ export class GroupChatController {
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() dto: UpdateGroupVisibilityDto,
-  ): Promise<ResponseInterceptor<CreateGroupResponseDto>> {
+  ): Promise<CreateGroupResponseDto> {
     const result = await this.groupChatService.updateGroupVisibility(
       id,
       user.id,
       dto.isPublic,
     );
-    return { data: result };
+    return result;
   }
 
-
   @Delete('delete/:id')
+  @SerializeOptions({ type: DeleteResponseDto, excludeExtraneousValues: true })
   @IsOwner()
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Rời nhóm hoặc xóa nhóm' })
   async deleteGroup(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<DeleteResponseDto>> {
+  ): Promise<DeleteResponseDto> {
     const result = await this.groupChatService.deleteGroup(id, user.id);
-    return {
-      data: result
-    }
+    return result;
   }
 
   @Post('leave/:id')
@@ -159,15 +158,16 @@ export class GroupChatController {
   }
 
   @Get(':id/messages')
+  @SerializeOptions({ type: MessageWithDetails, excludeExtraneousValues: true })
   @RequireGroupMember()
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Lấy tin nhắn trong nhóm' })
   async getGroupMessages(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<MessageWithDetails[]>> {
+  ): Promise<MessageWithDetails[]> {
     const result = await this.groupChatService.getGroupMessages(id);
-    return { data: result };
+    return result;
   }
 
   @Post(':id/addMembers')
@@ -187,14 +187,15 @@ export class GroupChatController {
   }
 
   @Get(':id/getMembers')
+  @SerializeOptions({ type: GroupMemberDto, excludeExtraneousValues: true })
   @RequireGroupMember()
   @UseGuards(GroupPermissionGuard)
   @ApiOperation({ summary: 'Lấy danh sách thành viên' })
   async getMembers(
     @Param('id') id: string,
-  ): Promise<ResponseInterceptor<GroupMemberDto[]>> {
+  ): Promise<GroupMemberDto[]> {
     const result = await this.groupChatService.getMembers(id);
-    return { data: result };
+    return result;
   }
 
   @Delete(':id/deleteMembers/:memberId')
@@ -246,9 +247,10 @@ export class GroupChatController {
   }
 
   @Get('permissions/all')
+  @SerializeOptions({ type: PermissionDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy danh sách tất cả các quyền trong hệ thống' })
-  async getAvailablePermissions(): Promise<ResponseInterceptor<PermissionDto[]>> {
+  async getAvailablePermissions(): Promise<PermissionDto[]> {
     const result = await this.groupChatService.getAvailablePermissions();
-    return { data: result };
+    return result;
   }
 }

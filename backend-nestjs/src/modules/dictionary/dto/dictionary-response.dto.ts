@@ -1,3 +1,4 @@
+import { Expose, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DictionaryDefinitionDto {
@@ -7,6 +8,7 @@ export class DictionaryDefinitionDto {
       "used to attract someone's attention or to express surprise, joy, or anger",
     nullable: true,
   })
+  @Expose()
   text!: string | null;
 
   @ApiPropertyOptional({
@@ -14,6 +16,7 @@ export class DictionaryDefinitionDto {
     description: 'Examples of the word in context',
     example: ['Hey, wait for me!'],
   })
+  @Expose()
   examples: string[] = [];
 }
 
@@ -23,11 +26,14 @@ export class DictionaryMeaningDto {
     example: 'interjection',
     nullable: true,
   })
+  @Expose()
   partOfSpeech!: string | null;
 
   @ApiPropertyOptional({
     type: [DictionaryDefinitionDto],
   })
+  @Expose()
+  @Type(() => DictionaryDefinitionDto)
   definitions: DictionaryDefinitionDto[] = [];
 }
 
@@ -36,6 +42,7 @@ export class DictionaryIdiomDto {
     description: 'Whether this phrase is a phrasal verb or an idiom',
     example: true,
   })
+  @Expose()
   isPhrasalVerb!: boolean;
 
   @ApiPropertyOptional({
@@ -43,11 +50,14 @@ export class DictionaryIdiomDto {
     example: 'upset the apple cart',
     nullable: true,
   })
+  @Expose()
   phrase!: string | null;
 
   @ApiPropertyOptional({
     type: [DictionaryDefinitionDto],
   })
+  @Expose()
+  @Type(() => DictionaryDefinitionDto)
   definitions: DictionaryDefinitionDto[] = [];
 }
 
@@ -57,6 +67,7 @@ export class InflectionDto {
     example: 'plural',
     nullable: true,
   })
+  @Expose()
   label!: string | null;
 
   @ApiPropertyOptional({
@@ -64,6 +75,7 @@ export class InflectionDto {
     example: 'apples',
     nullable: true,
   })
+  @Expose()
   value!: string | null;
 }
 
@@ -73,6 +85,7 @@ export class PronunciationDto {
     example: 'ˈheɪ',
     nullable: true,
   })
+  @Expose()
   phonetic!: string | null;
 
   @ApiPropertyOptional({
@@ -81,6 +94,7 @@ export class PronunciationDto {
       'https://media.merriam-webster.com/audio/prons/en/us/mp3/h/hey00001.mp3',
     nullable: true,
   })
+  @Expose()
   audioUrl!: string | null;
 }
 
@@ -90,6 +104,7 @@ export class DictionaryLookupResponse {
     example: 'hey',
     nullable: true,
   })
+  @Expose()
   word!: string | null;
 
   @ApiPropertyOptional({
@@ -98,6 +113,7 @@ export class DictionaryLookupResponse {
     example: false,
     nullable: true,
   })
+  @Expose()
   isOffensive!: boolean | null;
 
   @ApiPropertyOptional({
@@ -106,6 +122,7 @@ export class DictionaryLookupResponse {
       'All morphological stems of the word for backend search indexing',
     example: ['hey'],
   })
+  @Expose()
   stems: string[] = [];
 
   @ApiPropertyOptional({
@@ -113,36 +130,46 @@ export class DictionaryLookupResponse {
     description:
       'List of pronunciations (handles words with multiple valid pronunciations)',
   })
+  @Expose()
+  @Type(() => PronunciationDto)
   pronunciations: PronunciationDto[] = [];
 
   @ApiPropertyOptional({
     type: [InflectionDto],
     description: 'Morphological inflections like plurals or past participles',
   })
+  @Expose()
+  @Type(() => InflectionDto)
   inflections: InflectionDto[] = [];
 
   @ApiPropertyOptional({
     type: [DictionaryMeaningDto],
     description: 'Detailed definitions grouped by part of speech',
   })
+  @Expose()
+  @Type(() => DictionaryMeaningDto)
   meanings: DictionaryMeaningDto[] = [];
 
   @ApiPropertyOptional({
     type: [DictionaryIdiomDto],
     description: 'Idioms and run-on phrases associated with the word',
   })
+  @Expose()
+  @Type(() => DictionaryIdiomDto)
   idioms: DictionaryIdiomDto[] = [];
 
   @ApiPropertyOptional({
     type: [String],
     description: 'Direct synonyms from the Thesaurus API',
   })
+  @Expose()
   synonyms: string[] = [];
 
   @ApiPropertyOptional({
     type: [String],
     description: 'Direct antonyms from the Thesaurus API',
   })
+  @Expose()
   antonyms: string[] = [];
 
   @ApiPropertyOptional({
@@ -150,5 +177,6 @@ export class DictionaryLookupResponse {
     description:
       'Words conceptually related to the headword, but not direct synonyms',
   })
+  @Expose()
   relatedWords: string[] = [];
 }

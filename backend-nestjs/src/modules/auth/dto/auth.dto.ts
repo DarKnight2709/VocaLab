@@ -1,5 +1,5 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 
 export class LoginDto {
   @ApiProperty({
@@ -19,30 +19,6 @@ export class LoginDto {
   password!: string
 }
 
-
-export class LoginResponseDto {
-  // token
-  @ApiProperty({
-    description: "Access token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  accessToken!: string;
-
-  // refresh token
-  @ApiProperty({
-    description: "Refresh token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  refreshToken!: string;
-}
-
-export class TempTokenResponseDto {
-  @ApiProperty({
-    description: "Temp token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  tempToken!: string;
-}
 
 export class TwoFactorLoginDto {
   @ApiProperty({
@@ -64,26 +40,6 @@ export class TwoFactorLoginDto {
   code!: string;
 }
 
-
-
-export class RefreshTokenResponseDto {
-  // new access token
-  @ApiProperty({
-    description: "New access token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  accessToken!: string;
-
-
-  // new refresh token
-  @ApiProperty({
-    description: "New refresh token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  refreshToken!: string;
-}
-
-
 export class RefreshTokenDto {
   // refresh token cũ muốn làm mới 
   @ApiProperty({
@@ -94,8 +50,6 @@ export class RefreshTokenDto {
   @IsNotEmpty()
   refreshToken!: string;
 }
-
-
 
 export class SignupDto {
   @ApiProperty({ example: 'username123' })
@@ -138,14 +92,6 @@ export class ChangePasswordDto {
   newPassword!: string;
 }
 
-export class TwoFactorGenerateResponseDto {
-  @ApiProperty({
-    description: "Mã QR code cho 2FA",
-    example: "data:image/png;base64,iVBORw0KGgo...",
-  })
-  qrCode!: string;
-}
-
 export class TwoFactorVerifyDto {
   @ApiProperty({
     description: "Mã OTP (6 chữ số)",
@@ -157,4 +103,3 @@ export class TwoFactorVerifyDto {
   @MaxLength(6)
   code!: string;
 }
-

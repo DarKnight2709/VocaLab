@@ -3,9 +3,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { buildDictionaryApiUrl } from '@/common/utils/dictionary.utils';
 import { firstValueFrom } from 'rxjs';
-import { DictionaryLookupResponse } from './dto/dictionary.dto';
+import { DictionaryLookupResponse } from './dto/dictionary-response.dto';
 import { RedisService } from '@/core/cache/redis.service';
-import { ZodError, ZodType, z } from 'zod';
 import {
   LearnerDictionaryEntry,
   LearnerDictionaryEntrySchema,
@@ -19,7 +18,7 @@ import {
   ThesaurusEntry,
   ThesaurusEntrySchema,
 } from './validation/ThesaurusEntrySchema';
-import { SearchSuggestionResultResponse } from '../search/dto/search.dto';
+import { SearchSuggestionResultResponse } from '../search/dto/search-response.dto';
 import { validateWithSchema } from '@/common/validation/validate-schema';
 
 @Injectable()

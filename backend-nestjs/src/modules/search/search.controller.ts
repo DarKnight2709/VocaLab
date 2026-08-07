@@ -1,9 +1,9 @@
 import type { RequestUser } from '@/common/types';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, SerializeOptions } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
-import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
+
 import { GetBlogsResponseDto } from '../blog/dto/blog-response.dto';
 import { GroupsSearchResultResponse } from '../group-chat/dto/group-chat-response.dto';
 import { ProfileSearchResultResponse } from '../users/dto/users-response.dto';
@@ -11,8 +11,8 @@ import { CollectionSearchResponseDto } from '../vocabulary/dto/vocabulary-respon
 import {
   SearchSuggestionResultResponse,
   SidebarSearchResultResponse,
-} from './dto/search.dto';
-import { PostSearchQueryDto, ProfileSearchQueryDto, SideBarSearchQueryDto, GroupSearchQueryDto, CollectionSearchQueryDto } from './dto/search-query.dto';
+} from './dto/search-response.dto';
+import { PostSearchQueryDto, ProfileSearchQueryDto, SideBarSearchQueryDto, GroupSearchQueryDto, CollectionSearchQueryDto } from './dto/search.dto';
 import { SearchService } from './search.service';
 import {
   SEARCH_SORT,
@@ -30,19 +30,19 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get('suggestion')
+  @SerializeOptions({ type: SearchSuggestionResultResponse, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get search suggestions' })
   @ApiResponse({ type: SearchSuggestionResultResponse, isArray: true })
   async getSuggestions(
     @Query('query') query: string,
-  ): Promise<ResponseInterceptor<SearchSuggestionResultResponse[]>> {
+  ): Promise<SearchSuggestionResultResponse[]> {
     const result = await this.searchService.getSuggestions(query);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get('sidebar')
+  @SerializeOptions({ type: SidebarSearchResultResponse, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get sidebar search results' })
   @ApiResponse({ type: SidebarSearchResultResponse })
@@ -62,22 +62,23 @@ export class SearchController {
   async searchSidebar(
     @CurrentUser() user: RequestUser,
     @Query() query: SideBarSearchQueryDto,
-  ): Promise<ResponseInterceptor<SidebarSearchResultResponse>> {
+  ): Promise<SidebarSearchResultResponse> {
     const result = await this.searchService.searchSidebar(
       user?.id,
       query.query,
     );
-    return { data: result };
+    return result;
   }
 
   @Get('collections')
+  @SerializeOptions({ type: CollectionSearchResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get collections search results' })
   @ApiResponse({ type: CollectionSearchResponseDto })
   async searchCollections(
     @CurrentUser() user: RequestUser,
     @Query() query: CollectionSearchQueryDto,
-  ): Promise<ResponseInterceptor<CollectionSearchResponseDto>> {
+  ): Promise<CollectionSearchResponseDto> {
     const result = await this.searchService.searchCollections(
       user?.id,
       query.page,
@@ -89,12 +90,11 @@ export class SearchController {
         languages: query.languages,
       },
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get('posts')
+  @SerializeOptions({ type: GetBlogsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get posts search results' })
   @ApiResponse({ type: GetBlogsResponseDto })
@@ -116,7 +116,7 @@ export class SearchController {
   async searchPosts(
     @CurrentUser() user: RequestUser,
     @Query() query: PostSearchQueryDto,
-  ): Promise<ResponseInterceptor<GetBlogsResponseDto>> {
+  ): Promise<GetBlogsResponseDto> {
     const result = await this.searchService.searchPosts(
       user?.id,
       query.page,
@@ -127,12 +127,11 @@ export class SearchController {
         time: query.time,
       },
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get('groups')
+  @SerializeOptions({ type: GroupsSearchResultResponse, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get groups search results' })
   @ApiResponse({ type: GroupsSearchResultResponse })
@@ -148,7 +147,7 @@ export class SearchController {
   async searchGroups(
     @CurrentUser() user: RequestUser,
     @Query() query: GroupSearchQueryDto,
-  ): Promise<ResponseInterceptor<GroupsSearchResultResponse>> {
+  ): Promise<GroupsSearchResultResponse> {
     const result = await this.searchService.searchGroups(
       user?.id,
       query.page,
@@ -159,12 +158,11 @@ export class SearchController {
         languages: query.languages,
       },
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get('profiles')
+  @SerializeOptions({ type: ProfileSearchResultResponse, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get profiles search results' })
   @ApiResponse({ type: ProfileSearchResultResponse })
@@ -180,7 +178,7 @@ export class SearchController {
   async searchProfiles(
     @CurrentUser() user: RequestUser,
     @Query() query: ProfileSearchQueryDto,
-  ): Promise<ResponseInterceptor<ProfileSearchResultResponse>> {
+  ): Promise<ProfileSearchResultResponse> {
     const result = await this.searchService.searchProfiles(
       user?.id,
       query.page,
@@ -188,8 +186,6 @@ export class SearchController {
       query.query,
       { profileSort: query.profileSort },
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 }

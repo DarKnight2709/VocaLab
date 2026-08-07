@@ -12,6 +12,7 @@ import {
   Post,
   Inject,
   forwardRef,
+  SerializeOptions,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -22,7 +23,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { UpdatePersonalInfoDto, CreateUserSocialDto } from './dto/users.dto';
 import { PostVisibility } from '../../common/enums/post-visibility.enum';
-import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
+
 import {
   UpdateProfileResponseDto,
   FollowResponseDto,
@@ -52,6 +53,7 @@ export class UsersController {
   ) {}
 
   @Patch('profile')
+  @SerializeOptions({ type: UpdateProfileResponseDto, excludeExtraneousValues: true })
   @ApiOperation({
     summary: 'Cập nhật thông tin cá nhân',
     description:
@@ -62,18 +64,17 @@ export class UsersController {
     @CurrentUser() user: RequestUser,
     @Body() updateDto: UpdatePersonalInfoDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<ResponseInterceptor<UpdateProfileResponseDto>> {
+  ): Promise<UpdateProfileResponseDto> {
     const result = await this.userService.updateProfile(
       user.id,
       updateDto,
       file,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Delete('account')
+  @SerializeOptions({ type: PublicUserDto, excludeExtraneousValues: true })
   @ApiOperation({
     summary: 'Xóa tài khoản',
     description: 'Xóa tài khoản cá nhân (Xóa mềm)',
@@ -88,50 +89,46 @@ export class UsersController {
   async searchUsers(
     @CurrentUser() user: RequestUser,
     @Query('keyword') keyword?: string,
-  ): Promise<ResponseInterceptor<PublicUserDto[]>> {
+  ): Promise<PublicUserDto[]> {
     const result = await this.userService.searchUsers(user.id, keyword);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get('me/socials')
+  @SerializeOptions({ type: UserSocialDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy danh sách liên kết mạng xã hội của tôi' })
   async getMySocials(
     @CurrentUser() user: RequestUser,
-  ): Promise<ResponseInterceptor<UserSocialDto[]>> {
+  ): Promise<UserSocialDto[]> {
     const result = await this.userService.getMySocials(user.id);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Post('me/socials')
+  @SerializeOptions({ type: UserSocialDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Thêm mới một liên kết mạng xã hội' })
   async createSocial(
     @CurrentUser() user: RequestUser,
     @Body() createDto: CreateUserSocialDto,
-  ): Promise<ResponseInterceptor<UserSocialDto>> {
+  ): Promise<UserSocialDto> {
     const result = await this.userService.createSocial(user.id, createDto);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Patch('me/socials/:id')
+  @SerializeOptions({ type: UserSocialDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Cập nhật một liên kết mạng xã hội' })
   async updateSocial(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() updateDto: CreateUserSocialDto,
-  ): Promise<ResponseInterceptor<UserSocialDto>> {
+  ): Promise<UserSocialDto> {
     const result = await this.userService.updateSocial(user.id, id, updateDto);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Delete('me/socials/:id')
+  @SerializeOptions({ type: FriendsSuggestionResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Xóa một liên kết mạng xã hội' })
   async deleteSocial(
     @CurrentUser() user: RequestUser,
@@ -150,50 +147,49 @@ export class UsersController {
     @Query('q') query: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-  ): Promise<ResponseInterceptor<FriendsSuggestionResponseDto>> {
+  ): Promise<FriendsSuggestionResponseDto> {
     const result = await this.userService.searchFriendsSuggestion(
       user.id,
       query,
       Number(page) || 1,
       Number(limit) || 5,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':username')
+  @SerializeOptions({ type: UserDetailsDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng theo username' })
   async getByUsername(
     @Param('username') username: string,
     @CurrentUser() currentUser: RequestUser,
-  ): Promise<ResponseInterceptor<UserDetailsDto>> {
+  ): Promise<UserDetailsDto> {
     const result = await this.userService.getByUsername(
       username,
       currentUser?.id,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':userId/chat-info')
+  @SerializeOptions({ type: UserChatInfoDto, excludeExtraneousValues: true })
   @ApiOperation({
     summary: 'Lấy thông tin chat của người dùng (block & privacy)',
   })
   async getUserChatInfo(
     @Param('userId') userId: string,
     @CurrentUser() currentUser: RequestUser,
-  ): Promise<ResponseInterceptor<UserChatInfoDto>> {
+  ): Promise<UserChatInfoDto> {
     const result = await this.userService.getUserChatInfo(
       userId,
       currentUser.id,
     );
-    return { data: result };
+    return result;
   }
 
   @Get(':userId/followers')
+  @SerializeOptions({ type: FollowersResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách người theo dõi' })
   @ApiQuery({ name: 'page', required: false })
@@ -205,7 +201,7 @@ export class UsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
-  ): Promise<ResponseInterceptor<FollowersResponseDto>> {
+  ): Promise<FollowersResponseDto> {
     const result = await this.userService.getUserFollowers(
       userId,
       currentUser?.id,
@@ -213,12 +209,11 @@ export class UsersController {
       Number(limit),
       search,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':userId/following')
+  @SerializeOptions({ type: FollowingResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách đang theo dõi' })
   @ApiQuery({ name: 'page', required: false })
@@ -230,7 +225,7 @@ export class UsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
-  ): Promise<ResponseInterceptor<FollowingResponseDto>> {
+  ): Promise<FollowingResponseDto> {
     const result = await this.userService.getUserFollowing(
       userId,
       currentUser?.id,
@@ -238,12 +233,11 @@ export class UsersController {
       Number(limit),
       search,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':userId/friends')
+  @SerializeOptions({ type: FriendsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách bạn bè' })
   @ApiQuery({ name: 'page', required: false })
@@ -255,7 +249,7 @@ export class UsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
-  ): Promise<ResponseInterceptor<FriendsResponseDto>> {
+  ): Promise<FriendsResponseDto> {
     const result = await this.userService.getUserFriends(
       userId,
       currentUser?.id,
@@ -263,12 +257,11 @@ export class UsersController {
       Number(limit),
       search,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':userId/posts')
+  @SerializeOptions({ type: UserPostsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách bài viết của người dùng' })
   @ApiQuery({ name: 'page', required: false })
@@ -282,7 +275,7 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('visibility') visibility?: PostVisibility,
-  ): Promise<ResponseInterceptor<UserPostsResponseDto>> {
+  ): Promise<UserPostsResponseDto> {
     const result = await this.userService.getUserPosts(
       userId,
       currentUser?.id,
@@ -291,12 +284,11 @@ export class UsersController {
       search,
       visibility,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':userId/collections')
+  @SerializeOptions({ type: UserCollectionsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách bộ sưu tập của người dùng' })
   @ApiQuery({ name: 'page', required: false })
@@ -310,7 +302,7 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('visibility') visibility?: PostVisibility,
-  ): Promise<ResponseInterceptor<UserCollectionsResponseDto>> {
+  ): Promise<UserCollectionsResponseDto> {
     const result = await this.vocabularyService.getUserCollections(
       userId,
       currentUser?.id,
@@ -319,12 +311,11 @@ export class UsersController {
       search,
       visibility,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':userId/groups')
+  @SerializeOptions({ type: UserGroupsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách nhóm của người dùng' })
   @ApiQuery({ name: 'page', required: false })
@@ -336,7 +327,7 @@ export class UsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
-  ): Promise<ResponseInterceptor<UserGroupsResponseDto>> {
+  ): Promise<UserGroupsResponseDto> {
     const result = await this.groupChatService.getUserGroups(
       userId,
       currentUser?.id,
@@ -344,60 +335,55 @@ export class UsersController {
       Number(limit) || 12,
       search,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Post(':userId/follow')
+  @SerializeOptions({ type: FollowResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Theo dõi người dùng' })
   async followUser(
     @Param('userId') userId: string,
     @CurrentUser() currentUser: RequestUser,
-  ): Promise<ResponseInterceptor<FollowResponseDto>> {
+  ): Promise<FollowResponseDto> {
     const result = await this.userService.followUser(userId, currentUser.id);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Post(':userId/unfollow')
+  @SerializeOptions({ type: FollowResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Bỏ theo dõi người dùng' })
   async unfollowUser(
     @Param('userId') userId: string,
     @CurrentUser() currentUser: RequestUser,
-  ): Promise<ResponseInterceptor<FollowResponseDto>> {
+  ): Promise<FollowResponseDto> {
     const result = await this.userService.unfollowUser(userId, currentUser.id);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Post(':userId/block')
+  @SerializeOptions({ type: FollowResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Chặn người dùng' })
   async blockUser(
     @Param('userId') userId: string,
     @CurrentUser() currentUser: RequestUser,
-  ): Promise<ResponseInterceptor<FollowResponseDto>> {
+  ): Promise<FollowResponseDto> {
     const result = await this.userService.blockUser(userId, currentUser.id);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Post(':userId/unblock')
+  @SerializeOptions({ type: FollowResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Bỏ chặn người dùng' })
   async unblockUser(
     @Param('userId') userId: string,
     @CurrentUser() currentUser: RequestUser,
-  ): Promise<ResponseInterceptor<FollowResponseDto>> {
+  ): Promise<FollowResponseDto> {
     const result = await this.userService.unblockUser(userId, currentUser.id);
-    return {
-      data: result,
-    };
+    return result;
   }
 
   @Get(':userId/blocked')
+  @SerializeOptions({ type: BlockedUsersResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy danh sách người dùng đã chặn' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -408,7 +394,7 @@ export class UsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
-  ): Promise<ResponseInterceptor<BlockedUsersResponseDto>> {
+  ): Promise<BlockedUsersResponseDto> {
     const result = await this.userService.getBlockedUsers(
       userId,
       currentUser.id,
@@ -416,8 +402,6 @@ export class UsersController {
       Number(limit) || 12,
       search,
     );
-    return {
-      data: result,
-    };
+    return result;
   }
 }

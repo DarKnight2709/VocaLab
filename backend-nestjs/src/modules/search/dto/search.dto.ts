@@ -1,32 +1,113 @@
-import { GroupSearchItemDto } from '@/modules/group-chat/dto/group-chat-response.dto';
-import { GetGroupsResponseDto } from '@/modules/messages/dto/messages-response.dto';
-import { UserResponse, UserSummaryDto } from '@/modules/users/dto/users-response.dto';
-import { CollectionSearchItemDto } from '@/modules/vocabulary/dto/vocabulary-response.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
+import { Type, Transform } from 'class-transformer';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  IsArray,
+} from 'class-validator';
+import {
+  SEARCH_SORT,
+  SEARCH_TIME,
+  SEARCH_PROFILE_SORT,
+  SEARCH_GROUP_FILTER,
+  type SearchSort,
+  type SearchTime,
+  type SearchProfileSort,
+  type SearchGroupFilter,
+} from '../search.types';
 
-export class SearchSuggestionResultResponse {
-  @ApiProperty({ description: 'The unique identifier of the suggestion' })
-  id!: string;
+export class SearchQueryDto {
+  @ApiProperty({ description: 'Search keyword' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @IsNotEmpty()
+  query!: string;
 
-  @ApiProperty({ description: 'The display text of the suggestion' })
-  text!: string;
+  @ApiPropertyOptional({ default: 1, minimum: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page = 1;
+
+  @ApiPropertyOptional({ default: 10, minimum: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit = 10;
 }
-export class SidebarSearchResultResponse {
-  @ApiProperty({
-    description: 'Collections search results',
-    type: [CollectionSearchItemDto],
-  })
-  collections!: CollectionSearchItemDto[];
 
-  @ApiProperty({
-    description: 'Groups search results',
-    type: [GroupSearchItemDto],
-  })
-  groups!: GroupSearchItemDto[];
+export class SideBarSearchQueryDto {
+  @ApiProperty({ description: 'Search keyword' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @IsNotEmpty()
+  query!: string;
 
-  @ApiProperty({
-    description: 'Profiles search results',
-    type: [UserSummaryDto],
-  })
-  profiles!: UserSummaryDto[];
+  @ApiPropertyOptional({ enum: SEARCH_SORT, default: SEARCH_SORT.NEWEST })
+  @IsOptional()
+  @IsEnum(SEARCH_SORT)
+  sort: SearchSort = SEARCH_SORT.NEWEST;
+
+  @ApiPropertyOptional({ enum: SEARCH_TIME, default: SEARCH_TIME.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_TIME)
+  time: SearchTime = SEARCH_TIME.ALL;
+}
+
+export class PostSearchQueryDto extends SearchQueryDto {
+  @ApiPropertyOptional({ enum: SEARCH_SORT, default: SEARCH_SORT.NEWEST })
+  @IsOptional()
+  @IsEnum(SEARCH_SORT)
+  sort: SearchSort = SEARCH_SORT.NEWEST;
+
+  @ApiPropertyOptional({ enum: SEARCH_TIME, default: SEARCH_TIME.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_TIME)
+  time: SearchTime = SEARCH_TIME.ALL;
+}
+
+export class ProfileSearchQueryDto extends SearchQueryDto {
+  @ApiPropertyOptional({ enum: SEARCH_PROFILE_SORT, default: SEARCH_PROFILE_SORT.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_PROFILE_SORT)
+  profileSort: SearchProfileSort = SEARCH_PROFILE_SORT.ALL;
+}
+
+export class CollectionSearchQueryDto extends SearchQueryDto {
+  @ApiPropertyOptional({ enum: SEARCH_SORT, default: SEARCH_SORT.NEWEST })
+  @IsOptional()
+  @IsEnum(SEARCH_SORT)
+  sort: SearchSort = SEARCH_SORT.NEWEST;
+
+  @ApiPropertyOptional({ enum: SEARCH_TIME, default: SEARCH_TIME.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_TIME)
+  time: SearchTime = SEARCH_TIME.ALL;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value ? [value] : []))
+  languages?: string[];
+}
+
+export class GroupSearchQueryDto extends SearchQueryDto {
+  @ApiPropertyOptional({ enum: SEARCH_GROUP_FILTER, default: SEARCH_GROUP_FILTER.ALL })
+  @IsOptional()
+  @IsEnum(SEARCH_GROUP_FILTER)
+  filter: SearchGroupFilter = SEARCH_GROUP_FILTER.ALL;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value ? [value] : []))
+  languages?: string[];
 }

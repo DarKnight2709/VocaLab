@@ -11,30 +11,22 @@ import {
   UpdateFollowingTabVisibilityDto,
   UpdateFriendTabVisibilityDto,
   UpdateGroupsTabVisibilityDto,
-} from './dto/setting.dto';
-import { ErrorCode } from '@/common/enums/error-code.enum';
-import {
-  NotificationSettingDto,
   UpdateChatMessagesDto,
   UpdateCommentsDto,
-  UpdateUpvotesDto,
   UpdateNewFollowersDto,
+  UpdateUpvotesDto,
   UpdateActivityFromFollowedDto,
-} from './dto/notication-settings.dto';
-import {
   CreateReminderDto,
-  DailyGoalResponseDto,
-  ReminderDeleteResponseDto,
-  ReminderListResponseDto,
-  ReminderResponseDto,
   UpdateDailyGoalDto,
-} from './dto/learning-setting.dto';
+} from './dto/setting.dto';
+import { ErrorCode } from '@/common/enums/error-code.enum';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ReminderJobNames } from '@/common/enums/reminder-job-names';
 import { Reminder, ReminderType } from '@prisma/client';
 import { minutesToTime } from '@/common/utils/convertTime';
 import { randomUUID } from 'crypto';
+import { DailyGoalResponseDto, NotificationSettingDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/setting-response.dto';
 
 @Injectable()
 export class SettingService {

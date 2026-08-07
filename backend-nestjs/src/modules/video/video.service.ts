@@ -7,10 +7,10 @@ import {
 } from '@nestjs/common';
 import { ExtractVideoDto } from './dto/extract-video.dto';
 import {
-  TranscriptItem,
-  ChapterItem,
-  ExtractVideoResponse,
-} from './interfaces/extract-video.interface';
+  TranscriptItemDto,
+  ChapterItemDto,
+  ExtractVideoResponseDto,
+} from './dto/extract-video-response.dto';
 import { ConfigService } from '@/common/services/config.service';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -41,13 +41,13 @@ export class VideoService {
   async extract(
     userId: string,
     dto: ExtractVideoDto,
-  ): Promise<ExtractVideoResponse> {
+  ): Promise<ExtractVideoResponseDto> {
     const videoId = dto.url.split('v=')[1]?.split('&')[0] || dto.url;
     const cacheKey = `video:extract:${videoId}`;
 
     // check redis cache
     const cachedValue =
-      await this.redisService.getCache<ExtractVideoResponse>(cacheKey);
+      await this.redisService.getCache<ExtractVideoResponseDto>(cacheKey);
     if (cachedValue) {
       return cachedValue;
     }
@@ -59,10 +59,10 @@ export class VideoService {
       },
     });
     if (existingVideo) {
-      const dbResponse: ExtractVideoResponse = {
+      const dbResponse: ExtractVideoResponseDto = {
         transcript:
-          (existingVideo.transcript as unknown as TranscriptItem[]) || [],
-        chapters: (existingVideo.chapters as unknown as ChapterItem[]) || [],
+          (existingVideo.transcript as unknown as TranscriptItemDto[]) || [],
+        chapters: (existingVideo.chapters as unknown as ChapterItemDto[]) || [],
         videoInfo: {
           title: existingVideo.title,
           description: existingVideo.description || '',
@@ -115,7 +115,7 @@ export class VideoService {
       const formattedTranscript = this.formatTranscript(
         validatedTranscript.transcript,
       );
-      const formattedChapters: ChapterItem[] = (
+      const formattedChapters: ChapterItemDto[] = (
         validatedTranscript.chapters || []
       ).map((ch) => ({
         title: ch.chapter,
@@ -191,8 +191,8 @@ export class VideoService {
   }
 
   // HELPER
-  formatTranscript(rawTranscript: SerpApiTranscriptItem[]): TranscriptItem[] {
-    const formattedTranscript: TranscriptItem[] = [];
+  formatTranscript(rawTranscript: SerpApiTranscriptItem[]): TranscriptItemDto[] {
+    const formattedTranscript: TranscriptItemDto[] = [];
 
     const cleanText = (raw: string) =>
       raw

@@ -3,7 +3,7 @@ import { PrismaService } from '../../core/database/prisma.service';
 import {
   SearchSuggestionResultResponse,
   SidebarSearchResultResponse,
-} from './dto/search.dto';
+} from './dto/search-response.dto';
 import { VocabularyService } from '../vocabulary/vocabulary.service';
 import { BlogService } from '../blog/blog.service';
 import { UserService } from '../users/users.service';

@@ -1,8 +1,8 @@
-import { Controller, Get, Query, Param } from '@nestjs/common';
+import { Controller, Get, Query, Param, SerializeOptions } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Response as ResponseInterceptor } from '@/common/interceptors/transform.interceptor';
-import { SearchSuggestionResultResponse } from '../search/dto/search.dto';
-import { DictionaryLookupResponse } from './dto/dictionary.dto';
+
+import { SearchSuggestionResultResponse } from '../search/dto/search-response.dto';
+import { DictionaryLookupResponse } from './dto/dictionary-response.dto';
 import { Public } from '@/common/decorators/public.decorator';
 import { DictionaryService } from './dictionary.service';
 
@@ -12,28 +12,26 @@ export class DictionaryController {
   constructor(private readonly dictionaryService: DictionaryService) {}
 
   @Get('suggestion')
+  @SerializeOptions({ type: SearchSuggestionResultResponse, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get dictionary suggestions' })
   @ApiResponse({ type: SearchSuggestionResultResponse, isArray: true })
   async getSuggestions(
     @Query('query') query: string,
-  ): Promise<ResponseInterceptor<SearchSuggestionResultResponse[]>> {
+  ): Promise<SearchSuggestionResultResponse[]> {
     const result = await this.dictionaryService.getSuggestions(query);
-    return {
-      data: result || [],
-    };
+    return result || [];
   }
 
   @Get('lookup/:word')
+  @SerializeOptions({ type: DictionaryLookupResponse, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lookup full word definition' })
   @ApiResponse({ type: DictionaryLookupResponse })
   async lookupWord(
     @Param('word') word: string,
-  ): Promise<ResponseInterceptor<DictionaryLookupResponse | null>> {
+  ): Promise<DictionaryLookupResponse | null> {
     const result = await this.dictionaryService.lookupWord(word);
-    return {
-      data: result,
-    };
+    return result;
   }
 }
