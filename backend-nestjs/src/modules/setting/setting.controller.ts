@@ -34,7 +34,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { Post, Delete, Param } from '@nestjs/common';
-import { DailyGoalResponseDto, NotificationSettingDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/setting-response.dto';
+import { DailyGoalResponseDto, NotificationSettingDto, ReminderListResponseDto, ReminderResponseDto } from './dto/setting-response.dto';
 
 @ApiTags('settings')
 @Controller('settings')
@@ -221,17 +221,12 @@ export class SettingController {
   }
 
   @Delete('reminders/:id')
-  @SerializeOptions({
-    type: ReminderDeleteResponseDto,
-    excludeExtraneousValues: true,
-  })
   @ApiOperation({ summary: 'Delete a reminder' })
   async deleteReminder(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
-  ): Promise<ReminderDeleteResponseDto> {
-    const result = await this.settingService.deleteReminder(user.id, id);
-    return result;
+  ): Promise<void> {
+    await this.settingService.deleteReminder(user.id, id);
   }
 
   @Get('daily-goal')

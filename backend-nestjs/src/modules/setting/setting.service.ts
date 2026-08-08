@@ -26,7 +26,7 @@ import { ReminderJobNames } from '@/common/enums/reminder-job-names';
 import { Reminder, ReminderType } from '@prisma/client';
 import { minutesToTime } from '@/common/utils/convertTime';
 import { randomUUID } from 'crypto';
-import { DailyGoalResponseDto, NotificationSettingDto, ReminderDeleteResponseDto, ReminderListResponseDto, ReminderResponseDto } from './dto/setting-response.dto';
+import { DailyGoalResponseDto, NotificationSettingDto, ReminderListResponseDto, ReminderResponseDto } from './dto/setting-response.dto';
 
 @Injectable()
 export class SettingService {
@@ -340,7 +340,7 @@ export class SettingService {
   async deleteReminder(
     userId: string,
     id: string,
-  ): Promise<ReminderDeleteResponseDto> {
+  ): Promise<void> {
     const reminder = await this.prisma.reminder.findUnique({
       where: { id, userId },
     });
@@ -353,8 +353,6 @@ export class SettingService {
       reminder.schedulerId,
     );
     await this.prisma.reminder.delete({ where: { id, userId } });
-
-    return { id };
   }
 
   // --- HELPERS ---

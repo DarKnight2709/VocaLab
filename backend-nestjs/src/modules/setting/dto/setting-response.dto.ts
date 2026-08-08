@@ -1,3 +1,4 @@
+import { PaginationMetaDto } from "@/modules/blog/dto/blog-response.dto";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { NotificationChannel, ReminderType } from "@prisma/client";
 import { Expose, Type } from "class-transformer";
@@ -70,25 +71,6 @@ export class ReminderResponseDto {
   @Expose()
   createdAt!: Date;
 }
-
-export class PaginationMetaDto {
-  @ApiProperty({ example: 1 })
-  @Expose()
-  page!: number;
-
-  @ApiProperty({ example: 10 })
-  @Expose()
-  limit!: number;
-
-  @ApiProperty({ example: 100 })
-  @Expose()
-  total!: number;
-
-  @ApiProperty({ example: 10 })
-  @Expose()
-  totalPages!: number;
-}
-
 export class ReminderListResponseDto {
   @ApiProperty({ type: [ReminderResponseDto] })
   @Expose()
@@ -99,12 +81,6 @@ export class ReminderListResponseDto {
   @Expose()
   @Type(() => PaginationMetaDto)
   meta!: PaginationMetaDto;
-}
-
-export class ReminderDeleteResponseDto {
-  @ApiProperty()
-  @Expose()
-  id!: string;
 }
 
 export class DailyGoalResponseDto {
