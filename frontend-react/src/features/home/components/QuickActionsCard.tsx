@@ -12,7 +12,7 @@ export default function QuickActionsCard() {
       desc: t("home.actions.vocabularyDesc"),
       icon: BookMarked,
       href: ROUTES.VOCABULARY.url,
-      color: "from-emerald-500/15 to-teal-500/10",
+      bg: "bg-emerald-500/10",
       iconColor: "text-emerald-600 dark:text-emerald-400",
     },
     {
@@ -20,7 +20,7 @@ export default function QuickActionsCard() {
       desc: t("home.actions.grammarDesc"),
       icon: BookOpen,
       href: ROUTES.GRAMMAR.url,
-      color: "from-blue-500/15 to-indigo-500/10",
+      bg: "bg-blue-500/10",
       iconColor: "text-blue-600 dark:text-blue-400",
     },
     {
@@ -28,7 +28,7 @@ export default function QuickActionsCard() {
       desc: t("home.actions.blogDesc"),
       icon: PenSquare,
       href: ROUTES.BLOG.url,
-      color: "from-amber-500/15 to-orange-500/10",
+      bg: "bg-amber-500/10",
       iconColor: "text-amber-600 dark:text-amber-400",
     },
     {
@@ -36,7 +36,7 @@ export default function QuickActionsCard() {
       desc: t("home.actions.chatDesc"),
       icon: MessageCircle,
       href: ROUTES.CHAT_TAB_USERS.url,
-      color: "from-purple-500/15 to-fuchsia-500/10",
+      bg: "bg-purple-500/10",
       iconColor: "text-purple-600 dark:text-purple-400",
     },
   ];
@@ -51,12 +51,12 @@ export default function QuickActionsCard() {
           <Link
             key={action.href}
             to={action.href}
-            className="group/card flex items-start gap-3 rounded-2xl bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            className="group/card flex items-start gap-3 rounded-2xl bg-card border border-border/40 p-4 transition-colors hover:bg-accent/40"
           >
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${action.color}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${action.bg}`}
             >
-              <action.icon size={20} className={action.iconColor} />
+              <action.icon size={18} className={action.iconColor} />
             </div>
             <div className="min-w-0">
               <h3 className="text-sm font-semibold leading-tight">

@@ -19,10 +19,10 @@ export default function HomeCollections() {
         </h2>
         <Link
           to={ROUTES.VOCABULARY.url}
-          className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           {t("home.viewAll")}
-          <ArrowRight size={12} />
+          <ArrowRight size={14} className="opacity-70" />
         </Link>
       </div>
 
@@ -52,10 +52,10 @@ export default function HomeCollections() {
             <Link
               key={col.id}
               to={`/vocabulary/${col.id}`}
-              className="group/col flex flex-col rounded-2xl bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+              className="group/col flex flex-col rounded-2xl bg-card border border-border/40 p-4 transition-colors hover:bg-accent/40"
             >
-              <div className="flex items-start gap-2">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/15 to-teal-500/10">
+              <div className="flex items-start gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
                   <Layers size={16} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div className="min-w-0 flex-1">

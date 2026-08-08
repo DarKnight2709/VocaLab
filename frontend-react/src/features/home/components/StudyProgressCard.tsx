@@ -44,8 +44,8 @@ function CircularProgress({
       />
       <defs>
         <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="oklch(0.72 0.19 155)" />
-          <stop offset="100%" stopColor="oklch(0.63 0.24 145)" />
+          <stop offset="0%" className="text-primary/70" stopColor="currentColor" />
+          <stop offset="100%" className="text-primary" stopColor="currentColor" />
         </linearGradient>
       </defs>
     </svg>
@@ -66,8 +66,8 @@ export default function StudyProgressCard() {
   const progressPct = dailyGoal > 0 ? (todayMinutes / dailyGoal) * 100 : 0;
 
   return (
-    <section className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
-      <div className="mb-4 flex items-center justify-between">
+    <section className="group relative overflow-hidden rounded-2xl bg-card border border-border/40 p-6 shadow-sm transition-all hover:border-border/80">
+      <div className="mb-5 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">
           {t("home.studyProgress")}
         </h2>
@@ -96,30 +96,30 @@ export default function StudyProgressCard() {
 
         {/* Stats */}
         <div className="flex-1 space-y-3">
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <Clock size={15} className="text-muted-foreground/70" />
+            <span className="flex-1 text-xs font-medium text-muted-foreground">
               {t("home.todayStudy")}
             </span>
-            <span className="ml-auto text-sm font-semibold tabular-nums">
+            <span className="text-xs font-semibold tabular-nums text-foreground">
               {t("home.minutesShort", { count: todayMinutes })}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Target size={14} className="text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <Target size={15} className="text-muted-foreground/70" />
+            <span className="flex-1 text-xs font-medium text-muted-foreground">
               {t("home.dailyGoal")}
             </span>
-            <span className="ml-auto text-sm font-semibold tabular-nums">
+            <span className="text-xs font-semibold tabular-nums text-foreground">
               {t("home.minutesShort", { count: dailyGoal })}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <TrendingUp size={14} className="text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <TrendingUp size={15} className="text-muted-foreground/70" />
+            <span className="flex-1 text-xs font-medium text-muted-foreground">
               {t("home.weeklyAverage")}
             </span>
-            <span className="ml-auto text-sm font-semibold tabular-nums">
+            <span className="text-xs font-semibold tabular-nums text-foreground">
               {t("home.minutesShort", { count: weeklyAvg })}
             </span>
           </div>

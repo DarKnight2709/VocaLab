@@ -15,13 +15,13 @@ export default function WelcomeBanner() {
   const greeting = useMemo(() => getGreeting(t), [t]);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-card p-6 sm:p-8 shadow-sm">
-      <div className="absolute inset-y-0 left-0 w-1 rounded-l-2xl bg-gradient-to-b from-emerald-500 to-teal-400" />
-      <div className="pl-4">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          {greeting}, {me?.fullName?.split(" ").pop() ?? ""} 👋
+    <section className="relative overflow-hidden rounded-2xl bg-card border border-border/40 p-6 sm:p-8 shadow-sm">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent pointer-events-none" />
+      <div className="relative">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
+          {greeting}, {me?.fullName?.split(" ").pop() ?? ""}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1.5 text-sm font-medium text-muted-foreground">
           {t("home.subtitle")}
         </p>
       </div>

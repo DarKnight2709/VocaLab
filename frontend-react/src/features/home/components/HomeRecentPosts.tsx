@@ -21,10 +21,10 @@ export default function HomeRecentPosts() {
         </h2>
         <Link
           to={ROUTES.BLOG.url}
-          className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           {t("home.viewAll")}
-          <ArrowRight size={12} />
+          <ArrowRight size={14} className="opacity-70" />
         </Link>
       </div>
 
@@ -64,7 +64,7 @@ export default function HomeRecentPosts() {
                     navigate(detailUrl);
                   }
                 }}
-                className="group/blog flex items-start gap-4 rounded-2xl bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+                className="group/blog flex items-start gap-4 rounded-2xl bg-card border border-border/40 p-4 transition-colors hover:bg-accent/40 cursor-pointer"
               >
                 <div className="min-w-0 flex-1">
                   <h3 className="line-clamp-1 text-sm font-semibold leading-tight group-hover/blog:text-primary transition-colors">
