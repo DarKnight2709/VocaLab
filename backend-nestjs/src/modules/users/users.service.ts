@@ -30,7 +30,6 @@ import {
   FollowersResponseDto,
   FollowingResponseDto,
   FriendsResponseDto,
-  UserPostsResponseDto,
   BlockedUsersResponseDto,
 } from './dto/users-response.dto';
 import { Follow, Prisma, VisibilityScope } from '@prisma/client';
@@ -38,6 +37,7 @@ import { PrivacyVisibilityField } from '@/common/enums/privacy-visibility-field.
 import { NotificationType } from '@prisma/client';
 import { SettingKey } from '@/common/enums/setting-key.enum';
 import { NotificationsService } from '../notifications/services/notifications.service';
+import { BlogsResponseDto } from '../blog/dto/blog-response.dto';
 
 interface MappedUserTarget {
   id: string;
@@ -304,9 +304,12 @@ export class UserService {
     });
   }
 
-  async findUserByKeyword(userId: string, keyword?: string): Promise<PublicUserDto[]> {
+  async findUserByKeyword(
+    userId: string,
+    keyword?: string,
+  ): Promise<PublicUserDto[]> {
     const where: Prisma.UserWhereInput = {
-      id: { not: userId }
+      id: { not: userId },
     };
 
     if (keyword && keyword.trim()) {
@@ -399,7 +402,10 @@ export class UserService {
     });
   }
 
-  async searchUsers(userId: string, keyword?: string): Promise<PublicUserDto[]> {
+  async searchUsers(
+    userId: string,
+    keyword?: string,
+  ): Promise<PublicUserDto[]> {
     const users = await this.findUserByKeyword(userId, keyword);
     return users;
   }
@@ -773,7 +779,7 @@ export class UserService {
     limit = 12,
     search?: string,
     visibility?: PostVisibility,
-  ): Promise<UserPostsResponseDto> {
+  ): Promise<BlogsResponseDto> {
     const isOwner = profileUserId === requestingUserId;
 
     const user = await this.findById(profileUserId);
@@ -829,6 +835,14 @@ export class UserService {
         include: {
           votes: { select: { type: true, userId: true } },
           _count: { select: { comments: true } },
+          author: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
+          },
         },
       }),
       this.prisma.blog.count({ where }),
@@ -981,10 +995,7 @@ export class UserService {
     });
   }
 
-  async deleteSocial(
-    userId: string,
-    id: string,
-  ): Promise<void> {
+  async deleteSocial(userId: string, id: string): Promise<void> {
     // Check ownership
     const social = await this.prisma.userSocial.findUnique({
       where: { id },

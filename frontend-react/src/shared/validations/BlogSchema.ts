@@ -86,7 +86,7 @@ export const MetaSchema = z.object({
 });
 
 export const BlogListResponseSchema = z.object({
-  blogs: z.array(BlogItemSchema),
+  posts: z.array(BlogItemSchema),
   meta: MetaSchema,
 });
 

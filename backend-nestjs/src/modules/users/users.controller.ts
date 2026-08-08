@@ -35,11 +35,11 @@ import {
   FollowersResponseDto,
   FollowingResponseDto,
   FriendsResponseDto,
-  UserPostsResponseDto,
   UserCollectionsResponseDto,
   UserGroupsResponseDto,
   BlockedUsersResponseDto,
 } from './dto/users-response.dto';
+import { BlogsResponseDto } from '../blog/dto/blog-response.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -128,7 +128,6 @@ export class UsersController {
   }
 
   @Delete('me/socials/:id')
-  @SerializeOptions({ type: FriendsSuggestionResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Xóa một liên kết mạng xã hội' })
   async deleteSocial(
     @CurrentUser() user: RequestUser,
@@ -261,7 +260,7 @@ export class UsersController {
   }
 
   @Get(':userId/posts')
-  @SerializeOptions({ type: UserPostsResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: BlogsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách bài viết của người dùng' })
   @ApiQuery({ name: 'page', required: false })
@@ -275,7 +274,7 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('visibility') visibility?: PostVisibility,
-  ): Promise<UserPostsResponseDto> {
+  ): Promise<BlogsResponseDto> {
     const result = await this.userService.getUserPosts(
       userId,
       currentUser?.id,

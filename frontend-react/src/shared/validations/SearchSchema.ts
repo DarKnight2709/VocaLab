@@ -57,7 +57,7 @@ export const SearchPaginationMetaSchema = z.object({
 });
 
 export const SearchInfiniteResponseSchema = z.object({
-  blogs: z.array(BlogItemSchema).optional(),
+  posts: z.array(BlogItemSchema).optional(),
   collections: z.array(SearchCollectionResultSchema).optional(),
   groups: z.array(SearchGroupResultSchema).optional(),
   profiles: z.array(SearchUserResultSchema).optional(),

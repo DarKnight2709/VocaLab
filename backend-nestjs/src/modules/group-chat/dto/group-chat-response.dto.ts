@@ -4,24 +4,6 @@ import { UserResponse } from '@/modules/users/dto/users-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { MemberRole } from '@prisma/client';
 
-export class GroupMemberUserDto {
-  @ApiProperty()
-  @Expose()
-  id!: string;
-
-  @ApiProperty()
-  @Expose()
-  username!: string;
-
-  @ApiProperty()
-  @Expose()
-  fullName!: string;
-
-  @ApiProperty({ required: false, nullable: true })
-  @Expose()
-  avatar!: string | null;
-}
-
 export class GroupMemberDto {
   @ApiProperty()
   @Expose()
@@ -39,10 +21,10 @@ export class GroupMemberDto {
   @Expose()
   role!: MemberRole;
 
-  @ApiProperty({ type: GroupMemberUserDto })
+  @ApiProperty({ type: UserResponse })
   @Expose()
-  @Type(() => GroupMemberUserDto)
-  user!: GroupMemberUserDto;
+  @Type(() => UserResponse)
+  user!: UserResponse;
 
   @ApiProperty({ type: [String], required: false })
   @Expose()
@@ -66,7 +48,6 @@ export class RolePermissionDto {
   @Expose()
   isEnabled!: boolean;
 }
-
 export class GroupDetailDto {
   @ApiProperty()
   @Expose()
@@ -97,10 +78,10 @@ export class GroupDetailDto {
   @Type(() => GroupMemberDto)
   members!: GroupMemberDto[];
 
-  @ApiProperty({ type: GroupMemberUserDto })
+  @ApiProperty({ type: UserResponse })
   @Expose()
-  @Type(() => GroupMemberUserDto)
-  owner!: GroupMemberUserDto;
+  @Type(() => UserResponse)
+  owner!: UserResponse;
 
   @ApiProperty({ type: [RolePermissionDto] })
   @Expose()
@@ -153,15 +134,6 @@ export class GroupsSearchResultResponse {
   @Expose()
   @Type(() => PaginationMetaDto)
   meta!: PaginationMetaDto;
-}
-
-
-export class CreateGroupResponseDto extends GroupDetailDto {}
-export class GetMembersResponseDto {
-  @ApiProperty({ type: [GroupMemberDto] })
-  @Expose()
-  @Type(() => GroupMemberDto)
-  members!: GroupMemberDto[];
 }
 
 export class PermissionDto {

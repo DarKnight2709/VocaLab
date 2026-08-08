@@ -25,7 +25,7 @@ export default function BlogPage() {
     }, 400);
   };
 
-  const blogs = blogData?.data?.blogs ?? [];
+  const blogs = blogData?.data?.posts ?? [];
 
   return (
     <div className="h-full overflow-y-scroll p-6 md:p-8">

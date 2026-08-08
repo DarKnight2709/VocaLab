@@ -228,7 +228,7 @@ export default function SearchPage() {
   // Normalise each page based on active type — the API returns different shapes per endpoint
   // 1. Memoize the flattened list properly
   const blogs = useMemo<BlogResult[]>(() => {
-    return infiniteData?.pages.flatMap((p) => p.blogs ?? []) ?? [];
+    return infiniteData?.pages.flatMap((p) => p.posts ?? []) ?? [];
   }, [infiniteData?.pages]);
 
   // 2. Optimized Intersection Observer

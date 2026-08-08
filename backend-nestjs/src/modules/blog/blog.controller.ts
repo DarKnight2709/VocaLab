@@ -29,13 +29,10 @@ import {
 } from './dto/blog.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import {
+  BlogDetailDto,
+  BlogsResponseDto,
   CreateBlogResponseDto,
   CreateCommentResponseDto,
-  DeleteResponseDto,
-  GetBlogByIdResponseDto,
-  GetBlogsResponseDto,
-  GetMyBlogsResponseDto,
-  UpdateBlogResponseDto,
   UpdateCommentResponseDto,
 } from './dto/blog-response.dto';
 
@@ -45,7 +42,7 @@ export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get()
-  @SerializeOptions({ type: GetBlogsResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: BlogsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Lấy danh sách blog công khai' })
   @ApiQuery({ name: 'page', required: false })
@@ -56,31 +53,31 @@ export class BlogController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
-  ): Promise<GetBlogsResponseDto> {
+  ): Promise<BlogsResponseDto> {
     const result = await this.blogService.getBlogs(user?.id, page, limit, search);
     return result;
   }
 
   @Get(':id')
-  @SerializeOptions({ type: GetBlogByIdResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: BlogDetailDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Xem chi tiết bài viết' })
   async getBlogById(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<GetBlogByIdResponseDto> {
+  ): Promise<BlogDetailDto> {
     const result = await this.blogService.getBlogById(id, user?.id);
     return result;
   }
 
   @Get('me/list')
-  @SerializeOptions({ type: GetMyBlogsResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: BlogsResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy blog của tôi' })
   async getMyBlogs(
     @CurrentUser() user: RequestUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ): Promise<GetMyBlogsResponseDto> {
+  ): Promise<BlogsResponseDto> {
     const result = await this.blogService.getMyBlogs(user.id, page, limit);
     return result;
   }
@@ -97,26 +94,24 @@ export class BlogController {
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: UpdateBlogResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: CreateBlogResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Cập nhật bài viết' })
   async updateBlog(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateBlogDto,
-  ): Promise<UpdateBlogResponseDto> {
+  ): Promise<CreateBlogResponseDto> {
     const result = await this.blogService.updateBlog(id, user.id, dto);
     return result;
   }
 
   @Delete(':id')
-  @SerializeOptions({ type: DeleteResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Xóa bài viết' })
   async deleteBlog(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<DeleteResponseDto> {
-    const result = await this.blogService.deleteBlog(id, user.id);
-    return result;
+  ): Promise<void> {
+    await this.blogService.deleteBlog(id, user.id);
   }
 
   // ---------- Votes ----------
@@ -133,7 +128,7 @@ export class BlogController {
 
   // ---------- Comments ----------
 
-  @Post(':id/comments')
+  @Post(':id/comment')
   @SerializeOptions({ type: CreateCommentResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Thêm bình luận' })
   async createComment(
@@ -145,48 +140,46 @@ export class BlogController {
     return result;
   }
 
-  @Patch('comments/:commentId')
+  @Patch('comments/:id')
   @SerializeOptions({ type: UpdateCommentResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Chỉnh sửa bình luận' })
   async editComment(
-    @Param('commentId') commentId: string,
+    @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateCommentDto,
   ): Promise<UpdateCommentResponseDto> {
-    const result = await this.blogService.editComment(commentId, user.id, dto);
+    const result = await this.blogService.editComment(id, user.id, dto);
     return result;
   }
 
-  @Delete('comments/:commentId')
-  @SerializeOptions({ type: DeleteResponseDto, excludeExtraneousValues: true })
+  @Delete('comments/:id')
   @ApiOperation({ summary: 'Xóa bình luận' })
   async deleteComment(
-    @Param('commentId') commentId: string,
+    @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<DeleteResponseDto> {
-    const result = await this.blogService.deleteComment(commentId, user.id);
-    return result;
+  ): Promise<void> {
+    await this.blogService.deleteComment(id, user.id);
   }
 
-  @Post('comments/:commentId/reply')
+  @Post('comments/:id/reply')
   @SerializeOptions({ type: CreateCommentResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Phản hồi bình luận' })
   async replyComment(
-    @Param('commentId') commentId: string,
+    @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: ReplyCommentDto,
   ): Promise<CreateCommentResponseDto> {
-    const result = await this.blogService.replyComment(commentId, user.id, dto);
+    const result = await this.blogService.replyComment(id, user.id, dto);
     return result;
   }
 
-  @Post('comments/:commentId/vote')
+  @Post('comments/:id/vote')
   @ApiOperation({ summary: 'Upvote/Downvote bình luận' })
   async voteComment(
-    @Param('commentId') commentId: string,
+    @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: VoteBlogDto,
   ): Promise<void> {
-    await this.blogService.voteComment(commentId, user.id, dto.type);
+    await this.blogService.voteComment(id, user.id, dto.type);
   }
 }

@@ -42,6 +42,7 @@ import { calculateSM2 } from '@/common/utils/srs.utils';
 import { SrsRating } from '@/common/enums/srs-rating.enum';
 import { PostVisibility } from '@/common/enums/post-visibility.enum';
 import { UserCollectionsResponseDto } from '../users/dto/users-response.dto';
+import { getDateThreshold } from '@/common/utils/convertTime';
 
 const collectionDetailSelect = {
   id: true,
@@ -790,7 +791,7 @@ export class VocabularyService {
     }
 
     if (filters?.time && filters.time !== SEARCH_TIME.ALL) {
-      const threshold = this.blogService.getDateThreshold(filters.time);
+      const threshold = getDateThreshold(filters.time);
       if (threshold) {
         where.createdAt = { gte: threshold };
       }

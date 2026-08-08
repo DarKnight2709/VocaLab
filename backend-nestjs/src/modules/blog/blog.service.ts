@@ -15,19 +15,17 @@ import {
 import { mapVoteScore } from '@/common/utils/vote.utils';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 import {
+  BlogDetailDto,
+  BlogsResponseDto,
   CreateBlogResponseDto,
   CreateCommentResponseDto,
-  DeleteResponseDto,
-  GetBlogByIdResponseDto,
-  GetBlogsResponseDto,
-  GetMyBlogsResponseDto,
-  UpdateBlogResponseDto,
   UpdateCommentResponseDto,
 } from './dto/blog-response.dto';
 import { SettingKey } from '@/common/enums/setting-key.enum';
 import { NotificationsService } from '../notifications/services/notifications.service';
 import { UserService } from '../users/users.service';
-import { PostSearchFilters, SearchTime } from '../search/search.types';
+import { PostSearchFilters } from '../search/search.types';
+import { getDateThreshold } from '@/common/utils/convertTime';
 
 @Injectable()
 export class BlogService {
@@ -45,7 +43,7 @@ export class BlogService {
     limit = 10,
     search?: string,
     _filters?: PostSearchFilters,
-  ): Promise<GetBlogsResponseDto> {
+  ): Promise<BlogsResponseDto> {
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -78,7 +76,7 @@ export class BlogService {
             },
             { id: 'asc' },
           ];
-    const dateThreshold: Date | null = this.getDateThreshold(_filters?.time);
+    const dateThreshold: Date | null = getDateThreshold(_filters?.time);
     if (dateThreshold) {
       where.createdAt = { gte: dateThreshold };
     }
@@ -115,7 +113,7 @@ export class BlogService {
     );
 
     return {
-      blogs: formattedBlogs,
+      posts: formattedBlogs,
       meta: {
         page,
         limit,
@@ -128,7 +126,7 @@ export class BlogService {
   async getBlogById(
     id: string,
     userId?: string,
-  ): Promise<GetBlogByIdResponseDto> {
+  ): Promise<BlogDetailDto> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
       include: {
@@ -201,7 +199,7 @@ export class BlogService {
     userId: string,
     page = 1,
     limit = 10,
-  ): Promise<GetMyBlogsResponseDto> {
+  ): Promise<BlogsResponseDto> {
     const skip = (page - 1) * limit;
     const [blogs, total] = await Promise.all([
       this.prisma.blog.findMany({
@@ -210,6 +208,14 @@ export class BlogService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
+          },
           _count: { select: { comments: true } },
           votes: { select: { type: true } },
         },
@@ -220,7 +226,7 @@ export class BlogService {
     const formattedBlogs = blogs.map((blog) => mapVoteScore(blog));
 
     return {
-      blogs: formattedBlogs,
+      posts: formattedBlogs,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -242,6 +248,7 @@ export class BlogService {
         author: {
           select: { id: true, username: true, fullName: true, avatar: true },
         },
+        _count: { select: { comments: true } },
       },
     });
 
@@ -276,7 +283,7 @@ export class BlogService {
     id: string,
     userId: string,
     dto: UpdateBlogDto,
-  ): Promise<UpdateBlogResponseDto> {
+  ): Promise<CreateBlogResponseDto> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
     });
@@ -297,18 +304,17 @@ export class BlogService {
     return updatedBlog;
   }
 
-  async deleteBlog(id: string, userId: string): Promise<DeleteResponseDto> {
+  async deleteBlog(id: string, userId: string): Promise<void> {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
     });
     if (!blog) throw new NotFoundException(ErrorCode.BLOG_NOT_FOUND);
     if (blog.authorId !== userId)
       throw new ForbiddenException(ErrorCode.BLOG_DELETE_FORBIDDEN);
-    const deletedBlog = await this.prisma.blog.update({
+    await this.prisma.blog.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
-    return { id: deletedBlog.id };
   }
 
   // ==================== VOTES ====================
@@ -475,8 +481,8 @@ export class BlogService {
   async deleteComment(
     commentId: string,
     userId: string,
-  ): Promise<DeleteResponseDto> {
-    const deletedComment = await this.prisma.$transaction(async (tx) => {
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
       const comment = await tx.comment.findFirst({
         where: { id: commentId, deletedAt: null },
       });
@@ -490,9 +496,6 @@ export class BlogService {
       await this.recalculatePopularityScores(tx, comment.blogId);
       return deletedComment;
     });
-    return {
-      id: deletedComment.id,
-    };
   }
 
   async replyComment(
@@ -760,28 +763,5 @@ export class BlogService {
       where: { id: blogId },
       data: { popularityScore: newScore },
     });
-  }
-
-  getDateThreshold(time?: SearchTime): Date | null {
-    let dateThreshold: Date | null = null;
-    const now = new Date();
-
-    switch (time) {
-      case '24h':
-        dateThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case '7d':
-        dateThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        dateThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '1y':
-        dateThreshold = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        dateThreshold = null; // 'all'
-    }
-    return dateThreshold;
   }
 }

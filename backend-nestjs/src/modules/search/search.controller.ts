@@ -4,7 +4,6 @@ import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 
-import { GetBlogsResponseDto } from '../blog/dto/blog-response.dto';
 import { GroupsSearchResultResponse } from '../group-chat/dto/group-chat-response.dto';
 import { ProfileSearchResultResponse } from '../users/dto/users-response.dto';
 import { CollectionSearchResponseDto } from '../vocabulary/dto/vocabulary-response.dto';
@@ -23,6 +22,7 @@ import {
   SEARCH_PROFILE_SORT as SEARCH_PROFILE_SORT_VALUES,
   SEARCH_GROUP_FILTER as SEARCH_GROUP_FILTER_VALUES,
 } from './search.types';
+import { BlogsResponseDto } from '../blog/dto/blog-response.dto';
 
 @ApiTags('search')
 @Controller('search')
@@ -94,10 +94,10 @@ export class SearchController {
   }
 
   @Get('posts')
-  @SerializeOptions({ type: GetBlogsResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: BlogsResponseDto, excludeExtraneousValues: true })
   @Public()
   @ApiOperation({ summary: 'Get posts search results' })
-  @ApiResponse({ type: GetBlogsResponseDto })
+  @ApiResponse({ type: BlogsResponseDto })
   @ApiQuery({ name: 'query', required: true })
   @ApiQuery({ name: 'page', required: false, default: 1 })
   @ApiQuery({ name: 'limit', required: false, default: 10 })
@@ -116,7 +116,7 @@ export class SearchController {
   async searchPosts(
     @CurrentUser() user: RequestUser,
     @Query() query: PostSearchQueryDto,
-  ): Promise<GetBlogsResponseDto> {
+  ): Promise<BlogsResponseDto> {
     const result = await this.searchService.searchPosts(
       user?.id,
       query.page,

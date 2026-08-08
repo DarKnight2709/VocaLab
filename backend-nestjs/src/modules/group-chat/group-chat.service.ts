@@ -24,13 +24,11 @@ import {
   GroupSearchFilters,
 } from '../search/search.types';
 import {
-  CreateGroupResponseDto,
   GroupDetailDto,
   GroupMemberDto,
   GroupsSearchResultResponse,
   PermissionDto,
 } from './dto/group-chat-response.dto';
-import { DeleteResponseDto } from '../blog/dto/blog-response.dto';
 import { MessageWithDetails } from '../messages/dto/messages-response.dto';
 import { UserService } from '../users/users.service';
 import {
@@ -189,7 +187,7 @@ export class GroupChatService {
   async createGroup(
     ownerId: string,
     createDto: CreateGroupDto,
-  ): Promise<CreateGroupResponseDto> {
+  ): Promise<GroupDetailDto> {
     // Validate member IDs exist
     const existingUsers = await this.prisma.user.findMany({
       where: { id: { in: createDto.members } },
@@ -487,7 +485,7 @@ export class GroupChatService {
     userId: string,
     updateDto: UpdateGroupDto,
     file?: Express.Multer.File,
-  ): Promise<CreateGroupResponseDto> {
+  ): Promise<GroupDetailDto> {
     const group = await this.getActiveGroupOrThrow(groupId);
     const memberIds = group.members?.map((m) => m.userId) || [];
 
@@ -523,9 +521,8 @@ export class GroupChatService {
 
   async updateGroupVisibility(
     groupId: string,
-    userId: string,
     isPublic: boolean,
-  ): Promise<CreateGroupResponseDto> {
+  ): Promise<GroupDetailDto> {
     const group = await this.getActiveGroupOrThrow(groupId);
     const memberIds = group.members?.map((m) => m.userId) || [];
 
@@ -542,7 +539,7 @@ export class GroupChatService {
   async deleteGroup(
     groupId: string,
     userId: string,
-  ): Promise<DeleteResponseDto> {
+  ): Promise<void> {
     const isOwner = await this.isOwner(groupId, userId);
     if (!isOwner) {
       throw new ForbiddenException(ErrorCode.ONLY_GROUP_OWNER_CAN_DELETE);
@@ -551,16 +548,12 @@ export class GroupChatService {
     const group = await this.getActiveGroupOrThrow(groupId);
     const memberIds = group.members?.map((m) => m.userId) || [];
 
-    const deletedGroup = await this.prisma.group.update({
+    await this.prisma.group.update({
       where: { id: groupId },
       data: { isActive: false },
     });
 
     this.groupChatGateway.notifyReloadGroups(memberIds);
-
-    return {
-      id: deletedGroup.id,
-    };
   }
 
   async leaveGroup(groupId: string, userId: string): Promise<void> {
@@ -624,7 +617,6 @@ export class GroupChatService {
 
   async addMember(
     groupId: string,
-    userId: string,
     addMemberDto: AddMemberDto,
   ): Promise<void> {
     const group = await this.getActiveGroupOrThrow(groupId);
@@ -703,9 +695,8 @@ export class GroupChatService {
 
   async deleteMember(
     groupId: string,
-    userId: string,
     memberId: string,
-  ): Promise<DeleteResponseDto> {
+  ): Promise<void> {
     const isTargetOwner = await this.isOwner(groupId, memberId);
     if (isTargetOwner) {
       throw new BadRequestException(ErrorCode.CANNOT_REMOVE_GROUP_OWNER);
@@ -727,10 +718,6 @@ export class GroupChatService {
 
     this.groupChatGateway.notifyReloadGroups([memberId]);
     this.groupChatGateway.notifyReloadGroups(remainingMemberIds, groupId);
-
-    return {
-      id: memberId,
-    };
   }
 
   async changeRole(

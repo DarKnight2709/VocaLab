@@ -11,7 +11,7 @@ export default function HomeRecentPosts() {
   const navigate = useNavigate();
   const { data: blogData, isLoading } = useBlogsQuery(1, 3);
 
-  const blogs = blogData?.data?.blogs?.slice(0, 3) ?? [];
+  const blogs = blogData?.data?.posts?.slice(0, 3) ?? [];
 
   return (
     <section className="pb-6">

@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { MyBlogListItemDto, PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
+import { PaginationMetaDto, BlogResponse } from '@/modules/blog/dto/blog-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SocialPlatform, VoteType } from '@prisma/client';
 
@@ -75,6 +75,10 @@ export class UserCapabilitiesDto {
   @ApiProperty({ example: true })
   @Expose()
   canSeeFriends!: boolean;
+
+  @ApiProperty({ example: true })
+  @Expose()
+  canSeeGroups!: boolean;
 }
 
 // ─── User Stats ─────────────────────────────────────────────
@@ -180,18 +184,6 @@ export class BlockedUsersResponseDto {
   @Expose()
   @Type(() => UserResponse)
   blockedUsers!: UserResponse[];
-
-  @ApiProperty({ type: PaginationMetaDto })
-  @Expose()
-  @Type(() => PaginationMetaDto)
-  meta!: PaginationMetaDto;
-}
-
-export class UserPostsResponseDto {
-  @ApiProperty({ type: [MyBlogListItemDto] })
-  @Expose()
-  @Type(() => MyBlogListItemDto)
-  posts!: MyBlogListItemDto[];
 
   @ApiProperty({ type: PaginationMetaDto })
   @Expose()
@@ -374,3 +366,15 @@ export class UserChatInfoDto extends UserResponse {
   @Expose()
   isBlocked!: boolean;
 }
+
+export class UserPostsResponseDto {
+  @ApiProperty({ type: [BlogResponse] })
+  @Expose()
+  @Type(() => BlogResponse)
+  posts!: BlogResponse[];
+
+  @ApiProperty({ type: PaginationMetaDto })
+  @Expose()
+  @Type(() => PaginationMetaDto)
+  meta!: PaginationMetaDto;
+}
