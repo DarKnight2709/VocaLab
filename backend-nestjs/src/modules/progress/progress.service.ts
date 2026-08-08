@@ -169,9 +169,9 @@ export class ProgressService {
     };
   }
 
-  async getCollectionStats(userId: string, collectionId: string) : Promise<CollectionStatsResponseDto> {
+  async getCollectionStats(userId: string, id: string) : Promise<CollectionStatsResponseDto> {
     const allProgress = await this.prisma.collectionDailyProgress.findMany({
-      where: { userId, collectionId },
+      where: { userId, collectionId: id },
       orderBy: { date: 'asc' },
     });
 

@@ -34,14 +34,14 @@ export class ProgressController {
     return result;
   }
 
-  @Get('collections/:collectionId/stats')
+  @Get('collections/:id/stats')
   @SerializeOptions({ type: CollectionStatsResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Get study stats for a specific collection' })
   async getCollectionStats(
     @CurrentUser() user: RequestUser,
-    @Param('collectionId') collectionId: string,
+    @Param('id') id: string,
   ): Promise<CollectionStatsResponseDto> {
-    const result = await this.progressService.getCollectionStats(user.id, collectionId);
+    const result = await this.progressService.getCollectionStats(user.id, id);
     return result;
   }
 }
