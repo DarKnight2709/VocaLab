@@ -11,10 +11,9 @@ import { ErrorCode } from '@/common/enums/error-code.enum';
 import {
   MessageAttachment,
   MessageWithDetails,
-  GetConversationsResponseDto,
-  GetMessagesResponseDto,
   LastMessageInfo,
-  GetGroupsResponseDto,
+  ConversationListItem,
+  GroupsResponseDto,
 } from './dto/messages-response.dto';
 import { MessageAttachmentDto } from './dto/messages.dto';
 import { GroupChatService } from '../group-chat/group-chat.service';
@@ -40,7 +39,7 @@ export class MessagesService {
     private readonly groupChatService: GroupChatService,
   ) {}
 
-  async getConversations(userId: string): Promise<GetConversationsResponseDto> {
+  async getConversations(userId: string): Promise<ConversationListItem[]> {
     // 1. Find all blocks where current userId is the blocked user and fetch all follows to determine friendship
     const [blockerUserIds, follows] = await Promise.all([
       this.userService.getBlockerIdsOf(userId),
@@ -151,12 +150,10 @@ export class MessagesService {
       };
     });
 
-    return {
-      users: users.sort(
-        (a, b) =>
-          b.lastMessage.createdAt.getTime() - a.lastMessage.createdAt.getTime(),
-      ),
-    };
+    return users.sort(
+      (a, b) =>
+        b.lastMessage.createdAt.getTime() - a.lastMessage.createdAt.getTime(),
+    );
   }
 
   async getFriends(userId: string): Promise<UserResponse[]> {
@@ -195,7 +192,7 @@ export class MessagesService {
     return friends;
   }
 
-  async getGroups(userId: string): Promise<GetGroupsResponseDto[]> {
+  async getGroups(userId: string): Promise<GroupsResponseDto[]> {
     const groups = await this.groupChatService.findUserGroups(userId);
     const transformedGroups = await Promise.all(
       groups.map(async (group) => {
@@ -235,7 +232,7 @@ export class MessagesService {
   async getMessages(
     userId: string,
     friendId: string,
-  ): Promise<GetMessagesResponseDto> {
+  ): Promise<MessageWithDetails[]> {
     const messages = await this.prisma.message.findMany({
       where: {
         OR: [
@@ -297,7 +294,7 @@ export class MessagesService {
       };
     });
 
-    return { messages: mapped };
+    return mapped;
   }
 
   async sendMessage(input: SendMessageInput) {

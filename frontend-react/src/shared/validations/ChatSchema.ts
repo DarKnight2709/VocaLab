@@ -19,9 +19,7 @@ export const UserItemSchema = z.object({
   canChat: z.boolean().optional(),
 });
 
-export const GetUsersResponseSchema = z.object({
-  users: z.array(UserItemSchema),
-});
+export const GetUsersResponseSchema = z.array(UserItemSchema);
 
 export const FriendItemSchema = z.object({
   id: z.string(),
@@ -74,9 +72,7 @@ export const ChatMessageItemSchema = z.object({
   seenBy: z.array(PopulatedSenderSchema).optional(),
 });
 
-export const GetMessagesResponseSchema = z.object({
-  messages: z.array(ChatMessageItemSchema),
-});
+export const GetMessagesResponseSchema = z.array(ChatMessageItemSchema);
 
 export const UserChatInfoResponseSchema = z.object({
   id: z.string(),

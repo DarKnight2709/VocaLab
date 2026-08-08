@@ -2,6 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { AttachmentType } from '@/common/enums/attachment.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { MessageStatus, MessageType } from '@prisma/client';
+import { UserResponse } from '@/modules/users/dto/users-response.dto';
 
 export class MessageAttachment {
   @ApiProperty()
@@ -25,23 +26,7 @@ export class MessageAttachment {
   mimeType!: string | null;
 }
 
-export class UserBasicInfo {
-  @ApiProperty()
-  @Expose()
-  id!: string;
-
-  @ApiProperty()
-  @Expose()
-  username!: string;
-
-  @ApiProperty({ nullable: true })
-  @Expose()
-  fullName!: string | null;
-
-  @ApiProperty({ nullable: true })
-  @Expose()
-  avatar!: string | null;
-
+export class UserBasicInfo extends UserResponse {
   @ApiProperty({ nullable: true })
   @Expose()
   canChat!: boolean | null;
@@ -109,13 +94,6 @@ export class MessageWithDetails {
   seenBy!: UserBasicInfo[];
 }
 
-export class GetMessagesResponseDto {
-  @ApiProperty({ type: () => MessageWithDetails, isArray: true })
-  @Expose()
-  @Type(() => MessageWithDetails)
-  messages!: MessageWithDetails[];
-}
-
 export class LastMessageInfo {
   @ApiProperty({ nullable: true })
   @Expose()
@@ -141,14 +119,7 @@ export class ConversationListItem extends UserBasicInfo {
   unreadCount!: number;
 }
 
-export class GetConversationsResponseDto {
-  @ApiProperty({ type: () => ConversationListItem, isArray: true })
-  @Expose()
-  @Type(() => ConversationListItem)
-  users!: ConversationListItem[];
-}
-
-export class GetGroupsResponseDto {
+export class GroupsResponseDto {
   @ApiProperty()
   @Expose()
   id!: string;

@@ -44,7 +44,7 @@ export const useSearchUsersQuery = (keyword: string) => {
         GetUsersResponseSchema
       );
 
-      return result.data.users ?? [];
+      return result.data ?? [];
     },
     enabled: !!normalized,
     staleTime: 1000 * 60, // 1 minute
@@ -61,7 +61,7 @@ export function useUsersQuery(enabled = true) {
         GetUsersResponseSchema
       );
 
-      return result.data.users ?? [];
+      return result.data ?? [];
     },
     enabled,
   });
@@ -119,7 +119,7 @@ export function useMessagesQuery(friendId: string) {
         GetMessagesResponseSchema
       );
 
-      return result.data.messages ?? [];
+      return result.data ?? [];
     },
     enabled: !!friendId,
   });

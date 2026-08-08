@@ -6,9 +6,9 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 
 import {
-  GetConversationsResponseDto,
-  GetGroupsResponseDto,
-  GetMessagesResponseDto,
+  ConversationListItem,
+  GroupsResponseDto,
+  MessageWithDetails,
 } from './dto/messages-response.dto';
 import { UserResponse } from '../users/dto/users-response.dto';
 
@@ -20,15 +20,15 @@ export class MessagesController {
 
   @Get('users')
   @SerializeOptions({
-    type: GetConversationsResponseDto,
+    type: ConversationListItem,
     excludeExtraneousValues: true,
   })
   @ApiOperation({
     summary: 'Lấy danh sách người dùng đã từng nhắn tin (Dashboard)',
   })
-  async getUsers(
+  async getConversations(
     @CurrentUser() user: RequestUser,
-  ): Promise<GetConversationsResponseDto> {
+  ): Promise<ConversationListItem[]> {
     const result = await this.messagesService.getConversations(user.id);
     return result;
   }
@@ -43,27 +43,27 @@ export class MessagesController {
 
   @Get('groups')
   @SerializeOptions({
-    type: GetGroupsResponseDto,
+    type: GroupsResponseDto,
     excludeExtraneousValues: true,
   })
   @ApiOperation({ summary: 'Lấy danh sách nhóm đã tham gia' })
   async getGroups(
     @CurrentUser() user: RequestUser,
-  ): Promise<GetGroupsResponseDto[]> {
+  ): Promise<GroupsResponseDto[]> {
     const result = await this.messagesService.getGroups(user.id);
     return result;
   }
 
   @Get(':id')
   @SerializeOptions({
-    type: GetMessagesResponseDto,
+    type: MessageWithDetails,
     excludeExtraneousValues: true,
   })
   @ApiOperation({ summary: 'Lấy tin nhắn giữa tôi và người này' })
   async getMessages(
     @CurrentUser() user: RequestUser,
     @Param('id') friendId: string,
-  ): Promise<GetMessagesResponseDto> {
+  ): Promise<MessageWithDetails[]> {
     const result = await this.messagesService.getMessages(user.id, friendId);
     return result;
   }
