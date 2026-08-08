@@ -7,7 +7,7 @@ import { SettingKey } from '@/common/enums/setting-key.enum';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
-import { GetNotificationResponseDto, NotificationDto } from '../dto/notifications-response.dto';
+import { NotificationDto, NotificationResponseDto } from '../dto/notifications-response.dto';
 import { GroupChatService } from '@/modules/group-chat/group-chat.service';
 import { NotificationsGateway } from '../notifications.gateway';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
@@ -193,7 +193,7 @@ export class NotificationsService {
     userId: string,
     page: number = 1,
     limit: number = 10,
-  ): Promise<GetNotificationResponseDto> {
+  ): Promise<NotificationResponseDto> {
     const skip = (page - 1) * limit;
 
     // get groups to which the user belong

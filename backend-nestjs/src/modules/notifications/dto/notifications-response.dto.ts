@@ -1,32 +1,12 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { NotificationType } from '@prisma/client';
-
-export class NotificationSenderDto {
-  @ApiProperty()
-  @Expose()
-  id!: string;
-
-  @ApiProperty()
-  @Expose()
-  username!: string;
-
-  @ApiProperty()
-  @Expose()
-  fullName!: string;
-
-  @ApiProperty({ nullable: true })
-  @Expose()
-  // Keep required key, allow null value
-  avatar!: string | null;
-}
-
+import { UserResponse } from '@/modules/users/dto/users-response.dto';
 export class NotificationRecipientDto {
   @ApiProperty()
   @Expose()
   email!: string;
 }
-
 export class NotificationDto {
   @ApiProperty()
   @Expose()
@@ -72,10 +52,10 @@ export class NotificationDto {
   @Expose()
   createdAt!: Date;
 
-  @ApiProperty({ type: NotificationSenderDto, nullable: true })
+  @ApiProperty({ type: UserResponse, nullable: true })
   @Expose()
-  @Type(() => NotificationSenderDto)
-  sender!: NotificationSenderDto | null;
+  @Type(() => UserResponse)
+  sender!: UserResponse | null;
 
   @ApiProperty({ type: NotificationRecipientDto, nullable: true })
   @Expose()
@@ -97,7 +77,7 @@ export class NotificationMetaDto {
   lastPage!: number;
 }
 
-export class GetNotificationResponseDto {
+export class NotificationResponseDto {
   @ApiProperty({ type: [NotificationDto] })
   @Expose()
   @Type(() => NotificationDto)

@@ -12,7 +12,7 @@ import {
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 
-import { GetNotificationResponseDto } from './dto/notifications-response.dto';
+import { NotificationResponseDto } from './dto/notifications-response.dto';
 import { NotificationsService } from './services/notifications.service';
 
 @Controller('notifications')
@@ -20,7 +20,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  @SerializeOptions({ type: GetNotificationResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: NotificationResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy danh sách thông báo' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -28,7 +28,7 @@ export class NotificationsController {
     @CurrentUser() user: RequestUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ): Promise<GetNotificationResponseDto> {
+  ): Promise<NotificationResponseDto> {
     const result = await this.notificationsService.getNotifications(
       user.id,
       page,
