@@ -663,7 +663,16 @@
       "dragDrop": "Kéo thả hoặc click để chọn file",
       "encodingAlert": "Sử dụng mã hóa UTF-8 để tránh lỗi phông chữ.",
       "delimiter": "Ký tự phân cách",
-      "delimiterPlaceholder": "VD: , ; hoặc |",
+      "delimiterPlaceholder": "Nhập ký tự phân cách...",
+      "delimiters": {
+        "tab": "Tab",
+        "comma": "Dấu phẩy (,)",
+        "semicolon": "Dấu chấm phẩy (;)",
+        "colon": "Dấu hai chấm (:)",
+        "pipe": "Dấu gạch đứng (|)",
+        "space": "Dấu cách",
+        "other": "Khác"
+      },
       "duplicatePolicy": "Chế độ trùng lặp",
       "policy": {
         "skip": "Bỏ qua",
@@ -675,7 +684,7 @@
       "collection": "Bộ sưu tập",
       "selectCollection": "Chọn bộ sưu tập",
       "preview": "Xem trước (thẻ đầu tiên)",
-      "fieldLabel": "Trường: {{label}} ({{side}})",
+      "fieldLabel": "{{label}} ({{side}})",
       "empty": "(Trống)",
       "fieldMismatch": "Số lượng giá trị ({{count}}) nhiều hơn số lượng trường trong loại thẻ ({{fieldsCount}}).",
       "processing": "Đang xử lý...",

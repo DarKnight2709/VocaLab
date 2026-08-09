@@ -667,7 +667,16 @@
       "dragDrop": "Drag and drop or click to choose a file",
       "encodingAlert": "Use UTF-8 encoding to avoid font issues.",
       "delimiter": "Delimiter",
-      "delimiterPlaceholder": "E.g. , ; or |",
+      "delimiterPlaceholder": "Enter custom delimiter...",
+      "delimiters": {
+        "tab": "Tab",
+        "comma": "Comma (,)",
+        "semicolon": "Semicolon (;)",
+        "colon": "Colon (:)",
+        "pipe": "Pipe (|)",
+        "space": "Space",
+        "other": "Other"
+      },
       "duplicatePolicy": "Duplicate policy",
       "policy": {
         "skip": "Skip",
@@ -678,8 +687,8 @@
       "selectCardType": "Select a card type",
       "collection": "Collection",
       "selectCollection": "Select a collection",
-      "preview": "Preview (first card)",
-      "fieldLabel": "Field: {{label}} ({{side}})",
+      "preview": "Preview",
+      "fieldLabel": "{{label}} ({{side}})",
       "empty": "(Empty)",
       "fieldMismatch": "Number of values ({{count}}) is greater than the number of fields in the card type ({{fieldsCount}}).",
       "processing": "Processing...",

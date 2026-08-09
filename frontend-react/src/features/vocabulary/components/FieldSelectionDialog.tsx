@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil, Plus, X } from "lucide-react";
+import { Pencil, Plus, X, Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -377,7 +377,7 @@ export default function FieldSelectionDialog({
                 onClick={handleAddCustomField}
                 disabled={!customFieldName.trim()}
               >
-                <Plus className="h-4 w-4" />
+                {editingField ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 {editingField ? t("vocabulary.fieldsObj.updateField") : t("vocabulary.fieldsObj.addField")}
               </Button>
 

@@ -51,7 +51,21 @@ export default function ImportVocabularyDialog({
   const { t } = useTranslation();
   const [importMode, setImportMode] = useState<"text" | "file">("text");
   const [rawText, setRawText] = useState("");
-  const [delimiter, setDelimiter] = useState(",");
+  const [delimiterType, setDelimiterType] = useState<string>("tab");
+  const [customDelimiter, setCustomDelimiter] = useState<string>(",");
+
+  const delimiter = useMemo(() => {
+    switch (delimiterType) {
+      case "tab": return "\t";
+      case "comma": return ",";
+      case "semicolon": return ";";
+      case "colon": return ":";
+      case "pipe": return "|";
+      case "space": return " ";
+      case "other": return customDelimiter;
+      default: return ",";
+    }
+  }, [delimiterType, customDelimiter]);
   const [cardTypeId, setCardTypeId] = useState("");
   const [collectionId, setCollectionId] = useState(defaultCollectionId || "");
   const [duplicatePolicy, setDuplicatePolicy] = useState<DuplicatePolicy>(DuplicatePolicy.SKIP);
@@ -138,7 +152,7 @@ export default function ImportVocabularyDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         {importResult ? (
           <div className="py-6 space-y-6">
             <div className="text-center space-y-2">
@@ -293,15 +307,35 @@ export default function ImportVocabularyDialog({
             </TabsContent>
           </Tabs>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>{t("vocabulary.import.delimiter")}</Label>
-              <Input
-                value={delimiter}
-                onChange={(e) => setDelimiter(e.target.value)}
-                placeholder={t("vocabulary.import.delimiterPlaceholder")}
-                maxLength={5}
-              />
+              <Select
+                value={delimiterType}
+                onValueChange={setDelimiterType}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tab">{t("vocabulary.import.delimiters.tab")}</SelectItem>
+                  <SelectItem value="comma">{t("vocabulary.import.delimiters.comma")}</SelectItem>
+                  <SelectItem value="semicolon">{t("vocabulary.import.delimiters.semicolon")}</SelectItem>
+                  <SelectItem value="colon">{t("vocabulary.import.delimiters.colon")}</SelectItem>
+                  <SelectItem value="pipe">{t("vocabulary.import.delimiters.pipe")}</SelectItem>
+                  <SelectItem value="space">{t("vocabulary.import.delimiters.space")}</SelectItem>
+                  <SelectItem value="other">{t("vocabulary.import.delimiters.other")}</SelectItem>
+                </SelectContent>
+              </Select>
+              {delimiterType === "other" && (
+                <Input
+                  className="mt-2"
+                  value={customDelimiter}
+                  onChange={(e) => setCustomDelimiter(e.target.value)}
+                  placeholder={t("vocabulary.import.delimiterPlaceholder")}
+                  maxLength={5}
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -357,7 +391,7 @@ export default function ImportVocabularyDialog({
           {previewData && (
             <div className="space-y-4 mt-6">
               <h4 className="font-semibold">{t("vocabulary.import.preview")}</h4>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+              <div className="space-y-4">
                 {previewData.fields.map((field, idx) => (
                     <div key={field.id} className="space-y-2">
                       <Label>
