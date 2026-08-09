@@ -8,6 +8,7 @@ import { Logger } from '@nestjs/common';
 import { corsConfig } from './core/configs/cors.config';
 import helmet from 'helmet';
 import compression from 'compression';
+import { urlencoded, json } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -59,6 +60,10 @@ async function bootstrap() {
     ),
   );
   app.use(compression());
+
+  // Increase payload size limits
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   // Set global prefix and versioning (/api/v1)
   app.setGlobalPrefix(API_PREFIX, {
