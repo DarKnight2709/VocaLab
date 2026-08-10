@@ -1,175 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
-
-// ─── Shared / Reusable DTOs ─────────────────────────────────
-
-export class GrammarAuthorDto {
-  @ApiProperty({ example: 'uuid-string' })
-  @Expose()
-  id!: string;
-
-  @ApiProperty({ example: 'quyentran' })
-  @Expose()
-  username!: string;
-
-  @ApiProperty({ example: 'Trần Duy Quyến' })
-  @Expose()
-  fullName!: string;
-}
-
-export class GrammarPaginationMetaDto {
-  @ApiProperty({ example: 1 })
-  @Expose()
-  page!: number;
-
-  @ApiProperty({ example: 20 })
-  @Expose()
-  limit!: number;
-
-  @ApiProperty({ example: 100 })
-  @Expose()
-  total!: number;
-
-  @ApiProperty({ example: 5 })
-  @Expose()
-  totalPages!: number;
-}
-
-// ─── Grammar List Item (for getAll) ─────────────────────────
-
-export class GrammarListItemDto {
-  @ApiProperty({ example: 'uuid-string' })
-  @Expose()
-  id!: string;
-
-  @ApiProperty({ example: 'Present Perfect Simple' })
-  @Expose()
-  title!: string;
-
-  @ApiProperty({ example: 'S + have/has + V3' })
-  @Expose()
-  structure!: string;
-
-  @ApiProperty({ example: 'Dùng để diễn đạt hành động đã xảy ra trong quá khứ nhưng còn liên quan đến hiện tại' })
-  @Expose()
-  explanation!: string;
-
-  @ApiPropertyOptional({
-    example: ['I have eaten breakfast.', 'She has finished her work.'],
-    nullable: true,
-  })
-  @Expose()
-  examples!: Prisma.JsonValue;
-
-  @ApiPropertyOptional({ example: 'Thì hiện tại', nullable: true })
-  @Expose()
-  category!: string | null;
-
-  @ApiPropertyOptional({ example: 'B1', nullable: true })
-  @Expose()
-  level!: string | null;
-
-  @ApiProperty({ example: false })
-  @Expose()
-  isDefault!: boolean;
-
-  @ApiPropertyOptional({ example: 'uuid-string', nullable: true })
-  @Expose()
-  authorId!: string | null;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  @Expose()
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  @Expose()
-  updatedAt!: Date;
-
-  @ApiPropertyOptional({ type: GrammarAuthorDto, nullable: true })
-  @Expose()
-  @Type(() => GrammarAuthorDto)
-  author!: GrammarAuthorDto | null;
-}
-
-export class GetGrammarsResponseDto {
-  @ApiProperty({ type: [GrammarListItemDto] })
-  @Expose()
-  @Type(() => GrammarListItemDto)
-  items!: GrammarListItemDto[];
-
-  @ApiProperty({ type: GrammarPaginationMetaDto })
-  @Expose()
-  @Type(() => GrammarPaginationMetaDto)
-  meta!: GrammarPaginationMetaDto;
-}
-
-// ─── Categories ─────────────────────────────────────────────
-
-export class GetCategoriesResponseDto {
-  @ApiProperty({ example: ['Thì hiện tại', 'Thì quá khứ', 'Câu điều kiện'] })
-  @Expose()
-  categories!: string[];
-}
-
-// ─── Grammar Detail (for getById) ───────────────────────────
-
-export class GetGrammarByIdResponseDto {
-  @ApiProperty({ example: 'uuid-string' })
-  @Expose()
-  id!: string;
-
-  @ApiProperty({ example: 'Present Perfect Simple' })
-  @Expose()
-  title!: string;
-
-  @ApiProperty({ example: 'S + have/has + V3' })
-  @Expose()
-  structure!: string;
-
-  @ApiProperty({ example: 'Dùng để diễn đạt hành động đã xảy ra trong quá khứ nhưng còn liên quan đến hiện tại' })
-  @Expose()
-  explanation!: string;
-
-  @ApiPropertyOptional({
-    example: ['I have eaten breakfast.', 'She has finished her work.'],
-    nullable: true,
-  })
-  @Expose()
-  examples!: Prisma.JsonValue;
-
-  @ApiPropertyOptional({ example: 'Thì hiện tại', nullable: true })
-  @Expose()
-  category!: string | null;
-
-  @ApiPropertyOptional({ example: 'B1', nullable: true })
-  @Expose()
-  level!: string | null;
-
-  @ApiProperty({ example: false })
-  @Expose()
-  isDefault!: boolean;
-
-  @ApiPropertyOptional({ example: 'uuid-string', nullable: true })
-  @Expose()
-  authorId!: string | null;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  @Expose()
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  @Expose()
-  updatedAt!: Date;
-
-  @ApiPropertyOptional({ type: GrammarAuthorDto, nullable: true })
-  @Expose()
-  @Type(() => GrammarAuthorDto)
-  author!: GrammarAuthorDto | null;
-}
-
-// ─── Create Grammar Response ────────────────────────────────
-
+import { PaginationMetaDto } from '@/modules/blog/dto/blog-response.dto';
 export class CreateGrammarResponseDto {
   @ApiProperty({ example: 'uuid-string' })
   @Expose()
@@ -219,61 +51,41 @@ export class CreateGrammarResponseDto {
   updatedAt!: Date;
 }
 
-// ─── Update Grammar Response ────────────────────────────────
-
-export class UpdateGrammarResponseDto {
+export class GrammarAuthorDto {
   @ApiProperty({ example: 'uuid-string' })
   @Expose()
   id!: string;
 
-  @ApiProperty({ example: 'Present Perfect Simple' })
+  @ApiProperty({ example: 'quyentran' })
   @Expose()
-  title!: string;
+  username!: string;
 
-  @ApiProperty({ example: 'S + have/has + V3' })
+  @ApiProperty({ example: 'Trần Duy Quyến' })
   @Expose()
-  structure!: string;
-
-  @ApiProperty({ example: 'Dùng để diễn đạt hành động...' })
-  @Expose()
-  explanation!: string;
-
-  @ApiPropertyOptional({
-    example: ['I have eaten breakfast.', 'She has finished her work.'],
-    nullable: true,
-  })
-  @Expose()
-  examples!: Prisma.JsonValue;
-
-  @ApiPropertyOptional({ example: 'Thì hiện tại', nullable: true })
-  @Expose()
-  category!: string | null;
-
-  @ApiPropertyOptional({ example: 'B1', nullable: true })
-  @Expose()
-  level!: string | null;
-
-  @ApiProperty({ example: false })
-  @Expose()
-  isDefault!: boolean;
-
-  @ApiPropertyOptional({ example: 'uuid-string', nullable: true })
-  @Expose()
-  authorId!: string | null;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  @Expose()
-  createdAt!: Date;
-
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  @Expose()
-  updatedAt!: Date;
+  fullName!: string;
 }
 
-// ─── Delete Response ────────────────────────────────────────
-
-export class DeleteGrammarResponseDto {
-  @ApiProperty({ example: 'uuid-string' })
+export class GrammarItemDto extends CreateGrammarResponseDto{
+  @ApiPropertyOptional({ type: GrammarAuthorDto, nullable: true })
   @Expose()
-  id!: string;
+  @Type(() => GrammarAuthorDto)
+  author!: GrammarAuthorDto | null;
+}
+
+export class GrammarsResponseDto {
+  @ApiProperty({ type: [GrammarItemDto] })
+  @Expose()
+  @Type(() => GrammarItemDto)
+  items!: GrammarItemDto[];
+
+  @ApiProperty({ type: PaginationMetaDto })
+  @Expose()
+  @Type(() => PaginationMetaDto)
+  meta!: PaginationMetaDto;
+}
+
+export class CategoriesResponseDto {
+  @ApiProperty({ example: ['Thì hiện tại', 'Thì quá khứ', 'Câu điều kiện'] })
+  @Expose()
+  categories!: string[];
 }

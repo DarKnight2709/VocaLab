@@ -18,12 +18,10 @@ import { CreateGrammarDto, UpdateGrammarDto } from './dto/grammar.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 import {
-  GetGrammarsResponseDto,
-  GetCategoriesResponseDto,
-  GetGrammarByIdResponseDto,
+  CategoriesResponseDto,
   CreateGrammarResponseDto,
-  UpdateGrammarResponseDto,
-  DeleteGrammarResponseDto,
+  GrammarItemDto,
+  GrammarsResponseDto,
 } from './dto/grammar-response.dto';
 
 @ApiTags('grammar')
@@ -32,7 +30,7 @@ export class GrammarController {
   constructor(private readonly grammarService: GrammarService) {}
 
   @Get()
-  @SerializeOptions({ type: GetGrammarsResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: GrammarsResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy danh sách ngữ pháp' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -45,23 +43,23 @@ export class GrammarController {
     @Query('search') search?: string,
     @Query('category') category?: string,
     @Query('level') level?: string,
-  ): Promise<GetGrammarsResponseDto> {
+  ): Promise<GrammarsResponseDto> {
     const result = await this.grammarService.getAll(page, limit, search, category, level);
     return result;
   }
 
   @Get('categories')
-  @SerializeOptions({ type: GetCategoriesResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: CategoriesResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy danh sách danh mục ngữ pháp' })
-  async getCategories(): Promise<GetCategoriesResponseDto> {
+  async getCategories(): Promise<CategoriesResponseDto> {
     const result = await this.grammarService.getCategories();
     return result;
   }
 
   @Get(':id')
-  @SerializeOptions({ type: GetGrammarByIdResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: GrammarItemDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Lấy chi tiết ngữ pháp theo id' })
-  async getById(@Param('id') id: string): Promise<GetGrammarByIdResponseDto> {
+  async getById(@Param('id') id: string): Promise<GrammarItemDto> {
     const result = await this.grammarService.getById(id);
     return result;
   }
@@ -78,24 +76,23 @@ export class GrammarController {
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: UpdateGrammarResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: CreateGrammarResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Cập nhật ngữ pháp theo id' })
   async update(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateGrammarDto,
-  ): Promise<UpdateGrammarResponseDto> {
+  ): Promise<CreateGrammarResponseDto> {
     const result = await this.grammarService.update(id, user.id, dto);
     return result;
   }
 
   @Delete(':id')
-  @SerializeOptions({ type: DeleteGrammarResponseDto, excludeExtraneousValues: true })
   @ApiOperation({ summary: 'Xóa ngữ pháp theo id' })
   async delete(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
-  ): Promise<DeleteGrammarResponseDto> {
+  ): Promise<void> {
     const result = await this.grammarService.delete(id, user.id);
     return result;
   }

@@ -1,13 +1,14 @@
+import { GrammarLevel } from '@/common/enums/grammar-level.enum';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
-  IsString,
-  IsOptional,
-  IsBoolean,
   IsArray,
+  IsBoolean,
+  IsEnum,
   IsNotEmpty,
+  IsOptional,
+  IsString,
   MaxLength,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-
 export class CreateGrammarDto {
   @ApiProperty({ example: 'Present Perfect Simple' })
   @IsString()
@@ -28,70 +29,33 @@ export class CreateGrammarDto {
   @IsNotEmpty()
   explanation!: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: ['I have eaten breakfast.', 'She has finished her work.'],
-    required: false,
+    type: [String],
   })
   @IsArray()
+  @IsString({ each: true }) 
   @IsOptional()
   examples?: string[];
 
-  @ApiProperty({ example: 'Thì hiện tại hoàn thành', required: false })
+  @ApiPropertyOptional({ example: 'Thì hiện tại hoàn thành' })
   @IsString()
   @IsOptional()
   @MaxLength(100)
   category?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'B1',
-    required: false,
-    enum: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+    enum: GrammarLevel,
   })
-  @IsString()
+  @IsEnum(GrammarLevel) 
   @IsOptional()
-  level?: string;
+  level?: GrammarLevel;
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ example: false })
   @IsBoolean()
   @IsOptional()
   isDefault?: boolean;
 }
 
-export class UpdateGrammarDto {
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  @MaxLength(200)
-  title?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  structure?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  explanation?: string;
-
-  @ApiProperty({ required: false })
-  @IsArray()
-  @IsOptional()
-  examples?: string[];
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  @MaxLength(100)
-  category?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  level?: string;
-
-  @ApiProperty({ required: false })
-  @IsBoolean()
-  @IsOptional()
-  isDefault?: boolean;
-}
+export class UpdateGrammarDto extends PartialType(CreateGrammarDto) {}
