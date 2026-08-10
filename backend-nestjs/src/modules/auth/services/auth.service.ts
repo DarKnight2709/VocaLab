@@ -21,14 +21,7 @@ import * as QRCode from 'qrcode';
 import { PublicUserDto } from '@/modules/users/dto/users-response.dto';
 import { AuthTokensDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from '../dto/auth-response.dto';
 import { ChangePasswordDto, LoginDto, RefreshTokenDto, SetPasswordDto, SignupDto, TwoFactorLoginDto } from '../dto/auth.dto';
-
-export interface JWTRefreshPayLoad {
-  sub: string;
-  jti: string;
-  iat: number;
-  exp: number;
-}
-
+import { JwtRefreshTokenPayload } from '../interfaces/JwtRefreshTokenPayload';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -213,7 +206,7 @@ export class AuthService {
         {
           algorithms: ['RS256'],
         },
-      ) as JWTRefreshPayLoad;
+      ) as JwtRefreshTokenPayload;
 
       const jti = payload.jti;
 
@@ -409,7 +402,7 @@ export class AuthService {
         {
           algorithms: ['RS256'],
         },
-      ) as JWTRefreshPayLoad;
+      ) as JwtRefreshTokenPayload;
 
       const jti = payload.jti;
 
@@ -626,6 +619,9 @@ export class AuthService {
     const payload = {
       sub: user.id,
       email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+      avatar: user.avatar || undefined,
     };
 
     return jwt.sign(payload, this.keyManager.getPrivateKeyAccess(), {

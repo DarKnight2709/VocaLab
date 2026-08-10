@@ -6,26 +6,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
-import { PrismaService } from '../../core/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config';
 import { RsaKeyManager } from '../utils/RsaKeyManager';
-
-export interface JwtPayload {
-  sub: string;
-  email: string;
-  iat: number;
-  exp: number;
-}
-
+import { JwtAccessTokenPayload } from '@/modules/auth/interfaces/JwtAccessTokenPayload';
 @Injectable()
 export class SocketAuthGuard implements CanActivate {
   private readonly logger = new Logger(SocketAuthGuard.name);
-  constructor(
-    private prisma: PrismaService,
-    private configService: ConfigService,
-    private readonly keyManager: RsaKeyManager,
-  ) {}
+  constructor(private readonly keyManager: RsaKeyManager) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     if (context.getType() !== 'ws') {
@@ -44,29 +31,14 @@ export class SocketAuthGuard implements CanActivate {
     try {
       const payload = jwt.verify(token, this.keyManager.getPublicKeyAccess(), {
         algorithms: ['RS256'],
-      }) as JwtPayload;
-
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub as string },
-        select: {
-          id: true,
-          email: true,
-          fullName: true,
-          username: true,
-          avatar: true,
-        },
-      });
-
-      if (!user) {
-        throw new WsException(ErrorCode.UNAUTHORIZED);
-      }
+      }) as JwtAccessTokenPayload;
 
       client.user = {
         id: payload.sub,
         email: payload.email,
-        fullName: user.fullName,
-        username: user.username,
-        avatar: user.avatar,
+        fullName: payload.fullName,
+        username: payload.username,
+        avatar: payload.avatar || null,
       };
       return true;
     } catch (error) {
