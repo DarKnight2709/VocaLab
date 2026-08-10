@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Expose } from "class-transformer";
 
-export class LoginResponseDto {
+export class AuthTokensDto {
   // token
   @ApiProperty({
     description: "Access token",
@@ -27,25 +27,6 @@ export class TempTokenResponseDto {
   @Expose()
   tempToken!: string;
 }
-
-export class RefreshTokenResponseDto {
-  // new access token
-  @ApiProperty({
-    description: "New access token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  @Expose()
-  accessToken!: string;
-
-  // new refresh token
-  @ApiProperty({
-    description: "New refresh token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  @Expose()
-  refreshToken!: string;
-}
-
 export class TwoFactorGenerateResponseDto {
   @ApiProperty({
     description: "Mã QR code cho 2FA",

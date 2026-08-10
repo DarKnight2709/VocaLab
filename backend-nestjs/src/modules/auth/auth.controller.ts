@@ -29,7 +29,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@/common/services/config.service';
 import { PublicUserDto } from '../users/dto/users-response.dto';
-import { LoginResponseDto, RefreshTokenResponseDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from './dto/auth-response.dto';
+import { AuthTokensDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from './dto/auth-response.dto';
 import { ChangePasswordDto, LoginDto, RefreshTokenDto, SetPasswordDto, SignupDto, TwoFactorLoginDto, TwoFactorVerifyDto } from './dto/auth.dto';
 
 @ApiTags('auth')
@@ -45,7 +45,7 @@ export class AuthController {
   @Post('login')
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiOkResponse({ type: AuthTokensDto })
   @ApiOperation({
     summary: 'Đăng nhập (Public)',
     description: 'Đăng nhập với email và password',
@@ -53,7 +53,7 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Req() request: Request,
-  ): Promise<LoginResponseDto | TempTokenResponseDto> {
+  ): Promise<AuthTokensDto | TempTokenResponseDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
@@ -63,10 +63,10 @@ export class AuthController {
   }
 
   @Post('two-factor-auth/login')
-  @SerializeOptions({ type: LoginResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: AuthTokensDto, excludeExtraneousValues: true })
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiOkResponse({ type: AuthTokensDto })
   @ApiOperation({
     summary: 'Đăng nhập 2FA (Public)',
     description: 'Đăng nhập với temp token và mã OTP',
@@ -74,7 +74,7 @@ export class AuthController {
   async loginTwoFa(
     @Body() twoFactorLoginDto: TwoFactorLoginDto,
     @Req() request: Request,
-  ): Promise<LoginResponseDto> {
+  ): Promise<AuthTokensDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
@@ -85,10 +85,10 @@ export class AuthController {
 
   // refresh token
   @Post('refresh-token')
-  @SerializeOptions({ type: RefreshTokenResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({ type: AuthTokensDto, excludeExtraneousValues: true })
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: RefreshTokenResponseDto })
+  @ApiOkResponse({ type: AuthTokensDto })
   @ApiOperation({
     summary: 'Làm mới access token và refresh token (Public)',
     description: 'Sử dụng refresh token để lấy access và refresh token mới',
@@ -96,7 +96,7 @@ export class AuthController {
   async refreshToken(
     @Body() refreshTokenDto: RefreshTokenDto,
     @Req() request: Request,
-  ): Promise<RefreshTokenResponseDto> {
+  ): Promise<AuthTokensDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
@@ -179,7 +179,7 @@ export class AuthController {
   @Get('google/callback')
   @Public()
   @UseGuards(AuthGuard('google'))
-  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiOkResponse({ type: AuthTokensDto })
   @ApiOperation({ summary: 'Callback sau khi Google xác thực' })
   async googleCallback(
     @Req() req: Request,

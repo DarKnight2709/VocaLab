@@ -19,7 +19,7 @@ import { UserService } from '@/modules/users/users.service';
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
 import { PublicUserDto } from '@/modules/users/dto/users-response.dto';
-import { LoginResponseDto, RefreshTokenResponseDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from '../dto/auth-response.dto';
+import { AuthTokensDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from '../dto/auth-response.dto';
 import { ChangePasswordDto, LoginDto, RefreshTokenDto, SetPasswordDto, SignupDto, TwoFactorLoginDto } from '../dto/auth.dto';
 
 export interface JWTRefreshPayLoad {
@@ -76,7 +76,7 @@ export class AuthService {
     loginDto: LoginDto,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<LoginResponseDto | TempTokenResponseDto> {
+  ): Promise<AuthTokensDto | TempTokenResponseDto> {
     const { email, password } = loginDto;
 
     // tìm user theo email (bao gồm cả user đã bị xóa mềm)
@@ -133,7 +133,7 @@ export class AuthService {
     twoFactorLoginDto: TwoFactorLoginDto,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<LoginResponseDto> {
+  ): Promise<AuthTokensDto> {
     const { tempToken, code } = twoFactorLoginDto;
 
     // 1. Verify tempToken
@@ -196,7 +196,7 @@ export class AuthService {
     refreshToken: RefreshTokenDto,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<RefreshTokenResponseDto> {
+  ): Promise<AuthTokensDto> {
     // lấy token ra
     const { refreshToken: rawRefreshToken } = refreshToken;
 
@@ -314,7 +314,7 @@ export class AuthService {
     profile: any,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<LoginResponseDto> {
+  ): Promise<AuthTokensDto> {
     const { googleId, email, fullName, avatar } = profile;
 
     if (!email || !googleId) {
