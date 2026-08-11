@@ -4,6 +4,7 @@ import { Input } from "@/shared/components/ui/input";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { getFieldValue, normalize } from "../../utils";
 import type { CardItem } from "../../api/vocabularyService";
+import { useLayoutStore } from "@/shared/stores/useLayoutStore";
 
 interface PracticeCardProps {
   currentCard: CardItem;
@@ -35,6 +36,7 @@ export default function PracticeCard({
   onCheckResult,
 }: PracticeCardProps) {
   const { t } = useTranslation();
+  const { isFocusMode } = useLayoutStore();
 
   // Collect visible fields for this card
   const allFields = (currentCard.cardType?.fields ?? []).sort((a, b) => {
@@ -46,7 +48,7 @@ export default function PracticeCard({
   const allFilled =
     practiceFieldsOnCard.length > 0 &&
     practiceFieldsOnCard.every(
-      (f) => (answers[currentCard.id]?.[f.id] ?? "").trim().length > 0
+      (f) => (answers[currentCard.id]?.[f.id] ?? "").length > 0
     );
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -59,8 +61,7 @@ export default function PracticeCard({
       if (e.nativeEvent && e.nativeEvent.stopImmediatePropagation) {
         e.nativeEvent.stopImmediatePropagation();
       }
-      
-      if (e.currentTarget.value.trim().length === 0) return;
+      if (e.currentTarget.value.length === 0) return;
 
       const formInputs = Array.from(
         document.querySelectorAll('input[data-practice-input="true"]')
@@ -70,7 +71,7 @@ export default function PracticeCard({
       if (idx >= 0 && idx < formInputs.length - 1) {
         formInputs[idx + 1].focus();
       } else {
-        const allInputsFilled = formInputs.every((input) => input.value.trim().length > 0);
+        const allInputsFilled = formInputs.every((input) => input.value.length > 0);
         if (allInputsFilled) {
           onReveal();
         }
@@ -79,14 +80,14 @@ export default function PracticeCard({
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 mt-4 pb-12">
+    <div className={`${isFocusMode ? "max-w-none px-0 md:px-12" : "max-w-3xl"} w-full mx-auto space-y-6 mt-4 pb-12`}>
       <div className="flex items-center justify-between text-xs text-muted-foreground uppercase tracking-widest font-medium">
         <span>
           {t("vocabulary.practiceProgress") || "Card"} {currentIdx + 1} / {totalCards}
         </span>
       </div>
 
-      <div className="rounded-2xl bg-card shadow-sm p-8 min-h-[350px] space-y-6 flex flex-col justify-center">
+      <div className={`rounded-2xl bg-card shadow-sm p-8 ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px]"} space-y-6 flex flex-col justify-center`}>
         {allFields.map((field) => {
           const isPractice = practiceFieldIds.has(field.id);
           const isShow = showFieldIds.has(field.id);
@@ -103,10 +104,12 @@ export default function PracticeCard({
 
               {isShow && (
                 <div
-                  className="text-base whitespace-pre-line leading-snug"
+                  className={`whitespace-pre-line leading-snug font-medium ${isFocusMode ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'}`}
                   style={{
                     color: field.color || "inherit",
-                    fontSize: field.fontSize ? `${field.fontSize}px` : "inherit",
+                    fontSize: field.fontSize 
+                      ? (isFocusMode ? (Number(field.fontSize) * 1.5) + "px" : `${field.fontSize}px`) 
+                      : "inherit",
                   }}
                 >
                   {correctValue || (
@@ -122,7 +125,7 @@ export default function PracticeCard({
                   placeholder={`${t("vocabulary.typeAnswer") || "Type your answer"}...`}
                   value={userAnswer}
                   onChange={(e) => onAnswerChange(currentCard.id, field.id, e.target.value)}
-                  className="text-base"
+                  className={`${isFocusMode ? 'text-3xl md:text-4xl h-20' : 'text-xl md:text-2xl h-14'}`}
                   autoComplete="off"
                   data-practice-input="true"
                   onKeyDown={handleInputKeyDown}
@@ -133,13 +136,13 @@ export default function PracticeCard({
               {isPractice && revealed && (
                 <div className="space-y-1.5">
                   <div
-                    className={`rounded-lg border px-3 py-2 text-sm ${
+                    className={`rounded-lg border ${isFocusMode ? 'px-5 py-3 text-2xl md:text-3xl' : 'px-3 py-2 text-sm'} ${
                       normalize(userAnswer) === normalize(correctValue)
                         ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400"
                         : "border-destructive bg-destructive/10 text-destructive"
                     }`}
                   >
-                    <span className="text-[10px] uppercase tracking-widest font-bold block mb-0.5 opacity-70">
+                    <span className={`${isFocusMode ? 'text-xs mb-1' : 'text-[10px] mb-0.5'} uppercase tracking-widest font-bold block opacity-70`}>
                       {t("vocabulary.yourAnswer") || "Your Answer"}
                     </span>
                     {userAnswer || (
@@ -147,8 +150,8 @@ export default function PracticeCard({
                     )}
                   </div>
                   {normalize(userAnswer) !== normalize(correctValue) && (
-                    <div className="rounded-lg border border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
-                      <span className="text-[10px] uppercase tracking-widest font-bold block mb-0.5 opacity-70">
+                    <div className={`rounded-lg border border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 ${isFocusMode ? 'px-5 py-3 text-2xl md:text-3xl' : 'px-3 py-2 text-sm'}`}>
+                      <span className={`${isFocusMode ? 'text-xs mb-1' : 'text-[10px] mb-0.5'} uppercase tracking-widest font-bold block opacity-70`}>
                         {t("vocabulary.correctAnswer") || "Correct Answer"}
                       </span>
                       {correctValue}

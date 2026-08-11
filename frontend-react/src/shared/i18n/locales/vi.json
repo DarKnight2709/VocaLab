@@ -519,6 +519,8 @@
     }
   },
   "vocabulary": {
+    "enterFocusMode": "Bật chế độ tập trung",
+    "exitFocusMode": "Tắt chế độ tập trung",
     "readyForReview": "Sẵn sàng cho phiên ôn tập?",
     "saveAsCopy": "Lưu bản sao",
     "collectionDesc": "Mô tả",

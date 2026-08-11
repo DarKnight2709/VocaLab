@@ -11,6 +11,8 @@ import {
   Globe,
   Lock,
   PenLine,
+  Maximize,
+  Minimize,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import {
@@ -31,11 +33,13 @@ import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import ROUTES from "@/shared/lib/routes";
 import PracticeMode from "../components/PracticeMode";
+import { useLayoutStore } from "@/shared/stores/useLayoutStore";
 
 export default function VocabularyCollectionPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { collectionId } = useParams<{ collectionId: string }>();
+  const { isFocusMode, setIsFocusMode } = useLayoutStore();
 
   const [mode, setMode] = useState<"preview" | "learn" | "practice">("preview");
   const [isStudying, setIsStudying] = useState(false);
@@ -71,6 +75,14 @@ export default function VocabularyCollectionPage() {
       setSessionInitialized(true);
     }
   }, [mode, dueCardsData, sessionInitialized]);
+
+
+
+  useEffect(() => {
+    return () => {
+      setIsFocusMode(false);
+    };
+  }, [setIsFocusMode]);
 
   const handleRating = async (rating: SrsRating) => {
     const currentCard = sessionCards[flashcardIdx];
@@ -178,7 +190,9 @@ export default function VocabularyCollectionPage() {
             className="whitespace-pre-line leading-snug"
             style={useStyles ? {
               color: entry.color || "inherit",
-              fontSize: entry.fontSize ? Number(entry.fontSize) + "px" : "inherit",
+              fontSize: entry.fontSize 
+                ? (isFocusMode ? (Number(entry.fontSize) * 1.5) + "px" : Number(entry.fontSize) + "px") 
+                : "inherit",
               fontWeight: entry.fontSize ? '500' : 'inherit',
             } : {}}
           >
@@ -194,74 +208,80 @@ export default function VocabularyCollectionPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb 
-        items={[
-          { label: t("vocabulary.title"), href: "/vocabulary" },
-          { label: isLoading ? t("vocabulary.loading") : data?.name || t("vocabulary.collectionsTitle") }
-        ]} 
-      />
+      {!isFocusMode && (
+        <Breadcrumb 
+          items={[
+            { label: t("vocabulary.title"), href: "/vocabulary" },
+            { label: isLoading ? t("vocabulary.loading") : data?.name || t("vocabulary.collectionsTitle") }
+          ]} 
+        />
+      )}
 
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold truncate">
-              {isLoading ? t("vocabulary.loading") : data?.name}
-            </h1>
-            {!isLoading && data && (
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                data.isPublic 
-                  ? "bg-green-500/10 text-green-600 dark:text-green-400" 
-                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-              }`}>
-                {data.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                {data.isPublic ? t("vocabulary.public") : t("vocabulary.private")}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col mt-1">
-            <p className="text-sm text-muted-foreground">
-              {isLoading ? "" : data?.description}
-            </p>
-            {data?.originId && (
-              <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1 bg-muted/40 w-fit px-2 py-1 rounded-md border">
-                <span>{t("vocabulary.forkedFrom")} </span>
-                <button 
-                  type="button"
-                  onClick={() => navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", data.originId!))}
-                  className="text-blue-500 hover:underline hover:text-blue-600 transition-colors font-medium"
-                >
-                  {data.origin ? `${data.origin.user.username}/${data.origin.name}` : t("vocabulary.originalCollection")}
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="mt-2 text-sm text-muted-foreground flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Layers className="h-4 w-4" />
-              <span>{cards.length} {t("vocabulary.cards")}</span>
+        {!isFocusMode && (
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold truncate">
+                {isLoading ? t("vocabulary.loading") : data?.name}
+              </h1>
+              {!isLoading && data && (
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                  data.isPublic 
+                    ? "bg-green-500/10 text-green-600 dark:text-green-400" 
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                }`}>
+                  {data.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                  {data.isPublic ? t("vocabulary.public") : t("vocabulary.private")}
+                </span>
+              )}
             </div>
-            {!isLoading && data && (
-              <>
-                <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span>{data.newCount + data.dueCount} {t("vocabulary.total") || "Total"}</span>
+            <div className="flex flex-col mt-1">
+              <p className="text-sm text-muted-foreground">
+                {isLoading ? "" : data?.description}
+              </p>
+              {data?.originId && (
+                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1 bg-muted/40 w-fit px-2 py-1 rounded-md border">
+                  <span>{t("vocabulary.forkedFrom")} </span>
+                  <button 
+                    type="button"
+                    onClick={() => navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", data.originId!))}
+                    className="text-blue-500 hover:underline hover:text-blue-600 transition-colors font-medium"
+                  >
+                    {data.origin ? `${data.origin.user.username}/${data.origin.name}` : t("vocabulary.originalCollection")}
+                  </button>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                  <span>{data.newCount} {t("vocabulary.new") || "New"}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  <span>{data.dueCount} {t("vocabulary.due") || "Due"}</span>
-                </div>
-              </>
-            )}
+              )}
+            </div>
+            <div className="mt-2 text-sm text-muted-foreground flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <Layers className="h-4 w-4" />
+                <span>{cards.length} {t("vocabulary.cards")}</span>
+              </div>
+              {!isLoading && data && (
+                <>
+                  <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <span>{data.newCount + data.dueCount} {t("vocabulary.total") || "Total"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                    <span>{data.newCount} {t("vocabulary.new") || "New"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                    <span>{data.dueCount} {t("vocabulary.due") || "Due"}</span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-wrap items-center gap-2 justify-end">
-          {!isLoading && data && (
+        <div className={`flex flex-wrap items-center gap-2 justify-end ${isFocusMode ? "w-full" : ""}`}>
+          {!isFocusMode && (
+            <>
+              {!isLoading && data && (
             <Button
               variant="outline"
               className="gap-2"
@@ -279,6 +299,11 @@ export default function VocabularyCollectionPage() {
               )}
             </Button>
           )}
+
+          {!isLoading && data && (
+            <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+          )}
+
           <Button
             variant={mode === "preview" ? "default" : "outline"}
             className="gap-2"
@@ -314,6 +339,9 @@ export default function VocabularyCollectionPage() {
           >
             <PenLine className="h-4 w-4" /> {t("vocabulary.practice") || "Practice"}
           </Button>
+          
+          <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+
           <Button
             variant="outline"
             className="gap-2"
@@ -326,6 +354,17 @@ export default function VocabularyCollectionPage() {
             onClick={() => navigate(`/vocabulary/${collectionId}/add-card`)}
           >
             <Plus className="h-4 w-4" /> {t("vocabulary.addCard")}
+          </Button>
+            </>
+          )}
+
+          <Button
+            variant={isFocusMode ? "default" : "outline"}
+            className="gap-2"
+            onClick={() => setIsFocusMode(!isFocusMode)}
+            title={isFocusMode ? (t("vocabulary.exitFocusMode") || "Exit Focus Mode") : (t("vocabulary.enterFocusMode") || "Enter Focus Mode")}
+          >
+            {isFocusMode ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -369,9 +408,9 @@ export default function VocabularyCollectionPage() {
                 </div>
 
                 <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-start gap-4">
-                  <CardFace card={card} side="front" className="font-semibold" useStyles={false} />
+                  <CardFace card={card} side="front" className={`font-semibold ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} />
                   <div className="w-px self-stretch bg-border" aria-hidden="true" />
-                  <CardFace card={card} side="back" className="text-muted-foreground" useStyles={false} />
+                  <CardFace card={card} side="back" className={`text-muted-foreground ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} />
                 </div>
               </div>
             ))
@@ -430,16 +469,16 @@ export default function VocabularyCollectionPage() {
               </Button>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto space-y-6 pb-12">
+            <div className={`${isFocusMode ? "max-w-none px-0 md:px-12" : "max-w-3xl"} w-full mx-auto space-y-6 pb-12`}>
               <div 
-                className="relative min-h-[350px] w-full perspective-[2000px] cursor-pointer group" 
+                className={`relative w-full perspective-[2000px] cursor-pointer group ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px]"}`} 
                 onClick={() => setFlipped((f) => !f)}
               >
-                <div className={`relative w-full h-full min-h-[350px] duration-300 transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
+                <div className={`relative w-full h-full ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px]"} transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
                   {/* Front Face */}
                   <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden">
-                    <div className="text-center">
-                      <CardFace card={sessionCards[flashcardIdx]} side="front" className="text-xl font-medium" />
+                    <div className="text-center w-full max-w-4xl px-4">
+                      <CardFace card={sessionCards[flashcardIdx]} side="front" className={`leading-tight font-medium ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} />
                     </div>
                     <div className="absolute bottom-4 text-xs text-muted-foreground animate-pulse">
                       {t("vocabulary.clickToFlip") || "Click card to flip"}
@@ -451,8 +490,8 @@ export default function VocabularyCollectionPage() {
 
                   {/* Back Face */}
                   <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
-                    <div className="text-center">
-                      <CardFace card={sessionCards[flashcardIdx]} side="back" className="text-xl font-medium text-muted-foreground" />
+                    <div className="text-center w-full max-w-4xl px-4">
+                      <CardFace card={sessionCards[flashcardIdx]} side="back" className={`leading-tight font-medium text-muted-foreground ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} />
                     </div>
                     <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
                       {t("vocabulary.backFace")}

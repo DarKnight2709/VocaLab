@@ -519,6 +519,8 @@
     "replyComment": "Reply to comment"
   },
   "vocabulary": {
+    "enterFocusMode": "Enter Focus Mode",
+    "exitFocusMode": "Exit Focus Mode",
     "readyForReview": "Ready for your review session?",
     "saveAsCopy": "Save as Copy",
     "collectionDesc": "Description",
