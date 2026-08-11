@@ -230,6 +230,17 @@ export class AuthService {
           (ipAddress && tokenEntity.ipAddress !== ipAddress) ||
           (userAgent && tokenEntity.userAgent !== userAgent)
         ) {
+          if (tokenEntity?.isRevoked) {
+            await manager.refreshToken.updateMany({
+              where: {
+                familyId: tokenEntity.familyId
+              },
+              data: {
+                isRevoked: true
+              }
+            });
+            throw new UnauthorizedException("Token reuse detected. All related sessions have been revoked.");
+          }
           throw new UnauthorizedException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
 
@@ -251,6 +262,7 @@ export class AuthService {
           ipAddress,
           userAgent,
           manager,
+          tokenEntity.familyId,
         );
 
         return {
@@ -407,7 +419,7 @@ export class AuthService {
       const jti = payload.jti;
 
       // thu hồi refresh
-      await this.prisma.refreshToken.updateMany({
+      await this.prisma.refreshToken.update({
         where: {
           id: jti,
           isRevoked: false,
@@ -639,6 +651,7 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
     manager?: Prisma.TransactionClient,
+    existingFamilyId?: string,
   ): Promise<string> {
     const jti = crypto.randomUUID();
     const payload = {
@@ -657,12 +670,13 @@ export class AuthService {
         expiresIn: refreshExpiresIn,
       },
     );
-
+    const familyId = existingFamilyId || crypto.randomUUID();
     // lưu refresh token vào database
     const createData = {
       id: jti,
       token: this.hashToken(refreshToken),
       userId: user.id,
+      familyId,
       expiresAt: new Date(Date.now() + refreshExpiresIn * 1000),
       ipAddress,
       userAgent,

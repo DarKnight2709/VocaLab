@@ -179,6 +179,7 @@ model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    String
+  familyId  String
   ipAddress String?
   userAgent String?
   isRevoked Boolean  @default(false)
