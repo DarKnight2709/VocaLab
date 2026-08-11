@@ -1196,6 +1196,9 @@ export class VocabularyService {
         updated: { count: updated, cards: updatedCards },
         errors: { count: errors, lines: errorLines },
       };
+    }, {
+      maxWait: 50000, // Max time the transaction will wait to acquire a lock
+      timeout: 100000 // Total time allowed for transaction execution (10 seconds)
     });
 
     return result;
