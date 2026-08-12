@@ -24,24 +24,9 @@ export const getSignUpSchema = () =>
     .strict()
     .strip();
 
-export const LogoutSchema = z
-  .object({
-    refreshToken: z.string(),
-  })
-  .strict()
-  .strip();
-
-export const RefreshTokenSchema = z
-  .object({
-    refreshToken: z.string(),
-  })
-  .strict()
-  .strip();
-
 export const LoginResponseSchema = z
   .object({
     accessToken: z.string(),
-    refreshToken: z.string(),
   })
   .strip();
 
@@ -63,7 +48,6 @@ export const getTwoFactorLoginSchema = () =>
 export const RefreshTokenResponseSchema = z
   .object({
     accessToken: z.string(),
-    refreshToken: z.string(),
   })
   .strip();
 
@@ -129,8 +113,6 @@ export type SetPasswordBodyType = z.infer<
 export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
-export type RefreshTokenBodyType = z.infer<typeof RefreshTokenSchema>;
-export type LogoutBodyType = z.infer<typeof LogoutSchema>;
 export type TwoFactorLoginBodyType = z.infer<
   ReturnType<typeof getTwoFactorLoginSchema>
 >;

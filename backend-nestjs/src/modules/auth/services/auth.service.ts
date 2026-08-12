@@ -20,7 +20,7 @@ import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
 import { PublicUserDto } from '@/modules/users/dto/users-response.dto';
 import { AuthTokensDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from '../dto/auth-response.dto';
-import { ChangePasswordDto, LoginDto, RefreshTokenDto, SetPasswordDto, SignupDto, TwoFactorLoginDto } from '../dto/auth.dto';
+import { ChangePasswordDto, LoginDto, SetPasswordDto, SignupDto, TwoFactorLoginDto } from '../dto/auth.dto';
 import { JwtRefreshTokenPayload } from '../interfaces/JwtRefreshTokenPayload';
 @Injectable()
 export class AuthService {
@@ -186,22 +186,19 @@ export class AuthService {
   }
 
   async refreshToken(
-    refreshToken: RefreshTokenDto,
+    refreshToken: string,
     ipAddress?: string,
     userAgent?: string,
   ): Promise<AuthTokensDto> {
-    // lấy token ra
-    const { refreshToken: rawRefreshToken } = refreshToken;
-
     // check valid
-    if (!rawRefreshToken) {
+    if (!refreshToken) {
       throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
     }
 
     try {
       //verify -> lấy payload
       const payload = jwt.verify(
-        rawRefreshToken,
+        refreshToken,
         this.keyManager.getPublicKeyRefresh(),
         {
           algorithms: ['RS256'],
@@ -406,6 +403,9 @@ export class AuthService {
   }
 
   async logout(refreshToken: string): Promise<void> {
+    if (!refreshToken) {
+      throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
+    }
     try {
       // verify refresh token
       const payload = jwt.verify(

@@ -24,21 +24,15 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   const navigate = useNavigate();
 
   const logout = useAuthStore((state) => state.logout);
-  const refreshToken = useAuthStore((state) => state.authToken?.refreshToken);
 
   async function handleLogout() {
-    if (!refreshToken) {
-      // Nếu không có refresh token thì cứ logout ở client
-      logout();
-      navigate(ROUTES.LOGIN.url);
-      return;
-    }
-
     try {
-      await logoutMutation.mutateAsync(refreshToken);
+      await logoutMutation.mutateAsync();
       navigate(ROUTES.LOGIN.url);
     } catch (error) {
       console.error("Logout error:", error);
+      logout();
+      navigate(ROUTES.LOGIN.url);
     }
   }
 

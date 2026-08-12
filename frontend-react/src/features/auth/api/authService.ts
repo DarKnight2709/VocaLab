@@ -70,7 +70,7 @@ export const useLogoutMutation = () => {
   const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (refreshToken: string) => api.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }),
+    mutationFn: () => api.post(API_ROUTES.AUTH.LOGOUT),
     onSuccess: () => {
       logout();
       queryClient.clear();

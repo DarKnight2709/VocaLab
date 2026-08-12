@@ -13,7 +13,6 @@ import { create } from "zustand";
 import envConfig from "../config/envConfig";
 import i18n from "@/shared/i18n";
 import { useAuthStore } from "@/features/auth/stores/authStore";
-import { decodeToken } from "@/shared/lib/jwt";
 import { api, fetchWithSchema } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { RefreshTokenResponseSchema } from "@/shared/validations/AuthSchema";
@@ -149,19 +148,9 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
 
       _isRefreshing = true;
 
-      const refreshToken = useAuthStore.getState().authToken?.refreshToken;
-      const decoded = refreshToken ? decodeToken(refreshToken) : null;
-
-      if (!decoded || decoded.exp * 1000 < Date.now()) {
-        useAuthStore.getState().logout();
-        window.location.href = ROUTES.HOME.url;
-        _isRefreshing = false;
-        return;
-      }
-
       try {
         const { data: token } = await fetchWithSchema(
-          api.post(API_ROUTES.AUTH.REFRESH_TOKEN, { refreshToken }),
+          api.post(API_ROUTES.AUTH.REFRESH_TOKEN),
           RefreshTokenResponseSchema,
         );
         get().disconnect();

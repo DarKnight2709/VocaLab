@@ -14,6 +14,7 @@ export const api = axios.create({
     import.meta.env.VITE_ENV === "development"
       ? "/api/"
       : envConfig.VITE_API_URL,
+  withCredentials: true,
   paramsSerializer: {
     serialize: (params) => {
       return qs.stringify(params, { arrayFormat: "repeat", skipNulls: true });
@@ -54,8 +55,6 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const status = error?.response?.status;
-    const token = useAuthStore.getState().authToken;
-
     // Check if the request is for login, signup or if it's already a refresh request
     const isAuthRequest =
       typeof originalRequest?.url === "string" &&
@@ -67,7 +66,6 @@ api.interceptors.response.use(
     // And don't retry if it's an auth request itself to avoid infinite loops.
     if (
       status === 401 &&
-      token?.refreshToken &&
       !isAuthRequest &&
       !originalRequest._retry
     ) {
@@ -87,9 +85,7 @@ api.interceptors.response.use(
 
       try {
         const data = await fetchWithSchema(
-          api.post(API_ROUTES.AUTH.REFRESH_TOKEN, {
-            refreshToken: token.refreshToken,
-          }),
+          api.post(API_ROUTES.AUTH.REFRESH_TOKEN),
           RefreshTokenResponseSchema,
         );
 

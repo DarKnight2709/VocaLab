@@ -5,7 +5,6 @@ import type {
   TempTokenResponse,
 } from "@/shared/validations/AuthSchema";
 import { decodeToken } from "@/shared/lib/jwt";
-import { persist, createJSONStorage } from "zustand/middleware";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { useFcmStore } from "@/features/notification/hooks/usePushNotifications";
 import type { JwtPayload } from "jwt-decode";
@@ -26,86 +25,76 @@ interface AuthState {
 
 // set: hàm để cập nhật state
 // get: hàm lấy state hiện tại
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  isAuth: false,
+  isFirstFactorPassed: false,
+  userId: null,
+  authToken: null,
+  tempToken: null,
+  error: null,
+
+  login: (token: LoginResponse | TempTokenResponse) => {
+    // 1. Xác định token thuộc loại nào
+    const rawToken = "tempToken" in token ? token.tempToken : token.accessToken;
+
+    if (!rawToken) {
+      toast.error(i18n.t("auth.missingToken"), {
+        description: i18n.t("auth.pleaseSignInAgain"),
+      });
+      get().clearAuthState();
+      return;
+    }
+
+    // 2. Decode và validate
+    let decoded: JwtPayload | null = null;
+    try {
+      decoded = decodeToken(rawToken);
+      if (!decoded) throw new Error("Invalid token");
+    } catch (error) {
+      toast.error(i18n.t("auth.invalidToken"), {
+        description: i18n.t("auth.pleaseSignInAgain"),
+      });
+      get().clearAuthState();
+      return;
+    }
+
+    // 3. Phân nhánh xử lý State
+    if ("tempToken" in token) {
+      set({
+        isAuth: false,
+        isFirstFactorPassed: true,
+        authToken: null,
+        tempToken: token,
+        error: null,
+        userId: decoded.sub,
+      });
+    } else {
+      set({
+        isAuth: true,
+        isFirstFactorPassed: false,
+        authToken: token,
+        tempToken: null,
+        error: null,
+        userId: decoded.sub,
+      });
+      useSocketStore.getState().connect(token.accessToken);
+    }
+  },
+
+  logout: () => {
+    const token = get().authToken?.accessToken;
+    useFcmStore.getState().revokeToken(token).catch(console.error);
+    get().clearAuthState();
+    useSocketStore.getState().disconnect();
+  },
+
+  clearAuthState: () => {
+    set({
       isAuth: false,
-      isFirstFactorPassed: false,
-      userId: null,
       authToken: null,
       tempToken: null,
       error: null,
-
-      login: (token: LoginResponse | TempTokenResponse) => {
-        // 1. Xác định token thuộc loại nào
-        const rawToken =
-          "tempToken" in token ? token.tempToken : token.accessToken;
-
-        if (!rawToken) {
-          toast.error(i18n.t("auth.missingToken"), {
-            description: i18n.t("auth.pleaseSignInAgain"),
-          });
-          get().clearAuthState();
-          return;
-        }
-
-        // 2. Decode và validate
-        let decoded: JwtPayload | null = null;
-        try {
-          decoded = decodeToken(rawToken);
-          if (!decoded) throw new Error("Invalid token");
-        } catch (error) {
-          toast.error(i18n.t("auth.invalidToken"), {
-            description: i18n.t("auth.pleaseSignInAgain"),
-          });
-          get().clearAuthState();
-          return;
-        }
-
-        // 3. Phân nhánh xử lý State
-        if ("tempToken" in token) {
-          set({
-            isAuth: false,
-            isFirstFactorPassed: true,
-            authToken: null,
-            tempToken: token,
-            error: null,
-            userId: decoded.sub,
-          });
-        } else {
-          set({
-            isAuth: true,
-            isFirstFactorPassed: false,
-            authToken: token,
-            tempToken: null,
-            error: null,
-            userId: decoded.sub,
-          });
-          useSocketStore.getState().connect(token.accessToken);
-        }
-      },
-
-      logout: () => {
-        const token = get().authToken?.accessToken;
-        useFcmStore.getState().revokeToken(token).catch(console.error);
-        get().clearAuthState();
-        useSocketStore.getState().disconnect();
-      },
-
-      clearAuthState: () => {
-        set({
-          isAuth: false,
-          authToken: null,
-          tempToken: null,
-          error: null,
-          userId: null,
-        });
-      },
-    }),
-
-    {
-      name: "auth-vocalab-storage",
-      storage: createJSONStorage(() => localStorage),
-    },
-  ),
-);
+      userId: null,
+    });
+  },
+}));

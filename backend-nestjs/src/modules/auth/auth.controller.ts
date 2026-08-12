@@ -29,8 +29,20 @@ import { Public } from '@/common/decorators/public.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@/common/services/config.service';
 import { PublicUserDto } from '../users/dto/users-response.dto';
-import { AuthTokensDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from './dto/auth-response.dto';
-import { ChangePasswordDto, LoginDto, RefreshTokenDto, SetPasswordDto, SignupDto, TwoFactorLoginDto, TwoFactorVerifyDto } from './dto/auth.dto';
+import {
+  AccessTokenReponseDto,
+  AuthTokensDto,
+  TempTokenResponseDto,
+  TwoFactorGenerateResponseDto,
+} from './dto/auth-response.dto';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  SetPasswordDto,
+  SignupDto,
+  TwoFactorLoginDto,
+  TwoFactorVerifyDto,
+} from './dto/auth.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -53,13 +65,27 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Req() request: Request,
-  ): Promise<AuthTokensDto | TempTokenResponseDto> {
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AccessTokenReponseDto | TempTokenResponseDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
     const result = await this.authService.login(loginDto, ipAddress, userAgent);
 
-    return result;
+    if (result instanceof TempTokenResponseDto) {
+      return result;
+    }
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'production',
+      sameSite: 'strict',
+      maxAge: this.configService.get('REFRESH_TOKEN_EXPIRES_IN'),
+      path: '/api/v1/auth',
+    });
+
+    return {
+      accessToken: result.accessToken,
+    };
   }
 
   @Post('two-factor-auth/login')
@@ -78,7 +104,11 @@ export class AuthController {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
-    const result = await this.authService.loginTwoFa(twoFactorLoginDto, ipAddress, userAgent);
+    const result = await this.authService.loginTwoFa(
+      twoFactorLoginDto,
+      ipAddress,
+      userAgent,
+    );
 
     return result;
   }
@@ -94,15 +124,30 @@ export class AuthController {
     description: 'Sử dụng refresh token để lấy access và refresh token mới',
   })
   async refreshToken(
-    @Body() refreshTokenDto: RefreshTokenDto,
-    @Req() request: Request,
-  ): Promise<AuthTokensDto> {
-    const ipAddress = request.ip;
-    const userAgent = request.get('user-agent');
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AccessTokenReponseDto> {
+    const ipAddress = req.ip;
+    const userAgent = req.get('user-agent');
+    const oldRefreshToken = req.cookies['refreshToken'];
+    const result = await this.authService.refreshToken(
+      oldRefreshToken,
+      ipAddress,
+      userAgent,
+    );
 
-    const result = await this.authService.refreshToken(refreshTokenDto, ipAddress, userAgent);
+    // overwrite the cookie with the new one
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'production',
+      sameSite: 'strict',
+      maxAge: this.configService.get('REFRESH_TOKEN_EXPIRES_IN'),
+      path: '/api/v1/auth',
+    });
 
-    return result;
+    return {
+      accessToken: result.accessToken,
+    };
   }
 
   @Post('logout')
@@ -112,10 +157,12 @@ export class AuthController {
     summary: 'Đăng xuất (Protect)',
     description: 'Đăng xuất đồng thời thu hồi refresh token',
   })
-  async logout(
-    @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<void> {
-    await this.authService.logout(refreshTokenDto.refreshToken);
+  async logout(@Req() req: Request, @Res() res: Response): Promise<void> {
+    const refreshToken = req.cookies['refreshToken'];
+    await this.authService.logout(refreshToken);
+    res.clearCookie('refreshToken', {
+      path: '/api/v1/auth',
+    });
   }
 
   @Post('signup')
@@ -123,9 +170,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Đăng ký' })
   @ApiResponse({ status: 201, description: 'Đăng ký thành công' })
-  async signup(
-    @Body() signupDto: SignupDto,
-  ): Promise<void> {
+  async signup(@Body() signupDto: SignupDto): Promise<void> {
     await this.authService.signup(signupDto);
   }
 
@@ -136,7 +181,9 @@ export class AuthController {
   @ApiOperation({
     summary: 'Lấy thông tin user từ access token (Protect)',
   })
-  async getCurrentUser(@CurrentUser() user: RequestUser): Promise<PublicUserDto> {
+  async getCurrentUser(
+    @CurrentUser() user: RequestUser,
+  ): Promise<PublicUserDto> {
     const result = await this.authService.getCurrentUser(user.id);
     return result;
   }
@@ -218,7 +265,10 @@ export class AuthController {
   }
 
   @Post('two-factor-auth/generate')
-  @SerializeOptions({ type: TwoFactorGenerateResponseDto, excludeExtraneousValues: true })
+  @SerializeOptions({
+    type: TwoFactorGenerateResponseDto,
+    excludeExtraneousValues: true,
+  })
   @ApiOkResponse({ type: TwoFactorGenerateResponseDto })
   @ApiOperation({
     summary: 'Tạo mã 2FA (Protect)',
@@ -247,9 +297,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Tắt mã 2FA (Protect)',
   })
-  async disableTwoFactorAuth(
-    @CurrentUser() user: RequestUser,
-  ): Promise<void> {
+  async disableTwoFactorAuth(@CurrentUser() user: RequestUser): Promise<void> {
     await this.authService.disableTwoFactorAuth(user.id);
   }
 }

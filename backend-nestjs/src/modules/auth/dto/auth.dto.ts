@@ -19,7 +19,6 @@ export class LoginDto {
   password!: string
 }
 
-
 export class TwoFactorLoginDto {
   @ApiProperty({
     description: "Temp token",
@@ -38,17 +37,6 @@ export class TwoFactorLoginDto {
   @MinLength(6)
   @MaxLength(6)
   code!: string;
-}
-
-export class RefreshTokenDto {
-  // refresh token cũ muốn làm mới 
-  @ApiProperty({
-    description: "New refresh token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  @IsString()
-  @IsNotEmpty()
-  refreshToken!: string;
 }
 
 export class SignupDto {

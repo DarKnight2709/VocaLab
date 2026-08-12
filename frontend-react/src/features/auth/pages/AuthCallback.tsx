@@ -11,18 +11,15 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const accessToken = Cookies.get("accessToken");
-    const refreshToken = Cookies.get("refreshToken");
 
-    if (accessToken && refreshToken) {
+    if (accessToken) {
       // Gọi hàm login của Zustand - Store sẽ tự động lưu vào localStorage
       login({
         accessToken,
-        refreshToken,
       });
 
       // Xóa cookie sau khi đã đưa vào Zustand
       Cookies.remove("accessToken");
-      Cookies.remove("refreshToken");
 
       // Chuyển hướng về trang chủ
       navigate("/", { replace: true });

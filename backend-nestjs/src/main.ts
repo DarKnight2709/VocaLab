@@ -9,6 +9,7 @@ import { corsConfig } from './core/configs/cors.config';
 import helmet from 'helmet';
 import compression from 'compression';
 import { urlencoded, json } from 'express';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -60,6 +61,7 @@ async function bootstrap() {
     ),
   );
   app.use(compression());
+  app.use(cookieParser());
 
   // Increase payload size limits
   app.use(json({ limit: '50mb' }));
