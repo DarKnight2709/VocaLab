@@ -1,36 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
 import { useAuthStore } from "../stores/authStore";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { RefreshTokenResponseSchema } from "@/shared/validations/AuthSchema";
+import { api, fetchWithSchema } from "@/shared/lib/api";
+import API_ROUTES from "@/shared/lib/api-routes";
 
 const AuthCallback = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    const accessToken = Cookies.get("accessToken");
+    const { login, clearAuthState } = useAuthStore.getState();
 
-    if (accessToken) {
-      // Gọi hàm login của Zustand - Store sẽ tự động lưu vào localStorage
-      login({
-        accessToken,
-      });
+    if (hasFetched.current) return;
+    hasFetched.current = true;
 
-      // Xóa cookie sau khi đã đưa vào Zustand
-      Cookies.remove("accessToken");
-
-      // Chuyển hướng về trang chủ
-      navigate("/", { replace: true });
-    } else {
-      // Quan trọng: Kiểm tra xem thực sự là chưa đăng nhập hay chỉ là bị chạy lại do Strict Mode
-      const isAuth = useAuthStore.getState().isAuth;
-
-      if (!isAuth) {
+    const refreshToken = async () => {
+      try {
+        const { data: token } = await fetchWithSchema(
+          api.post(API_ROUTES.AUTH.REFRESH_TOKEN),
+          RefreshTokenResponseSchema,
+        );
+        login(token);
+        navigate("/", { replace: true });
+      } catch {
+        clearAuthState();
         navigate("/login", { replace: true });
       }
-    }
+    };
+    refreshToken();
   }, [navigate, login]);
 
   return (

@@ -55,7 +55,7 @@ import PublicLayout from "./shared/layout/PublicLayout";
 import LandingPage from "./features/home/pages/LandingPage";
 import { ExtractedVideoPage } from "./features/video/pages/VideoTranscriptPage";
 
-const router = createBrowserRouter([
+export const router = createBrowserRouter([
   {
     element: (
       <>

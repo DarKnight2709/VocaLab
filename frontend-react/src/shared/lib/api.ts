@@ -8,6 +8,7 @@ import { useAuthStore } from "@/features/auth/stores/authStore";
 import API_ROUTES from "./api-routes";
 import { RefreshTokenResponseSchema } from "../validations/AuthSchema";
 import i18n from "../i18n";
+import { router } from "@/App";
 
 export const api = axios.create({
   baseURL:
@@ -99,7 +100,9 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         useSocketStore.getState().disconnect();
         useAuthStore.getState().logout();
-        window.location.href = ROUTES.LOGIN.url;
+        if (window.location.pathname !== ROUTES.LOGIN.url) {
+          router.navigate(ROUTES.LOGIN.url);
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

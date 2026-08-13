@@ -28,6 +28,7 @@ export default function MainHeader({ me, toggleLeftSidebar }: MainHeaderProps) {
   async function handleLogout() {
     try {
       await logoutMutation.mutateAsync();
+      logout();
       navigate(ROUTES.LOGIN.url);
     } catch (error) {
       console.error("Logout error:", error);

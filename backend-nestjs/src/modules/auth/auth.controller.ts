@@ -157,7 +157,7 @@ export class AuthController {
     summary: 'Đăng xuất (Protect)',
     description: 'Đăng xuất đồng thời thu hồi refresh token',
   })
-  async logout(@Req() req: Request, @Res() res: Response): Promise<void> {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     const refreshToken = req.cookies['refreshToken'];
     await this.authService.logout(refreshToken);
     res.clearCookie('refreshToken', {
@@ -243,20 +243,12 @@ export class AuthController {
       userAgent,
     );
 
-    // Thiết lập cookie để truyền dữ liệu sang Frontend
-    // Cookie này chỉ tồn tại trong 2 phút để FE kịp đọc và lưu vào Zustand
-    res.cookie('accessToken', result.accessToken, {
-      httpOnly: false,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
-      maxAge: 2 * 60 * 1000,
-    });
-
     res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: false,
+      httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
-      maxAge: 2 * 60 * 1000,
+      sameSite: 'strict',
+      maxAge: Number(this.configService.get('REFRESH_TOKEN_EXPIRES_IN')) * 1000,
+      path: '/api/v1/auth',
     });
 
     // Redirect về client mà không mang theo dữ liệu trên URL

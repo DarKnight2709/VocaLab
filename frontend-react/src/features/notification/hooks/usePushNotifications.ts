@@ -7,6 +7,7 @@ import API_ROUTES from "@/shared/lib/api-routes";
 import { api, getErrorMessage } from "@/shared/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 import i18n from "@/shared/i18n";
 import { create } from "zustand";
 
@@ -22,7 +23,9 @@ interface FcmState {
 // ── Standalone API Calls (Keeps store actions clean) 
 
 const unregisterTokenOnBackend = (token: string, authToken?: string) => {
-  const config: any = { data: { fcmToken: token } };
+  // _retry: true prevents the axios interceptor from trying to refresh the token 
+  // if this request fails with 401, breaking the infinite logout loop!
+  const config: any = { data: { fcmToken: token }, _retry: true };
   if (authToken) {
     config.headers = { Authorization: `Bearer ${authToken}` };
   }
@@ -111,8 +114,10 @@ export const useFcmToken = () => {
   const setPermission = useFcmStore((state) => state.setPermission);
 
   const { mutateAsync: saveTokenMutation } = useMutation({
-    mutationFn: (token: string) =>
-      api.post(API_ROUTES.DEVICES.REGISTER, { fcmToken: token }),
+    mutationFn: (token: string) => {
+      if (!useAuthStore.getState().isAuth) return Promise.resolve(null);
+      return api.post(API_ROUTES.DEVICES.REGISTER, { fcmToken: token });
+    },
     onError: (error) => {
       toast.error(getErrorMessage(error, i18n.t("common.actionFailed")));
     },
