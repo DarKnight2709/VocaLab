@@ -79,7 +79,7 @@ export class AuthController {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'strict',
-      maxAge: this.configService.get('REFRESH_TOKEN_EXPIRES_IN'),
+      maxAge: Number(this.configService.get('REFRESH_TOKEN_EXPIRES_IN')) * 1000,
       path: '/api/v1/auth',
     });
 
@@ -141,7 +141,7 @@ export class AuthController {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'strict',
-      maxAge: this.configService.get('REFRESH_TOKEN_EXPIRES_IN'),
+      maxAge: Number(this.configService.get('REFRESH_TOKEN_EXPIRES_IN')) * 1000,
       path: '/api/v1/auth',
     });
 
