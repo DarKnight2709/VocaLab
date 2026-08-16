@@ -1,7 +1,6 @@
 import {
   Injectable,
   Logger,
-  Inject,
   BadRequestException,
   HttpException,
 } from '@nestjs/common';
@@ -11,53 +10,50 @@ import {
   ChapterItemDto,
   ExtractVideoResponseDto,
 } from './dto/extract-video-response.dto';
-import { ConfigService } from '@/common/services/config.service';
-import { firstValueFrom } from 'rxjs';
-import { HttpService } from '@nestjs/axios';
 import { RedisService } from '@/core/cache/redis.service';
 import { validateWithSchema } from '@/common/validation/validate-schema';
-import {
-  VideoInfoResSchema,
-  type VideoInfoRes,
-} from './validation/VideoInfoResponseSchema';
-import {
-  SerpApiTranscriptResponseSchema,
-  type SerpApiTranscriptItem,
-} from './validation/SerpApiTranscriptSchema';
-import { PrismaService } from '@/core/database/prisma.service';
-import { Prisma } from '@prisma/client';
+import { VideoInfoResSchema } from './validation/VideoInfoResponseSchema';
+import { SerpApiTranscriptResponseSchema } from './validation/SerpApiTranscriptSchema';
+import { YoutubeService } from '@/modules/video/clients/youtube.service';
+import { SerpService } from '@/modules/video/clients/serp.service';
+import { formatTranscript } from '@/modules/video/mappers/transcript.mapper';
+import { formatVideoInfo } from '@/modules/video/mappers/video-info.mapper';
+import { VideoRepository } from './video.repository';
+import { extractYoutubeVideoId } from './utils/youtube-url.util';
 
 @Injectable()
 export class VideoService {
   private readonly logger = new Logger(VideoService.name);
   constructor(
-    private readonly configService: ConfigService,
-    private readonly httpService: HttpService,
-    @Inject()
     private readonly redisService: RedisService,
-    private readonly prisma: PrismaService,
+    private readonly videoRepository: VideoRepository,
+    private readonly youtubeService: YoutubeService,
+    private readonly serpService: SerpService,
   ) {}
 
   async extract(
     userId: string,
     dto: ExtractVideoDto,
   ): Promise<ExtractVideoResponseDto> {
-    const videoId = dto.url.split('v=')[1]?.split('&')[0] || dto.url;
+    const videoId = extractYoutubeVideoId(dto.url);
+    if (!videoId) {
+      throw new BadRequestException(
+        `Could not extract a video ID from the provided URL: ${dto.url}`,
+      );
+    }
     const cacheKey = `video:extract:${videoId}`;
 
     // check redis cache
     const cachedValue =
       await this.redisService.getCache<ExtractVideoResponseDto>(cacheKey);
     if (cachedValue) {
+      this.logger.log(`Cache hit for video: ${videoId}`);
       return cachedValue;
     }
+    this.logger.log(`Cache miss for video: ${videoId}`);
 
     // check db cache
-    const existingVideo = await this.prisma.video.findUnique({
-      where: {
-        youtubeId: videoId,
-      },
-    });
+    const existingVideo = await this.videoRepository.findByYoutubeId(videoId);
     if (existingVideo) {
       const dbResponse: ExtractVideoResponseDto = {
         transcript:
@@ -80,17 +76,10 @@ export class VideoService {
       return dbResponse;
     }
 
-    const baseURL = this.configService.get('YOUTUBE_BASE_URL');
-    const key = this.configService.get('YOUTUBE_API_KEY');
-    const videoInformationURL = `${baseURL}/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${key}`;
-    const serpApiBaseUrl = this.configService.get('SERPAPI_URL');
-    const separator = serpApiBaseUrl.includes('?') ? '&' : '?';
-    const transcriptURL = `${serpApiBaseUrl}${separator}engine=youtube_video_transcript&v=${videoId}&api_key=${this.configService.get('SERPAPI_API_KEY')}`;
-
     try {
       const [rawTranscript, videoInfoRes] = await Promise.all([
-        firstValueFrom(this.httpService.get(transcriptURL)),
-        firstValueFrom(this.httpService.get(videoInformationURL)),
+        this.serpService.getTranscript(videoId),
+        this.youtubeService.getVideoInfo(videoId),
       ]);
 
       if (rawTranscript.data?.error) {
@@ -112,7 +101,7 @@ export class VideoService {
         videoInfoRes.data,
         VideoInfoResSchema,
       );
-      const formattedTranscript = this.formatTranscript(
+      const formattedTranscript = formatTranscript(
         validatedTranscript.transcript,
       );
       const formattedChapters: ChapterItemDto[] = (
@@ -120,35 +109,19 @@ export class VideoService {
       ).map((ch) => ({
         title: ch.chapter,
         start: ch.start_ms,
-        end: ch.end_ms,
+        end: ch.end_ms ?? ch.start_ms,
       }));
-      const formattedVideoInfo = this.formatVideoInfo(validatedVideoInfoRes);
-      // save into database and cache
+      const formattedVideoInfo = formatVideoInfo(validatedVideoInfoRes);
+
+      // save into database and cache in the background
       if (formattedVideoInfo) {
         Promise.all([
-          this.prisma.video.upsert({
-            where: { youtubeId: videoId },
-            update: {
-              title: formattedVideoInfo.title,
-              viewCount: formattedVideoInfo.viewCount,
-              transcript:
-                formattedTranscript as unknown as Prisma.InputJsonValue,
-              chapters: formattedChapters as unknown as Prisma.InputJsonValue,
-            },
-            create: {
-              youtubeId: videoId,
-              title: formattedVideoInfo.title,
-              description: formattedVideoInfo.description,
-              channelTitle: formattedVideoInfo.channelTitle,
-              publishedAt: new Date(formattedVideoInfo.publishedAt),
-              thumbnail: formattedVideoInfo.thumbnail,
-              duration: formattedVideoInfo.duration,
-              viewCount: formattedVideoInfo.viewCount,
-              userId,
-              transcript:
-                formattedTranscript as unknown as Prisma.InputJsonValue,
-              chapters: formattedChapters as unknown as Prisma.InputJsonValue,
-            },
+          this.videoRepository.upsert({
+            youtubeId: videoId,
+            userId,
+            ...formattedVideoInfo,
+            transcript: formattedTranscript,
+            chapters: formattedChapters,
           }),
           this.redisService.setCache(cacheKey, {
             transcript: formattedTranscript,
@@ -188,97 +161,5 @@ export class VideoService {
       }
       throw new BadRequestException(errorMessage);
     }
-  }
-
-  // HELPER
-  formatTranscript(rawTranscript: SerpApiTranscriptItem[]): TranscriptItemDto[] {
-    const formattedTranscript: TranscriptItemDto[] = [];
-
-    const cleanText = (raw: string) =>
-      raw
-        .replace(/&amp;/g, '&')
-        .replace(/&#39;/g, "'")
-        .replace(/&quot;/g, '"')
-        .trim();
-
-    const hasPunctuation = rawTranscript.some((item) =>
-      /[.!?]/.test(item.snippet),
-    );
-
-    let groupText = '';
-    let groupStart = 0;
-    let groupDurationEnd = 0;
-
-    const flushGroup = () => {
-      const trimmed = groupText.trim();
-      if (trimmed) {
-        formattedTranscript.push({
-          text: trimmed,
-          start: groupStart,
-          duration: groupDurationEnd - groupStart,
-        });
-      }
-      groupText = '';
-    };
-
-    for (const item of rawTranscript) {
-      const text = cleanText(item.snippet);
-      if (!text) continue;
-
-      const chunkEnd = item.end_ms;
-
-      if (!hasPunctuation) {
-        if (groupText === '') groupStart = item.start_ms;
-        groupText += (groupText ? ' ' : '') + text;
-        groupDurationEnd = chunkEnd;
-
-        const wordCount = groupText.split(/\s+/).length;
-        if (wordCount >= 15) {
-          flushGroup();
-        }
-        continue;
-      }
-
-      if (groupText === '') groupStart = item.start_ms;
-      groupText += (groupText ? ' ' : '') + text;
-      groupDurationEnd = chunkEnd;
-
-      const wordCount = groupText.split(/\s+/).length;
-      const endsWithPunctuation = /[.!?]["']?$/.test(groupText.trim());
-
-      if ((endsWithPunctuation && wordCount >= 10) || wordCount >= 30) {
-        flushGroup();
-      }
-    }
-
-    flushGroup();
-
-    return formattedTranscript;
-  }
-
-  formatVideoInfo(videoInfoRes: VideoInfoRes) {
-    if (!videoInfoRes.items || videoInfoRes.items.length === 0) {
-      return null;
-    }
-
-    const item = videoInfoRes.items[0];
-    const snippet = item.snippet;
-    const statistics = item.statistics;
-    const contentDetails = item.contentDetails;
-
-    return {
-      title: snippet?.title || '',
-      description: snippet?.description || '',
-      channelTitle: snippet?.channelTitle || '',
-      publishedAt: snippet?.publishedAt || '',
-      thumbnail:
-        snippet?.thumbnails?.maxres?.url ||
-        snippet?.thumbnails?.high?.url ||
-        snippet?.thumbnails?.medium?.url ||
-        snippet?.thumbnails?.default?.url ||
-        '',
-      duration: contentDetails?.duration || '',
-      viewCount: statistics?.viewCount || '0',
-    };
   }
 }

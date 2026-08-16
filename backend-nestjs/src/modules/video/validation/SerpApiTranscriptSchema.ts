@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const SerpApiTranscriptItemSchema = z.object({
   start_ms: z.number(),
-  end_ms: z.number(),
+  end_ms: z.number().optional(),
   snippet: z.string(),
   start_time_text: z.string().optional(),
 });
@@ -10,7 +10,7 @@ export const SerpApiTranscriptItemSchema = z.object({
 export const SerpApiChapterSchema = z.object({
   chapter: z.string(),
   start_ms: z.number(),
-  end_ms: z.number(),
+  end_ms: z.number().optional(),
 });
 
 export const SerpApiTranscriptResponseSchema = z.object({
