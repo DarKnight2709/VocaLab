@@ -13,6 +13,8 @@ import {
   PenLine,
   Maximize,
   Minimize,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import {
@@ -21,6 +23,7 @@ import {
   useUpdateCollectionMutation,
   useCollectionDueCardsQuery,
   useReviewCardMutation,
+  useCollectionsQuery,
   type CardItem,
 } from "../api/vocabularyService";
 import type { SrsRating } from "@/shared/enums/SrsRating.enum";
@@ -58,8 +61,13 @@ export default function VocabularyCollectionPage() {
 
   const { data, isLoading } = useCollectionDetailQuery(collectionId || null);
   const { data: statsData } = useCollectionStatsQuery(collectionId || "");
+  const { data: collections } = useCollectionsQuery(true);
   const deleteMutation = useDeleteCardMutation(collectionId || "");
   const updateCollectionMutation = useUpdateCollectionMutation();
+
+  const currentIndex = collections?.findIndex((c) => c.id === collectionId) ?? -1;
+  const previousCollection = currentIndex > 0 ? collections?.[currentIndex - 1] : null;
+  const nextCollection = currentIndex !== -1 && currentIndex < (collections?.length ?? 0) - 1 ? collections?.[currentIndex + 1] : null;
 
   const { data: dueCardsData } = useCollectionDueCardsQuery(
     collectionId || "",
@@ -221,11 +229,29 @@ export default function VocabularyCollectionPage() {
         {!isFocusMode && (
           <div className="min-w-0">
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+                disabled={!previousCollection}
+                onClick={() => previousCollection && navigate(`/vocabulary/${previousCollection.id}`)}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
               <h1 className="text-2xl font-bold truncate">
                 {isLoading ? t("vocabulary.loading") : data?.name}
               </h1>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+                disabled={!nextCollection}
+                onClick={() => nextCollection && navigate(`/vocabulary/${nextCollection.id}`)}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
               {!isLoading && data && (
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider shrink-0 ${
                   data.isPublic 
                     ? "bg-green-500/10 text-green-600 dark:text-green-400" 
                     : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
