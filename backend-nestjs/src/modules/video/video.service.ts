@@ -1,6 +1,7 @@
 import {
   Injectable,
   Logger,
+  Inject,
   BadRequestException,
   HttpException,
 } from '@nestjs/common';
@@ -11,24 +12,34 @@ import {
   ExtractVideoResponseDto,
 } from './dto/extract-video-response.dto';
 import { RedisService } from '@/core/cache/redis.service';
-import { validateWithSchema } from '@/common/validation/validate-schema';
-import { VideoInfoResSchema } from './validation/VideoInfoResponseSchema';
-import { SerpApiTranscriptResponseSchema } from './validation/SerpApiTranscriptSchema';
-import { YoutubeService } from '@/modules/video/clients/youtube.service';
-import { SerpService } from '@/modules/video/clients/serp.service';
-import { formatTranscript } from '@/modules/video/mappers/transcript.mapper';
-import { formatVideoInfo } from '@/modules/video/mappers/video-info.mapper';
-import { VideoRepository } from './video.repository';
+import { formatTranscript } from './mappers/transcript.mapper';
+import { formatVideoInfo } from './mappers/video-info.mapper';
 import { extractYoutubeVideoId } from './utils/youtube-url.util';
+import {
+  TRANSCRIPT_PROVIDER,
+  type ITranscriptProvider,
+} from './contracts/transcript-provider.interface';
+import {
+  VIDEO_INFO_PROVIDER,
+  type IVideoInfoProvider,
+} from './contracts/video-info-provider.interface';
+import {
+  VIDEO_REPOSITORY,
+  type IVideoRepository,
+} from './contracts/video-repository.interface';
 
 @Injectable()
 export class VideoService {
   private readonly logger = new Logger(VideoService.name);
+
   constructor(
     private readonly redisService: RedisService,
-    private readonly videoRepository: VideoRepository,
-    private readonly youtubeService: YoutubeService,
-    private readonly serpService: SerpService,
+    @Inject(TRANSCRIPT_PROVIDER)
+    private readonly transcriptProvider: ITranscriptProvider,
+    @Inject(VIDEO_INFO_PROVIDER)
+    private readonly videoInfoProvider: IVideoInfoProvider,
+    @Inject(VIDEO_REPOSITORY)
+    private readonly videoRepository: IVideoRepository,
   ) {}
 
   async extract(
@@ -71,49 +82,30 @@ export class VideoService {
           viewCount: existingVideo.viewCount || '0',
         },
       };
-      // Restore to Redis cache and return
       await this.redisService.setCache(cacheKey, dbResponse);
       return dbResponse;
     }
 
     try {
-      const [rawTranscript, videoInfoRes] = await Promise.all([
-        this.serpService.getTranscript(videoId),
-        this.youtubeService.getVideoInfo(videoId),
+      // Fetch transcript and video info in parallel.
+      // Each provider handles its own HTTP errors and schema validation —
+      // VideoService only sees clean, typed domain objects.
+      const [transcript, videoInfo] = await Promise.all([
+        this.transcriptProvider.getTranscript(videoId),
+        this.videoInfoProvider.getVideoInfo(videoId),
       ]);
 
-      if (rawTranscript.data?.error) {
-        throw new BadRequestException(
-          `SerpAPI error: ${rawTranscript.data.error}`,
-        );
-      }
-      if (videoInfoRes.data?.error) {
-        throw new BadRequestException(
-          `YouTube API error: ${JSON.stringify(videoInfoRes.data.error)}`,
-        );
-      }
-
-      const validatedTranscript = validateWithSchema(
-        rawTranscript.data,
-        SerpApiTranscriptResponseSchema,
-      );
-      const validatedVideoInfoRes = validateWithSchema(
-        videoInfoRes.data,
-        VideoInfoResSchema,
-      );
-      const formattedTranscript = formatTranscript(
-        validatedTranscript.transcript,
-      );
+      const formattedTranscript = formatTranscript(transcript.transcript);
       const formattedChapters: ChapterItemDto[] = (
-        validatedTranscript.chapters || []
+        transcript.chapters || []
       ).map((ch) => ({
         title: ch.chapter,
         start: ch.start_ms,
         end: ch.end_ms ?? ch.start_ms,
       }));
-      const formattedVideoInfo = formatVideoInfo(validatedVideoInfoRes);
+      const formattedVideoInfo = formatVideoInfo(videoInfo);
 
-      // save into database and cache in the background
+      // Persist to DB and Redis in the background — do not block the response
       if (formattedVideoInfo) {
         Promise.all([
           this.videoRepository.upsert({

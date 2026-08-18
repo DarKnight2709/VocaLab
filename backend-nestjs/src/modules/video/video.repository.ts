@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Video } from '@prisma/client';
 import { TranscriptItemDto, ChapterItemDto } from './dto/extract-video-response.dto';
+import type { IVideoRepository } from './contracts/video-repository.interface';
 
 export interface VideoData {
   youtubeId: string;
@@ -18,17 +19,17 @@ export interface VideoData {
 }
 
 @Injectable()
-export class VideoRepository {
+export class VideoRepository implements IVideoRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findByYoutubeId(youtubeId: string) {
+  findByYoutubeId(youtubeId: string): Promise<Video | null> {
     return this.prisma.video.findUnique({
       where: { youtubeId },
     });
   }
 
-  upsert(data: VideoData) {
-    return this.prisma.video.upsert({
+  async upsert(data: VideoData): Promise<void> {
+    await this.prisma.video.upsert({
       where: { youtubeId: data.youtubeId },
       update: {
         title: data.title,
