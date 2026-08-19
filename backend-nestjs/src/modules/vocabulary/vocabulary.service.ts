@@ -7,6 +7,8 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { getLocalDateStr } from '@/common/utils/convertTime';
+
 import { PrismaService } from '../../core/database/prisma.service';
 import {
   CreateCollectionDto,
@@ -1610,7 +1612,7 @@ export class VocabularyService {
     collectionId: string,
     activityType: 'cardsAdded' | 'cardsUpdated' | 'cardsDeleted' | 'cardsReviewed'
   ) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateStr();
     const updateData = { [activityType]: { increment: 1 } };
     
     try {

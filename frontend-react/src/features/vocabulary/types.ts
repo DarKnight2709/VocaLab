@@ -2,6 +2,8 @@ import type { CardItem } from "./api/vocabularyService";
 import type { CardField } from "@/shared/validations/VocabularySchema";
 
 export type FieldMode = "show" | "practice" | "hide";
+export type CardOrderMode = "order" | "reverse" | "random";
+
 
 export interface FieldConfig {
   field: CardField;

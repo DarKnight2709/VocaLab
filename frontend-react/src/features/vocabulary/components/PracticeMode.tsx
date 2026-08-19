@@ -5,7 +5,22 @@ import PracticeSetup from "./practice/PracticeSetup";
 import PracticeCard from "./practice/PracticeCard";
 import PracticeResults from "./practice/PracticeResults";
 import { getUniqueFields, getFieldValue, normalize } from "../utils";
-import type { FieldConfig, FieldMode } from "../types";
+import type { FieldConfig, FieldMode, CardOrderMode } from "../types";
+
+function getOrderedCards(cards: CardItem[], order: CardOrderMode): CardItem[] {
+  const result = [...cards];
+  if (order === "reverse") {
+    return result.reverse();
+  }
+  if (order === "random") {
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+  return result;
+}
 
 interface PracticeModeProps {
   cards: CardItem[];
@@ -24,6 +39,7 @@ export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
       mode: "show",
     }))
   );
+  const [cardOrder, setCardOrder] = useState<CardOrderMode>("order");
 
   // Phase 2: Practice state
   const [phase, setPhase] = useState<Phase>("setup");
@@ -62,12 +78,12 @@ export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
   }, []);
 
   const handleStartPractice = useCallback(() => {
-    setPracticeCards([...cards]);
+    setPracticeCards(getOrderedCards(cards, cardOrder));
     setCurrentIdx(0);
     setAnswers({});
     setRevealed(false);
     setPhase("practicing");
-  }, [cards]);
+  }, [cards, cardOrder]);
 
   const handleAnswerChange = useCallback(
     (cardId: string, fieldId: string, value: string) => {
@@ -124,11 +140,12 @@ export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
   const correctCount = results.filter((r) => r.allCorrect).length;
 
   const handleTryAgain = useCallback(() => {
+    setPracticeCards(getOrderedCards(cards, cardOrder));
     setCurrentIdx(0);
     setAnswers({});
     setRevealed(false);
     setPhase("practicing");
-  }, []);
+  }, [cards, cardOrder]);
 
   const handleTryWrongOnes = useCallback(() => {
     const wrongCards = results.filter((r) => !r.allCorrect).map((r) => r.card);
@@ -157,6 +174,8 @@ export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
       <PracticeSetup
         fieldConfigs={fieldConfigs}
         cards={cards}
+        cardOrder={cardOrder}
+        onCardOrderChange={setCardOrder}
         onCycleFieldMode={cycleFieldMode}
         onStartPractice={handleStartPractice}
       />

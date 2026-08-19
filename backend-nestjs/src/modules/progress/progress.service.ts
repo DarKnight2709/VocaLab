@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CollectionStatsResponseDto, StatsResponseDto } from './dto/stats-response.dto';
+import { getLocalDateStr } from '@/common/utils/convertTime';
 
 @Injectable()
 export class ProgressService {
   constructor(private readonly prisma: PrismaService) {}
 
   async handleHeartbeat(userId: string, seconds: number) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateStr();
 
     return await this.prisma.dailyProgress.upsert({
       where: {
@@ -40,7 +41,7 @@ export class ProgressService {
       });
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const todayProgress = await this.prisma.dailyProgress.findUnique({
       where: { userId_date: { userId, date: todayStr }}
     });
@@ -60,7 +61,7 @@ export class ProgressService {
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateStr(d);
       const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
       
       const p = await this.prisma.dailyProgress.findUnique({

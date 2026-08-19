@@ -4,6 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import type { HistoryActivity } from "@/shared/validations/ProgressSchema";
+import { getLocalDateStr } from "@/shared/lib/utils";
 
 interface HeatMapChartProps {
   history: HistoryActivity[];
@@ -36,15 +37,12 @@ export const HeatMapChart = ({ history }: HeatMapChartProps) => {
       yearBlocks.push(null);
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
 
     // Add days
     for (let i = 0; i < numDays; i++) {
       const d = new Date(year, 0, 1 + i);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      const dateStr = `${yyyy}-${mm}-${dd}`;
+      const dateStr = getLocalDateStr(d);
       const record = historyMap.get(dateStr);
       
       yearBlocks.push({
@@ -121,7 +119,8 @@ export const HeatMapChart = ({ history }: HeatMapChartProps) => {
               }
 
               const { date, count, isToday, cardsReviewed, cardsAdded, cardsUpdated, cardsDeleted } = block;
-              const dateObj = new Date(date);
+              const [yyyy, mm, dd] = date.split('-').map(Number);
+              const dateObj = new Date(yyyy, mm - 1, dd);
               const dateString = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
               
               const hasActivity = cardsReviewed > 0 || cardsAdded > 0 || cardsUpdated > 0 || cardsDeleted > 0;

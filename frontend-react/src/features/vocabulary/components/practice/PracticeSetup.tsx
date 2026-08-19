@@ -1,12 +1,14 @@
-import { Eye, EyeOff, PenLine } from "lucide-react";
+import { Eye, EyeOff, PenLine, ArrowRight, ArrowLeftRight, Shuffle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import type { FieldConfig } from "../../types";
+import type { FieldConfig, CardOrderMode } from "../../types";
 import type { CardItem } from "../../api/vocabularyService";
 
 interface PracticeSetupProps {
   fieldConfigs: FieldConfig[];
   cards: CardItem[];
+  cardOrder: CardOrderMode;
+  onCardOrderChange: (order: CardOrderMode) => void;
   onCycleFieldMode: (fieldId: string) => void;
   onStartPractice: () => void;
 }
@@ -14,6 +16,8 @@ interface PracticeSetupProps {
 export default function PracticeSetup({
   fieldConfigs,
   cards,
+  cardOrder,
+  onCardOrderChange,
   onCycleFieldMode,
   onStartPractice,
 }: PracticeSetupProps) {
@@ -29,6 +33,63 @@ export default function PracticeSetup({
         </p>
       </div>
 
+      {/* Card Order Selection */}
+      <div className="space-y-3 rounded-2xl bg-card border border-border/50 shadow-sm p-5">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[15px] font-semibold">
+            {t("vocabulary.cardOrder") || "Card Order"}
+          </span>
+          <span className="text-[13px] text-muted-foreground">
+            {t("vocabulary.cardOrderDesc") || "Choose how cards will be ordered during practice"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2.5 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            className={`flex flex-col md:flex-row items-center justify-center gap-2 h-14 md:h-11 font-semibold text-xs md:text-sm rounded-xl transition-all ${
+              cardOrder === "order"
+                ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                : "border-border/60 hover:bg-muted/40 text-muted-foreground"
+            }`}
+            onClick={() => onCardOrderChange("order")}
+          >
+            <ArrowRight className="h-4 w-4 shrink-0" />
+            <span>{t("vocabulary.orderSequential") || "In Order"}</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className={`flex flex-col md:flex-row items-center justify-center gap-2 h-14 md:h-11 font-semibold text-xs md:text-sm rounded-xl transition-all ${
+              cardOrder === "reverse"
+                ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                : "border-border/60 hover:bg-muted/40 text-muted-foreground"
+            }`}
+            onClick={() => onCardOrderChange("reverse")}
+          >
+            <ArrowLeftRight className="h-4 w-4 shrink-0" />
+            <span>{t("vocabulary.orderReverse") || "Reverse"}</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className={`flex flex-col md:flex-row items-center justify-center gap-2 h-14 md:h-11 font-semibold text-xs md:text-sm rounded-xl transition-all ${
+              cardOrder === "random"
+                ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                : "border-border/60 hover:bg-muted/40 text-muted-foreground"
+            }`}
+            onClick={() => onCardOrderChange("random")}
+          >
+            <Shuffle className="h-4 w-4 shrink-0" />
+            <span>{t("vocabulary.orderRandom") || "Random"}</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Field Configuration List */}
       <div className="space-y-3">
         {fieldConfigs.map((fc) => {
           return (
@@ -90,3 +151,4 @@ export default function PracticeSetup({
     </div>
   );
 }
+
