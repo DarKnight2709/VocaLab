@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { useLayoutStore } from "@/shared/stores/useLayoutStore";
 
 export default function MainLayout() {
-  const { isLoading, isPending, data: me } = useMeQuery();
+  const { isLoading, data: me } = useMeQuery();
   // Initialize FCM globally so foreground messages are received on all pages
   useFcmToken();
   const [isMobile, setIsMobile] = useState(
@@ -30,7 +30,7 @@ export default function MainLayout() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  if (isLoading || isPending) {
+  if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 flex h-dvh w-dvw items-center justify-center">
         <LoadingSpinner isLoading />

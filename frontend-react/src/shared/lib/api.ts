@@ -6,7 +6,6 @@ import ROUTES from "./routes";
 import { type ZodType, ZodError } from "zod";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import API_ROUTES from "./api-routes";
-import { RefreshTokenResponseSchema } from "../validations/AuthSchema";
 import i18n from "../i18n";
 import { router } from "@/App";
 
@@ -24,26 +23,19 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().authToken?.accessToken;
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    // nếu không có token, request vẫn đi mà không có header Authorization
-    return config;
-  },
+  (config) => config,
   async (error) => Promise.reject(error),
 );
 
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: any = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve();
     }
   });
   failedQueue = [];
@@ -74,8 +66,7 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((accessToken) => {
-            originalRequest.headers["Authorization"] = "Bearer " + accessToken;
+          .then(() => {
             return api(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -85,21 +76,14 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const data = await fetchWithSchema(
-          api.post(API_ROUTES.AUTH.REFRESH_TOKEN),
-          RefreshTokenResponseSchema,
-        );
+        await api.post(API_ROUTES.AUTH.REFRESH_TOKEN);
 
-        useAuthStore.getState().login(data.data);
-        useSocketStore.getState().connect(data.data.accessToken);
-        processQueue(null, data.data.accessToken);
-
-        originalRequest.headers["Authorization"] = "Bearer " + data.data.accessToken;
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
+        processQueue(refreshError);
         useSocketStore.getState().disconnect();
-        useAuthStore.getState().logout();
+        useAuthStore.getState().clearAuthState();
         if (window.location.pathname !== ROUTES.LOGIN.url) {
           router.navigate(ROUTES.LOGIN.url);
         }

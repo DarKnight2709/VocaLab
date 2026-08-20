@@ -1,17 +1,11 @@
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet, useLoaderData } from "react-router";
 import { useAuthStore } from "../stores/authStore";
 import ROUTES from "@/shared/lib/routes";
 
-/**
- * Route guard for public pages that also work when authenticated.
- * - If user is authenticated → redirect to the authenticated home (MainLayout handles those routes)
- * - If user is a guest → render the public layout via <Outlet />
- *
- * This guard is used for the "/" landing page route specifically.
- * Other public routes (blog, grammar, search) use OptionalPublicGuard.
- */
 const LandingRedirectGuard = () => {
-  const isAuth = useAuthStore((s) => s.isAuth);
+  const loaderData = useLoaderData() as { isAuth?: boolean } | undefined;
+  const isAuthStore = useAuthStore((s) => s.isAuth);
+  const isAuth = loaderData?.isAuth ?? isAuthStore;
 
   if (isAuth) {
     return <Navigate to={ROUTES.HOME.url} replace />;

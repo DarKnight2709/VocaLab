@@ -1,24 +1,20 @@
-import { decodeToken } from "@/shared/lib/jwt";
-import {
-  RefreshTokenResponseSchema,
-  type LoginResponse,
-  type TempTokenResponse,
-} from "@/shared/validations/AuthSchema";
+import { MeResponseSchema } from "@/shared/validations/AuthSchema";
 import { api, fetchWithSchema } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { useAuthStore } from "./stores/authStore";
 
-const refreshToken = async (
-  login: (token: LoginResponse | TempTokenResponse) => void,
-  clearAuthState: () => void,
-) => {
+const refreshToken = async (clearAuthState: () => void) => {
   try {
-    const { data: token } = await fetchWithSchema(
-      api.post(API_ROUTES.AUTH.REFRESH_TOKEN),
-      RefreshTokenResponseSchema,
+    await api.post(API_ROUTES.AUTH.REFRESH_TOKEN);
+    const { data: me } = await fetchWithSchema(
+      api.get(API_ROUTES.AUTH.ME),
+      MeResponseSchema,
     );
-    login(token);
-    return { isAuth: true };
+    if (me?.id) {
+      useAuthStore.setState({ isAuth: true, userId: me.id });
+      return { isAuth: true };
+    }
+    return { isAuth: false };
   } catch {
     clearAuthState();
     return { isAuth: false };
@@ -26,23 +22,24 @@ const refreshToken = async (
 };
 
 export const authLoader = async () => {
-  const { authToken, login, clearAuthState } = useAuthStore.getState();
+  const { isAuth, clearAuthState } = useAuthStore.getState();
 
-  const accessToken = authToken?.accessToken;
-
-  if (!accessToken) {
-    return refreshToken(login, clearAuthState);
-  }
-  const decodedAccess = decodeToken(accessToken);
-  if (!decodedAccess) {
-    return refreshToken(login, clearAuthState);
-  }
-
-  const isAccessTokenExpired = decodedAccess.exp * 1000 < Date.now();
-
-  if (!isAccessTokenExpired) {
+  if (isAuth) {
     return { isAuth: true };
   }
 
-  return refreshToken(login, clearAuthState);
+  try {
+    const { data: me } = await fetchWithSchema(
+      api.get(API_ROUTES.AUTH.ME),
+      MeResponseSchema,
+    );
+    if (me?.id) {
+      useAuthStore.setState({ isAuth: true, userId: me.id });
+      return { isAuth: true };
+    }
+  } catch {
+    // accessToken cookie missing or expired, attempt token refresh via refreshToken cookie
+  }
+
+  return refreshToken(clearAuthState);
 };

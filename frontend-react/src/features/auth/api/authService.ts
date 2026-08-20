@@ -9,27 +9,23 @@ import type {
 
 import {
   MeResponseSchema,
-  LoginResponseSchema,
   TwoFactorAuthResponseSchema,
-  TempTokenResponseSchema,
 } from "@/shared/validations/AuthSchema";
 import { api, fetchWithSchema, getErrorMessage } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
 import { toast } from "sonner";
 import i18n from "@/shared/i18n";
 import { useAuthStore } from "../stores/authStore";
-import z from "zod";
 
 export const useLoginMutation = () => {
   const login = useAuthStore((state) => state.login);
   return useMutation({
-    mutationFn: (body: LoginBodyType) =>
-      fetchWithSchema(
-        api.post(API_ROUTES.AUTH.LOGIN, body),
-        z.union([LoginResponseSchema , TempTokenResponseSchema]),
-      ),
-    onSuccess: (response) => {
-      login(response.data);
+    mutationFn: async (body: LoginBodyType) => {
+      const res = await api.post(API_ROUTES.AUTH.LOGIN, body);
+      return res;
+    },
+    onSuccess: (response: any) => {
+      login(response);
       toast.success(i18n.t("auth.loginSuccess"));
     },
     onError: (error: any) => {
@@ -50,7 +46,7 @@ export const useSignUpMutation = () => {
 };
 
 export const useMeQuery = () => {
-  const token = useAuthStore((state) => state.authToken);
+  const isAuth = useAuthStore((state) => state.isAuth);
   return useQuery({
     queryKey: ["me"],
     queryFn: async () => {
@@ -62,7 +58,7 @@ export const useMeQuery = () => {
     },
 
     retry: false,
-    enabled: !!token,
+    enabled: isAuth,
   });
 };
 
@@ -145,12 +141,9 @@ export const useLoginTwoFaMutation = () => {
   const login = useAuthStore((state) => state.login);
   return useMutation({
     mutationFn: (body: TwoFactorLoginBodyType) =>
-      fetchWithSchema(
-        api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_LOGIN, body),
-        LoginResponseSchema,
-      ),
-    onSuccess: (response) => {
-      login(response.data);
+      api.post(API_ROUTES.AUTH.TWO_FACTOR_AUTH_LOGIN, body),
+    onSuccess: () => {
+      login();
       toast.success(i18n.t("auth.loginSuccess"));
     },
     onError: (error: any) => {

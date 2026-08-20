@@ -16,19 +16,16 @@ interface FcmState {
   fcmToken: string | null;
   permissionStatus: NotificationPermission;
   setToken: (token: string | null) => void;
-  revokeToken: (authToken?: string) => Promise<boolean>;
+  revokeToken: () => Promise<boolean>;
   setPermission: (status: NotificationPermission) => void;
 }
 
 // ── Standalone API Calls (Keeps store actions clean) 
 
-const unregisterTokenOnBackend = (token: string, authToken?: string) => {
+const unregisterTokenOnBackend = (token: string) => {
   // _retry: true prevents the axios interceptor from trying to refresh the token 
   // if this request fails with 401, breaking the infinite logout loop!
   const config: any = { data: { fcmToken: token }, _retry: true };
-  if (authToken) {
-    config.headers = { Authorization: `Bearer ${authToken}` };
-  }
   return api.delete(API_ROUTES.DEVICES.UNREGISTER, config);
 };
 
@@ -37,7 +34,7 @@ export const useFcmStore = create<FcmState>((set, get) => ({
   permissionStatus:
     typeof window !== "undefined" ? Notification.permission : "default",
   setToken: (token) => set({ fcmToken: token }),
-  revokeToken: async (authToken?: string) => {
+  revokeToken: async () => {
     try {
       if (!messaging) return true;
 
@@ -45,7 +42,7 @@ export const useFcmStore = create<FcmState>((set, get) => ({
         get().fcmToken || (await getToken(messaging).catch(() => null));
       if (!tokenToDelete) return true;
 
-      await unregisterTokenOnBackend(tokenToDelete, authToken);
+      await unregisterTokenOnBackend(tokenToDelete);
       await deleteToken(messaging);
 
       set({ fcmToken: null });
@@ -73,8 +70,6 @@ const fetchToken = async (mutateAsync: (variables: string) => Promise<any>) => {
     vapidKey: envConfig.VITE_FIREBASE_VAPID_KEY,
     serviceWorkerRegistration: swRegistration,
   });
-  console.log(fcmToken);
-
   if (fcmToken) {
     await mutateAsync(fcmToken);
     return fcmToken;

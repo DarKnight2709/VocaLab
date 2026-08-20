@@ -3,7 +3,7 @@
 // This file creates a global Zustand store:
 // - manages a single Socket.IO instance to avoid duplicate connections
 // - tracks connection state (isConnected, isConnecting, error)
-// - connects with a JWT token
+// - connects automatically using HttpOnly cookies
 // - handles reconnects, connection errors, and auth errors
 // - shows user-facing errors with Sonner toast
 // - prevents repeated connect calls while already connecting
@@ -13,17 +13,15 @@ import { create } from "zustand";
 import envConfig from "../config/envConfig";
 import i18n from "@/shared/i18n";
 import { useAuthStore } from "@/features/auth/stores/authStore";
-import { api, fetchWithSchema } from "@/shared/lib/api";
+import { api } from "@/shared/lib/api";
 import API_ROUTES from "@/shared/lib/api-routes";
-import { RefreshTokenResponseSchema } from "@/shared/validations/AuthSchema";
-import ROUTES from "@/shared/lib/routes";
 
 interface SocketState {
   socket: Socket | null; // current socket instance
   isConnected: boolean;
   isConnecting: boolean; // true while connecting to prevent duplicate calls
   error: string | null;
-  connect: (token?: string) => void; // connect, disconnect, manual setters
+  connect: () => void; // connect, disconnect, manual setters
   handleSocketError: (error: any, retry?: () => void) => Promise<void>;
   disconnect: () => void;
   setConnected: (connected: boolean) => void;
@@ -41,7 +39,7 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
   isConnecting: false,
   error: null,
 
-  connect: (accessToken?: string) => {
+  connect: () => {
     const { socket, isConnected } = get();
 
     // already connected, nothing to do
@@ -58,19 +56,9 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
     set({ isConnecting: true, error: null });
 
     try {
-      const token = accessToken ?? useAuthStore.getState().authToken?.accessToken;
-
-      if (!token) {
-        toast.error(i18n.t("socket.missingToken"), {
-          description: i18n.t("socket.signInToContinue"),
-        });
-        set({ isConnecting: false, error: i18n.t("socket.missingToken") });
-        return;
-      }
-
       // create the socket instance
       const newSocket = io(`${envConfig.VITE_SOCKET_URL}`, {
-        auth: { token: token }, // send the access token for server auth
+        withCredentials: true,
         transports: ["websocket"], // websocket only, no polling fallback
         autoConnect: true,
         reconnection: true,
@@ -102,11 +90,7 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
 
       // connection error
       newSocket.on("connect_error", (err: any) => {
-        // Backend rejects the handshake with Error('auth_error') when JWT is missing or invalid.
         if (err?.message === "auth_error") {
-          // toast.error(i18n.t('socket.authFailed'), {
-          //   description: i18n.t('socket.checkSignInDetails')
-          // })
           set({
             isConnected: false,
             isConnecting: false,
@@ -149,12 +133,9 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
       _isRefreshing = true;
 
       try {
-        const { data: token } = await fetchWithSchema(
-          api.post(API_ROUTES.AUTH.REFRESH_TOKEN),
-          RefreshTokenResponseSchema,
-        );
+        await api.post(API_ROUTES.AUTH.REFRESH_TOKEN);
         get().disconnect();
-        useAuthStore.getState().login(token);
+        get().connect();
 
         const onConnect = () => {
           if (retry) retry();
@@ -175,7 +156,6 @@ export const useSocketStore = create<SocketState>()((set, get) => ({
         }
       } catch (err) {
         useAuthStore.getState().logout();
-        window.location.href = ROUTES.HOME.url;
         _isRefreshing = false;
         _refreshQueue = [];
       }

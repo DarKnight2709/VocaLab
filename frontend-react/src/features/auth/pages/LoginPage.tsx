@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Navigate, useNavigate, useLocation } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,8 @@ import {
   type SignUpBodyType,
 } from "@/shared/validations/AuthSchema";
 import ROUTES from "@/shared/lib/routes";
+import API_ROUTES from "@/shared/lib/api-routes";
+import { api } from "@/shared/lib/api";
 import { useAuthStore } from "../stores/authStore";
 import { toast } from "sonner";
 import { useTranslation } from "@/shared/hooks/useTranslation";
@@ -30,6 +32,28 @@ export default function LoginPage() {
 
   // Lấy đường dẫn mà người dùng định truy cập trước khi bị redirect sang đây
   const from = location.state?.from || ROUTES.HOME.url;
+
+  // On mount, if memory state is not authenticated, verify if valid cookie exists in browser
+  useEffect(() => {
+    if (isAuth) return;
+
+    let isMounted = true;
+    api.get(API_ROUTES.AUTH.ME)
+      .then((res: any) => {
+        const me = res?.data || res;
+        if (me?.id && isMounted) {
+          useAuthStore.setState({ isAuth: true, userId: me.id });
+          navigate(from, { replace: true });
+        }
+      })
+      .catch(() => {
+        // Guest user or no cookie — stay on login page cleanly
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuth, navigate, from]);
 
   const loginMutation = useLoginMutation();
   const signUpMutation = useSignUpMutation();

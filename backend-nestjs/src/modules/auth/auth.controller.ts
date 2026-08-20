@@ -30,7 +30,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@/common/services/config.service';
 import { PublicUserDto } from '../users/dto/users-response.dto';
 import {
-  AccessTokenReponseDto,
   AuthTokensDto,
   TempTokenResponseDto,
   TwoFactorGenerateResponseDto,
@@ -52,6 +51,22 @@ export class AuthController {
 
     private readonly configService: ConfigService,
   ) {}
+
+  private getAccessTokenCookieOptions() {
+    const accessExpiresInSeconds =
+      Number(this.configService.get('ACCESS_TOKEN_EXPIRES_IN')) || 15 * 60;
+    const maxAgeMs = accessExpiresInSeconds * 1000;
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+
+    return {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax' as const,
+      maxAge: maxAgeMs,
+      expires: new Date(Date.now() + maxAgeMs),
+      path: '/',
+    };
+  }
 
   private getRefreshTokenCookieOptions() {
     const refreshExpiresInSeconds =
@@ -82,7 +97,7 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Req() request: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AccessTokenReponseDto | TempTokenResponseDto> {
+  ): Promise<void | TempTokenResponseDto> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
@@ -91,11 +106,8 @@ export class AuthController {
     if (result instanceof TempTokenResponseDto) {
       return result;
     }
+    res.cookie('accessToken', result.accessToken, this.getAccessTokenCookieOptions());
     res.cookie('refreshToken', result.refreshToken, this.getRefreshTokenCookieOptions());
-
-    return {
-      accessToken: result.accessToken,
-    };
   }
 
   @Post('two-factor-auth/login')
@@ -136,7 +148,7 @@ export class AuthController {
   async refreshToken(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AccessTokenReponseDto> {
+  ): Promise<void> {
     const ipAddress = req.ip;
     const userAgent = req.get('user-agent');
     const oldRefreshToken = req.cookies['refreshToken'];
@@ -146,12 +158,9 @@ export class AuthController {
       userAgent,
     );
 
-    // overwrite the cookie with the new one
+    // overwrite the cookies with the new ones
+    res.cookie('accessToken', result.accessToken, this.getAccessTokenCookieOptions());
     res.cookie('refreshToken', result.refreshToken, this.getRefreshTokenCookieOptions());
-
-    return {
-      accessToken: result.accessToken,
-    };
   }
 
   @Post('logout')
@@ -164,6 +173,9 @@ export class AuthController {
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     const refreshToken = req.cookies['refreshToken'];
     await this.authService.logout(refreshToken);
+    res.clearCookie('accessToken', {
+      path: '/',
+    });
     res.clearCookie('refreshToken', {
       path: '/api/v1/auth',
     });
@@ -247,10 +259,11 @@ export class AuthController {
       userAgent,
     );
 
+    res.cookie('accessToken', result.accessToken, this.getAccessTokenCookieOptions());
     res.cookie('refreshToken', result.refreshToken, this.getRefreshTokenCookieOptions());
 
     // Redirect về client mà không mang theo dữ liệu trên URL
-    const redirectUrl = `${this.configService.get('CLIENT_URL')}/auth/callback`;
+    const redirectUrl = `${this.configService.get('CLIENT_URL')}/home`;
     return res.redirect(redirectUrl);
   }
 

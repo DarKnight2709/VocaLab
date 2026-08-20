@@ -36,13 +36,3 @@ export class TwoFactorGenerateResponseDto {
   qrCode!: string;
 }
 
-export class AccessTokenReponseDto {
-    // token
-  @ApiProperty({
-    description: "Access token",
-    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-  })
-  @Expose()
-  accessToken!: string;
-
-}

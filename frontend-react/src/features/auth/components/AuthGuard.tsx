@@ -3,7 +3,6 @@ import { Navigate, Outlet, useLoaderData, useLocation } from "react-router";
 import { authLoader } from "../AuthLoader";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { useEffect } from "react";
-import { useAuthStore } from "../stores/authStore";
 import { useNotificationSocket } from "@/shared/hooks/useNotificationSocket";
 
 // Route Protector
@@ -12,13 +11,11 @@ const AuthGuard = () => {
   const location = useLocation();
   const socketConnect = useSocketStore((s) => s.connect);
 
-  const accessToken = useAuthStore((s) => s.authToken?.accessToken);
-
   useEffect(() => {
-    if (isAuth && accessToken) {
-      socketConnect(accessToken);
+    if (isAuth) {
+      socketConnect();
     }
-  }, [isAuth, socketConnect, accessToken]);
+  }, [isAuth, socketConnect]);
 
   if (!isAuth) {
     // trở về login và lưu lại đường dẫn hiện tại sau khi login có thể quay lại

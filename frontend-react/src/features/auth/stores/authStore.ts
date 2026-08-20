@@ -1,24 +1,16 @@
-import { toast } from "sonner";
 import { create } from "zustand";
-import type {
-  LoginResponse,
-  TempTokenResponse,
-} from "@/shared/validations/AuthSchema";
+import type { TempTokenResponse } from "@/shared/validations/AuthSchema";
 import { decodeToken } from "@/shared/lib/jwt";
 import { useSocketStore } from "@/shared/stores/useSocketStore";
 import { useFcmStore } from "@/features/notification/hooks/usePushNotifications";
-import type { JwtPayload } from "jwt-decode";
-import i18n from "@/shared/i18n";
 
 interface AuthState {
   isAuth: boolean;
   isFirstFactorPassed: boolean;
   userId: string | null;
-  authToken: LoginResponse | null;
   tempToken: TempTokenResponse | null;
   error: string | null;
-
-  login: (token: LoginResponse | TempTokenResponse) => void;
+  login: (token?: TempTokenResponse | void) => void;
   logout: () => void;
   clearAuthState: () => void;
 }
@@ -29,61 +21,35 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   isAuth: false,
   isFirstFactorPassed: false,
   userId: null,
-  authToken: null,
   tempToken: null,
   error: null,
 
-  login: (token: LoginResponse | TempTokenResponse) => {
-    // 1. Xác định token thuộc loại nào
-    const rawToken = "tempToken" in token ? token.tempToken : token.accessToken;
-
-    if (!rawToken) {
-      toast.error(i18n.t("auth.missingToken"), {
-        description: i18n.t("auth.pleaseSignInAgain"),
-      });
-      get().clearAuthState();
-      return;
-    }
-
-    // 2. Decode và validate
-    let decoded: JwtPayload | null = null;
-    try {
-      decoded = decodeToken(rawToken);
-      if (!decoded) throw new Error("Invalid token");
-    } catch (error) {
-      toast.error(i18n.t("auth.invalidToken"), {
-        description: i18n.t("auth.pleaseSignInAgain"),
-      });
-      get().clearAuthState();
-      return;
-    }
-
-    // 3. Phân nhánh xử lý State
-    if ("tempToken" in token) {
+  login: (token?: TempTokenResponse | void) => {
+    // 1. Two-Factor Auth (2FA) Temporary Token Case
+    if (token && typeof token === "object" && "tempToken" in token && token.tempToken) {
+      const decoded = decodeToken(token.tempToken);
       set({
         isAuth: false,
         isFirstFactorPassed: true,
-        authToken: null,
         tempToken: token,
         error: null,
-        userId: decoded.sub,
+        userId: decoded?.sub ?? null,
       });
-    } else {
-      set({
-        isAuth: true,
-        isFirstFactorPassed: false,
-        authToken: token,
-        tempToken: null,
-        error: null,
-        userId: decoded.sub,
-      });
-      useSocketStore.getState().connect(token.accessToken);
+      return;
     }
+
+    // 2. Standard or Cookie Login Case
+    set({
+      isAuth: true,
+      isFirstFactorPassed: false,
+      tempToken: null,
+      error: null,
+    });
+    useSocketStore.getState().connect();
   },
 
   logout: () => {
-    const token = get().authToken?.accessToken;
-    useFcmStore.getState().revokeToken(token).catch(console.error);
+    useFcmStore.getState().revokeToken().catch(console.error);
     get().clearAuthState();
     useSocketStore.getState().disconnect();
   },
@@ -91,7 +57,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   clearAuthState: () => {
     set({
       isAuth: false,
-      authToken: null,
       tempToken: null,
       error: null,
       userId: null,

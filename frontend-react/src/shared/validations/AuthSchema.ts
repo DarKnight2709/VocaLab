@@ -24,12 +24,6 @@ export const getSignUpSchema = () =>
     .strict()
     .strip();
 
-export const LoginResponseSchema = z
-  .object({
-    accessToken: z.string(),
-  })
-  .strip();
-
 export const TempTokenResponseSchema = z
   .object({
     tempToken: z.string(),
@@ -44,12 +38,6 @@ export const getTwoFactorLoginSchema = () =>
     })
     .strict()
     .strip();
-
-export const RefreshTokenResponseSchema = z
-  .object({
-    accessToken: z.string(),
-  })
-  .strip();
 
 export const MeResponseSchema = BaseEntityDTO.extend({
   username: z.string(),
@@ -83,6 +71,7 @@ export const getChangePasswordSchema = () =>
     // Keep the payload strict so no extra fields slip through.
     .strict()
     .strip();
+
 export const getSetPasswordSchema = () =>
   z
     .object({
@@ -102,7 +91,6 @@ export const UploadAvatarResponseSchema = z.object({
 
 export type LoginBodyType = z.infer<ReturnType<typeof getLoginSchema>>;
 export type SignUpBodyType = z.infer<ReturnType<typeof getSignUpSchema>>;
-export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type TempTokenResponse = z.infer<typeof TempTokenResponseSchema>;
 export type ChangePasswordBodyType = z.infer<
   ReturnType<typeof getChangePasswordSchema>
@@ -112,7 +100,6 @@ export type SetPasswordBodyType = z.infer<
 >;
 export type UploadAvatarResponse = z.infer<typeof UploadAvatarResponseSchema>;
 export type MeResponse = z.infer<typeof MeResponseSchema>;
-export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
 export type TwoFactorLoginBodyType = z.infer<
   ReturnType<typeof getTwoFactorLoginSchema>
 >;

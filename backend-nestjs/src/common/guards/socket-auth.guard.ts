@@ -20,8 +20,16 @@ export class SocketAuthGuard implements CanActivate {
     }
 
     const client = context.switchToWs().getClient();
+    const rawCookie = client.handshake?.headers?.cookie;
+    const cookieToken = rawCookie
+      ?.split('; ')
+      .find((row: string) => row.startsWith('accessToken='))
+      ?.split('=')[1];
+
     const token =
-      client.handshake?.auth?.token || client.handshake?.headers?.token;
+      client.handshake?.auth?.token ||
+      client.handshake?.headers?.token ||
+      cookieToken;
 
     if (!token) {
       this.logger.error('No token found in handshake');
