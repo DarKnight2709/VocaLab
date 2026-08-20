@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CloudinaryService } from '@/common/services/cloudinary.service';
+import { S3Service } from '@/common/services/s3.service';
 import { IsProtected } from '@/common/decorators/protected.decorator';
 import { ErrorCode } from '@/common/enums/error-code.enum';
 
@@ -17,7 +17,7 @@ import { ErrorCode } from '@/common/enums/error-code.enum';
 @IsProtected()
 export class UploadController {
   private readonly logger = new Logger(UploadController.name);
-  constructor(private readonly cloudinaryService: CloudinaryService) {}
+  constructor(private readonly s3Service: S3Service) {}
 
   @Post()
   @ApiOperation({ summary: 'Tải lên một file (ảnh, video, v.v...)' })
@@ -46,7 +46,7 @@ export class UploadController {
 
     this.logger.log(`Uploading file: ${originalName} (${file.mimetype})`);
 
-    const result = await this.cloudinaryService.uploadFile(file, originalName);
+    const result = await this.s3Service.uploadFile(file, originalName);
 
     let type = 'file';
     if (file.mimetype.startsWith('image/')) type = 'image';
@@ -54,7 +54,7 @@ export class UploadController {
     else if (file.mimetype.startsWith('audio/')) type = 'audio';
 
     return {
-      url: result.secure_url,
+      url: result?.secure_url,
       type,
       name: originalName,
       size: file.size,

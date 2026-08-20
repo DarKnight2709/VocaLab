@@ -12,9 +12,10 @@ import { CloudinaryProvider } from "@/core/configs/cloudinary.config";
 import { CacheModule } from "@nestjs/cache-manager";
 import { createKeyv } from "@keyv/redis";
 import { RedisService } from "@/core/cache/redis.service";
+import { S3Provider } from "@/core/configs/s3.config";
+import { S3Service } from "./services/s3.service";
 
-
-const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaService, CloudinaryService, RedisService]
+const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaService, CloudinaryService, RedisService, S3Service];
 
 // global module 
 // every module can use its services without importing
@@ -52,6 +53,7 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
   ],
   providers: [
     CloudinaryProvider,
+    S3Provider,
     // phải export thì mới inject nơi khác
     ...globalService,
   ],

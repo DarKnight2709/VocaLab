@@ -7,7 +7,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { CloudinaryService } from '@/common/services/cloudinary.service';
+import { S3Service } from '@/common/services/s3.service';
 import { PrismaService } from '@/core/database/prisma.service';
 import {
   CreateUserDto,
@@ -55,7 +55,7 @@ export class UserService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly cloudinaryService: CloudinaryService,
+    private readonly s3Service: S3Service,
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
   ) {}
@@ -385,8 +385,8 @@ export class UserService {
 
     if (file) {
       this.logger.debug('[FILE UPLOAD] Combining with profile update');
-      const result = await this.cloudinaryService.uploadFile(file);
-      updateDto.avatar = result.secure_url;
+      const result = await this.s3Service.uploadFile(file);
+      updateDto.avatar = result?.secure_url;
     }
 
     return await this.prisma.user.update({

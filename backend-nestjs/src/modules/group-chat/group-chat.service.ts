@@ -17,7 +17,7 @@ import { AddMemberDto } from './dto/add-member.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
 import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 import { GroupChatGateway } from './group-chat.gateway';
-import { CloudinaryService } from '@/common/services/cloudinary.service';
+import { S3Service } from '@/common/services/s3.service';
 import { MessagesService } from '../messages/messages.service';
 import {
   SEARCH_GROUP_FILTER,
@@ -90,7 +90,7 @@ export class GroupChatService {
     private groupChatGateway: GroupChatGateway,
     @Inject(forwardRef(() => UserService))
     private userService: UserService,
-    private cloudinaryService: CloudinaryService,
+    private s3Service: S3Service,
   ) {}
 
   async getUserGroups(
@@ -500,8 +500,8 @@ export class GroupChatService {
       updateData.description = updateDto.description.trim();
     }
     if (file) {
-      const result = await this.cloudinaryService.uploadFile(file);
-      updateData.avatar = result.secure_url;
+      const result = await this.s3Service.uploadFile(file);
+      updateData.avatar = result?.secure_url;
     } else if (updateDto.avatar !== undefined) {
       updateData.avatar = updateDto.avatar;
     }

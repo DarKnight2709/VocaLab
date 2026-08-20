@@ -174,6 +174,20 @@ export class EnvironmentValidation {
   @IsString()
   @Transform(({ value }) => value || 'https://www.dictionaryapi.com/api/v3/references')
   MW_BASE_URL: string = 'https://www.dictionaryapi.com/api/v3/references';
+
+  // ─── AWS S3 ────────────────────────────────────────────────
+  
+  @IsString()
+  AWS_S3_REGION!: string;
+
+  @IsString()
+  AWS_ACCESS_KEY_ID!: string;
+
+  @IsString()
+  AWS_SECRET_ACCESS_KEY!: string;
+
+  @IsString()
+  AWS_BUCKET_NAME!: string;
 }
 
 export function validateConfig(config: Record<string, unknown>) {
