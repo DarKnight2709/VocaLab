@@ -53,6 +53,22 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  private getRefreshTokenCookieOptions() {
+    const refreshExpiresInSeconds =
+      Number(this.configService.get('REFRESH_TOKEN_EXPIRES_IN')) || 7 * 24 * 60 * 60;
+    const maxAgeMs = refreshExpiresInSeconds * 1000;
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+
+    return {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax' as const,
+      maxAge: maxAgeMs,
+      expires: new Date(Date.now() + maxAgeMs),
+      path: '/api/v1/auth',
+    };
+  }
+
   // login
   @Post('login')
   @Public()
@@ -75,13 +91,7 @@ export class AuthController {
     if (result instanceof TempTokenResponseDto) {
       return result;
     }
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: Number(this.configService.get('REFRESH_TOKEN_EXPIRES_IN')) * 1000,
-      path: '/api/v1/auth',
-    });
+    res.cookie('refreshToken', result.refreshToken, this.getRefreshTokenCookieOptions());
 
     return {
       accessToken: result.accessToken,
@@ -137,13 +147,7 @@ export class AuthController {
     );
 
     // overwrite the cookie with the new one
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: Number(this.configService.get('REFRESH_TOKEN_EXPIRES_IN')) * 1000,
-      path: '/api/v1/auth',
-    });
+    res.cookie('refreshToken', result.refreshToken, this.getRefreshTokenCookieOptions());
 
     return {
       accessToken: result.accessToken,
@@ -243,13 +247,7 @@ export class AuthController {
       userAgent,
     );
 
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: Number(this.configService.get('REFRESH_TOKEN_EXPIRES_IN')) * 1000,
-      path: '/api/v1/auth',
-    });
+    res.cookie('refreshToken', result.refreshToken, this.getRefreshTokenCookieOptions());
 
     // Redirect về client mà không mang theo dữ liệu trên URL
     const redirectUrl = `${this.configService.get('CLIENT_URL')}/auth/callback`;
