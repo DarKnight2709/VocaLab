@@ -396,7 +396,7 @@ export default function VocabularyCollectionPage() {
       </div>
 
       {mode === "practice" ? (
-        <PracticeMode cards={cards} />
+        <PracticeMode cards={cards} collectionId={collectionId} />
       ) : mode === "preview" ? (
         <div className="space-y-2">
           {cards.length === 0 ? (

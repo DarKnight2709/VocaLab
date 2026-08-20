@@ -5,6 +5,7 @@ import PracticeSetup from "./practice/PracticeSetup";
 import PracticeCard from "./practice/PracticeCard";
 import PracticeResults from "./practice/PracticeResults";
 import { getUniqueFields, getFieldValue, normalize } from "../utils";
+import { useLocalStorage } from "@/shared/hooks/useLocalStorage";
 import type { FieldConfig, FieldMode, CardOrderMode } from "../types";
 
 function getOrderedCards(cards: CardItem[], order: CardOrderMode): CardItem[] {
@@ -24,22 +25,51 @@ function getOrderedCards(cards: CardItem[], order: CardOrderMode): CardItem[] {
 
 interface PracticeModeProps {
   cards: CardItem[];
+  collectionId?: string;
   onFinish?: () => void;
+}
+
+interface StoredPracticeSettings {
+  cardOrder: CardOrderMode;
+  fieldModes: Record<string, FieldMode>;
 }
 
 type Phase = "setup" | "practicing" | "results";
 
-export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
+export default function PracticeMode({ cards, collectionId, onFinish }: PracticeModeProps) {
+  const storageKey = `vocalab_practice_config_${collectionId ?? "default"}`;
+  const [savedConfig, setSavedConfig] = useLocalStorage<StoredPracticeSettings | null>(
+    storageKey,
+    null
+  );
+
   // Phase 1: Setup state
   const uniqueFields = useMemo(() => getUniqueFields(cards), [cards]);
 
   const [fieldConfigs, setFieldConfigs] = useState<FieldConfig[]>(() =>
     uniqueFields.map((field) => ({
       field,
-      mode: "show",
+      mode: savedConfig?.fieldModes?.[field.id] ?? "show",
     }))
   );
-  const [cardOrder, setCardOrder] = useState<CardOrderMode>("order");
+  const [cardOrder, setCardOrder] = useState<CardOrderMode>(
+    () => savedConfig?.cardOrder ?? "order"
+  );
+
+  // Sync fieldConfigs when uniqueFields updates (e.g., initial empty cards state)
+  useEffect(() => {
+    if (uniqueFields.length > 0) {
+      setFieldConfigs((prev) => {
+        if (prev.length === 0) {
+          return uniqueFields.map((field) => ({
+            field,
+            mode: savedConfig?.fieldModes?.[field.id] ?? "show",
+          }));
+        }
+        return prev;
+      });
+    }
+  }, [uniqueFields, savedConfig]);
 
   // Phase 2: Practice state
   const [phase, setPhase] = useState<Phase>("setup");
@@ -78,12 +108,18 @@ export default function PracticeMode({ cards, onFinish }: PracticeModeProps) {
   }, []);
 
   const handleStartPractice = useCallback(() => {
+    const fieldModes = fieldConfigs.reduce<Record<string, FieldMode>>((acc, fc) => {
+      acc[fc.field.id] = fc.mode;
+      return acc;
+    }, {});
+    setSavedConfig({ cardOrder, fieldModes });
+
     setPracticeCards(getOrderedCards(cards, cardOrder));
     setCurrentIdx(0);
     setAnswers({});
     setRevealed(false);
     setPhase("practicing");
-  }, [cards, cardOrder]);
+  }, [cards, cardOrder, fieldConfigs, setSavedConfig]);
 
   const handleAnswerChange = useCallback(
     (cardId: string, fieldId: string, value: string) => {
