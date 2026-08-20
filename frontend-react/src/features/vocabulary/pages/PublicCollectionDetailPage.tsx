@@ -22,6 +22,7 @@ import {
   DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { useOptionalAuth } from "@/features/auth/hooks/useOptionalAuth";
+import FormattedFieldValue from "../components/FormattedFieldValue";
 
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -149,7 +150,7 @@ export default function PublicCollectionDetailPage() {
                 : {}
             }
           >
-            {entry.value}
+            <FormattedFieldValue text={entry.value} />
           </div>
         ))}
         {entries.length === 0 && (

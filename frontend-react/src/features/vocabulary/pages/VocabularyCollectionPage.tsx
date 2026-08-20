@@ -36,6 +36,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import ROUTES from "@/shared/lib/routes";
 import PracticeMode from "../components/PracticeMode";
+import FormattedFieldValue from "../components/FormattedFieldValue";
 import { useLayoutStore } from "@/shared/stores/useLayoutStore";
 
 export default function VocabularyCollectionPage() {
@@ -159,58 +160,6 @@ export default function VocabularyCollectionPage() {
     () => data?.cards ?? [],
     [data?.cards],
   );
-
-  const CardFace = ({ 
-    card, 
-    side, 
-    className, 
-    useStyles = true 
-  }: { 
-    card: CardItem; 
-    side: "front" | "back"; 
-    className?: string;
-    useStyles?: boolean;
-  }) => {
-    const fieldsById = new Map(
-      (card.cardType?.fields ?? []).map((field) => [field.id, field]),
-    );
-
-    const entries = (card.values ?? [])
-      .map((item) => {
-        const field = item.field ?? fieldsById.get(item.fieldId);
-        const normalizedSide = String(field?.side).toLowerCase();
-        return {
-          value: item.value,
-          side: normalizedSide,
-          order: field?.order ?? 0,
-          color: field?.color,
-          fontSize: field?.fontSize,
-        };
-      })
-      .filter((item) => item.side === side)
-      .sort((a, b) => a.order - b.order);
-
-    return (
-      <div className={className}>
-        {entries.map((entry, idx) => (
-          <div
-            key={idx}
-            className="whitespace-pre-line leading-snug"
-            style={useStyles ? {
-              color: entry.color || "inherit",
-              fontSize: entry.fontSize 
-                ? (isFocusMode ? (Number(entry.fontSize) * 1.5) + "px" : Number(entry.fontSize) + "px") 
-                : "inherit",
-              fontWeight: entry.fontSize ? '500' : 'inherit',
-            } : {}}
-          >
-            {entry.value}
-          </div>
-        ))}
-        {entries.length === 0 && <div className="text-muted-foreground italic text-xs">{t("vocabulary.emptyFieldValue")}</div>}
-      </div>
-    );
-  };
 
 
 
@@ -434,9 +383,9 @@ export default function VocabularyCollectionPage() {
                 </div>
 
                 <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-start gap-4">
-                  <CardFace card={card} side="front" className={`font-semibold ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} />
+                  <CardFace card={card} side="front" className={`font-semibold ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} isFocusMode={isFocusMode} />
                   <div className="w-px self-stretch bg-border" aria-hidden="true" />
-                  <CardFace card={card} side="back" className={`text-muted-foreground ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} />
+                  <CardFace card={card} side="back" className={`text-muted-foreground ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} isFocusMode={isFocusMode} />
                 </div>
               </div>
             ))
@@ -504,7 +453,7 @@ export default function VocabularyCollectionPage() {
                   {/* Front Face */}
                   <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden">
                     <div className="text-center w-full max-w-4xl px-4">
-                      <CardFace card={sessionCards[flashcardIdx]} side="front" className={`leading-tight font-medium ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} />
+                      <CardFace card={sessionCards[flashcardIdx]} side="front" className={`leading-tight font-medium ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} isFocusMode={isFocusMode} />
                     </div>
                     <div className="absolute bottom-4 text-xs text-muted-foreground animate-pulse">
                       {t("vocabulary.clickToFlip") || "Click card to flip"}
@@ -517,7 +466,7 @@ export default function VocabularyCollectionPage() {
                   {/* Back Face */}
                   <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
                     <div className="text-center w-full max-w-4xl px-4">
-                      <CardFace card={sessionCards[flashcardIdx]} side="back" className={`leading-tight font-medium text-muted-foreground ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} />
+                      <CardFace card={sessionCards[flashcardIdx]} side="back" className={`leading-tight font-medium text-muted-foreground ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} isFocusMode={isFocusMode} />
                     </div>
                     <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
                       {t("vocabulary.backFace")}
@@ -615,5 +564,70 @@ export default function VocabularyCollectionPage() {
       />
     </div>
 
+  );
+}
+
+function CardFace({
+  card,
+  side,
+  className,
+  useStyles = true,
+  isFocusMode = false,
+}: {
+  card: CardItem;
+  side: "front" | "back";
+  className?: string;
+  useStyles?: boolean;
+  isFocusMode?: boolean;
+}) {
+  const { t } = useTranslation();
+  const fieldsById = new Map(
+    (card.cardType?.fields ?? []).map((field) => [field.id, field]),
+  );
+
+  const entries = (card.values ?? [])
+    .map((item) => {
+      const field = item.field ?? fieldsById.get(item.fieldId);
+      const normalizedSide = String(field?.side).toLowerCase();
+      return {
+        value: item.value,
+        side: normalizedSide,
+        order: field?.order ?? 0,
+        color: field?.color,
+        fontSize: field?.fontSize,
+      };
+    })
+    .filter((item) => item.side === side)
+    .sort((a, b) => a.order - b.order);
+
+  return (
+    <div className={className}>
+      {entries.map((entry, idx) => (
+        <div
+          key={idx}
+          className="whitespace-pre-line leading-snug"
+          style={
+            useStyles
+              ? {
+                  color: entry.color || "inherit",
+                  fontSize: entry.fontSize
+                    ? isFocusMode
+                      ? Number(entry.fontSize) * 1.5 + "px"
+                      : Number(entry.fontSize) + "px"
+                    : "inherit",
+                  fontWeight: entry.fontSize ? "500" : "inherit",
+                }
+              : {}
+          }
+        >
+          <FormattedFieldValue text={entry.value} />
+        </div>
+      ))}
+      {entries.length === 0 && (
+        <div className="text-muted-foreground italic text-xs">
+          {t("vocabulary.emptyFieldValue")}
+        </div>
+      )}
+    </div>
   );
 }

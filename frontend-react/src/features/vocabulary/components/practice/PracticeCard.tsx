@@ -5,6 +5,7 @@ import { useTranslation } from "@/shared/hooks/useTranslation";
 import { getFieldValue, normalize } from "../../utils";
 import type { CardItem } from "../../api/vocabularyService";
 import { useLayoutStore } from "@/shared/stores/useLayoutStore";
+import FormattedFieldValue from "../FormattedFieldValue";
 
 interface PracticeCardProps {
   currentCard: CardItem;
@@ -112,7 +113,9 @@ export default function PracticeCard({
                       : "inherit",
                   }}
                 >
-                  {correctValue || (
+                  {correctValue ? (
+                    <FormattedFieldValue text={correctValue} />
+                  ) : (
                     <span className="text-muted-foreground italic text-xs">
                       {t("vocabulary.emptyFieldValue")}
                     </span>
@@ -145,7 +148,9 @@ export default function PracticeCard({
                     <span className={`${isFocusMode ? 'text-xs mb-1' : 'text-[10px] mb-0.5'} uppercase tracking-widest font-bold block opacity-70`}>
                       {t("vocabulary.yourAnswer") || "Your Answer"}
                     </span>
-                    {userAnswer || (
+                    {userAnswer ? (
+                      <FormattedFieldValue text={userAnswer} />
+                    ) : (
                       <span className="italic opacity-50">({t("vocabulary.emptyFieldValue")})</span>
                     )}
                   </div>
@@ -154,7 +159,7 @@ export default function PracticeCard({
                       <span className={`${isFocusMode ? 'text-xs mb-1' : 'text-[10px] mb-0.5'} uppercase tracking-widest font-bold block opacity-70`}>
                         {t("vocabulary.correctAnswer") || "Correct Answer"}
                       </span>
-                      {correctValue}
+                      <FormattedFieldValue text={correctValue} />
                     </div>
                   )}
                 </div>

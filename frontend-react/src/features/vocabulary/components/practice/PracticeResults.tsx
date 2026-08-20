@@ -5,6 +5,7 @@ import { getFieldValue } from "../../utils";
 import type { CardItem } from "../../api/vocabularyService";
 import type { PracticeResult } from "../../types";
 import type { CardField } from "@/shared/validations/VocabularySchema";
+import FormattedFieldValue from "../FormattedFieldValue";
 
 interface PracticeResultsProps {
   practiceCards: CardItem[];
@@ -104,7 +105,7 @@ export default function PracticeResults({
               return (
                 <div key={fid} className="text-sm mb-1">
                   <span className="font-medium">{label}:</span>{" "}
-                  <span className="text-muted-foreground">{val}</span>
+                  <span className="text-muted-foreground"><FormattedFieldValue text={val} /></span>
                 </div>
               );
             })}
@@ -116,13 +117,13 @@ export default function PracticeResults({
                 <div key={fr.fieldId} className="text-sm mt-1">
                   <span className="font-medium">{label}:</span>{" "}
                   {fr.isCorrect ? (
-                    <span className="text-emerald-600">{fr.userAnswer}</span>
+                    <span className="text-emerald-600"><FormattedFieldValue text={fr.userAnswer} /></span>
                   ) : (
                     <>
                       <span className="line-through text-destructive mr-1.5">
-                        {fr.userAnswer || `(${t("vocabulary.emptyFieldValue")})`}
+                        {fr.userAnswer ? <FormattedFieldValue text={fr.userAnswer} /> : `(${t("vocabulary.emptyFieldValue")})`}
                       </span>
-                      <span className="text-emerald-600">→ {fr.correct}</span>
+                      <span className="text-emerald-600">→ <FormattedFieldValue text={fr.correct} /></span>
                     </>
                   )}
                 </div>
