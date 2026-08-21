@@ -66,10 +66,10 @@ export const router = createBrowserRouter([
       // 1. PUBLIC ROUTES (Accessible to both guests and users, but users get redirected from landing)
       {
         element: <OptionalPublicGuard />,
+        loader: authLoader,
         children: [
           {
             path: ROUTES.LANDING.url,
-            loader: authLoader,
             element: <LandingRedirectGuard />,
             children: [
               {
