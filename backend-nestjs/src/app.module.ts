@@ -34,7 +34,7 @@ import { ApiValidationPipe } from './common/pipes/validation.pipe';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-
+import { CustomRateLimitGuard } from './common/guards/custom-rate-limit.guard';
 
 @Module({
   imports: [
@@ -86,6 +86,10 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     {
       provide: APP_GUARD,
       useClass: JwtGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CustomRateLimitGuard,
     },
     // {
     //   provide: APP_INTERCEPTOR,

@@ -2,6 +2,7 @@
 import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from './common/services/config.service';
 import { configSwagger } from './core/configs/swagger.config';
 import { Logger } from '@nestjs/common';
@@ -12,7 +13,9 @@ import { urlencoded, json } from 'express';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // This tells Express to read the X-Forwarded-For header sent by Nginx
+  app.set('trust proxy', 1);
   const configService = app.get(ConfigService);
 
   // get config

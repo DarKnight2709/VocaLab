@@ -14,6 +14,7 @@ import { createKeyv } from "@keyv/redis";
 import { RedisService } from "@/core/cache/redis.service";
 import { S3Provider } from "@/core/configs/s3.config";
 import { S3Service } from "./services/s3.service";
+import { REDIS_CLIENT, RedisProvider } from "@/core/redis/redis.provider";
 
 const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaService, CloudinaryService, RedisService, S3Service];
 
@@ -54,11 +55,13 @@ const globalService = [ConfigService, HashingService, RsaKeyManager, PrismaServi
   providers: [
     CloudinaryProvider,
     S3Provider,
+    RedisProvider,
     // phải export thì mới inject nơi khác
     ...globalService,
   ],
   exports: [
     ...globalService,
+    REDIS_CLIENT,
   ]
 })
 
