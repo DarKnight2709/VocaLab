@@ -24,6 +24,7 @@ import {
   useCollectionDueCardsQuery,
   useReviewCardMutation,
   useCollectionsQuery,
+  useDeleteManyCardsMutation,
   type CardItem,
 } from "../api/vocabularyService";
 import type { SrsRating } from "@/shared/enums/SrsRating.enum";
@@ -33,6 +34,7 @@ import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { useCollectionStatsQuery } from "@/features/stats/api/statsService";
 import { HeatMapChart } from "@/features/stats/components/HeatMapChart";
 import { Button } from "@/shared/components/ui/button";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import ROUTES from "@/shared/lib/routes";
 import PracticeMode from "../components/PracticeMode";
@@ -56,6 +58,9 @@ export default function VocabularyCollectionPage() {
 
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+
+  const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
 
   const [sessionCards, setSessionCards] = useState<CardItem[]>([]);
   const [sessionInitialized, setSessionInitialized] = useState(false);
@@ -64,6 +69,7 @@ export default function VocabularyCollectionPage() {
   const { data: statsData } = useCollectionStatsQuery(collectionId || "");
   const { data: collections } = useCollectionsQuery(true);
   const deleteMutation = useDeleteCardMutation(collectionId || "");
+  const deleteManyMutation = useDeleteManyCardsMutation(collectionId || "");
   const updateCollectionMutation = useUpdateCollectionMutation();
 
   const currentIndex = collections?.findIndex((c) => c.id === collectionId) ?? -1;
@@ -144,15 +150,41 @@ export default function VocabularyCollectionPage() {
   };
 
   const handleDeleteClick = (cardId: string) => {
+    setIsDeletingBulk(false);
     setDeletingCardId(cardId);
     setDeleteConfirmOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (deletingCardId) {
+    if (isDeletingBulk && selectedCardIds.size > 0) {
+      await deleteManyMutation.mutateAsync(Array.from(selectedCardIds));
+      setSelectedCardIds(new Set());
+      setDeleteConfirmOpen(false);
+      setIsDeletingBulk(false);
+    } else if (deletingCardId) {
       await deleteMutation.mutateAsync(deletingCardId);
       setDeleteConfirmOpen(false);
       setDeletingCardId(null);
+    }
+  };
+
+  const handleToggleCardSelection = (cardId: string) => {
+    setSelectedCardIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+      } else {
+        next.add(cardId);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && cards) {
+      setSelectedCardIds(new Set(cards.map(c => c.id)));
+    } else {
+      setSelectedCardIds(new Set());
     }
   };
 
@@ -347,7 +379,7 @@ export default function VocabularyCollectionPage() {
       {mode === "practice" ? (
         <PracticeMode cards={cards} collectionId={collectionId} />
       ) : mode === "preview" ? (
-        <div className="space-y-2">
+        <div className="space-y-2 relative pb-2">
           {cards.length === 0 ? (
               <div className="rounded-xl bg-card shadow-sm p-10 text-center text-muted-foreground">
               {t("vocabulary.noCards")}
@@ -356,11 +388,27 @@ export default function VocabularyCollectionPage() {
             cards.map((card) => (
               <div
                 key={card.id}
-                className="group relative rounded-xl bg-card shadow-sm p-4 hover:bg-muted/40 transition-colors"
+                className={`group relative rounded-xl bg-card shadow-sm p-4 transition-all cursor-pointer ${
+                  selectedCardIds.has(card.id) 
+                    ? "ring-2 ring-primary/50 bg-primary/[0.03]" 
+                    : "hover:bg-muted/40"
+                }`}
+                onClick={(e) => {
+                  // Don't toggle if clicking on buttons or links
+                  if ((e.target as HTMLElement).closest("button, a, input")) return;
+                  handleToggleCardSelection(card.id);
+                }}
               >
                 <div className="flex items-start justify-between">
-                  <div className="text-xs text-muted-foreground mb-1">
-                    {card.cardType?.name ?? t("vocabulary.cardType")}
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={selectedCardIds.has(card.id)}
+                      onCheckedChange={() => handleToggleCardSelection(card.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      {card.cardType?.name ?? t("vocabulary.cardType")}
+                    </div>
                   </div>
                   <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
                     <Button
@@ -390,6 +438,42 @@ export default function VocabularyCollectionPage() {
               </div>
             ))
           )}
+
+          {/* Floating action bar */}
+          <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${
+            selectedCardIds.size > 0 
+              ? "translate-y-0 opacity-100" 
+              : "translate-y-4 opacity-0 pointer-events-none"
+          }`}>
+            <div className="flex items-center gap-3 bg-foreground text-background px-5 py-2.5 rounded-full shadow-2xl">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedCardIds.size === cards.length && cards.length > 0}
+                  onCheckedChange={handleSelectAll}
+                  className="border-background/50 accent-background"
+                />
+                <span className="text-sm font-medium">
+                  {selectedCardIds.size} {t("vocabulary.selected") || "selected"}
+                </span>
+              </div>
+              <div className="w-px h-5 bg-background/20" />
+              <button
+                className="text-sm text-background/70 hover:text-background transition-colors"
+                onClick={() => setSelectedCardIds(new Set())}
+              >
+                {t("vocabulary.clearSelection") || "Clear"}
+              </button>
+              <div className="w-px h-5 bg-background/20" />
+              <button
+                className="flex items-center gap-1.5 text-sm font-medium text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                disabled={deleteManyMutation.isPending}
+                onClick={() => { setIsDeletingBulk(true); setDeleteConfirmOpen(true); }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t("vocabulary.delete") || "Delete"}
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="mt-4">
@@ -558,9 +642,9 @@ export default function VocabularyCollectionPage() {
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         onConfirm={handleConfirmDelete}
-        isLoading={deleteMutation.isPending}
-        title={t("vocabulary.deleteCardTitle")}
-        description={t("vocabulary.deleteCardDescription")}
+        isLoading={isDeletingBulk ? deleteManyMutation.isPending : deleteMutation.isPending}
+        title={isDeletingBulk ? (t("vocabulary.deleteSelectedTitle") || "Delete Selected Cards") : t("vocabulary.deleteCardTitle")}
+        description={isDeletingBulk ? (t("vocabulary.deleteSelectedDescription") || "Are you sure you want to delete these cards? This action cannot be undone.") : t("vocabulary.deleteCardDescription")}
       />
     </div>
 

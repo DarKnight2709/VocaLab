@@ -20,6 +20,7 @@ import {
   ForkCollectionDto,
   ReviewCardDto,
   UpdateCollectionDto,
+  DeleteManyCardsDto,
 } from './dto/vocabulary.dto';
 import { IsProtected } from '../../common/decorators/protected.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -180,6 +181,15 @@ export class VocabularyController {
       dto,
     );
     return result;
+  }
+
+  @Delete('cards/bulk')
+  @ApiOperation({ summary: 'Xóa nhiều thẻ' })
+  async deleteManyCards(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: DeleteManyCardsDto,
+  ): Promise<void> {
+    await this.vocabularyService.deleteManyCards(dto.cardIds, user.id);
   }
 
   @Delete('cards/:id')

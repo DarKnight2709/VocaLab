@@ -390,6 +390,28 @@ export const useDeleteCardMutation = (collectionId: string) => {
   });
 };
 
+export const useDeleteManyCardsMutation = (collectionId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cardIds: string[]) =>
+      api.delete(API_ROUTES.VOCABULARY.BULK_DELETE_CARDS, { data: { cardIds } }),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["card-collection-cards", collectionId],
+      });
+      qc.invalidateQueries({
+        queryKey: ["card-collection-detail", collectionId],
+      });
+      qc.invalidateQueries({ queryKey: ["card-collections"] });
+      qc.invalidateQueries({ queryKey: ["collection-stats", collectionId] });
+      qc.invalidateQueries({ queryKey: ["vocabulary-stats"] });
+      toast.success(i18n.t("vocabulary.cardDeleteSuccess") || "Cards deleted successfully");
+    },
+    onError: (e) =>
+      toast.error(getErrorMessage(e, i18n.t("vocabulary.cardDeleteFailed"))),
+  });
+};
+
 export const useUpdateCardMutation = (collectionId: string) => {
   const qc = useQueryClient();
   return useMutation({

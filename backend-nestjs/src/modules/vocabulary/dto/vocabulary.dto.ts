@@ -18,6 +18,13 @@ import { UpdateCardType } from '@/common/enums/update-card-type';
 import { UpdateCard } from '@/common/enums/update-card';
 import { SrsRating } from '@/common/enums/srs-rating.enum';
 
+export class DeleteManyCardsDto {
+  @IsArray()
+  @IsString({ each: true })
+  @IsNotEmpty()
+  cardIds!: string[];
+}
+
 export class CreateCollectionDto {
   @IsString()
   @IsNotEmpty()

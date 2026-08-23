@@ -1074,6 +1074,34 @@ export class VocabularyService {
     await this.recordDailyActivity(userId, card.cardCollectionId, 'cardsDeleted');
   }
 
+  async deleteManyCards(cardIds: string[], userId: string): Promise<void> {
+    if (!cardIds || cardIds.length === 0) return;
+
+    // Lấy thông tin các thẻ để kiểm tra quyền sở hữu
+    const cards = await this.prisma.card.findMany({
+      where: {
+        id: { in: cardIds },
+        cardCollection: { userId },
+      },
+      select: { id: true, cardCollectionId: true },
+    });
+
+    if (cards.length !== cardIds.length) {
+      // Một số thẻ không tồn tại hoặc không thuộc quyền sở hữu của user
+      throw new ForbiddenException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
+    }
+
+    await this.prisma.card.deleteMany({
+      where: { id: { in: cardIds } },
+    });
+
+    // Record activity (only once per unique collection)
+    const collectionIds = Array.from(new Set(cards.map(c => c.cardCollectionId)));
+    for (const colId of collectionIds) {
+      await this.recordDailyActivity(userId, colId, 'cardsDeleted');
+    }
+  }
+
   async importCards(
     collectionId: string,
     userId: string,

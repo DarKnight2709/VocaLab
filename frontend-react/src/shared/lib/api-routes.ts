@@ -111,6 +111,7 @@ const API_ROUTES = {
     CREATE_CARD: (collectionId: string) =>
       `v1/vocabulary/collections/${collectionId}/card`,
     DELETE_CARD: (cardId: string) => `v1/vocabulary/cards/${cardId}`,
+    BULK_DELETE_CARDS: `v1/vocabulary/cards/bulk`,
     IMPORT_CARDS: (collectionId: string) =>
       `v1/vocabulary/collections/${collectionId}/import`,
     ADD_CARD: (collectionId: string) =>
