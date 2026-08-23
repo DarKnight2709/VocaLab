@@ -1077,7 +1077,7 @@ export class VocabularyService {
   async deleteManyCards(cardIds: string[], userId: string): Promise<void> {
     if (!cardIds || cardIds.length === 0) return;
 
-    // Lấy thông tin các thẻ để kiểm tra quyền sở hữu
+    // Find cards that exist and belong to the user
     const cards = await this.prisma.card.findMany({
       where: {
         id: { in: cardIds },
@@ -1086,13 +1086,11 @@ export class VocabularyService {
       select: { id: true, cardCollectionId: true },
     });
 
-    if (cards.length !== cardIds.length) {
-      // Một số thẻ không tồn tại hoặc không thuộc quyền sở hữu của user
-      throw new ForbiddenException(ErrorCode.CARD_NOT_FOUND_OR_FORBIDDEN);
-    }
+    if (cards.length === 0) return;
 
+    const validIds = cards.map(c => c.id);
     await this.prisma.card.deleteMany({
-      where: { id: { in: cardIds } },
+      where: { id: { in: validIds } },
     });
 
     // Record activity (only once per unique collection)

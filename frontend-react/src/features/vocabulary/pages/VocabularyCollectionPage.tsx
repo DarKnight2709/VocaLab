@@ -193,7 +193,18 @@ export default function VocabularyCollectionPage() {
     [data?.cards],
   );
 
-
+  // Clear stale selections when cards data refreshes
+  useEffect(() => {
+    if (cards.length === 0) {
+      setSelectedCardIds(new Set());
+    } else {
+      setSelectedCardIds((prev) => {
+        const currentIds = new Set(cards.map(c => c.id));
+        const filtered = new Set([...prev].filter(id => currentIds.has(id)));
+        return filtered.size === prev.size ? prev : filtered;
+      });
+    }
+  }, [cards]);
 
   return (
     <div className="space-y-6">
@@ -232,14 +243,20 @@ export default function VocabularyCollectionPage() {
                 <ChevronRight className="h-5 w-5" />
               </Button>
               {!isLoading && data && (
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider shrink-0 ${
-                  data.isPublic 
-                    ? "bg-green-500/10 text-green-600 dark:text-green-400" 
-                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                }`}>
+                <button
+                  type="button"
+                  onClick={handleToggleVisibility}
+                  disabled={updateCollectionMutation.isPending}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider shrink-0 transition-colors cursor-pointer disabled:opacity-50 ${
+                    data.isPublic 
+                      ? "bg-green-500/10 text-green-600 hover:bg-green-500/20 dark:text-green-400 dark:hover:bg-green-500/20" 
+                      : "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/20"
+                  }`}
+                  title={data.isPublic ? t("vocabulary.makePrivate") : t("vocabulary.publish")}
+                >
                   {data.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
                   {data.isPublic ? t("vocabulary.public") : t("vocabulary.private")}
-                </span>
+                </button>
               )}
             </div>
             <div className="flex flex-col mt-1">
@@ -288,29 +305,6 @@ export default function VocabularyCollectionPage() {
         <div className={`flex flex-wrap items-center gap-2 justify-end ${isFocusMode ? "w-full" : ""}`}>
           {!isFocusMode && (
             <>
-              {!isLoading && data && (
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={handleToggleVisibility}
-              disabled={updateCollectionMutation.isPending}
-            >
-              {data.isPublic ? (
-                <>
-                  <Lock className="h-4 w-4" /> {t("vocabulary.makePrivate")}
-                </>
-              ) : (
-                <>
-                  <Globe className="h-4 w-4" /> {t("vocabulary.publish")}
-                </>
-              )}
-            </Button>
-          )}
-
-          {!isLoading && data && (
-            <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
-          )}
-
           <Button
             variant={mode === "preview" ? "default" : "outline"}
             className="gap-2"
