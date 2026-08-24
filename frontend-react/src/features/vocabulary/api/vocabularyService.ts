@@ -471,6 +471,52 @@ export const useImportVocabularyMutation = () => {
   });
 };
 
+export interface AnkiImportResponse {
+  collectionId: string;
+  collectionName: string;
+  cardsCount: number;
+  cardTypeName: string;
+}
+
+export const useImportAnkiMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ file, name }: { file: File; name?: string }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (name?.trim()) {
+        formData.append("name", name.trim());
+      }
+      const res = await api.post<AnkiImportResponse>(
+        API_ROUTES.VOCABULARY.IMPORT_ANKI,
+        formData,
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["card-collections"] });
+      qc.invalidateQueries({ queryKey: ["card-types"] });
+      qc.invalidateQueries({ queryKey: ["vocabulary-stats"] });
+      toast.success(
+        i18n.t("vocabulary.ankiImportSuccess", {
+          count: data.cardsCount,
+          name: data.collectionName,
+          defaultValue: `Successfully imported "${data.collectionName}" (${data.cardsCount} cards)!`,
+        }),
+      );
+    },
+    onError: (e) =>
+      toast.error(
+        getErrorMessage(
+          e,
+          i18n.t("vocabulary.ankiImportFailed", {
+            defaultValue: "Failed to import Anki package",
+          }),
+        ),
+      ),
+  });
+};
+
 export const useCollectionDueCardsQuery = (collectionId: string, enabled: boolean) =>
   useQuery<CardItem[]>({
     queryKey: ["card-collection-due-cards", collectionId],

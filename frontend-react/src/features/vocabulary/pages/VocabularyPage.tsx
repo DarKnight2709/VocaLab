@@ -9,12 +9,14 @@ import {
   Download,
   Settings,
   Import,
+  UploadCloud,
   Globe,
   Lock,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { Switch } from "@/shared/components/ui/switch";
 import ImportVocabularyDialog from "../components/ImportVocabularyDialog";
+import ImportAnkiDialog from "../components/ImportAnkiDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { LanguagePicker } from "@/features/chat/components/LanguagePicker";
 import { toast } from "sonner";
@@ -58,6 +60,7 @@ export default function VocabularyPage() {
   const [newColIsPublic, setNewColIsPublic] = useState(true);
   const [newColLanguages, setNewColLanguages] = useState<string[]>([]);
   const [importOpen, setImportOpen] = useState(false);
+  const [ankiImportOpen, setAnkiImportOpen] = useState(false);
 
   const [renameOpen, setRenameOpen] = useState(false);
   const [renamingCol, setRenamingCol] = useState<VocabCollection | null>(null);
@@ -230,6 +233,14 @@ export default function VocabularyPage() {
             className="gap-2"
           >
             <Import className="h-4 w-4" /> {t("vocabulary.importData")}
+          </Button>
+
+          <Button
+            onClick={() => setAnkiImportOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <UploadCloud className="h-4 w-4 text-primary" /> {t("vocabulary.importAnki", { defaultValue: "Import Anki (.apkg)" })}
           </Button>
 
           <Button
@@ -488,6 +499,7 @@ export default function VocabularyPage() {
       </Dialog>
 
       <ImportVocabularyDialog open={importOpen} onOpenChange={setImportOpen} />
+      <ImportAnkiDialog open={ankiImportOpen} onOpenChange={setAnkiImportOpen} />
 
       <ConfirmDeleteDialog
         open={deleteConfirmOpen}

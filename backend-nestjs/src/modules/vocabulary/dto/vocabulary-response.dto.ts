@@ -329,6 +329,24 @@ export class ImportCardsResponseDto {
   errors!: ImportErrorDetailDto;
 }
 
+export class ImportAnkiResponseDto {
+  @ApiProperty({ example: 'uuid-string' })
+  @Expose()
+  collectionId!: string;
+
+  @ApiProperty({ example: 'Japanese Core 2000' })
+  @Expose()
+  collectionName!: string;
+
+  @ApiProperty({ example: 50 })
+  @Expose()
+  cardsCount!: number;
+
+  @ApiProperty({ example: 'Anki - Japanese Vocabulary' })
+  @Expose()
+  cardTypeName!: string;
+}
+
 // ─── Card Types ─────────────────────────────────────────────
 
 export class CardTypesResponseDto {

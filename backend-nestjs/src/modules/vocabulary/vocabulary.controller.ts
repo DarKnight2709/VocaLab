@@ -8,9 +8,14 @@ import {
   Param,
   Body,
   SerializeOptions,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { VocabularyService } from './vocabulary.service';
+import { AnkiImporterService } from './services/anki-importer.service';
 import {
   CreateCollectionDto,
   CreateCardTypeDto,
@@ -36,13 +41,17 @@ import {
   CollectionItemDto,
   PublicCollectionResponseDto,
   CardTypesResponseDto,
+  ImportAnkiResponseDto,
 } from './dto/vocabulary-response.dto';
 
 @IsProtected()
 @ApiTags('vocabulary')
 @Controller('vocabulary')
 export class VocabularyController {
-  constructor(private readonly vocabularyService: VocabularyService) {}
+  constructor(
+    private readonly vocabularyService: VocabularyService,
+    private readonly ankiImporterService: AnkiImporterService,
+  ) {}
 
   // ──────────────────────────────────────────────
   // Collections
@@ -163,6 +172,27 @@ export class VocabularyController {
       id,
       user.id,
       dto,
+    );
+    return result;
+  }
+
+  @Post('collections/import/anki')
+  @ApiOperation({ summary: 'Import bộ thẻ từ file Anki (.apkg)' })
+  @ApiConsumes('multipart/form-data')
+  @SerializeOptions({ type: ImportAnkiResponseDto, excludeExtraneousValues: true })
+  @UseInterceptors(FileInterceptor('file'))
+  async importAnki(
+    @CurrentUser() user: RequestUser,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('name') name?: string,
+  ): Promise<ImportAnkiResponseDto> {
+    if (!file) {
+      throw new BadRequestException('Vui lòng chọn file .apkg để import');
+    }
+    const result = await this.ankiImporterService.importAnkiPackage(
+      file.buffer,
+      user.id,
+      name,
     );
     return result;
   }
