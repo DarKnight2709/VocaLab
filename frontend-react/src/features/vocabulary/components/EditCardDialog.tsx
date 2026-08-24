@@ -7,8 +7,7 @@ import {
   DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
+import { CardFieldInput } from "./CardFieldInput";
 import {
   useUpdateCardMutation,
   type CardItem,
@@ -79,19 +78,20 @@ export default function EditCardDialog({
 
         <div className="space-y-4 py-4">
           {card.cardType?.fields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label>{field.label}</Label>
-              <Input
-                value={fieldValues[field.id] || ""}
-                onChange={(e) =>
-                  setFieldValues((prev) => ({
-                    ...prev,
-                    [field.id]: e.target.value,
-                  }))
-                }
-                placeholder={t("vocabulary.cardManagement.enterValue", { label: field.label.toLowerCase() })}
-              />
-            </div>
+            <CardFieldInput
+              key={field.id}
+              id={`edit-field-${field.id}`}
+              label={field.label}
+              value={fieldValues[field.id] || ""}
+              onChange={(val) =>
+                setFieldValues((prev) => ({
+                  ...prev,
+                  [field.id]: val,
+                }))
+              }
+              placeholder={t("vocabulary.cardManagement.enterValue", { label: field.label.toLowerCase() })}
+              isRequired={field.isRequired}
+            />
           ))}
         </div>
 

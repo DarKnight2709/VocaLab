@@ -8,7 +8,7 @@ import {
 } from "../api/vocabularyService";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
+import { CardFieldInput } from "../components/CardFieldInput";
 import { Label } from "@/shared/components/ui/label";
 import {
   Select,
@@ -223,22 +223,19 @@ export default function VocabularyAddCardPage() {
             )}
 
             {(selectedType?.fields ?? []).map((field) => (
-              <div key={field.id} className="space-y-1.5">
-                <Label>
-                  {field.label}
-                  {field.isRequired ? " *" : ""}
-                </Label>
-                <Input
-                  value={fieldConfigs[field.id]?.value ?? ""}
-                  onChange={(e) =>
-                    updateFieldConfig(field.id, {
-                      value: e.target.value,
-                    })
-                  }
-                  placeholder={t("vocabulary.enterFieldPlaceholder", { label: field.label.toLowerCase() })}
-                  required={field.isRequired}
-                />
-              </div>
+              <CardFieldInput
+                key={field.id}
+                id={`field-${field.id}`}
+                label={field.label}
+                value={fieldConfigs[field.id]?.value ?? ""}
+                onChange={(val) =>
+                  updateFieldConfig(field.id, {
+                    value: val,
+                  })
+                }
+                placeholder={t("vocabulary.enterFieldPlaceholder", { label: field.label.toLowerCase() })}
+                isRequired={field.isRequired}
+              />
             ))}
           </div>
 

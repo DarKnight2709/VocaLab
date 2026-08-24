@@ -1035,7 +1035,8 @@
   },
   "upload": {
     "uploadFailed": "Tải file lên thất bại",
-    "uploadImageFailed": "Tải ảnh lên thất bại"
+    "uploadImageFailed": "Tải ảnh lên thất bại",
+    "invalidFileType": "Vui lòng chọn tệp hình ảnh"
   },
   "notifications": {
     "title": "Thông báo",

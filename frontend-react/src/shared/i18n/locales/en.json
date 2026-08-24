@@ -1056,7 +1056,8 @@
   },
   "upload": {
     "uploadFailed": "Upload failed",
-    "uploadImageFailed": "Image upload failed"
+    "uploadImageFailed": "Image upload failed",
+    "invalidFileType": "Please select an image file"
   },
   "stats": {
     "title": "Study Statistics",

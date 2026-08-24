@@ -11,6 +11,9 @@ const AuthGuard = () => {
   const location = useLocation();
   const socketConnect = useSocketStore((s) => s.connect);
 
+  // Always call all hooks at the top level before any conditional returns
+  useNotificationSocket();
+
   useEffect(() => {
     if (isAuth) {
       socketConnect();
@@ -18,7 +21,7 @@ const AuthGuard = () => {
   }, [isAuth, socketConnect]);
 
   if (!isAuth) {
-    // trở về login và lưu lại đường dẫn hiện tại sau khi login có thể quay lại
+    // Trở về login và lưu lại đường dẫn hiện tại sau khi login có thể quay lại
     return (
       <Navigate
         to={ROUTES.LOGIN.url}
@@ -28,8 +31,7 @@ const AuthGuard = () => {
     );
   }
 
-  useNotificationSocket();
-  // render các route con qua Outlet
+  // Render các route con qua Outlet
   return <Outlet />;
 };
 
