@@ -102,8 +102,7 @@ export class AuthController {
     const userAgent = request.get('user-agent');
 
     const result = await this.authService.login(loginDto, ipAddress, userAgent);
-
-    if (result instanceof TempTokenResponseDto) {
+    if (result && 'tempToken' in result) {
       return result;
     }
     res.cookie('accessToken', result.accessToken, this.getAccessTokenCookieOptions());
@@ -111,10 +110,8 @@ export class AuthController {
   }
 
   @Post('two-factor-auth/login')
-  @SerializeOptions({ type: AuthTokensDto, excludeExtraneousValues: true })
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: AuthTokensDto })
   @ApiOperation({
     summary: 'Đăng nhập 2FA (Public)',
     description: 'Đăng nhập với temp token và mã OTP',
@@ -122,7 +119,8 @@ export class AuthController {
   async loginTwoFa(
     @Body() twoFactorLoginDto: TwoFactorLoginDto,
     @Req() request: Request,
-  ): Promise<AuthTokensDto> {
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
     const ipAddress = request.ip;
     const userAgent = request.get('user-agent');
 
@@ -132,7 +130,8 @@ export class AuthController {
       userAgent,
     );
 
-    return result;
+    res.cookie('accessToken', result.accessToken, this.getAccessTokenCookieOptions());
+    res.cookie('refreshToken', result.refreshToken, this.getRefreshTokenCookieOptions());
   }
 
   // refresh token
