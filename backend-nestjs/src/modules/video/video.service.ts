@@ -54,8 +54,11 @@ export class VideoService {
     }
     const cacheKey = `video:extract:${videoId}`;
 
-    // Set TTL to 7 days (7 * 24 * 60 * 60 * 1000 = 604800000 ms)
-    const SEVEN_DAYS_MS = 604800000;
+    // 7 days base TTL (604,800,000 ms)
+    const BASE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+    // Random jitter between 0 and 12 hours (43,200,000 ms)
+    const JITTER_MS = Math.floor(Math.random() * (12 * 60 * 60 * 1000));
+    const TTL_MS = BASE_TTL_MS + JITTER_MS;
 
     try {
       // Use Read-Through caching pattern via getOrSet
@@ -125,7 +128,7 @@ export class VideoService {
             videoInfo: formattedVideoInfo,
           };
         },
-        SEVEN_DAYS_MS,
+        TTL_MS,
       );
     } catch (error: any) {
       const apiError = error?.response?.data;
