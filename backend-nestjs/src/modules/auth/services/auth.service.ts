@@ -18,7 +18,7 @@ import { UserService } from '@/modules/users/users.service';
 
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
-import { PublicUserDto } from '@/modules/users/dto/users-response.dto';
+import { CurrentUserDto, PublicUserDto } from '@/modules/users/dto/users-response.dto';
 import { AuthTokensDto, TempTokenResponseDto, TwoFactorGenerateResponseDto } from '../dto/auth-response.dto';
 import { ChangePasswordDto, LoginDto, SetPasswordDto, SignupDto, TwoFactorLoginDto } from '../dto/auth.dto';
 import { JwtRefreshTokenPayload } from '../interfaces/JwtRefreshTokenPayload';
@@ -33,7 +33,7 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
-  async getCurrentUser(userId: string): Promise<PublicUserDto> {
+  async getCurrentUser(userId: string): Promise<CurrentUserDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -55,14 +55,16 @@ export class AuthService {
           },
         },
         socials: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
     if (!user) {
       throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     }
-    return user;
+    const { hashedPassword, ...rest } = user;
+    return {
+      ...rest,
+      hasPassword: Boolean(hashedPassword),
+    };
   }
 
   async login(

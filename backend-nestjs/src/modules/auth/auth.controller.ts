@@ -28,7 +28,7 @@ import { Public } from '@/common/decorators/public.decorator';
 
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@/common/services/config.service';
-import { PublicUserDto } from '../users/dto/users-response.dto';
+import { CurrentUserDto } from '../users/dto/users-response.dto';
 import {
   AuthTokensDto,
   TempTokenResponseDto,
@@ -192,14 +192,14 @@ export class AuthController {
 
   // lấy người dùng hiện tại
   @Get('me')
-  @SerializeOptions({ type: PublicUserDto, excludeExtraneousValues: true })
-  @ApiOkResponse({ type: PublicUserDto })
+  @SerializeOptions({ type: CurrentUserDto, excludeExtraneousValues: true })
+  @ApiOkResponse({ type: CurrentUserDto })
   @ApiOperation({
     summary: 'Lấy thông tin user từ access token (Protect)',
   })
   async getCurrentUser(
     @CurrentUser() user: RequestUser,
-  ): Promise<PublicUserDto> {
+  ): Promise<CurrentUserDto> {
     const result = await this.authService.getCurrentUser(user.id);
     return result;
   }

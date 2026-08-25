@@ -1,7 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { PaginationMetaDto, BlogResponse } from '@/modules/blog/dto/blog-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { SocialPlatform, VoteType } from '@prisma/client';
+import { SocialPlatform, VisibilityScope } from '@prisma/client';
 
 // ─── Shared / Reusable DTOs ─────────────────────────────────
 export class UserResponse {
@@ -43,6 +43,56 @@ export class PublicUserDto extends UserResponse {
   @ApiPropertyOptional({ example: true })
   @Expose()
   hasPassword?: boolean;
+}
+
+export class PrivacySettingsDto {
+  @ApiProperty({ example: true })
+  @Expose()
+  allowFollow!: boolean;
+
+  @ApiProperty({ enum: VisibilityScope, example: VisibilityScope.EVERYONE })
+  @Expose()
+  messageScope!: VisibilityScope;
+
+  @ApiProperty({ enum: VisibilityScope, example: VisibilityScope.EVERYONE })
+  @Expose()
+  followersTabVisibility!: VisibilityScope;
+
+  @ApiProperty({ enum: VisibilityScope, example: VisibilityScope.EVERYONE })
+  @Expose()
+  followingTabVisibility!: VisibilityScope;
+
+  @ApiProperty({ enum: VisibilityScope, example: VisibilityScope.EVERYONE })
+  @Expose()
+  friendTabVisibility!: VisibilityScope;
+
+  @ApiProperty({ enum: VisibilityScope, example: VisibilityScope.EVERYONE })
+  @Expose()
+  groupsTabVisibility!: VisibilityScope;
+}
+
+export class CurrentUserDto extends UserResponse {
+  @ApiProperty({ example: 'user@example.com' })
+  @Expose()
+  email!: string;
+
+  @ApiProperty({ example: true })
+  @Expose()
+  hasPassword!: boolean;
+
+  @ApiProperty({ example: false })
+  @Expose()
+  isTwoFactorEnabled!: boolean;
+
+  @ApiPropertyOptional({ type: PrivacySettingsDto, nullable: true })
+  @Expose()
+  @Type(() => PrivacySettingsDto)
+  privacySettings!: PrivacySettingsDto | null;
+
+  @ApiProperty({ type: () => [UserSocialDto] })
+  @Expose()
+  @Type(() => UserSocialDto)
+  socials!: UserSocialDto[];
 }
 
 // ─── Update Profile ─────────────────────────────────────────
@@ -377,4 +427,4 @@ export class UserPostsResponseDto {
   @Expose()
   @Type(() => PaginationMetaDto)
   meta!: PaginationMetaDto;
-}
+}
