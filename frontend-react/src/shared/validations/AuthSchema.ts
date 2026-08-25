@@ -42,21 +42,21 @@ export const getTwoFactorLoginSchema = () =>
 export const MeResponseSchema = BaseEntityDTO.extend({
   username: z.string(),
   fullName: z.string(),
-  hasPassword: z.boolean().optional(),
-  isTwoFactorEnabled: z.boolean().optional(),
+  hasPassword: z.boolean(),
+  isTwoFactorEnabled: z.boolean(),
   privacySettings: z
     .object({
-      allowFollow: z.boolean().optional(),
-      messageScope: z.nativeEnum(ScopeVisibility).optional(),
-      followersTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
-      followingTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
-      friendTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
-      groupsTabVisibility: z.nativeEnum(ScopeVisibility).optional(),
+      allowFollow: z.boolean(),
+      messageScope: z.nativeEnum(ScopeVisibility),
+      followersTabVisibility: z.nativeEnum(ScopeVisibility),
+      followingTabVisibility: z.nativeEnum(ScopeVisibility),
+      friendTabVisibility: z.nativeEnum(ScopeVisibility),
+      groupsTabVisibility: z.nativeEnum(ScopeVisibility),
     })
-    .optional(),
-  email: z.string().optional(),
-  avatar: z.string().optional().nullable(),
-  socials: z.array(z.lazy(() => UserSocialItemSchema)).optional(),
+    .nullable(),
+  email: z.string(),
+  avatar: z.string().nullable(),
+  socials: z.array(z.lazy(() => UserSocialItemSchema)),
 });
 
 export const getChangePasswordSchema = () =>
