@@ -1,3 +1,4 @@
+import { Duration } from '@/common/utils/duration.util';
 import {
   Injectable,
   Logger,
@@ -55,9 +56,9 @@ export class VideoService {
     const cacheKey = `video:extract:${videoId}`;
 
     // 7 days base TTL (604,800,000 ms)
-    const BASE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+    const BASE_TTL_MS = Duration.days(7);
     // Random jitter between 0 and 12 hours (43,200,000 ms)
-    const JITTER_MS = Math.floor(Math.random() * (12 * 60 * 60 * 1000));
+    const JITTER_MS = Math.floor(Math.random() * (Duration.hours(12)));
     const TTL_MS = BASE_TTL_MS + JITTER_MS;
 
     try {

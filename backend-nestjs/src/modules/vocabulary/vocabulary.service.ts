@@ -1,3 +1,5 @@
+import { Duration } from '@/common/utils/duration.util';
+import { RedisService } from '@/core/cache/redis.service';
 import {
   Injectable,
   Logger,
@@ -131,6 +133,7 @@ export class VocabularyService {
 
   constructor(
     private prisma: PrismaService,
+    private readonly redisService: RedisService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly blogService: BlogService,
@@ -248,13 +251,21 @@ export class VocabularyService {
   async getCollectionByIdPublic(
     id: string,
   ): Promise<PublicCollectionResponseDto> {
-    const collection = await this.prisma.cardCollection.findFirst({
-      where: { id, isPublic: true },
-      select: collectionDetailSelect,
-    });
-    if (!collection)
-      throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);
-    return collection;
+    const cacheKey = `collection:public:${id}`;
+
+    return this.redisService.getOrSet(
+      cacheKey,
+      async () => {
+        const collection = await this.prisma.cardCollection.findFirst({
+          where: { id, isPublic: true },
+          select: collectionDetailSelect,
+        });
+        if (!collection)
+          throw new NotFoundException(ErrorCode.COLLECTION_NOT_FOUND);
+        return collection;
+      },
+      Duration.minutes(30), // 30 min TTL
+    );
   }
 
   async getCollectionById(
@@ -752,6 +763,10 @@ export class VocabularyService {
       where: { id },
       data: dto,
     });
+
+    // DELAYED DOUBLE INVALIDATION (Immediate delete + 500ms secondary wipe)
+    await this.redisService.delayedDoubleDelete(`collection:public:${id}`, 500);
+
     return collection;
   }
 
@@ -761,6 +776,9 @@ export class VocabularyService {
   ): Promise<void> {
     await this.findCollectionOrFail(id, userId);
     await this.prisma.cardCollection.delete({ where: { id } });
+
+    // DELAYED DOUBLE INVALIDATION
+    await this.redisService.delayedDoubleDelete(`collection:public:${id}`, 500);
   }
 
   async searchCollections(
@@ -1072,6 +1090,12 @@ export class VocabularyService {
     });
 
     await this.recordDailyActivity(userId, card.cardCollectionId, 'cardsDeleted');
+
+    // DELAYED DOUBLE INVALIDATION on the parent collection
+    await this.redisService.delayedDoubleDelete(
+      `collection:public:${card.cardCollectionId}`,
+      500,
+    );
   }
 
   async deleteManyCards(cardIds: string[], userId: string): Promise<void> {

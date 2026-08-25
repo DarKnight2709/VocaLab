@@ -1,3 +1,5 @@
+import { Duration } from '@/common/utils/duration.util';
+import { RedisService } from '@/core/cache/redis.service';
 import {
   ConflictException,
   ForbiddenException,
@@ -56,31 +58,40 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
+    private readonly redisService: RedisService,
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
   ) {}
 
   async findById(id: string): Promise<PublicUserDto | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        username: true,
-        hashedPassword: true,
-        fullName: true,
-        email: true,
-        avatar: true,
-        isTwoFactorEnabled: true,
-        createdAt: true,
-        updatedAt: true,
+    const cacheKey = `user:${id}:profile`;
+
+    return this.redisService.getOrSet(
+      cacheKey,
+      async () => {
+        const user = await this.prisma.user.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            username: true,
+            hashedPassword: true,
+            fullName: true,
+            email: true,
+            avatar: true,
+            isTwoFactorEnabled: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+        if (!user) return null;
+        const { hashedPassword, ...rest } = user;
+        return {
+          ...rest,
+          hasPassword: !!hashedPassword,
+        };
       },
-    });
-    if (!user) return null;
-    const { hashedPassword, ...rest } = user;
-    return {
-      ...rest,
-      hasPassword: !!hashedPassword,
-    };
+      Duration.minutes(10),
+    );
   }
 
   async getUserChatInfo(
@@ -389,7 +400,7 @@ export class UserService {
       updateDto.avatar = result?.secure_url;
     }
 
-    return await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: updateDto,
       select: {
@@ -398,8 +409,34 @@ export class UserService {
         fullName: true,
         email: true,
         avatar: true,
+        isTwoFactorEnabled: true,
+        createdAt: true,
+        updatedAt: true,
+        hashedPassword: true,
       },
     });
+
+    const { hashedPassword, ...rest } = updatedUser;
+    const cachedProfile: PublicUserDto = {
+      ...rest,
+      hasPassword: !!hashedPassword,
+    };
+
+    // WRITE-PATH REPOPULATION: Immediately update Redis with DB updatedAt timestamp
+    await this.redisService.writePathRepopulate(
+      `user:${userId}:profile`,
+      cachedProfile,
+      updatedUser.updatedAt.getTime(),
+      Duration.minutes(10),
+    );
+
+    return {
+      id: updatedUser.id,
+      username: updatedUser.username,
+      fullName: updatedUser.fullName,
+      email: updatedUser.email,
+      avatar: updatedUser.avatar,
+    };
   }
 
   async searchUsers(
