@@ -25,7 +25,7 @@ export const useLoginMutation = () => {
       return res;
     },
     onSuccess: (response: any) => {
-      login(response);
+      login(response.data);
       toast.success(i18n.t("auth.loginSuccess"));
     },
     onError: (error: any) => {
