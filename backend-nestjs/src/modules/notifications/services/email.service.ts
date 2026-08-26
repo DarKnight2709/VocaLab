@@ -301,4 +301,92 @@ export class EmailService {
       throw error;
     }
   }
+
+  /**
+   * Dispatches an urgent security alert email when multiple failed 2FA attempts are detected.
+   */
+  async sendSecurityAlertEmail(
+    to: string,
+    recipientName: string,
+    details: {
+      ipAddress?: string;
+      userAgent?: string;
+      attemptCount: number;
+      time: Date;
+    },
+  ): Promise<void> {
+    const from = this.configService.get('EMAIL_FROM');
+    const clientUrl = this.configService.get('CLIENT_URL');
+
+    const formattedTime = new Date(details.time).toUTCString();
+    const changePasswordUrl = `${clientUrl}/setting/me/account`;
+
+    try {
+      const mailOptions = {
+        from: `"VocaLab Security" <${from}>`,
+        to,
+        subject: `🚨 Security Alert: Failed 2FA Login Attempts on Your VocaLab Account`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 24px; max-width: 600px; margin: auto; border: 1px solid #fee2e2; border-radius: 12px; background-color: #ffffff;">
+            <div style="display: flex; align-items: center; margin-bottom: 16px;">
+              <h2 style="color: #dc2626; margin: 0; font-size: 20px;">⚠️ Urgent Security Notification</h2>
+            </div>
+            
+            <p style="color: #374151; font-size: 15px; line-height: 1.5;">
+              Hi <strong>${recipientName}</strong>,
+            </p>
+
+            <p style="color: #374151; font-size: 15px; line-height: 1.5;">
+              We detected <strong>${details.attemptCount} consecutive failed two-factor authentication (2FA) attempts</strong> for your account following a successful password entry.
+            </p>
+
+            <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 20px 0;">
+              <h3 style="color: #991b1b; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Incident Details</h3>
+              <table style="width: 100%; font-size: 14px; color: #4b5563; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 4px 0; width: 120px; font-weight: 600;">Time:</td>
+                  <td style="padding: 4px 0; color: #1f2937;">${formattedTime}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: 600;">IP Address:</td>
+                  <td style="padding: 4px 0; color: #1f2937;">${details.ipAddress || 'Unknown'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: 600;">Device / Agent:</td>
+                  <td style="padding: 4px 0; color: #1f2937;">${details.userAgent || 'Unknown'}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 14px; margin-bottom: 24px;">
+              <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.4;">
+                <strong>⚠️ Why are you receiving this?</strong><br/>
+                Your correct password was entered, but the second factor verification failed. If this was not you, someone may have compromised your password.
+              </p>
+            </div>
+
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${changePasswordUrl}" 
+                 style="background-color: #dc2626; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">
+                 Secure Account & Change Password
+              </a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 13px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+              If this was you, you can safely ignore this email. However, we recommend checking your authenticator app to ensure your device time is synchronized.
+            </p>
+          </div>
+        `,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Security alert email successfully dispatched to ${to}`);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to send security alert email to ${to}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
 }

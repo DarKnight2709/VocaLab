@@ -281,6 +281,7 @@
     "INVALID_TOKEN": "Phiên làm việc không hợp lệ.",
     "EXPIRED_TOKEN": "Phiên làm việc đã hết hạn, vui lòng đăng nhập lại.",
     "OTP_INVALID": "Mã xác thực không chính xác hoặc đã hết hạn.",
+    "OTP_ATTEMPTS_EXCEEDED": "Bạn đã nhập sai mã quá nhiều lần. Vui lòng thử lại sau 15 phút.",
     "GOOGLE_AUTH_REQUIRED": "Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.",
     "PASSWORD_INCORRECT": "Mật khẩu không đúng, vui lòng thử lại.",
     "REFRESH_TOKEN_INVALID": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",

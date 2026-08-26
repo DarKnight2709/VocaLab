@@ -281,6 +281,7 @@
     "INVALID_TOKEN": "Invalid session token.",
     "EXPIRED_TOKEN": "Session expired, please log in again.",
     "OTP_INVALID": "The verification code is incorrect or has expired.",
+    "OTP_ATTEMPTS_EXCEEDED": "Too many failed attempts. Please wait 15 minutes before trying again.",
     "GOOGLE_AUTH_REQUIRED": "This account uses Google Login. Please sign in with Google.",
     "PASSWORD_INCORRECT": "Incorrect password, please try again.",
     "REFRESH_TOKEN_INVALID": "Session has expired, please log in again.",

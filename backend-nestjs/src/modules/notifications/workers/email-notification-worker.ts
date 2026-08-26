@@ -42,6 +42,18 @@ export interface CommentNotificationJobData {
   blogId?: string;
 }
 
+/**
+ * Data structure for the 2FA failed security alert email job
+ */
+export interface TwoFactorFailedAlertJobData {
+  recipientEmail: string;
+  recipientName: string;
+  ipAddress?: string;
+  userAgent?: string;
+  attemptCount: number;
+  time: Date;
+}
+
 @Processor('email-notification', { concurrency: 20})
 export class EmailNotificationWorker extends WorkerHost {
   private readonly logger = new Logger(EmailNotificationWorker.name);
@@ -57,6 +69,21 @@ export class EmailNotificationWorker extends WorkerHost {
 
     try {
       switch (job.name) {
+        case EmailJobNames.TWO_FACTOR_FAILED_ALERT: {
+          const data: TwoFactorFailedAlertJobData = job.data;
+          await this.emailService.sendSecurityAlertEmail(
+            data.recipientEmail,
+            data.recipientName,
+            {
+              ipAddress: data.ipAddress,
+              userAgent: data.userAgent,
+              attemptCount: data.attemptCount,
+              time: data.time,
+            },
+          );
+          break;
+        }
+
         case EmailJobNames.SEND_DIRECT_MESSAGE_EMAIL: {
           const data: SendDirectMessageJobData = job.data;
           await this.emailService.sendDirectMessageEmail(

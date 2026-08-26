@@ -5,6 +5,9 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  Inject,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
@@ -15,6 +18,11 @@ import { ErrorCode } from '@/common/enums/error-code.enum';
 import { HashingService } from '@/common/services/hashing.service';
 import { RsaKeyManager } from '@/common/utils/RsaKeyManager';
 import { UserService } from '@/modules/users/users.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { REDIS_CLIENT } from '@/core/redis/redis.provider';
+import Redis from 'ioredis';
+import { EmailJobNames } from '@/common/enums/email-job-names.enum';
 
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
@@ -31,6 +39,10 @@ export class AuthService {
     private readonly hashingService: HashingService,
     private readonly keyManager: RsaKeyManager,
     private readonly userService: UserService,
+    @InjectQueue('email-notification')
+    private readonly emailQueue: Queue,
+    @Inject(REDIS_CLIENT)
+    private readonly redisClient: Redis,
   ) {}
 
   async getCurrentUser(userId: string): Promise<CurrentUserDto> {
@@ -141,6 +153,14 @@ export class AuthService {
       throw new UnauthorizedException(ErrorCode.INVALID_TOKEN);
     }
 
+    // Check if this tempToken was invalidated/blacklisted
+    const isBlacklisted = await this.redisClient.get(
+      `auth:temp_token:blacklist:${tempToken}`,
+    );
+    if (isBlacklisted) {
+      throw new UnauthorizedException(ErrorCode.INVALID_TOKEN);
+    }
+
     const userId = payload.sub;
 
     // 2. Find user
@@ -152,6 +172,21 @@ export class AuthService {
       throw new UnauthorizedException(ErrorCode.BAD_REQUEST);
     }
 
+    const failKey = `auth:2fa:failed:${user.id}`;
+
+    // Check if user is currently locked out
+    const currentAttempts = await this.redisClient.get(failKey);
+    if (currentAttempts && parseInt(currentAttempts, 10) >= 5) {
+      this.logger.warn(
+        `2FA locked out for user ${user.id} due to too many failed attempts`,
+      );
+
+      throw new HttpException(
+        ErrorCode.OTP_ATTEMPTS_EXCEEDED,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     // 3. Verify OTP code
     const isValid = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
@@ -161,9 +196,56 @@ export class AuthService {
     });
 
     if (!isValid) {
-      this.logger.warn(`OTP verification failed for user ${user.id}`);
+      const attempts = await this.redisClient.incr(failKey);
+      await this.redisClient.expire(failKey, 900); // Always refresh the 15-minute penalty window on every invalid attempt
+
+      this.logger.warn(
+        `OTP verification failed for user ${user.id} (attempt ${attempts})`,
+      );
+
+      // If attempts reach 5, immediately invalidate the tempToken
+      if (attempts >= 5) {
+        await this.redisClient.set(
+          `auth:temp_token:blacklist:${tempToken}`,
+          '1',
+          'EX',
+          300,
+        );
+      }
+
+      // Alert the user via email on 3rd failed attempt
+      if (attempts === 3) {
+        try {
+          await this.emailQueue.add(
+            EmailJobNames.TWO_FACTOR_FAILED_ALERT,
+            {
+              recipientEmail: user.email,
+              recipientName: user.fullName || user.username,
+              ipAddress,
+              userAgent,
+              attemptCount: attempts,
+              time: new Date(),
+            },
+            {
+              attempts: 3,
+              backoff: { type: 'exponential', delay: 1000 },
+              removeOnComplete: true,
+            },
+          );
+          this.logger.log(
+            `Dispatched security alert email job for user ${user.id}`,
+          );
+        } catch (err: any) {
+          this.logger.error(
+            `Failed to queue security alert email for user ${user.id}: ${err.message}`,
+          );
+        }
+      }
       throw new UnauthorizedException(ErrorCode.OTP_INVALID);
     }
+
+    // Success: clear failed attempts
+    await this.redisClient.del(failKey);
 
     // 4. Generate tokens
     const accessToken = this.generateAccessToken(user);

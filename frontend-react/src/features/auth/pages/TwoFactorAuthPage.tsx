@@ -11,7 +11,6 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import ROUTES from "@/shared/lib/routes";
-import { toast } from "sonner";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 
 function TwoFactorAuthPage() {
@@ -39,7 +38,15 @@ function TwoFactorAuthPage() {
       await loginTwoFaMutation.mutateAsync(data);
       navigate(ROUTES.HOME.url, { replace: true });
     } catch (error: any) {
-      toast.error(error.message);
+      const errorCode = error?.data?.message || error?.message;
+      if (
+        errorCode === "OTP_ATTEMPTS_EXCEEDED" ||
+        error?.status === 429 ||
+        error?.response?.status === 429
+      ) {
+        logout();
+        navigate(ROUTES.LOGIN.url, { replace: true });
+      }
     }
   };
 
