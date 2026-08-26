@@ -33,35 +33,34 @@ function parseFieldValue(val: string): { images: string[]; currentText: string }
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed) continue;
 
-    if (isImageUrl(trimmed)) {
+    if (trimmed && isImageUrl(trimmed)) {
       extractedImages.push(trimmed);
       continue;
     }
 
     // Markdown image: ![alt](url)
-    const mdMatch = trimmed.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+|data:image\/[^\s)]+)\)$/i);
+    const mdMatch = trimmed ? trimmed.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+|data:image\/[^\s)]+)\)$/i) : null;
     if (mdMatch) {
       extractedImages.push(mdMatch[2]);
       continue;
     }
 
     // HTML img tag: <img src="..." />
-    const htmlMatch = trimmed.match(/^<img\s+[^>]*src=["']([^"']+)["'][^>]*\/?>$/i);
+    const htmlMatch = trimmed ? trimmed.match(/^<img\s+[^>]*src=["']([^"']+)["'][^>]*\/?>$/i) : null;
     if (htmlMatch) {
       extractedImages.push(htmlMatch[1]);
       continue;
     }
 
     // Space-separated images in a single line
-    const tokens = trimmed.split(/\s+/);
+    const tokens = trimmed ? trimmed.split(/\s+/) : [];
     if (tokens.length > 1 && tokens.every(isImageUrl)) {
       extractedImages.push(...tokens);
       continue;
     }
 
-    // Plain text
+    // Plain text (preserves spaces and line breaks)
     textLines.push(line);
   }
 
@@ -96,8 +95,8 @@ export function CardFieldInput({
 
   const updateCombinedValue = (newImages: string[], newText: string) => {
     const parts = [...newImages];
-    if (newText.trim()) {
-      parts.push(newText.trim());
+    if (newText.length > 0) {
+      parts.push(newText);
     }
     const combined = parts.join("\n");
     valueRef.current = combined;
