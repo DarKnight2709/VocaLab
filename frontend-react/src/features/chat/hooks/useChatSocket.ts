@@ -234,7 +234,7 @@ export function useChatSocket({
       "group-typing-start",
       (data: { senderId: string; senderName?: string }) => {
         if (data.senderId === myId) return;
-        setGroupTypingText(`${data.senderName || "Ai đó"} đang gõ...`);
+        setGroupTypingText(data.senderName || " ");
       },
     );
 

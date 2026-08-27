@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { GripVertical, Trash2, Save, Pencil } from "lucide-react";
+import { GripVertical, Trash2, Save, Pencil, Layers, BookOpen } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import FieldSelectionDialog from "./FieldSelectionDialog";
@@ -7,7 +7,6 @@ import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { CardSide } from "@/shared/enums/CardSide.enum";
 import { type CardField } from "@/shared/validations/VocabularySchema";
-
 
 interface CardTypeWithFields {
   id: string;
@@ -35,13 +34,12 @@ export default function CardFieldDragDrop({
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
 
   // Store drop target in a ref so it's always current at drop time
-  // without causing re-renders on every dragover
   const dropTargetRef = useRef<{
     side: CardSide;
     insertBeforeId: string | null;
   } | null>(null);
 
-  // Separate state just for visual highlight — updated less aggressively
+  // Separate state just for visual highlight
   const [highlightedGap, setHighlightedGap] = useState<{
     side: CardSide;
     insertBeforeId: string | null;
@@ -79,7 +77,6 @@ export default function CardFieldDragDrop({
     setHighlightedGap(null);
   };
 
-  // Each gap calls this on dragover — most reliable way to track position
   const handleGapDragOver = (
     e: React.DragEvent,
     side: CardSide,
@@ -99,16 +96,12 @@ export default function CardFieldDragDrop({
     }
   };
 
-  // Zone dragover — only fires when NOT over a gap child (since gaps stopPropagation)
-  // Used as fallback to set append-to-end
   const handleZoneDragOver = (
     e: React.DragEvent,
     side: CardSide
   ) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    // Don't override if a gap already claimed this event via stopPropagation
-    // This fires only when hovering the zone background itself
     if (dropTargetRef.current?.side !== side) {
       dropTargetRef.current = { side, insertBeforeId: null };
       setHighlightedGap({ side, insertBeforeId: null });
@@ -186,8 +179,6 @@ export default function CardFieldDragDrop({
 
   const handleSave = async () => {
     try {
-      // GIỮ LẠI ID để Backend biết trường nào cũ, trường nào mới
-      // Chỉ những trường có id bắt đầu bằng 'temp_' mới là trường mới chưa có trong DB
       await onSave(fields);
       setHasChanges(false);
     } catch {
@@ -210,16 +201,12 @@ export default function CardFieldDragDrop({
     return (
       <div
         onDragOver={(e) => handleGapDragOver(e, side, insertBeforeId)}
-        style={{ height: "14px", display: "flex", alignItems: "center" }}
+        className="h-3 flex items-center"
       >
         <div
-          style={{
-            width: "100%",
-            height: active ? "2px" : "1px",
-            borderRadius: "9999px",
-            background: active ? "hsl(var(--primary))" : "transparent",
-            transition: "all 100ms",
-          }}
+          className={`w-full h-1 rounded-full transition-all duration-150 ${
+            active ? "bg-primary shadow-xs scale-y-125" : "bg-transparent"
+          }`}
         />
       </div>
     );
@@ -230,36 +217,46 @@ export default function CardFieldDragDrop({
       draggable
       onDragStart={(e) => handleDragStart(e, field)}
       onDragEnd={handleDragEnd}
-      className="flex items-center gap-3 p-3 rounded-lg bg-card shadow-sm hover:bg-muted/50 cursor-move transition-colors group"
+      className="flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl bg-muted/40 hover:bg-muted/70 border border-border/70 shadow-2xs hover:shadow-xs hover:border-primary/40 cursor-grab active:cursor-grabbing transition-all duration-200 group"
     >
-      <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+      <GripVertical className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
       <div className="flex-1 min-w-0">
-        <div 
-          className="font-medium text-sm truncate"
-          style={{ 
-            color: field.color || 'inherit',
-            fontSize: field.fontSize ? `${Math.max(field.fontSize * 0.7, 14)}px` : 'inherit'
-          }}
-        >
-          {field.label}
+        <div className="flex items-center gap-2">
+          <span 
+            className="font-bold text-sm truncate text-foreground"
+            style={{ 
+              color: field.color || 'inherit',
+              fontSize: field.fontSize ? `${Math.max(field.fontSize * 0.7, 14)}px` : 'inherit'
+            }}
+          >
+            {field.label}
+          </span>
+          {field.isRequired && (
+            <span className="text-[10px] uppercase font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/30 px-1.5 py-0.5 rounded-md border border-rose-500/20">
+              Required
+            </span>
+          )}
         </div>
       </div>
+
       <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
           onClick={() => setFieldDialogOpen(true)}
+          title={t("vocabulary.edit")}
         >
-          <Pencil className="h-3 w-3" />
+          <Pencil className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
+          className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           onClick={() => handleRemoveField(field.id)}
+          title={t("vocabulary.delete")}
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     </div>
@@ -267,59 +264,87 @@ export default function CardFieldDragDrop({
 
   const SideDropZone = ({
     side,
-    fields,
+    fields: zoneFields,
   }: {
     side: CardSide;
     fields: CardField[];
-  }) => (
-    <div
-      onDragOver={(e) => handleZoneDragOver(e, side)}
-      onDrop={(e) => handleDrop(e, side)}
-      className="flex-1 p-4 rounded-lg bg-card/50 shadow-sm flex flex-col"
-      style={{ minHeight: "300px" }}
-    >
-      <div className="font-semibold text-sm mb-2">
-        {side === "FRONT" ? t("vocabulary.dragDrop.frontSide") : t("vocabulary.dragDrop.backSide")}
-      </div>
+  }) => {
+    const isFront = side === "FRONT";
+    return (
+      <div
+        onDragOver={(e) => handleZoneDragOver(e, side)}
+        onDrop={(e) => handleDrop(e, side)}
+        className="flex-1 p-5 sm:p-6 rounded-3xl bg-card border border-border/80 shadow-xs flex flex-col"
+        style={{ minHeight: "320px" }}
+      >
+        {/* Zone Header */}
+        <div className="flex items-center justify-between gap-3 pb-3 mb-2 border-b border-border/40">
+          <div className="flex items-center gap-2.5">
+            <div className={`p-2 rounded-xl border shrink-0 ${
+              isFront 
+                ? "bg-primary/10 text-primary border-primary/20" 
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+            }`}>
+              {isFront ? <Layers className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+            </div>
+            <h3 className="font-bold text-sm text-foreground">
+              {isFront ? t("vocabulary.dragDrop.frontSide") : t("vocabulary.dragDrop.backSide")}
+            </h3>
+          </div>
 
-      <div className="flex-1 flex flex-col">
-        {fields.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-            {t("vocabulary.dragDrop.dragPlaceholder")}
-          </div>
-        ) : (
-          <div className="flex flex-col">
-            <DropGap side={side} insertBeforeId={fields[0].id} />
-            {fields.map((field, idx) => (
-              <div key={field.id}>
-                <FieldCard field={field} />
-                <DropGap
-                  side={side}
-                  insertBeforeId={fields[idx + 1]?.id ?? null}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+            isFront 
+              ? "bg-primary/10 text-primary" 
+              : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          }`}>
+            {zoneFields.length} {t("vocabulary.fields", { defaultValue: "fields" })}
+          </span>
+        </div>
+
+        {/* Zone Content */}
+        <div className="flex-1 flex flex-col pt-1">
+          {zoneFields.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-border/80 text-muted-foreground text-xs space-y-1">
+              <span className="font-medium">{t("vocabulary.dragDrop.dragPlaceholder")}</span>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              <DropGap side={side} insertBeforeId={zoneFields[0].id} />
+              {zoneFields.map((field, idx) => (
+                <div key={field.id}>
+                  <FieldCard field={field} />
+                  <DropGap
+                    side={side}
+                    insertBeforeId={zoneFields[idx + 1]?.id ?? null}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <SideDropZone side="FRONT" fields={frontFields} />
-        <SideDropZone side="BACK" fields={backFields} />
-      </div>
-
       {hasChanges && (
-        <div className="flex justify-end pt-2 border-t">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 shadow-lg">
+        <div className="flex justify-end">
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving} 
+            className="gap-2 rounded-xl font-semibold shadow-xs"
+          >
             <Save className="h-4 w-4" />
             {isSaving ? t("vocabulary.cardManagement.saving") : t("vocabulary.dragDrop.saveChanges")}
           </Button>
         </div>
       )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <SideDropZone side="FRONT" fields={frontFields} />
+        <SideDropZone side="BACK" fields={backFields} />
+      </div>
 
       <FieldSelectionDialog 
         open={fieldDialogOpen}

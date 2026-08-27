@@ -144,73 +144,74 @@ export default function BlogDetailPage() {
 
   return (
     <div className="h-full overflow-y-scroll p-6 md:p-8">
-      <div className="w-full max-w-[1600px] mx-auto">
+      <div className="w-full max-w-4xl mx-auto space-y-6 pb-16">
         <Breadcrumb
-        items={[
-          { label: t("common.blog"), href: ROUTES.BLOG.url },
-          { label: blog.title },
-        ]}
-      />
+          items={[
+            { label: t("common.blog"), href: ROUTES.BLOG.url },
+            { label: blog.title },
+          ]}
+        />
 
-      {/* Title */}
-      <h1 className="mb-4 text-3xl font-bold leading-snug">{blog.title}</h1>
+        {/* Title */}
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+          {blog.title}
+        </h1>
 
-      {/* Meta */}
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b pb-4">
-        <div className="flex items-center gap-3">
-          <Link
-            to={ROUTES.PROFILE.url.replace(
-              ":username",
-              blog.author.username,
-            )}
-            className="h-9 w-9 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
-            aria-label={`${t("common.viewProfile")} ${blog.author.fullName}`}
-          >
-            {blog.author.avatar ? (
-              <img
-                src={blog.author.avatar}
-                alt={blog.author.fullName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-sm font-bold uppercase">
-                {blog.author.fullName[0]}
-              </div>
-            )}
-          </Link>
-          <div>
-            <p className="text-sm font-medium">{blog.author.fullName}</p>
-            <p className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-              <span>{date}</span>
-              {isEdited && (
-                <span
-                  className="italic"
-                  title={`${t("blog.lastEdited")}: ${editDate}`}
-                >
-                  ({t("blog.edited")} {editDate})
-                </span>
+        {/* Meta and Author Action Bar */}
+        <div className="rounded-3xl bg-card border border-border/80 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              to={ROUTES.PROFILE.url.replace(":username", blog.author.username)}
+              className="h-10 w-10 overflow-hidden rounded-2xl bg-muted transition-opacity hover:opacity-80 shrink-0 border border-border/60 shadow-xs"
+              aria-label={`${t("common.viewProfile")} ${blog.author.fullName}`}
+            >
+              {blog.author.avatar ? (
+                <img
+                  src={blog.author.avatar}
+                  alt={blog.author.fullName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-sm font-bold uppercase">
+                  {blog.author.fullName[0]}
+                </div>
               )}
-            </p>
+            </Link>
+            <div>
+              <p className="text-sm font-bold text-foreground">{blog.author.fullName}</p>
+              <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                <span>{date}</span>
+                {isEdited && (
+                  <span
+                    className="italic text-muted-foreground/80"
+                    title={`${t("blog.lastEdited")}: ${editDate}`}
+                  >
+                    • ({t("blog.edited")})
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
-        </div>
+
           <div className="flex items-center gap-3">
             {isOwner && (
-              <>
+              <div className="flex items-center gap-2">
                 <Link
                   to={ROUTES.BLOG_EDIT.url.replace(":id", id)}
-                  className="rounded-lg border px-3 py-1.5 text-xs hover:bg-muted"
+                  className="rounded-xl border border-border/80 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
                   {t("blog.edit")}
                 </Link>
                 <button
                   onClick={handleDeleteBlog}
-                  className="rounded-lg border border-destructive/30 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                  className="rounded-xl border border-destructive/30 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
                   {t("blog.delete")}
                 </button>
-              </>
+              </div>
             )}
-            <div className="flex items-center rounded-lg border bg-background">
+            
+            <div className="flex items-center rounded-2xl border border-border/80 bg-muted/30 p-0.5 shadow-xs">
               <button
                 onClick={() => {
                   if (!isAuth) {
@@ -219,20 +220,19 @@ export default function BlogDetailPage() {
                   }
                   voteBlog.mutate(VoteType.UPVOTE);
                 }}
-                className={`flex items-center p-1.5 transition-colors rounded-l-lg ${
+                className={`flex items-center p-1.5 transition-colors rounded-xl ${
                   blog.userVote === VoteType.UPVOTE
-                    ? "bg-green-50 text-green-600 dark:bg-green-950"
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold"
                     : "hover:bg-muted text-muted-foreground"
                 }`}
+                title="Upvote"
               >
                 <ArrowBigUp
                   size={18}
-                  className={
-                    blog.userVote === VoteType.UPVOTE ? "fill-current" : ""
-                  }
+                  className={blog.userVote === VoteType.UPVOTE ? "fill-current" : ""}
                 />
               </button>
-              <span className="min-w-6 text-center text-xs font-semibold">
+              <span className="min-w-6 text-center text-xs font-bold text-foreground px-1">
                 {blog.voteScore ?? 0}
               </span>
               <button
@@ -243,39 +243,40 @@ export default function BlogDetailPage() {
                   }
                   voteBlog.mutate(VoteType.DOWNVOTE);
                 }}
-                className={`flex items-center p-1.5 transition-colors rounded-r-lg ${
+                className={`flex items-center p-1.5 transition-colors rounded-xl ${
                   blog.userVote === VoteType.DOWNVOTE
-                    ? "bg-red-50 text-red-600 dark:bg-red-950"
+                    ? "bg-red-500/15 text-red-600 dark:text-red-400 font-bold"
                     : "hover:bg-muted text-muted-foreground"
                 }`}
+                title="Downvote"
               >
                 <ArrowBigDown
                   size={18}
-                  className={
-                    blog.userVote === VoteType.DOWNVOTE ? "fill-current" : ""
-                  }
+                  className={blog.userVote === VoteType.DOWNVOTE ? "fill-current" : ""}
                 />
               </button>
             </div>
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MessageCircle size={14} />
-            {blog._count?.comments ?? 0}
-          </span>
+
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground px-3 py-2 rounded-2xl bg-muted/30 border border-border/80 shadow-xs">
+              <MessageCircle size={14} />
+              <span className="text-foreground">{blog._count?.comments ?? 0}</span>
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="mb-10">
-        <ReadOnlyEditor content={blog.content} />
-      </div>
+        {/* Article Content */}
+        <div className="rounded-3xl bg-card border border-border/80 p-6 sm:p-10 shadow-xs">
+          <ReadOnlyEditor content={blog.content} />
+        </div>
 
-      {/* Comments */}
-      <div className="border-t pt-8">
-          <h2 className="mb-5 text-lg font-semibold">
-          {t("blog.comments")} ({blog._count?.comments ?? 0})
-        </h2>
+        {/* Comments Section */}
+        <div className="rounded-3xl bg-card border border-border/80 p-6 sm:p-8 shadow-xs space-y-6">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-primary" />
+            {t("blog.comments")} ({blog._count?.comments ?? 0})
+          </h2>
 
-          <div className="mb-6 flex gap-3">
+          <div className="flex gap-2 rounded-2xl bg-muted/40 border border-border/60 p-2 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
             <textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
@@ -296,7 +297,7 @@ export default function BlogDetailPage() {
               }}
               placeholder={t("blog.writeComment")}
               rows={2}
-              className="flex-1 resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="flex-1 resize-none bg-transparent border-0 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
             <button
               onClick={() => {
@@ -307,37 +308,38 @@ export default function BlogDetailPage() {
                 handleSubmitComment();
               }}
               disabled={(!isAuth ? false : !commentText.trim()) || addComment.isPending}
-              className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl bg-primary text-primary-foreground disabled:opacity-50"
+              className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 shadow-xs transition-all cursor-pointer"
+              title={t("common.send", { defaultValue: "Send" })}
             >
               <Send size={16} />
             </button>
           </div>
 
-        <div className="space-y-4">
-          {blog.comments?.map((c: any) => (
-            <CommentItem
-              key={c.id}
-              comment={c}
-              currentUserId={currentUserId}
-              onDelete={(cid) => deleteComment.mutate(cid)}
-              onEdit={(commentId: string, content: string | undefined) => {
-                void editComment.mutateAsync({ commentId, content });
-              }}
-              onReply={(commentId: string, reply: string | undefined) => {
-                void replyComment.mutateAsync({ commentId, reply });
-              }}
-              onVote={(commentId: string, type: VoteType) => {
-                voteComment.mutate({ commentId, type });
-              }}
-              level={0}
-            />
-          ))}
-          {!blog.comments?.length && (
-            <p className="text-sm text-muted-foreground">
-              {t("blog.noComments")}
-            </p>
-          )}
-        </div>
+          <div className="space-y-4 pt-2">
+            {blog.comments?.map((c: any) => (
+              <CommentItem
+                key={c.id}
+                comment={c}
+                currentUserId={currentUserId}
+                onDelete={(cid) => deleteComment.mutate(cid)}
+                onEdit={(commentId: string, content: string | undefined) => {
+                  void editComment.mutateAsync({ commentId, content });
+                }}
+                onReply={(commentId: string, reply: string | undefined) => {
+                  void replyComment.mutateAsync({ commentId, reply });
+                }}
+                onVote={(commentId: string, type: VoteType) => {
+                  voteComment.mutate({ commentId, type });
+                }}
+                level={0}
+              />
+            ))}
+            {!blog.comments?.length && (
+              <p className="text-sm font-medium text-muted-foreground text-center py-6">
+                {t("blog.noComments")}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

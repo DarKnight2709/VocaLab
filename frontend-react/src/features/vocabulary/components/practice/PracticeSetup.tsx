@@ -25,128 +25,147 @@ export default function PracticeSetup({
   const hasPracticeFields = fieldConfigs.some((fc) => fc.mode === "practice");
 
   return (
-    <div className="max-w-xl mx-auto space-y-8 mt-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-xl font-bold tracking-tight">{t("vocabulary.practiceSetup") || "Practice Setup"}</h2>
-        <p className="text-sm text-muted-foreground">
-          {t("vocabulary.selectFieldsDesc") || "Choose which fields to practice (type answers), show (visible), or hide."}
-        </p>
+    <div className="max-w-4xl mx-auto space-y-6 mt-4 pb-12">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          {t("vocabulary.practiceSetup") || "Practice Setup"}
+        </h2>
       </div>
 
-      {/* Card Order Selection */}
-      <div className="space-y-3 rounded-2xl bg-card border border-border/50 shadow-sm p-5">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[15px] font-semibold">
-            {t("vocabulary.cardOrder") || "Card Order"}
-          </span>
-          <span className="text-[13px] text-muted-foreground">
-            {t("vocabulary.cardOrderDesc") || "Choose how cards will be ordered during practice"}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2.5 pt-1">
-          <Button
-            type="button"
-            variant="outline"
-            className={`flex flex-col md:flex-row items-center justify-center gap-2 h-14 md:h-11 font-semibold text-xs md:text-sm rounded-xl transition-all ${
-              cardOrder === "order"
-                ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
-                : "border-border/60 hover:bg-muted/40 text-muted-foreground"
-            }`}
-            onClick={() => onCardOrderChange("order")}
-          >
-            <ArrowRight className="h-4 w-4 shrink-0" />
-            <span>{t("vocabulary.orderSequential") || "In Order"}</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            className={`flex flex-col md:flex-row items-center justify-center gap-2 h-14 md:h-11 font-semibold text-xs md:text-sm rounded-xl transition-all ${
-              cardOrder === "reverse"
-                ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
-                : "border-border/60 hover:bg-muted/40 text-muted-foreground"
-            }`}
-            onClick={() => onCardOrderChange("reverse")}
-          >
-            <ArrowLeftRight className="h-4 w-4 shrink-0" />
-            <span>{t("vocabulary.orderReverse") || "Reverse"}</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            className={`flex flex-col md:flex-row items-center justify-center gap-2 h-14 md:h-11 font-semibold text-xs md:text-sm rounded-xl transition-all ${
-              cardOrder === "random"
-                ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
-                : "border-border/60 hover:bg-muted/40 text-muted-foreground"
-            }`}
-            onClick={() => onCardOrderChange("random")}
-          >
-            <Shuffle className="h-4 w-4 shrink-0" />
-            <span>{t("vocabulary.orderRandom") || "Random"}</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Field Configuration List */}
-      <div className="space-y-3">
-        {fieldConfigs.map((fc) => {
-          return (
-            <div
-              key={fc.field.id}
-              className="flex items-center justify-between rounded-2xl bg-card border border-border/50 shadow-sm px-5 py-4 transition-colors hover:bg-muted/40"
-            >
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[15px] font-semibold">{fc.field.label}</span>
-                <span className="text-[13px] text-muted-foreground">
-                  {fc.field.side === "FRONT" ? t("vocabulary.frontFace") : t("vocabulary.backFace")}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                className={`gap-1.5 min-w-[110px] h-9 justify-center font-semibold text-[13px] rounded-xl ${
-                  fc.mode === "practice"
-                    ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-950/20"
-                    : fc.mode === "show"
-                      ? "border-emerald-500 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20"
-                      : "border-muted-foreground/30 text-muted-foreground"
-                }`}
-                onClick={() => onCycleFieldMode(fc.field.id)}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Field Configuration List */}
+        <div className="lg:col-span-7 space-y-3">
+          {fieldConfigs.map((fc) => {
+            const isFront = fc.field.side === "FRONT";
+            return (
+              <div
+                key={fc.field.id}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-card border border-border/80 shadow-xs p-4 sm:px-5 hover:border-primary/40 transition-all duration-200"
               >
-                {fc.mode === "show" && (
-                  <>
-                    <Eye className="h-4 w-4" />
-                    {t("vocabulary.practiceFieldShow") || "Show"}
-                  </>
-                )}
-                {fc.mode === "practice" && (
-                  <>
-                    <PenLine className="h-4 w-4" />
-                    {t("vocabulary.practiceFieldPractice") || "Practice"}
-                  </>
-                )}
-                {fc.mode === "hide" && (
-                  <>
-                    <EyeOff className="h-4 w-4" />
-                    {t("vocabulary.practiceFieldHide") || "Hide"}
-                  </>
-                )}
-              </Button>
-            </div>
-          );
-        })}
-      </div>
+                <div className="flex flex-col gap-1 min-w-0">
+                  <span className="font-bold text-sm text-foreground truncate">
+                    {fc.field.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {isFront ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
+                  </span>
+                </div>
 
-      <div className="flex justify-center pt-2">
-        <Button
-          size="lg"
-          className="w-56 h-11 font-bold text-[15px] rounded-xl"
-          disabled={!hasPracticeFields || cards.length === 0}
-          onClick={onStartPractice}
-        >
-          {t("vocabulary.startPractice") || "Start Practice"}
-        </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`gap-1.5 min-w-28 h-9 font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 ${
+                    fc.mode === "practice"
+                      ? "border-amber-500/40 text-amber-700 bg-amber-500/10 dark:text-amber-300 hover:bg-amber-500/20 shadow-2xs"
+                      : fc.mode === "show"
+                        ? "border-sky-500/40 text-sky-700 bg-sky-500/10 dark:text-sky-300 hover:bg-sky-500/20 shadow-2xs"
+                        : "border-border/80 text-muted-foreground bg-card hover:bg-muted/60"
+                  }`}
+                  onClick={() => onCycleFieldMode(fc.field.id)}
+                  title="Click to cycle: Show -> Practice -> Hide"
+                >
+                  {fc.mode === "show" && (
+                    <>
+                      <Eye className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                      {t("vocabulary.practiceFieldShow") || "Show"}
+                    </>
+                  )}
+                  {fc.mode === "practice" && (
+                    <>
+                      <PenLine className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      {t("vocabulary.practiceFieldPractice") || "Practice"}
+                    </>
+                  )}
+                  {fc.mode === "hide" && (
+                    <>
+                      <EyeOff className="h-3.5 w-3.5 opacity-50" />
+                      {t("vocabulary.practiceFieldHide") || "Hide"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Right Column / Aside: Card Order & Action CTA */}
+        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
+          {/* Card Order Selection */}
+          <div className="rounded-3xl bg-card border border-border/80 shadow-xs p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-sm text-foreground">
+                  {t("vocabulary.cardOrder") || "Card Order"}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {t("vocabulary.cardOrderDesc") || "Choose how cards will be ordered during practice"}
+                </p>
+              </div>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-muted/70 text-muted-foreground shrink-0">
+                {cards.length} {t("vocabulary.cards", { defaultValue: "cards" })}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => onCardOrderChange("order")}
+                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                  cardOrder === "order"
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-muted/40 hover:bg-muted/70 text-foreground border-border/70"
+                }`}
+              >
+                <ArrowRight className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t("vocabulary.orderSequential") || "In Order"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onCardOrderChange("reverse")}
+                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                  cardOrder === "reverse"
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-muted/40 hover:bg-muted/70 text-foreground border-border/70"
+                }`}
+              >
+                <ArrowLeftRight className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t("vocabulary.orderReverse") || "Reverse"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onCardOrderChange("random")}
+                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                  cardOrder === "random"
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-muted/40 hover:bg-muted/70 text-foreground border-border/70"
+                }`}
+              >
+                <Shuffle className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t("vocabulary.orderRandom") || "Random"}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Start Practice CTA Card */}
+          <div className="rounded-3xl bg-card border border-border/80 shadow-xs p-5 space-y-2.5">
+            <Button
+              size="lg"
+              className="w-full h-12 font-bold text-base rounded-2xl shadow-xs"
+              disabled={!hasPracticeFields || cards.length === 0}
+              onClick={onStartPractice}
+            >
+              {t("vocabulary.startPractice") || "Start Practice"}
+            </Button>
+            {!hasPracticeFields && (
+              <p className="text-xs text-rose-500 font-medium text-center">
+                {t("vocabulary.needPracticeField", { defaultValue: "Please select at least 1 field to practice" })}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

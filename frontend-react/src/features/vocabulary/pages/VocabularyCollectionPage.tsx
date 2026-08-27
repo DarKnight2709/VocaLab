@@ -425,9 +425,9 @@ export default function VocabularyCollectionPage() {
                 </div>
 
                 <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-start gap-4">
-                  <CardFace card={card} side="front" className={`font-semibold ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} isFocusMode={isFocusMode} />
+                  <CardFace card={card} side="front" className={`font-semibold text-lg md:text-xl ${isFocusMode ? "text-2xl md:text-3xl" : ""}`} useStyles={false} isFocusMode={isFocusMode} />
                   <div className="w-px self-stretch bg-border" aria-hidden="true" />
-                  <CardFace card={card} side="back" className={`text-muted-foreground ${isFocusMode ? "text-xl md:text-2xl" : ""}`} useStyles={false} isFocusMode={isFocusMode} />
+                  <CardFace card={card} side="back" className={`text-muted-foreground text-base md:text-lg ${isFocusMode ? "text-2xl md:text-3xl" : ""}`} useStyles={false} isFocusMode={isFocusMode} />
                 </div>
               </div>
             ))
@@ -480,25 +480,25 @@ export default function VocabularyCollectionPage() {
                   </h1>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-8">
-                  <div className="flex gap-8">
-                    <div className="flex flex-col items-center">
-                      <span className="text-3xl font-bold text-emerald-500">{(data?.newCount || 0) + (data?.dueCount || 0)}</span>
-                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">Total</span>
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-xs">
+                      <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{(data?.newCount || 0) + (data?.dueCount || 0)}</span>
+                      <span className="text-[11px] font-bold text-emerald-700/80 dark:text-emerald-300/80 uppercase tracking-wider mt-0.5">Total</span>
                     </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-3xl font-bold text-blue-500">{data?.newCount || 0}</span>
-                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">New</span>
+                    <div className="flex flex-col items-center px-4 py-2.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shadow-xs">
+                      <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{data?.newCount || 0}</span>
+                      <span className="text-[11px] font-bold text-indigo-700/80 dark:text-indigo-300/80 uppercase tracking-wider mt-0.5">New</span>
                     </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-3xl font-bold text-rose-500">{data?.dueCount || 0}</span>
-                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">Due</span>
+                    <div className="flex flex-col items-center px-4 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 shadow-xs">
+                      <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">{data?.dueCount || 0}</span>
+                      <span className="text-[11px] font-bold text-rose-700/80 dark:text-rose-300/80 uppercase tracking-wider mt-0.5">Due</span>
                     </div>
                   </div>
 
                   <Button 
                     size="lg" 
-                    className="h-12 px-8 rounded-full bg-black hover:bg-black/90 text-white font-semibold shadow-sm dark:bg-white dark:text-black dark:hover:bg-white/90"
+                    className="h-11 px-8 rounded-xl font-semibold shadow-xs"
                     onClick={() => setIsStudying(true)}
                   >
                     Learn now
@@ -511,63 +511,65 @@ export default function VocabularyCollectionPage() {
               </div>
             </div>
           ) : sessionCards.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl bg-card shadow-sm space-y-4 max-w-md mx-auto">
-              <div className="text-4xl animate-bounce">🎉</div>
-              <h2 className="text-xl font-bold">{t("vocabulary.reviewDoneTitle") || "Review Session Completed!"}</h2>
+            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl bg-card border border-border/60 shadow-sm space-y-4 max-w-md mx-auto">
+              <div className="text-5xl animate-bounce">🎉</div>
+              <h2 className="text-2xl font-bold">{t("vocabulary.reviewDoneTitle") || "Review Session Completed!"}</h2>
               <p className="text-sm text-muted-foreground">
                 {t("vocabulary.reviewDoneDesc") || "All caught up! You have completed all due reviews for this collection."}
               </p>
-              <Button variant="default" onClick={() => setMode("preview")}>
+              <Button 
+                className="font-semibold rounded-xl shadow-xs"
+                onClick={() => setMode("preview")}
+              >
                 {t("vocabulary.backToPreview") || "Back to Preview"}
               </Button>
             </div>
           ) : (
             <div className={`${isFocusMode ? "max-w-none px-0 md:px-12" : "max-w-3xl"} w-full mx-auto space-y-6 pb-12`}>
               <div 
-                className={`relative w-full perspective-[2000px] cursor-pointer group ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px]"}`} 
+                className={`relative w-full perspective-[2000px] cursor-pointer group ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px] stream-card"}`} 
                 onClick={() => setFlipped((f) => !f)}
               >
                 <div className={`relative w-full h-full ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px]"} transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
                   {/* Front Face */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden">
+                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card border border-border/80 shadow-xs flex items-center justify-center p-6 overflow-hidden">
                     <div className="text-center w-full max-w-4xl px-4">
-                      <CardFace card={sessionCards[flashcardIdx]} side="front" className={`leading-tight font-medium ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} isFocusMode={isFocusMode} />
+                      <CardFace card={sessionCards[flashcardIdx]} side="front" className={`leading-tight font-semibold ${isFocusMode ? 'text-6xl md:text-8xl' : 'text-4xl md:text-6xl'}`} isFocusMode={isFocusMode} />
                     </div>
-                    <div className="absolute bottom-4 text-xs text-muted-foreground animate-pulse">
+                    <div className="absolute bottom-4 text-xs font-medium text-muted-foreground/80 animate-pulse">
                       {t("vocabulary.clickToFlip") || "Click card to flip"}
                     </div>
-                    <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                    <div className="absolute top-3.5 right-4 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20 shadow-xs">
                       {t("vocabulary.frontFace")}
                     </div>
                   </div>
 
                   {/* Back Face */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
+                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card border border-amber-500/30 shadow-xs flex items-center justify-center p-6 overflow-hidden">
                     <div className="text-center w-full max-w-4xl px-4">
                       <CardFace card={sessionCards[flashcardIdx]} side="back" className={`leading-tight font-medium text-muted-foreground ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} isFocusMode={isFocusMode} />
                     </div>
-                    <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
+                    <div className="absolute top-3.5 right-4 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wider border border-amber-500/20 shadow-xs">
                       {t("vocabulary.backFace")}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="text-center text-xs text-muted-foreground uppercase tracking-widest font-medium">
+              <div className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                 {t("vocabulary.remainingCards") || "Remaining"}: {sessionCards.length}
               </div>
 
               <div className="flex justify-center gap-3">
                 {!flipped ? (
-                  <Button size="lg" className="w-44" onClick={() => setFlipped(true)}>
+                  <Button size="lg" className="w-48 h-11 rounded-xl font-semibold shadow-xs" onClick={() => setFlipped(true)}>
                     {t("vocabulary.revealAnswer") || "Reveal Answer"}
                   </Button>
                 ) : (
-                  <div className="flex flex-wrap justify-center gap-2 w-full">
+                  <div className="flex flex-wrap justify-center gap-2.5 w-full">
                     <Button
                       size="sm"
-                      variant="destructive"
-                      className="w-24 gap-1 font-semibold"
+                      className="w-24 h-10 gap-1 font-bold bg-rose-500 hover:bg-rose-600 text-white shadow-sm shadow-rose-500/20 active:scale-95 transition-all"
                       disabled={reviewMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -578,8 +580,7 @@ export default function VocabularyCollectionPage() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="w-24 gap-1 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 font-semibold"
+                      className="w-24 h-10 gap-1 font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm shadow-amber-500/20 active:scale-95 transition-all"
                       disabled={reviewMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -590,8 +591,7 @@ export default function VocabularyCollectionPage() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="default"
-                      className="w-24 gap-1 font-semibold"
+                      className="w-24 h-10 gap-1 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-500/20 active:scale-95 transition-all"
                       disabled={reviewMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -602,7 +602,7 @@ export default function VocabularyCollectionPage() {
                     </Button>
                     <Button
                       size="sm"
-                      className="w-24 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                      className="w-24 h-10 gap-1 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 active:scale-95 transition-all"
                       disabled={reviewMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -690,9 +690,9 @@ function CardFace({
                   color: entry.color || "inherit",
                   fontSize: entry.fontSize
                     ? isFocusMode
-                      ? Number(entry.fontSize) * 1.5 + "px"
-                      : Number(entry.fontSize) + "px"
-                    : "inherit",
+                      ? Number(entry.fontSize) * 2 + "px"
+                      : Number(entry.fontSize) * 1.5 + "px"
+                    : undefined,
                   fontWeight: entry.fontSize ? "500" : "inherit",
                 }
               : {}

@@ -32,6 +32,18 @@ export function SearchBar() {
   }, [qParam]);
 
   useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setShowSuggestions(true);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         searchRef.current &&
@@ -53,8 +65,6 @@ export function SearchBar() {
     params.set("q", q.trim());
     params.set("type", type);
 
-    // Invalidate search queries so pressing Enter always fetches fresh results,
-    // even when the URL hasn't changed (same query as before).
     queryClient.invalidateQueries({ queryKey: ["search-sidebar", q.trim()] });
     queryClient.invalidateQueries({ queryKey: ["search-infinite", q.trim()] });
 
@@ -64,8 +74,8 @@ export function SearchBar() {
   }
 
   return (
-    <div ref={searchRef} className="relative flex-1 max-w-sm w-full">
-      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div ref={searchRef} className="relative flex-1 max-w-md w-full">
+      <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80 pointer-events-none" />
       <Input
         ref={inputRef}
         value={searchInput}
@@ -78,11 +88,15 @@ export function SearchBar() {
           if (e.key === "Enter") {
             handleSearchSubmit(searchInput);
           }
+          if (e.key === "Escape") {
+            setShowSuggestions(false);
+            inputRef.current?.blur();
+          }
         }}
         placeholder={t("common.searchPlaceholder")}
-        className="h-10 pl-9 pr-9 bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
+        className="h-10 pl-10 pr-12 rounded-2xl bg-muted/50 hover:bg-muted/70 focus:bg-card border border-border/70 focus:border-primary/50 text-sm placeholder:text-muted-foreground/70 transition-all shadow-2xs focus:shadow-xs focus:ring-2 focus:ring-primary/10"
       />
-      {searchInput.length > 0 && (
+      {searchInput.length > 0 ? (
         <button
           type="button"
           onClick={() => {
@@ -90,62 +104,66 @@ export function SearchBar() {
             setShowSuggestions(true);
             inputRef.current?.focus();
           }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </button>
+      ) : (
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-muted-foreground/70 bg-background/80 rounded-md border border-border/80 shadow-2xs absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none select-none">
+          ⌘K
+        </kbd>
       )}
 
       {/* Search Suggestion Dropdown */}
       {showSuggestions && (searchInput.length > 0 || history.length > 0) && (
-        <div className="absolute top-full mt-2 w-full bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-full mt-2 w-full bg-card/95 backdrop-blur-md border border-border/80 rounded-2xl shadow-xl z-50 overflow-hidden p-1.5">
           {searchInput.length > 0 ? (
             isLoading ? (
-              <div className="px-4 py-2 text-sm text-muted-foreground animate-pulse">
+              <div className="px-4 py-3 text-sm text-muted-foreground animate-pulse">
                 Searching...
               </div>
             ) : searchSuggestion?.data?.length ? (
-              <ul className="py-1">
+              <ul className="py-0.5 space-y-0.5">
                 {searchSuggestion.data.map((item) => (
                   <li
                     key={item.id}
-                    className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors flex items-center gap-3"
+                    className="px-3.5 py-2.5 rounded-xl hover:bg-muted/80 cursor-pointer transition-colors flex items-center gap-3 text-sm"
                     onClick={() => {
                       handleSearchSubmit(item.text);
                     }}
                   >
-                    <SearchIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="truncate">{item.text}</span>
+                    <SearchIcon className="h-4 w-4 text-primary shrink-0" />
+                    <span className="truncate font-medium text-foreground">{item.text}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="px-4 py-2 text-sm text-muted-foreground">
+              <div className="px-4 py-3 text-sm text-muted-foreground">
                 No results found.
               </div>
             )
           ) : (
-            <div className="py-1">
-              <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase flex items-center justify-between">
+            <div>
+              <div className="px-3.5 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
                 <span>Recent Searches</span>
                 <button
                   type="button"
                   onClick={() => clearHistory.mutate()}
-                  className="hover:text-foreground hover:underline cursor-pointer"
+                  className="hover:text-primary transition-colors cursor-pointer text-xs lowercase first-letter:uppercase font-normal"
                 >
-                  Clear
+                  Clear all
                 </button>
               </div>
-              <ul className="pb-1">
+              <ul className="space-y-0.5 pb-1">
                 {history.map((item) => (
                   <li
                     key={item.id}
-                    className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors flex items-center justify-between group"
+                    className="px-3.5 py-2 rounded-xl hover:bg-muted/80 cursor-pointer transition-colors flex items-center justify-between group text-sm"
                     onClick={() => handleSearchSubmit(item.query)}
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
                       <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="truncate">{item.query}</span>
+                      <span className="truncate font-medium text-foreground">{item.query}</span>
                     </div>
                     <button
                       type="button"
@@ -153,10 +171,10 @@ export function SearchBar() {
                         e.stopPropagation();
                         removeFromHistory.mutate(item.id);
                       }}
-                      className="p-1 text-muted-foreground hover:text-foreground hover:bg-background rounded opacity-0 group-hover:opacity-100 transition-all"
+                      className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                       title="Remove from history"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </li>
                 ))}

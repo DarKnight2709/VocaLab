@@ -163,6 +163,8 @@
     "chat": "Chat",
     "blog": "Blog",
     "video": "Video",
+    "learn": "Learn",
+    "discover": "Discover",
     "view": "View",
     "manage": "Manage",
     "cancel": "Cancel",
@@ -199,7 +201,13 @@
     "backToHome": "Back to Home",
     "searchPlaceholder": "Search on...",
     "noData": "No data available",
-    "noDescription": "No description"
+    "noDescription": "No description",
+    "send": "Send",
+    "close": "Close",
+    "clear": "Clear",
+    "actionFailed": "Action failed",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right"
   },
   "auth": {
     "signIn": "Sign in",
@@ -517,7 +525,10 @@
     "writeComment": "Write a comment...",
     "lastEdited": "Last edited",
     "coverPreviewAlt": "Cover preview",
-    "replyComment": "Reply to comment"
+    "replyComment": "Reply to comment",
+    "readingTime": "{{count}} min read",
+    "readMore": "Read more",
+    "viewAuthorProfile": "View profile of {{name}}"
   },
   "vocabulary": {
     "enterFocusMode": "Enter Focus Mode",
@@ -780,7 +791,14 @@
       "saveChanges": "Save card type changes",
       "removeField": "Remove field",
       "removeFieldDesc": "Are you sure you want to remove this field from the card type? Any card data attached to this field will also be lost if you save the changes."
-    }
+    },
+    "cardTypeUpdated": "Card type updated successfully",
+    "enterCollectionName": "e.g. Japanese Core 2000",
+    "finish": "Finish",
+    "importing": "Importing...",
+    "manageCardTypesDesc": "Customize note structures, fields, and styling for your flashcards",
+    "needPracticeField": "Please select at least 1 field to practice",
+    "uploadingImage": "Uploading..."
   },
   "chat": {
     "title": "Chat",
@@ -934,7 +952,11 @@
     "loadMessagesFailed": "Failed to load messages",
     "uploadFilesFailed": "Failed to upload files",
     "sendMessageFailed": "Failed to send message",
-    "recallMessageFailed": "Failed to recall message"
+    "recallMessageFailed": "Failed to recall message",
+    "added": "Added",
+    "attachFile": "Attach file",
+    "userTyping": "{{user}} is typing...",
+    "someone": "Someone"
   },
   "grammar": {
     "title": "English Grammar",
@@ -968,12 +990,16 @@
     "deleteSuccess": "Grammar structure deleted",
     "deleteError": "Delete failed",
     "deleteConfirmTitle": "Delete grammar structure",
-    "deleteConfirmDesc": "Are you sure you want to delete <strong>{{title}}</strong>? This action cannot be undone."
+    "deleteConfirmDesc": "Are you sure you want to delete <strong>{{title}}</strong>? This action cannot be undone.",
+    "details": "Structure Details",
+    "close": "Close",
+    "noResults": "No grammar structures found."
   },
   "search": {
     "title": "Search",
     "placeholder": "Search users, groups, posts...",
     "enterKeyword": "Enter a keyword to search",
+    "filter": "Filter:",
     "noResults": "No {{type}} found for \"{{query}}\"",
     "tabs": {
       "all": "All",
@@ -1064,7 +1090,28 @@
     "upvotePost": "<bold>{{sender}}</bold> liked your post",
     "upvoteComment": "<bold>{{sender}}</bold> liked your comment",
     "follow": "<bold>{{sender}}</bold> started following you",
-    "newPost": "<bold>{{sender}}</bold> published a new post"
+    "newPost": "<bold>{{sender}}</bold> published a new post",
+    "tabs": {
+      "all": "All",
+      "unread": "Unread",
+      "chat": "Messages & Groups",
+      "activity": "Interactions & Blog",
+      "system": "System"
+    },
+    "unreadBadge": "{{count}} unread",
+    "settings": "Notification settings",
+    "noUnread": "No unread notifications",
+    "noUnreadHint": "You are all caught up with your latest notifications.",
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "defaultSender": "User",
+    "defaultGroup": "Study group",
+    "systemNotice": "System notification",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
   },
   "upload": {
     "uploadFailed": "Upload failed",
@@ -1111,7 +1158,11 @@
     "activityHeatMap": "Activity Heat Map",
     "noActivity": "No activity",
     "todayTime": "Hôm nay: {{time}} phút",
-    "changeGoal": "Đổi mục tiêu"
+    "changeGoal": "Change Goal",
+    "cardsMastered": "Mastered",
+    "dayStreak": "Day Streak",
+    "goal": "Goal",
+    "masteryProgress": "Mastery Progress"
   },
   "home": {
     "greeting": {
@@ -1221,6 +1272,26 @@
     "failedToExtract": "Failed to extract transcript. Ensure the video has closed captions.",
     "copySentence": "Copy sentence",
     "extractSuccess": "Video extracted successfully",
-    "extractFailed": "Failed to extract video. Ensure the video has closed captions."
+    "extractFailed": "Failed to extract video. Ensure the video has closed captions.",
+    "chapters": "Chapters",
+    "featuredVideos": "Featured Videos by Topic",
+    "heroTitle": "Learn Vocabulary through Smart Videos",
+    "heroSubtitle": "Paste any YouTube link to explore synchronized subtitles, replay sentences, and build vocabulary in context.",
+    "noChapters": "This video has no chapter list.",
+    "readyToLearn": "{{count}} videos ready to learn",
+    "categoryAll": "All",
+    "categoryTalks": "Talks & Inspiration",
+    "categoryScience": "Science & Life",
+    "categoryLearning": "English Learning & Communication",
+    "categoryBusiness": "Business & Career",
+    "categoryStory": "Stories & TED-Ed",
+    "feature1Title": "One-tap Vocabulary",
+    "feature1Desc": "Click directly on any word in the subtitles to open a dictionary popup with definitions, IPA pronunciation, and examples.",
+    "feature2Title": "Auto Voice Sync",
+    "feature2Desc": "Subtitles automatically highlight and scroll smoothly in sync with the speaker's voice in the YouTube video.",
+    "feature3Title": "Sentence Loop Listening",
+    "feature3Desc": "Click any subtitle line to instantly jump to that moment in the video, perfect for listening practice and shadowing.",
+    "tryAnotherVideo": "Try another video",
+    "clickToLookup": "Click to look up dictionary"
   }
 }

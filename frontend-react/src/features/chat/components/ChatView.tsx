@@ -720,7 +720,7 @@ export default function ChatView({
         }}
       />
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className={`flex flex-1 min-h-0 overflow-hidden ${!embedded ? "rounded-3xl border border-border/80 bg-card shadow-xs" : ""}`}>
         <ChatSidebar
           embedded={embedded}
           hideSidebarSearch={hideSidebarSearch}
@@ -747,9 +747,17 @@ export default function ChatView({
         {(!embedded || isEmbeddedChatView) && (
           <main className={`flex-1 flex-col min-h-0 ${(!selectedUser && !selectedGroup && !embedded) ? "hidden md:flex" : "flex"}`}>
             {!selectedUser && !selectedGroup ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-lg text-muted-foreground">
+              <div className="flex-1 flex items-center justify-center p-6 bg-muted/10">
+                <div className="text-center space-y-3 max-w-sm">
+                  <div className="mx-auto w-16 h-16 rounded-3xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shadow-xs">
+                    <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {t("chat.title", { defaultValue: "VocaLab Messages" })}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
                     {t("chat.chooseToStart")}
                   </p>
                 </div>

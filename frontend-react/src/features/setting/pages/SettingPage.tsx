@@ -262,77 +262,79 @@ export default function SettingPage() {
 
 
   return (
-    <div className="h-full overflow-y-scroll p-6 md:p-8 bg-background">
-      <div className="w-full max-w-[1600px] mx-auto space-y-6">
+    <div className="h-full overflow-y-auto p-4 sm:p-6 md:p-8 bg-background">
+      <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in duration-300">
         <Breadcrumb items={[{ label: t("common.settingsPage") }]} />
 
-        <div className="pb-4">
-          <h1 className="text-2xl font-bold tracking-tight">{t("common.settingsPage")}</h1>
-          <p className="text-muted-foreground mt-1">
+        <div className="pb-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+            {t("common.settingsPage")}
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-muted-foreground mt-1">
             {t("settings.displayLanguageDesc")}
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-10">
+        <div className="flex flex-col md:flex-row gap-6 lg:gap-8 items-start">
           {/* Sidebar Left */}
-          <aside className="w-full md:w-64 shrink-0 space-y-6">
-            <nav className="space-y-1">
-              {sidebarGroups.map((group) => {
-                const isExpanded = expandedGroups.includes(group.id);
-                return (
-                  <div key={group.id} className="mb-4">
-                    <button
-                      onClick={() => toggleGroup(group.id)}
-                      className="flex w-full items-center justify-between px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors group"
-                    >
-                      <span className="uppercase tracking-wider text-xs">
-                        {group.title}
-                      </span>
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 opacity-50 group-hover:opacity-100" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100" />
-                      )}
-                    </button>
+          <aside className="w-full md:w-60 lg:w-64 shrink-0">
+            <div className="rounded-3xl border border-border/80 bg-card p-3 shadow-xs space-y-4">
+              <nav className="space-y-3">
+                {sidebarGroups.map((group) => {
+                  const isExpanded = expandedGroups.includes(group.id);
+                  return (
+                    <div key={group.id} className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.id)}
+                        className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      >
+                        <span>{group.title}</span>
+                        {isExpanded ? (
+                          <ChevronUp className="h-3.5 w-3.5 opacity-60" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                        )}
+                      </button>
 
-                    {isExpanded && (
-                      <div className="mt-1 space-y-1">
-                        {group.items.map((tab) => {
-                          const Icon = tab.icon;
-                          const isActive = currentTab === tab.key;
-                          const path = `${ROUTES.ME_SETTING.url}/${tab.key}`;
-                          
-                          return (
-                            <Link
-                              key={tab.key}
-                              to={path}
-                              className={[
-                                "flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all",
-                                isActive
-                                  ? "bg-secondary text-secondary-foreground shadow-sm"
-                                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                              ].join(" ")}
-                            >
-                              <Icon
-                                className={[
-                                  "h-4.5 w-4.5",
-                                  isActive ? "text-primary" : "",
-                                ].join(" ")}
-                              />
-                              {tab.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </nav>
+                      {isExpanded && (
+                        <div className="space-y-1 pt-0.5">
+                          {group.items.map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = currentTab === tab.key;
+                            const path = `${ROUTES.ME_SETTING.url}/${tab.key}`;
+                            
+                            return (
+                              <Link
+                                key={tab.key}
+                                to={path}
+                                className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold rounded-2xl transition-all cursor-pointer ${
+                                  isActive
+                                    ? "bg-primary text-primary-foreground shadow-xs font-extrabold"
+                                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                                }`}
+                              >
+                                <Icon
+                                  className={`h-4 w-4 shrink-0 ${
+                                    isActive ? "text-primary-foreground" : "text-muted-foreground"
+                                  }`}
+                                />
+                                <span>{tab.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </nav>
+            </div>
           </aside>
 
-          <main className="flex-1 min-h-150">
-            <div className="bg-card rounded-xl border p-6 shadow-sm">
+          {/* Main Content Area */}
+          <main className="flex-1 w-full min-w-0 min-h-130">
+            <div className="bg-card rounded-3xl border border-border/80 p-5 sm:p-7 shadow-xs">
               {me?.id ? (
                 <Outlet context={{
                   me,
@@ -361,7 +363,7 @@ export default function SettingPage() {
                   <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Users className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <p className="text-muted-foreground">
+                  <p className="text-xs sm:text-sm font-semibold text-muted-foreground">
                     {t("profile.userNotFound")}
                   </p>
                 </div>

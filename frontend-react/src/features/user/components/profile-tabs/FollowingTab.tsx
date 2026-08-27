@@ -50,8 +50,8 @@ export default function FollowingTab({ userId, search }: FollowingTabProps) {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
         {following.map((user) => (
           <UserCard key={user.id} user={user} />
         ))}

@@ -250,7 +250,7 @@ export function CardFieldInput({
               : ""
           }
           disabled={disabled || isUploading}
-          className="flex-1 min-w-[80px] bg-transparent outline-none text-sm placeholder:text-muted-foreground disabled:cursor-not-allowed"
+          className="flex-1 min-w-[80px] bg-transparent outline-none text-base placeholder:text-muted-foreground disabled:cursor-not-allowed py-0.5"
         />
 
         {isUploading && (

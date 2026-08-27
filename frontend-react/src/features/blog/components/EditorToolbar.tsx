@@ -37,7 +37,11 @@ function ToolbarBtn({
         onClick();
       }}
       title={title}
-      className={`rounded p-1.5 transition-colors hover:bg-muted ${active ? "bg-muted text-primary" : "text-muted-foreground"}`}
+      className={`rounded-xl p-2 transition-all ${
+        active 
+          ? "bg-primary/15 text-primary font-bold shadow-xs" 
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+      }`}
     >
       {children}
     </button>

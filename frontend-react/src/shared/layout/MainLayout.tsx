@@ -59,7 +59,7 @@ export default function MainLayout() {
         {/* Sidebar Container */}
         {!isFocusMode && (
           <div
-            className={`absolute md:relative z-50 h-full bg-card transition-all duration-300 ease-in-out overflow-hidden ${
+            className={`absolute md:relative z-40 h-full bg-sidebar border-r border-border/80 transition-all duration-300 ease-in-out overflow-hidden shrink-0 ${
               isLeftSidebarVisible 
                 ? "w-64 min-w-[256px] translate-x-0" 
                 : "w-64 -translate-x-full md:translate-x-0 md:w-16 md:min-w-[64px]"
@@ -69,7 +69,7 @@ export default function MainLayout() {
           </div>
         )}
         
-        <div className="flex-1 min-h-0 overflow-hidden w-full bg-muted/30">
+        <div className="flex-1 min-h-0 overflow-hidden w-full bg-background">
           <MainOutlet />
         </div>
       </div>

@@ -89,64 +89,83 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="h-full overflow-y-scroll p-6 md:p-8">
-      <div className="w-full max-w-[1600px] mx-auto space-y-6">
+    <div className="h-full overflow-y-auto p-4 sm:p-6 md:p-8 bg-background">
+      <div className="w-full max-w-[1400px] mx-auto space-y-6 animate-in fade-in duration-300">
+        {/* Breadcrumb */}
         <Breadcrumb items={[{ label: t("common.profile") }]} />
 
-        {/* Profile Header */}
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-          <Avatar className="h-36 w-36 min-h-36 min-w-36 flex-none border-4 border-background shadow-lg lg:h-48 lg:w-48 lg:min-h-48 lg:min-w-48">
-            <AvatarImage src={profileUser?.avatar || undefined} />
-            <AvatarFallback className="text-3xl">
-              {getInitials(profileUser?.fullName || profileUser?.username)}
-            </AvatarFallback>
-          </Avatar>
+        {/* Profile Card Hero */}
+        <div className="rounded-3xl bg-card border border-border/80 shadow-xs overflow-hidden">
+          {/* Cover Banner */}
+          <div className="h-36 sm:h-52 w-full bg-gradient-to-r from-primary/25 via-sky-500/15 to-indigo-500/25 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
+          </div>
 
-          <div className="min-w-0 flex-1 lg:max-w-4xl">
-            <div>
-              <h1 className="text-3xl font-bold">{profileUser?.fullName || profileUser?.username}</h1>
-              <p className="mt-1 text-muted-foreground">@{profileUser?.username}</p>
-            </div>
+          {/* Profile Header Info */}
+          <div className="px-5 sm:px-8 pb-6 sm:pb-8">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-14 sm:-mt-18 mb-5">
+              <Avatar className="h-28 w-28 sm:h-36 sm:w-36 min-h-28 min-w-28 border-4 border-card shadow-xl rounded-full bg-muted">
+                <AvatarImage src={profileUser?.avatar || undefined} className="object-cover" />
+                <AvatarFallback className="text-2xl sm:text-3xl font-extrabold text-foreground">
+                  {getInitials(profileUser?.fullName || profileUser?.username)}
+                </AvatarFallback>
+              </Avatar>
 
-            {profileUser?.socials && profileUser.socials.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-3">
-                {profileUser.socials.map((social: any) => (
-                  <a
-                    key={social.id}
-                    href={social.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors shadow-sm"
-                    title={social.name || social.platform}
-                  >
-                    {PLATFORM_ICONS[social.platform] || PLATFORM_ICONS[SocialPlatform.CUSTOM]}
-                    {social.name || social.platform}
-                  </a>
-                ))}
+              <div className="self-start sm:self-auto">
+                <ProfileActionButtons
+                  isOwnProfile={isOwnProfile}
+                  onEditProfile={() => setProfileOpen(true)}
+                  profileUserId={profileUserId}
+                  profileUsername={profileUser?.username}
+                  profileFullName={profileUser?.fullName}
+                  profileAvatar={profileUser?.avatar}
+                  isFollowing={matchedUser?.isFollowing}
+                  canFollow={matchedUser?.capabilities?.canFollow}
+                  canChat={matchedUser?.capabilities?.canChat}
+                  isBlocking={matchedUser?.isBlocking}
+                />
               </div>
-            )}
-
-            <div className="mt-4">
-              <ProfileStatsGrid stats={stats} />
             </div>
 
-            <div className="mt-5">
-              <ProfileActionButtons
-                isOwnProfile={isOwnProfile}
-                onEditProfile={() => setProfileOpen(true)}
-                profileUserId={profileUserId}
-                profileUsername={profileUser?.username}
-                profileFullName={profileUser?.fullName}
-                profileAvatar={profileUser?.avatar}
-                isFollowing={matchedUser?.isFollowing}
-                canFollow={matchedUser?.capabilities?.canFollow}
-                canChat={matchedUser?.capabilities?.canChat}
-                isBlocking={matchedUser?.isBlocking}
-              />
+            {/* Name, Username & Bio */}
+            <div className="space-y-3">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+                  {profileUser?.fullName || profileUser?.username}
+                </h1>
+                <p className="text-xs sm:text-sm font-semibold text-muted-foreground mt-0.5">
+                  @{profileUser?.username}
+                </p>
+              </div>
+
+              {/* Social links */}
+              {profileUser?.socials && profileUser.socials.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {profileUser.socials.map((social: any) => (
+                    <a
+                      key={social.id}
+                      href={social.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 rounded-xl border border-border/70 bg-muted/40 px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted/80 hover:border-primary/40 transition-all shadow-xs"
+                      title={social.name || social.platform}
+                    >
+                      {PLATFORM_ICONS[social.platform] || PLATFORM_ICONS[SocialPlatform.CUSTOM]}
+                      <span>{social.name || social.platform}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {/* Stats Grid */}
+              <div className="pt-2">
+                <ProfileStatsGrid stats={stats} />
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Profile Content Tabs */}
         <ProfileContentSection 
           userId={profileUserId} 
           isOwnProfile={isOwnProfile} 

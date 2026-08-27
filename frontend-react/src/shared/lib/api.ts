@@ -84,7 +84,19 @@ api.interceptors.response.use(
         processQueue(refreshError);
         useSocketStore.getState().disconnect();
         useAuthStore.getState().clearAuthState();
-        if (window.location.pathname !== ROUTES.LOGIN.url) {
+
+        const pathname = window.location.pathname;
+        const isPublicPath =
+          pathname === "/" ||
+          pathname === ROUTES.LANDING.url ||
+          pathname === ROUTES.LOGIN.url ||
+          pathname === ROUTES.BLOG.url ||
+          pathname === ROUTES.SEARCH.url ||
+          pathname.startsWith("/blogs/") ||
+          pathname.startsWith("/collections/") ||
+          pathname.startsWith("/user/");
+
+        if (!isPublicPath && pathname !== ROUTES.LOGIN.url) {
           router.navigate(ROUTES.LOGIN.url);
         }
         return Promise.reject(refreshError);

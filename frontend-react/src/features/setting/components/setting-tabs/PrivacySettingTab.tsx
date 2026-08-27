@@ -128,110 +128,111 @@ export default function PrivacySettingTab({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      
-      {/* ────────── Connections Privacy Panel ────────── */}
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Connections Privacy Panel */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <Users className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">{t("settings.tabs.privacy")}</h2>
+        <div className="flex items-center gap-2.5 pb-2 border-b border-border/80">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Users className="h-4 w-4" />
+          </div>
+          <h2 className="text-base font-extrabold text-foreground">{t("settings.tabs.privacy")}</h2>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {/* Allow standard followers configuration switch */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
-            <div className="flex-1 pr-4">
-              <p className="font-medium">{t("settings.privacy.whoCanFollow")}</p>
-              <p className="text-sm text-muted-foreground">{t("settings.privacy.whoCanFollowDesc")}</p>
+          <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t("settings.privacy.whoCanFollow")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.privacy.whoCanFollowDesc")}</p>
             </div>
-            <Switch checked={allowFollow} onCheckedChange={handleFollowToggle} />
+            <Switch checked={allowFollow} onCheckedChange={handleFollowToggle} className="cursor-pointer shrink-0" />
           </div>
 
           {/* Messaging Scope Access Selection */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
-            <div className="flex-1 pr-4">
-              <p className="font-medium">{t("settings.privacy.whoCanMessage")}</p>
-              <p className="text-sm text-muted-foreground">{t("settings.privacy.whoCanMessageDesc")}</p>
+          <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t("settings.privacy.whoCanMessage")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.privacy.whoCanMessageDesc")}</p>
             </div>
-            <div className="w-[180px]">
+            <div className="w-[150px] sm:w-[170px] shrink-0">
               <Select value={whoCanMessage} onValueChange={(val) => { setWhoCanMessage(val as ScopeVisibilityType); onUpdateMessageScope?.(val as ScopeVisibilityType); }}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EVERYONE">{t("settings.privacy.everyone")}</SelectItem>
-                  <SelectItem value="FRIENDS">{t("settings.privacy.friends")}</SelectItem>
-                  <SelectItem value="PRIVATE">{t("settings.privacy.nobody")}</SelectItem>
+                <SelectTrigger className="h-9 rounded-xl border-border/80 bg-background text-xs font-bold shadow-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-2xl border-border/80 shadow-md">
+                  <SelectItem value="EVERYONE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.everyone")}</SelectItem>
+                  <SelectItem value="FRIENDS" className="text-xs font-semibold rounded-xl">{t("settings.privacy.friends")}</SelectItem>
+                  <SelectItem value="PRIVATE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.nobody")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Followers NavTab TabVisibility Configuration */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
-            <div className="flex-1 pr-4">
-              <p className="font-medium">{t("settings.privacy.followersTab")}</p>
-              <p className="text-sm text-muted-foreground">{t("settings.privacy.followersTabDesc")}</p>
+          <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t("settings.privacy.followersTab")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.privacy.followersTabDesc")}</p>
             </div>
-            <div className="w-[180px]">
+            <div className="w-[150px] sm:w-[170px] shrink-0">
               <Select value={followersTabVisibility} onValueChange={(val) => { setFollowersTabVisibility(val as ScopeVisibilityType); onUpdateFollowersTabVisibility?.(val as ScopeVisibilityType); }}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EVERYONE">{t("settings.privacy.everyone")}</SelectItem>
-                  <SelectItem value="FRIENDS">{t("settings.privacy.friends")}</SelectItem>
-                  <SelectItem value="PRIVATE">{t("settings.privacy.nobody")}</SelectItem>
+                <SelectTrigger className="h-9 rounded-xl border-border/80 bg-background text-xs font-bold shadow-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-2xl border-border/80 shadow-md">
+                  <SelectItem value="EVERYONE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.everyone")}</SelectItem>
+                  <SelectItem value="FRIENDS" className="text-xs font-semibold rounded-xl">{t("settings.privacy.friends")}</SelectItem>
+                  <SelectItem value="PRIVATE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.nobody")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Following Tab Visibility Option */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
-            <div className="flex-1 pr-4">
-              <p className="font-medium">{t("settings.privacy.followingTab")}</p>
-              <p className="text-sm text-muted-foreground">{t("settings.privacy.followingTabDesc")}</p>
+          <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t("settings.privacy.followingTab")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.privacy.followingTabDesc")}</p>
             </div>
-            <div className="w-[180px]">
+            <div className="w-[150px] sm:w-[170px] shrink-0">
               <Select value={followingTabVisibility} onValueChange={(val) => { setFollowingTabVisibility(val as ScopeVisibilityType); onUpdateFollowingTabVisibility?.(val as ScopeVisibilityType); }}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EVERYONE">{t("settings.privacy.everyone")}</SelectItem>
-                  <SelectItem value="FRIENDS">{t("settings.privacy.friends")}</SelectItem>
-                  <SelectItem value="PRIVATE">{t("settings.privacy.nobody")}</SelectItem>
+                <SelectTrigger className="h-9 rounded-xl border-border/80 bg-background text-xs font-bold shadow-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-2xl border-border/80 shadow-md">
+                  <SelectItem value="EVERYONE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.everyone")}</SelectItem>
+                  <SelectItem value="FRIENDS" className="text-xs font-semibold rounded-xl">{t("settings.privacy.friends")}</SelectItem>
+                  <SelectItem value="PRIVATE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.nobody")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Friend Tab Visibility System Configuration */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
-            <div className="flex-1 pr-4">
-              <p className="font-medium">{t("settings.privacy.friendTab")}</p>
-              <p className="text-sm text-muted-foreground">{t("settings.privacy.friendTabDesc")}</p>
+          <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t("settings.privacy.friendTab")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.privacy.friendTabDesc")}</p>
             </div>
-            <div className="w-[180px]">
+            <div className="w-[150px] sm:w-[170px] shrink-0">
               <Select value={friendTabVisibility} onValueChange={(val) => { setFriendTabVisibility(val as ScopeVisibilityType); onUpdateFriendTabVisibility?.(val as ScopeVisibilityType); }}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EVERYONE">{t("settings.privacy.everyone")}</SelectItem>
-                  <SelectItem value="FRIENDS">{t("settings.privacy.friends")}</SelectItem>
-                  <SelectItem value="PRIVATE">{t("settings.privacy.nobody")}</SelectItem>
+                <SelectTrigger className="h-9 rounded-xl border-border/80 bg-background text-xs font-bold shadow-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-2xl border-border/80 shadow-md">
+                  <SelectItem value="EVERYONE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.everyone")}</SelectItem>
+                  <SelectItem value="FRIENDS" className="text-xs font-semibold rounded-xl">{t("settings.privacy.friends")}</SelectItem>
+                  <SelectItem value="PRIVATE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.nobody")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Groups Tab Visibility System Configuration */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
-            <div className="flex-1 pr-4">
-              <p className="font-medium">{t("settings.privacy.groupsTab")}</p>
-              <p className="text-sm text-muted-foreground">{t("settings.privacy.groupsTabDesc")}</p>
+          <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t("settings.privacy.groupsTab")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.privacy.groupsTabDesc")}</p>
             </div>
-            <div className="w-[180px]">
+            <div className="w-[150px] sm:w-[170px] shrink-0">
               <Select value={groupsTabVisibility} onValueChange={(val) => { setGroupsTabVisibility(val as ScopeVisibilityType); onUpdateGroupsTabVisibility?.(val as ScopeVisibilityType); }}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EVERYONE">{t("settings.privacy.everyone")}</SelectItem>
-                  <SelectItem value="FRIENDS">{t("settings.privacy.friends")}</SelectItem>
-                  <SelectItem value="PRIVATE">{t("settings.privacy.nobody")}</SelectItem>
+                <SelectTrigger className="h-9 rounded-xl border-border/80 bg-background text-xs font-bold shadow-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-2xl border-border/80 shadow-md">
+                  <SelectItem value="EVERYONE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.everyone")}</SelectItem>
+                  <SelectItem value="FRIENDS" className="text-xs font-semibold rounded-xl">{t("settings.privacy.friends")}</SelectItem>
+                  <SelectItem value="PRIVATE" className="text-xs font-semibold rounded-xl">{t("settings.privacy.nobody")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -239,52 +240,53 @@ export default function PrivacySettingTab({
         </div>
       </section>
 
-      {/* ────────── Security & Moderation Section ────────── */}
-      <section className="space-y-4 pt-4">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <ShieldX className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">{t("settings.privacy.blockedAccounts")}</h2>
+      {/* Security & Moderation Section */}
+      <section className="space-y-4 pt-2">
+        <div className="flex items-center gap-2.5 pb-2 border-b border-border/80">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ShieldX className="h-4 w-4" />
+          </div>
+          <h2 className="text-base font-extrabold text-foreground">{t("settings.privacy.blockedAccounts")}</h2>
         </div>
 
         <div className="grid gap-4">
-          <div className="flex flex-col rounded-lg bg-muted/30 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between p-4">
-              <div>
-                <p className="font-medium">{t("settings.privacy.blockedAccounts")}</p>
-                <p className="text-sm text-muted-foreground">{t("settings.privacy.blockedAccountsDesc")}</p>
+          <div className="flex flex-col rounded-2xl border border-border/70 bg-card shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between p-4 sm:p-4.5 gap-4">
+              <div className="space-y-0.5 flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">{t("settings.privacy.blockedAccounts")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.privacy.blockedAccountsDesc")}</p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowBlockedList(!showBlockedList)}
-                className="gap-2"
+                className="h-8.5 rounded-xl border-border/80 px-3.5 text-xs font-bold shadow-xs hover:bg-muted cursor-pointer shrink-0 gap-1.5"
               >
-                {showBlockedList ? t("common.cancel") : t("common.view")}
-                <ChevronDown className={cn("h-4 w-4 transition-transform", showBlockedList && "rotate-180")} />
+                <span>{showBlockedList ? t("common.cancel") : t("common.view")}</span>
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showBlockedList && "rotate-180")} />
               </Button>
             </div>
 
-            {/* Blocked Accounts Management Popover Body Container */}
+            {/* Blocked Accounts Body */}
             {showBlockedList && (
-              <div className="p-4 pt-0 space-y-4 border-t bg-card/50 animate-in slide-in-from-top-2 duration-300">
-                
-                {/* Search query contextual element */}
+              <div className="p-4 sm:p-5 pt-0 space-y-4 border-t border-border/70 bg-muted/20 animate-in slide-in-from-top-2 duration-300">
+                {/* Search input */}
                 <div className="relative mt-4">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70" />
                   <input
                     type="text"
                     value={blockSearch}
                     onChange={(e) => setBlockSearch(e.target.value)}
                     placeholder={t("settings.privacy.searchBlocked")}
-                    className="w-full h-9 pl-9 pr-9 py-2 text-sm rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-muted-foreground"
+                    className="w-full h-9 pl-9 pr-9 py-1.5 text-xs font-medium rounded-xl border border-border/80 bg-background focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground shadow-xs"
                   />
                   {blockSearch && (
                     <button
                       type="button"
                       onClick={() => setBlockSearch("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <X size={14} />
+                      <X size={13} />
                     </button>
                   )}
                 </div>
@@ -292,12 +294,12 @@ export default function PrivacySettingTab({
                 {/* Main Data Iteration Loop */}
                 {isLoadingBlocked ? (
                   <div className="flex items-center justify-center py-8 gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   </div>
                 ) : blockedList.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 gap-2 rounded-md bg-muted/10 shadow-sm">
-                    <Shield size={20} className="text-muted-foreground/50" />
-                    <p className="text-xs text-muted-foreground font-medium">
+                  <div className="flex flex-col items-center justify-center py-8 gap-2 rounded-xl bg-card border border-dashed border-border/80">
+                    <Shield size={20} className="text-muted-foreground/40" />
+                    <p className="text-xs text-muted-foreground font-semibold">
                       {blockSearch ? t("settings.privacy.noBlockedSearchResults") : t("settings.privacy.noBlockedAccounts")}
                     </p>
                   </div>
@@ -309,7 +311,7 @@ export default function PrivacySettingTab({
                         <div
                           key={user.id}
                           className={cn(
-                            "flex items-center gap-3 p-3 rounded-md border bg-background transition-all duration-300",
+                            "flex items-center gap-3 p-3 rounded-xl border border-border/70 bg-card shadow-xs transition-all duration-300",
                             isUnblocking && "opacity-40 scale-[0.98] border-destructive/20 bg-destructive/5"
                           )}
                         >
@@ -326,8 +328,8 @@ export default function PrivacySettingTab({
                           )}
 
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold truncate text-foreground">{user.fullName}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">@{user.username}</p>
+                            <p className="text-xs font-bold truncate text-foreground">{user.fullName}</p>
+                            <p className="text-[10px] text-muted-foreground truncate font-medium">@{user.username}</p>
                           </div>
 
                           <Button
@@ -335,12 +337,12 @@ export default function PrivacySettingTab({
                             size="sm"
                             disabled={isUnblocking}
                             onClick={() => handleUnblock(user.id)}
-                            className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="h-7.5 rounded-lg px-2.5 text-xs font-bold text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer shrink-0"
                           >
                             {isUnblocking ? (
-                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
                             ) : (
-                              <UserMinus className="h-3.5 w-3.5 mr-1.5" />
+                              <UserMinus className="h-3.5 w-3.5 mr-1" />
                             )}
                             {t("settings.privacy.unblock")}
                           </Button>
@@ -351,7 +353,7 @@ export default function PrivacySettingTab({
                 )}
 
                 {blockedList.length > 0 && !isLoadingBlocked && (
-                  <p className="text-[10px] text-muted-foreground text-right italic">
+                  <p className="text-[10px] text-muted-foreground text-right font-medium">
                     {blockedList.length} {t("settings.privacy.accountsBlocked")}
                   </p>
                 )}

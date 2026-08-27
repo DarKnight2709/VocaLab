@@ -50,21 +50,21 @@ export function CallOverlay({
   };
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-6 rounded-2xl bg-card p-8 shadow-2xl border min-w-75">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 backdrop-blur-md">
+      <div className="flex flex-col items-center gap-6 rounded-3xl bg-card p-8 shadow-2xl border border-border/80 min-w-80">
         {/* Avatar */}
-        <Avatar className="h-24 w-24">
+        <Avatar className="h-24 w-24 rounded-3xl border-2 border-border/50 shadow-md">
           <AvatarImage src={peerAvatar} />
-          <AvatarFallback className="text-2xl font-bold">
+          <AvatarFallback className="text-2xl font-bold rounded-3xl">
             {getInitials(peerName || "User")}
           </AvatarFallback>
         </Avatar>
 
         {/* Name */}
         <div className="text-center">
-          <div className="text-xl font-semibold">{peerName}</div>
+          <div className="text-xl font-bold text-foreground">{peerName}</div>
           <div
-            className={`text-sm mt-1 ${callState === "active" ? "text-green-500 font-mono" : "text-muted-foreground"}`}
+            className={`text-sm mt-1 font-semibold ${callState === "active" ? "text-emerald-500 font-mono" : "text-muted-foreground"}`}
           >
             {statusText[callState]}
           </div>
@@ -72,7 +72,7 @@ export function CallOverlay({
 
         {/* Pulse animation for ringing states */}
         {(callState === "calling" || callState === "incoming") && (
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:0ms]" />
             <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:150ms]" />
             <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:300ms]" />
@@ -87,7 +87,7 @@ export function CallOverlay({
               <Button
                 variant="destructive"
                 size="lg"
-                className="rounded-full h-14 w-14"
+                className="rounded-2xl h-14 w-14 shadow-lg hover:scale-105 transition-transform"
                 onClick={onReject}
                 title={t("chat.reject")}
               >
@@ -95,7 +95,7 @@ export function CallOverlay({
               </Button>
               <Button
                 size="lg"
-                className="rounded-full h-14 w-14 bg-green-600 hover:bg-green-700 text-white"
+                className="rounded-2xl h-14 w-14 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 hover:scale-105 transition-transform"
                 onClick={onAccept}
                 title={t("chat.accept")}
               >
@@ -109,7 +109,7 @@ export function CallOverlay({
             <Button
               variant="destructive"
               size="lg"
-              className="rounded-full h-14 w-14"
+              className="rounded-2xl h-14 w-14 shadow-lg hover:scale-105 transition-transform"
               onClick={onEnd}
               title={t("chat.cancelCall")}
             >
@@ -123,7 +123,7 @@ export function CallOverlay({
               <Button
                 variant={isMuted ? "destructive" : "outline"}
                 size="lg"
-                className="rounded-full h-14 w-14"
+                className="rounded-2xl h-14 w-14 border-border/80 shadow-md hover:scale-105 transition-transform"
                 onClick={onToggleMute}
                 title={isMuted ? t("chat.unmute") : t("chat.mute")}
               >
@@ -136,7 +136,7 @@ export function CallOverlay({
               <Button
                 variant="destructive"
                 size="lg"
-                className="rounded-full h-14 w-14"
+                className="rounded-2xl h-14 w-14 shadow-lg hover:scale-105 transition-transform"
                 onClick={onEnd}
                 title={t("chat.endCall")}
               >

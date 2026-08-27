@@ -50,6 +50,11 @@ function PostCard({ post }: { post: any }) {
   const navigate = useNavigate();
   const detailUrl = ROUTES.BLOG_DETAIL.url.replace(":id", post.id);
 
+  const createdAtStr =
+    typeof post.createdAt === "string"
+      ? post.createdAt
+      : post.createdAt?.toISOString?.() || new Date().toISOString();
+
   return (
     <article
       role="link"
@@ -61,58 +66,58 @@ function PostCard({ post }: { post: any }) {
           navigate(detailUrl);
         }
       }}
-      className="group flex flex-col overflow-hidden rounded-2xl border bg-card transition-colors duration-200 hover:bg-muted/50 cursor-pointer"
+      className="group flex flex-col overflow-hidden rounded-3xl border border-border/80 bg-card transition-all duration-200 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer shadow-xs"
     >
-      <div className="relative h-48 shrink-0 overflow-hidden">
+      <div className="relative h-48 shrink-0 overflow-hidden bg-muted/40">
         {post.coverImage ? (
           <>
             <img
               src={post.coverImage}
               alt={post.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
           </>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-muted/50 to-muted/20 transition-colors group-hover:from-primary/10 group-hover:to-primary/5">
-            <FileText className="h-12 w-12 text-muted-foreground/20 transition-transform duration-300 group-hover:scale-110" />
+          <div className="flex h-full w-full items-center justify-center bg-muted/20 transition-colors group-hover:bg-primary/5">
+            <FileText className="h-12 w-12 text-muted-foreground/30 transition-transform duration-300 group-hover:scale-110" />
           </div>
         )}
-        <div className="absolute top-4 left-4">
-           {!post.isPublic && (
-             <div className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-               {t("blog.private")}
-             </div>
-           )}
+        <div className="absolute top-3.5 left-3.5">
+          {!post.isPublic && (
+            <div className="rounded-full bg-black/70 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-extrabold text-white uppercase tracking-wider shadow-xs">
+              {t("blog.private")}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="flex flex-1 flex-col justify-between gap-4 p-5">
         <div className="space-y-2">
-          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug group-hover:text-primary transition-colors duration-200">
+          <h3 className="line-clamp-2 text-sm sm:text-base font-extrabold leading-snug group-hover:text-primary transition-colors duration-200">
             {post.title}
           </h3>
           {post.excerpt && (
-            <p className="line-clamp-2 text-[12px] text-muted-foreground/80 leading-relaxed">
+            <p className="line-clamp-2 text-xs text-muted-foreground leading-relaxed">
               {post.excerpt}
             </p>
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-white/10 pt-4">
+        <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-3.5">
           <div className="flex items-center gap-1.5 min-w-0">
-            <p className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-              <Calendar className="h-2.5 w-2.5" />
-              {formatDate(post.createdAt.toISOString())}
+            <p className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+              <Calendar className="h-3 w-3 opacity-70" />
+              <span>{formatDate(createdAtStr)}</span>
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0 text-muted-foreground">
             <VoteDisplay post={post} />
-            <div className="h-3 w-px bg-white/10" />
-            <span className="flex items-center gap-1 text-[11px] font-semibold">
-              <MessageCircle size={14} className="text-primary/70" />
-              {post._count?.comments ?? 0}
+            <div className="h-3 w-px bg-border/60" />
+            <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
+              <MessageCircle size={13} className="text-primary/80" />
+              <span>{post._count?.comments ?? 0}</span>
             </span>
           </div>
         </div>

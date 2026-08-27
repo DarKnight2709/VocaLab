@@ -71,25 +71,27 @@
     };
 
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="space-y-8 animate-in fade-in duration-300">
         {/* Learning Title */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b">
-            <Goal className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">
+        <div className="space-y-1 pb-2 border-b border-border/80">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Goal className="h-4 w-4" />
+            </div>
+            <h2 className="text-base font-extrabold text-foreground">
               {t("settings.learningTitle")}
             </h2>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground ml-10.5">
             {t("settings.learningDescription")}
           </p>
         </div>
 
         {/* Daily Goal Section */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-xl bg-card shadow-sm">
-            <div className="space-y-0.5">
-              <h3 className="text-sm font-medium leading-none">
+          <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-foreground">
                 {t("settings.dailyGoal.title")}
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -97,20 +99,20 @@
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="w-[140px] sm:w-[160px] shrink-0">
               <Select
                 value={dailyGoalData?.dailyGoalMinutes?.toString() || "15"}
                 onValueChange={(val) => updateDailyGoalMutation.mutate(parseInt(val))}
                 disabled={dailyGoalLoading || updateDailyGoalMutation.isPending}
               >
-                <SelectTrigger className="w-[140px] h-9">
+                <SelectTrigger className="h-9 rounded-xl border-border/80 bg-background text-xs font-bold shadow-xs">
                   <SelectValue placeholder={t("settings.dailyGoal.select")} />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5 {t("settings.dailyGoal.minutes")}</SelectItem>
-                  <SelectItem value="15">15 {t("settings.dailyGoal.minutes")}</SelectItem>
-                  <SelectItem value="30">30 {t("settings.dailyGoal.minutes")}</SelectItem>
-                  <SelectItem value="60">60 {t("settings.dailyGoal.minutes")}</SelectItem>
+                <SelectContent className="rounded-2xl border-border/80 shadow-md">
+                  <SelectItem value="5" className="text-xs font-semibold rounded-xl">5 {t("settings.dailyGoal.minutes")}</SelectItem>
+                  <SelectItem value="15" className="text-xs font-semibold rounded-xl">15 {t("settings.dailyGoal.minutes")}</SelectItem>
+                  <SelectItem value="30" className="text-xs font-semibold rounded-xl">30 {t("settings.dailyGoal.minutes")}</SelectItem>
+                  <SelectItem value="60" className="text-xs font-semibold rounded-xl">60 {t("settings.dailyGoal.minutes")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -120,21 +122,21 @@
         {/* Push Notification Guidance */}
         <div
           className={cn(
-            "p-4 rounded-xl border flex items-start gap-3 transition-all",
+            "p-4 sm:p-4.5 rounded-2xl border flex items-start gap-3 transition-all shadow-xs",
             fcmToken
               ? "bg-primary/5 border-primary/20 text-primary/80"
               : "bg-destructive/5 border-destructive/20 text-destructive/80",
           )}
         >
-          <div className="mt-0.5">
+          <div className="mt-0.5 shrink-0">
             {fcmToken ? (
-              <Info className="h-5 w-5" />
+              <Info className="h-4 w-4" />
             ) : (
-              <AlertCircle className="h-5 w-5" />
+              <AlertCircle className="h-4 w-4" />
             )}
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium leading-relaxed">
+            <p className="text-xs font-semibold leading-relaxed">
               {fcmToken
                 ? t("settings.reminder.desktopNotificationRemind")
                 : t("settings.reminder.allowBrowserNotifications")}
@@ -144,32 +146,34 @@
 
         {/* Reminders Section */}
         <section className={cn("space-y-4", !fcmToken && "opacity-50 select-none")}>
-          <div className="flex items-center justify-between pb-2 border-b">
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">
+          <div className="flex items-center justify-between pb-2 border-b border-border/80">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Bell className="h-4 w-4" />
+              </div>
+              <h2 className="text-base font-extrabold text-foreground">
                 {t("settings.reminder.reminders")}
               </h2>
             </div>
             <Button
               size="sm"
-              className="gap-2"
+              className="h-8.5 rounded-xl px-3.5 text-xs font-bold shadow-xs cursor-pointer gap-1.5"
               onClick={handleAdd}
               disabled={!fcmToken}
             >
-              <Plus className="h-4 w-4" />
-              {t("settings.reminder.addReminder")}
+              <Plus className="h-3.5 w-3.5" />
+              <span>{t("settings.reminder.addReminder")}</span>
             </Button>
           </div>
 
           <div className="grid gap-4">
-            <div className="flex flex-col rounded-lg bg-muted/30 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-normal text-foreground">
+            <div className="flex flex-col rounded-2xl border border-border/70 bg-card shadow-xs overflow-hidden">
+              <div className="flex items-center justify-between p-4 sm:p-4.5 gap-4">
+                <div className="space-y-0.5 flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground">
                     {t("settings.reminder.reminders")}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {t("settings.reminder.reminderDescription")}
                   </p>
                 </div>
@@ -177,13 +181,13 @@
                   variant="outline"
                   size="sm"
                   onClick={() => setShowReminders(!showReminders)}
-                  className="gap-2"
+                  className="h-8.5 rounded-xl border-border/80 px-3.5 text-xs font-bold shadow-xs hover:bg-muted cursor-pointer shrink-0 gap-1.5"
                   disabled={!fcmToken}
                 >
-                  {showReminders ? t("common.cancel") : t("common.view")}
+                  <span>{showReminders ? t("common.cancel") : t("common.view")}</span>
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 transition-transform",
+                      "h-3.5 w-3.5 transition-transform",
                       showReminders && "rotate-180",
                     )}
                   />
@@ -191,63 +195,57 @@
               </div>
 
               {showReminders && fcmToken && (
-                <div className="p-4 pt-0 space-y-4 border-t bg-card/50 animate-in slide-in-from-top-2 duration-300">
+                <div className="p-4 sm:p-5 pt-0 space-y-4 border-t border-border/70 bg-muted/20 animate-in slide-in-from-top-2 duration-300">
                   {isLoading ? (
                     <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                   ) : !Array.isArray(reminders) || reminders.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3 rounded-md bg-muted/10 shadow-sm mt-4">
-                      <Bell size={24} className="text-muted-foreground/50" />
-                      <p className="text-sm text-muted-foreground font-normal">
+                    <div className="flex flex-col items-center justify-center py-12 gap-2.5 rounded-xl bg-card border border-dashed border-border/80 mt-4">
+                      <Bell size={22} className="text-muted-foreground/40" />
+                      <p className="text-xs text-muted-foreground font-semibold">
                         {t("settings.reminder.noReminders")}
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3 max-h-100 overflow-y-auto pr-2 mt-4 custom-scrollbar">
+                    <div className="space-y-3 max-h-100 overflow-y-auto pr-1 mt-4">
                       {reminders.map((reminder: Reminder) => (
                         <div
                           key={reminder.id}
                           onClick={() => handleEdit(reminder)}
-                          className="flex items-center gap-4 p-4 rounded-xl border bg-background hover:shadow-md hover:border-primary/50 transition-all group cursor-pointer"
+                          className="flex items-center gap-3.5 p-4 rounded-2xl border border-border/70 bg-card hover:shadow-md hover:border-primary/40 transition-all group cursor-pointer shadow-xs"
                         >
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <Clock size={18} className="text-primary" />
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-foreground truncate">
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <h3 className="text-sm font-bold text-foreground truncate">
                               {reminder.title}
                             </h3>
                             <p className="text-xs text-muted-foreground truncate">
                               {reminder.description}
                             </p>
-                            <div className="flex flex-col gap-1.5 mt-1.5">
-                              <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary">
-                                  {t(`settings.reminder.types.${reminder.type}`)}
-                                </span>
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Clock
-                                    size={12}
-                                    className="text-muted-foreground/70"
-                                  />
+                            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-primary/10 text-primary">
+                                {t(`settings.reminder.types.${reminder.type}`)}
+                              </span>
+                              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                <Clock size={11} className="text-muted-foreground/70" />
+                                <span>
                                   {reminder.type === ReminderType.ON_THE_HOUR
                                     ? formatTime(reminder.triggerTime)
                                     : `${formatTime(reminder.startTime)} - ${formatTime(reminder.endTime)}`}
                                 </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Calendar
-                                  size={12}
-                                  className="text-muted-foreground/70"
-                                />
+                              </span>
+                              <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                                <Calendar size={11} className="text-muted-foreground/70" />
                                 <span>{formatDays(reminder.daysOfWeek, t)}</span>
-                              </div>
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 shrink-0">
                             <Switch
                               checked={reminder.isEnabled}
                               onClick={(e) => e.stopPropagation()}
@@ -255,15 +253,16 @@
                                   fcmToken && toggleMutation.mutate(reminder.id)
                               }
                               disabled={toggleMutation.isPending || !fcmToken}
+                              className="cursor-pointer"
                             />
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={(e) => handleDelete(reminder.id, e)}
                               disabled={deleteMutation.isPending || !fcmToken}
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                              className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={15} />
                             </Button>
                           </div>
                         </div>

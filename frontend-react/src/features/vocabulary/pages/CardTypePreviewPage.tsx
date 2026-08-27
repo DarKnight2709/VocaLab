@@ -1,12 +1,12 @@
 import { useNavigate, useParams } from "react-router";
 import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
+import { LayoutTemplate } from "lucide-react";
 import CardFieldDragDrop from "../components/CardFieldDragDrop";
 import { useCardTypeDetailsQuery, useUpdateCardTypeMutation } from "../api/vocabularyService";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { type CardType } from "@/shared/validations/VocabularySchema";
-
 
 export default function CardTypePreviewPage() {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ export default function CardTypePreviewPage() {
           fields: updatedFields,
         },
       });
-
+      toast.success(t("vocabulary.cardTypeUpdated") || "Card type updated successfully");
     } catch {
       toast.error(t("vocabulary.cardTypeUpdateFailed"));
     }
@@ -68,12 +68,19 @@ export default function CardTypePreviewPage() {
         ]}
       />
 
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold truncate">{cardType.name}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {cardType.description}
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5 min-w-0">
+          <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
+            <LayoutTemplate className="h-6 w-6" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{cardType.name}</h1>
+            {cardType.description && (
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                {cardType.description}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -83,6 +90,5 @@ export default function CardTypePreviewPage() {
         isSaving={updateMutation.isPending}
       />
     </div>
-
   );
 }

@@ -35,19 +35,13 @@ function CircularProgress({
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="url(#progressGradient)"
+        stroke="currentColor"
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={offset}
-        className="transition-all duration-700 ease-out"
+        className="text-primary transition-all duration-700 ease-out"
       />
-      <defs>
-        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" className="text-primary/70" stopColor="currentColor" />
-          <stop offset="100%" className="text-primary" stopColor="currentColor" />
-        </linearGradient>
-      </defs>
     </svg>
   );
 }
@@ -61,19 +55,22 @@ export default function StudyProgressCard() {
   }
 
   const todayMinutes = stats?.todayMinutes ?? 0;
-  const dailyGoal = stats?.dailyGoalMinutes ?? 5;
+  const dailyGoal = stats?.dailyGoalMinutes ?? 10;
   const weeklyAvg = stats?.weeklyAverageMinutes ?? 0;
   const progressPct = dailyGoal > 0 ? (todayMinutes / dailyGoal) * 100 : 0;
 
   return (
-    <section className="group relative overflow-hidden rounded-2xl bg-card border border-border/40 p-6 shadow-sm transition-all hover:border-border/80">
+    <section className="relative rounded-3xl bg-card border border-border/80 p-6 shadow-xs">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">
-          {t("home.studyProgress")}
-        </h2>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
+            {t("home.studyProgress")}
+          </h2>
+        </div>
         <Link
           to={ROUTES.STATS.url}
-          className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
         >
           {t("home.viewStats")}
           <ArrowRight
@@ -83,43 +80,60 @@ export default function StudyProgressCard() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex flex-col sm:flex-row items-center gap-6">
         {/* Circular ring */}
-        <div className="relative">
-          <CircularProgress value={progressPct} size={88} strokeWidth={7} />
+        <div className="relative shrink-0">
+          <CircularProgress value={progressPct} size={96} strokeWidth={8} />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-lg font-bold tabular-nums">
+            <span className="text-xl font-bold tabular-nums text-foreground">
               {Math.round(progressPct)}%
+            </span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              {progressPct >= 100 ? "Done" : "Goal"}
             </span>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="flex-1 space-y-3">
-          <div className="flex items-center gap-2.5">
-            <Clock size={15} className="text-muted-foreground/70" />
-            <span className="flex-1 text-xs font-medium text-muted-foreground">
-              {t("home.todayStudy")}
-            </span>
-            <span className="text-xs font-semibold tabular-nums text-foreground">
+        {/* Metric tiles */}
+        <div className="flex-1 w-full space-y-2">
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/50 border border-border/60 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded-md bg-primary/10 text-primary">
+                <Clock size={14} />
+              </div>
+              <span className="font-medium text-muted-foreground">
+                {t("home.todayStudy")}
+              </span>
+            </div>
+            <span className="font-bold tabular-nums text-foreground text-sm">
               {t("home.minutesShort", { count: todayMinutes })}
             </span>
           </div>
-          <div className="flex items-center gap-2.5">
-            <Target size={15} className="text-muted-foreground/70" />
-            <span className="flex-1 text-xs font-medium text-muted-foreground">
-              {t("home.dailyGoal")}
-            </span>
-            <span className="text-xs font-semibold tabular-nums text-foreground">
+
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/50 border border-border/60 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <Target size={14} />
+              </div>
+              <span className="font-medium text-muted-foreground">
+                {t("home.dailyGoal")}
+              </span>
+            </div>
+            <span className="font-bold tabular-nums text-foreground text-sm">
               {t("home.minutesShort", { count: dailyGoal })}
             </span>
           </div>
-          <div className="flex items-center gap-2.5">
-            <TrendingUp size={15} className="text-muted-foreground/70" />
-            <span className="flex-1 text-xs font-medium text-muted-foreground">
-              {t("home.weeklyAverage")}
-            </span>
-            <span className="text-xs font-semibold tabular-nums text-foreground">
+
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/50 border border-border/60 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <TrendingUp size={14} />
+              </div>
+              <span className="font-medium text-muted-foreground">
+                {t("home.weeklyAverage")}
+              </span>
+            </div>
+            <span className="font-bold tabular-nums text-foreground text-sm">
               {t("home.minutesShort", { count: weeklyAvg })}
             </span>
           </div>
@@ -127,9 +141,9 @@ export default function StudyProgressCard() {
       </div>
 
       {progressPct >= 100 && (
-        <p className="mt-3 text-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
+        <div className="mt-4 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300">
           {t("home.goalReached")}
-        </p>
+        </div>
       )}
     </section>
   );

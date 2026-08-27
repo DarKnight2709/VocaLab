@@ -1,5 +1,18 @@
-import { Eye, EyeOff, FileText, Handshake, Search, UserPlus, Users } from "lucide-react";
-import { useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  FileText,
+  Handshake,
+  Search,
+  UserPlus,
+  Users,
+  LayoutGrid,
+  BookOpen,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import FollowersTab from "./profile-tabs/FollowersTab";
@@ -26,22 +39,22 @@ function PostVisibilityFilter({
   ];
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-full bg-muted/50 p-1">
+    <div className="inline-flex items-center gap-1 rounded-2xl bg-card border border-border/80 p-1 shadow-xs">
       {options.map((opt) => {
         const Icon = opt.icon;
         const isActive = value === opt.value;
         return (
           <button
             key={opt.value}
+            type="button"
             onClick={() => onChange(opt.value)}
-            className={[
-              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200",
+            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
               isActive
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground",
-            ].join(" ")}
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+            }`}
           >
-            <Icon className="h-3.5 w-3.5" />
+            <Icon size={13} />
             <span className="hidden sm:inline">{opt.label}</span>
           </button>
         );
@@ -69,20 +82,20 @@ export default function ProfileContentSection({
   const contentTabs: Array<{
     key: ContentTab;
     label: string;
-    icon: typeof Users;
+    icon: any;
   }> = [];
 
   if (capabilities?.canSeeFollowers) {
-    contentTabs.push({ key: ContentTab.FOLLOWERS, label: t("profile.tabs.followers"), icon: Users });
+    contentTabs.push({ key: ContentTab.FOLLOWERS, label: t("profile.tabs.followers"), icon: UserPlus });
   }
   if (capabilities?.canSeeFollowing) {
-    contentTabs.push({ key: ContentTab.FOLLOWING, label: t("profile.tabs.following"), icon: UserPlus });
+    contentTabs.push({ key: ContentTab.FOLLOWING, label: t("profile.tabs.following"), icon: Users });
   }
   if (capabilities?.canSeeFriends) {
     contentTabs.push({ key: ContentTab.FRIENDS, label: t("profile.tabs.friends"), icon: Handshake });
   }
-  contentTabs.push({ key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: FileText });
-  contentTabs.push({ key: ContentTab.COLLECTIONS, label: t("profile.tabs.collections"), icon: FileText }); // You might want to use a different icon like Folder or Library here, but sticking to existing ones for now. Let's use FileText
+  contentTabs.push({ key: ContentTab.POSTS, label: t("profile.tabs.posts"), icon: BookOpen });
+  contentTabs.push({ key: ContentTab.COLLECTIONS, label: t("profile.tabs.collections"), icon: LayoutGrid });
   if (capabilities?.canSeeGroups) {
     contentTabs.push({ key: ContentTab.GROUPS, label: t("profile.tabs.groups"), icon: Users });
   }
@@ -92,7 +105,6 @@ export default function ProfileContentSection({
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get("tab") as ContentTab | null;
   
-  // Ensure activeTab is valid when capabilities change
   const activeTab = (urlTab && contentTabs.find(t => t.key === urlTab)) 
     ? urlTab 
     : defaultTab;
@@ -111,6 +123,50 @@ export default function ProfileContentSection({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [postVisibility, setPostVisibility] = useState<PostVisibility>(PostVisibility.ALL);
 
+  // Horizontal scroll controls
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const handleResize = () => checkScroll();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [checkScroll, contentTabs]);
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (scrollContainerRef.current && e.deltaY !== 0) {
+      scrollContainerRef.current.scrollLeft += e.deltaY;
+      checkScroll();
+    }
+  };
+
+  const handleScrollBy = (offset: number) => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollBy({ left: offset, behavior: "smooth" });
+    setTimeout(checkScroll, 300);
+  };
+
+  // Auto-scroll active tab into view
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+    const activeEl = scrollContainerRef.current.querySelector<HTMLElement>(
+      '[data-active="true"]'
+    );
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+    }
+    setTimeout(checkScroll, 300);
+  }, [activeTab, checkScroll]);
+
   const handleSearch = (val: string) => {
     setSearch(val);
     clearTimeout((handleSearch as any)._t);
@@ -119,11 +175,34 @@ export default function ProfileContentSection({
     }, 400);
   };
 
+  const handleClearSearch = () => {
+    setSearch("");
+    setDebouncedSearch("");
+  };
+
   return (
-    <section className="mt-10 border-t pt-5">
-      {/* Tab nav & Search bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-1">
-        <div className="flex items-center gap-1 overflow-x-auto">
+    <section className="space-y-4 pt-1">
+      {/* Sleek Underline Tab Navigation Bar with Slide Controls */}
+      <div className="relative flex items-center border-b border-border/80 pb-0">
+        {/* Left Scroll Arrow */}
+        {canScrollLeft && (
+          <button
+            type="button"
+            onClick={() => handleScrollBy(-180)}
+            className="absolute left-0 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 border border-border/80 shadow-md text-foreground hover:bg-muted transition-all cursor-pointer -translate-x-1"
+            title={t("common.scrollLeft", "Scroll left")}
+          >
+            <ChevronLeft size={16} />
+          </button>
+        )}
+
+        {/* Scrollable Tabs Container */}
+        <div
+          ref={scrollContainerRef}
+          onScroll={checkScroll}
+          onWheel={handleWheel}
+          className="flex-1 flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth"
+        >
           {contentTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -132,49 +211,84 @@ export default function ProfileContentSection({
               <button
                 key={tab.key}
                 type="button"
+                data-active={isActive}
                 onClick={() => {
                   setActiveTab(tab.key);
                 }}
-                className={[
-                  "inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2 text-base font-medium transition-colors",
+                className={`group relative flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   isActive
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                ].join(" ")}
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <Icon className="h-4.5 w-4.5" />
-                {tab.label}
+                <Icon
+                  size={15}
+                  className={
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground group-hover:text-foreground"
+                  }
+                />
+                <span>{tab.label}</span>
+                {/* Active Indicator Line */}
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                )}
               </button>
             );
           })}
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right Scroll Arrow */}
+        {canScrollRight && (
+          <button
+            type="button"
+            onClick={() => handleScrollBy(180)}
+            className="absolute right-0 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 border border-border/80 shadow-md text-foreground hover:bg-muted transition-all cursor-pointer translate-x-1"
+            title={t("common.scrollRight", "Scroll right")}
+          >
+            <ChevronRight size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Filter and Search Bar Row */}
+      <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+        <div className="w-auto">
           {(activeTab === ContentTab.POSTS || activeTab === ContentTab.COLLECTIONS) && isOwnProfile && (
             <PostVisibilityFilter
               value={postVisibility}
               onChange={setPostVisibility}
             />
           )}
+        </div>
 
-          <div className="relative flex-1 sm:min-w-64">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder={t("profile.searchPlaceholder")}
-              className="w-full rounded-xl border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
-            />
-          </div>
+        <div className="relative flex-1 sm:w-64 sm:flex-none ml-auto">
+          <Search
+            size={14}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/70"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder={t("profile.searchPlaceholder")}
+            className="h-9 w-full rounded-2xl border border-border/80 bg-card py-1.5 pl-9.5 pr-8 text-xs font-medium text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 shadow-xs transition-all placeholder:text-muted-foreground"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+            >
+              <X size={13} />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Tab content */}
-      <div className="mt-8 min-h-80">
+      <div className="pt-2 min-h-60">
         {userId ? (
             <>
               {activeTab === ContentTab.FOLLOWERS && <FollowersTab userId={userId} search={debouncedSearch} />}

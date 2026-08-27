@@ -590,7 +590,7 @@ export function DictionaryBubble() {
       <Button
         type="button"
         size="icon"
-        className="w-14 h-14 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 pointer-events-auto"
+        className="w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 pointer-events-auto border-2 border-background"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}

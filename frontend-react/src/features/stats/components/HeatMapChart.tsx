@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -10,9 +11,20 @@ interface HeatMapChartProps {
   history: HistoryActivity[];
 }
 
+interface HoveredTooltipInfo {
+  dateString: string;
+  cardsReviewed: number;
+  cardsAdded: number;
+  cardsUpdated: number;
+  cardsDeleted: number;
+  hasActivity: boolean;
+  rect: DOMRect;
+}
+
 export const HeatMapChart = ({ history }: HeatMapChartProps) => {
   const { t } = useTranslation();
   const [year, setYear] = useState(new Date().getFullYear());
+  const [hoveredInfo, setHoveredInfo] = useState<HoveredTooltipInfo | null>(null);
   const currentYear = new Date().getFullYear();
 
   const blocks = useMemo(() => {
@@ -61,34 +73,36 @@ export const HeatMapChart = ({ history }: HeatMapChartProps) => {
 
   // Color logic
   const getColorClass = (count: number) => {
-    if (count === 0) return "bg-[#ebedf0] dark:bg-slate-800";
-    if (count < 20) return "bg-[#c6e48b] dark:bg-[#c6e48b]/80";
-    if (count < 50) return "bg-[#7bc96f] dark:bg-[#7bc96f]/80";
-    if (count < 100) return "bg-[#239a3b] dark:bg-[#239a3b]/80";
-    return "bg-[#196127] dark:bg-[#196127]/80";
+    if (count === 0) return "bg-muted/60 dark:bg-muted/40 hover:bg-muted";
+    if (count < 20) return "bg-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300";
+    if (count < 50) return "bg-emerald-400 dark:bg-emerald-700/80";
+    if (count < 100) return "bg-emerald-500 dark:bg-emerald-500";
+    return "bg-emerald-700 dark:bg-emerald-400";
   };
 
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
   return (
-    <Card className="rounded-2xl bg-card shadow-sm p-6 shadow-sm flex flex-col w-full">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-bold">{t("stats.activityHeatMap") || "Activity Heat Map"}</h3>
+    <Card className="rounded-3xl bg-card border border-border/80 shadow-xs p-6 flex flex-col w-full space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-bold text-foreground">{t("stats.activityHeatMap") || "Activity Heat Map"}</h3>
         
         <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => setYear(prev => prev - 1)}
-            className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-medium w-12 text-center">{year}</span>
+          <span className="text-sm font-bold w-12 text-center text-foreground">{year}</span>
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => setYear(prev => prev + 1)}
             disabled={year >= currentYear}
-            className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground disabled:opacity-30"
+            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -96,75 +110,138 @@ export const HeatMapChart = ({ history }: HeatMapChartProps) => {
       </div>
 
       <div className="overflow-x-auto pb-2 custom-scrollbar">
-        <div className="min-w-[700px] flex gap-2 pt-14">
-          {/* Day Labels */}
-          <div className="flex flex-col justify-between text-[11px] text-slate-400 py-[2px] font-medium select-none pr-1 h-full">
-            <span className="h-[14px]"></span>
-            <span className="h-[14px] leading-[14px]">Mon</span>
-            <span className="h-[14px]"></span>
-            <span className="h-[14px] leading-[14px]">Wed</span>
-            <span className="h-[14px]"></span>
-            <span className="h-[14px] leading-[14px]">Fri</span>
-            <span className="h-[14px]"></span>
+        <div className="min-w-[720px] flex flex-col gap-2">
+          {/* Months header */}
+          <div className="flex justify-between text-xs font-semibold text-muted-foreground pl-8 pr-2 select-none">
+            {months.map((m) => (
+              <span key={m}>{m}</span>
+            ))}
           </div>
 
-          {/* Grid */}
-          <div 
-            className="grid grid-rows-7 gap-[3px] flex-1"
-            style={{ gridAutoFlow: "column", gridAutoColumns: "max-content" }}
-          >
-            {blocks.map((block, index) => {
-              if (!block) {
-                return <div key={`empty-${index}`} className="w-[14px] h-[14px] rounded-[3px] bg-transparent" />;
-              }
+          <div className="flex gap-2">
+            {/* Day Labels */}
+            <div className="flex flex-col justify-between text-[11px] text-muted-foreground py-0.5 font-medium select-none pr-1">
+              <span className="h-[14px]"></span>
+              <span className="h-[14px] leading-[14px]">Mon</span>
+              <span className="h-[14px]"></span>
+              <span className="h-[14px] leading-[14px]">Wed</span>
+              <span className="h-[14px]"></span>
+              <span className="h-[14px] leading-[14px]">Fri</span>
+              <span className="h-[14px]"></span>
+            </div>
 
-              const { date, count, isToday, cardsReviewed, cardsAdded, cardsUpdated, cardsDeleted } = block;
-              const [yyyy, mm, dd] = date.split('-').map(Number);
-              const dateObj = new Date(yyyy, mm - 1, dd);
-              const dateString = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-              
-              const hasActivity = cardsReviewed > 0 || cardsAdded > 0 || cardsUpdated > 0 || cardsDeleted > 0;
+            {/* Grid */}
+            <div 
+              className="grid grid-rows-7 gap-[3px] flex-1"
+              style={{ gridAutoFlow: "column", gridAutoColumns: "max-content" }}
+            >
+              {blocks.map((block) => {
+                if (!block) {
+                  return <div key={Math.random()} className="w-[14px] h-[14px] rounded-[3px] bg-transparent" />;
+                }
 
-              return (
-                <div 
-                  key={date} 
-                  className={`w-[14px] h-[14px] rounded-[4px] transition-colors cursor-pointer hover:ring-2 hover:ring-[#0096ff] hover:z-20 group relative ${getColorClass(count)} ${isToday ? 'ring-2 ring-slate-900 dark:ring-slate-400' : ''}`}
-                >
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#1b1f24] text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 min-w-max">
-                    <div className="text-[12px] font-bold pb-1 mb-1 border-b border-slate-700/50">{dateString}</div>
-                    <div className="text-[11px] text-slate-300 flex flex-col gap-0.5">
-                      {hasActivity ? (
-                        <>
-                          {cardsReviewed > 0 && <div>{cardsReviewed} {t("stats.cardsReviewedStr") || "cards reviewed"}</div>}
-                          {cardsAdded > 0 && <div>{cardsAdded} cards added</div>}
-                          {cardsUpdated > 0 && <div>{cardsUpdated} cards updated</div>}
-                          {cardsDeleted > 0 && <div>{cardsDeleted} cards deleted</div>}
-                        </>
-                      ) : (
-                        <div>{t("stats.noActivity") || "No activity"}</div>
-                      )}
-                    </div>
-                    {/* Triangle pointer */}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-[#1b1f24]" />
-                  </div>
-                </div>
-              );
-            })}
+                const { date, count, isToday, cardsReviewed, cardsAdded, cardsUpdated, cardsDeleted } = block;
+                const [yyyy, mm, dd] = date.split('-').map(Number);
+                const dateObj = new Date(yyyy, mm - 1, dd);
+                const dateString = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                
+                const hasActivity = cardsReviewed > 0 || cardsAdded > 0 || cardsUpdated > 0 || cardsDeleted > 0;
+
+                return (
+                  <div 
+                    key={date} 
+                    className={`w-[14px] h-[14px] rounded-[4px] transition-all cursor-pointer hover:ring-2 hover:ring-primary hover:scale-125 ${getColorClass(count)} ${isToday ? 'ring-2 ring-primary' : ''}`}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setHoveredInfo({
+                        dateString,
+                        cardsReviewed,
+                        cardsAdded,
+                        cardsUpdated,
+                        cardsDeleted,
+                        hasActivity,
+                        rect,
+                      });
+                    }}
+                    onMouseLeave={() => setHoveredInfo(null)}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
       
       {/* Legend */}
-      <div className="flex items-center justify-end gap-1 text-[11px] text-slate-500 font-medium mt-1 pr-2">
+      <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground font-medium pr-2">
         <span className="mr-1">Less</span>
-        <div className="w-[14px] h-[14px] rounded-[3px] bg-[#ebedf0] dark:bg-slate-800" />
-        <div className="w-[14px] h-[14px] rounded-[3px] bg-[#c6e48b] dark:bg-[#c6e48b]/80" />
-        <div className="w-[14px] h-[14px] rounded-[3px] bg-[#7bc96f] dark:bg-[#7bc96f]/80" />
-        <div className="w-[14px] h-[14px] rounded-[3px] bg-[#239a3b] dark:bg-[#239a3b]/80" />
-        <div className="w-[14px] h-[14px] rounded-[3px] bg-[#196127] dark:bg-[#196127]/80" />
+        <div className="w-3.5 h-3.5 rounded-[3px] bg-muted/60 dark:bg-muted/40" />
+        <div className="w-3.5 h-3.5 rounded-[3px] bg-emerald-200 dark:bg-emerald-950/80" />
+        <div className="w-3.5 h-3.5 rounded-[3px] bg-emerald-400 dark:bg-emerald-700/80" />
+        <div className="w-3.5 h-3.5 rounded-[3px] bg-emerald-500 dark:bg-emerald-500" />
+        <div className="w-3.5 h-3.5 rounded-[3px] bg-emerald-700 dark:bg-emerald-400" />
         <span className="ml-1">More</span>
       </div>
+
+      {/* Floating Tooltip Rendered via Portal (Never Clipped!) */}
+      {hoveredInfo && typeof document !== "undefined" && createPortal(
+        (() => {
+          const isNearTop = hoveredInfo.rect.top < 150;
+          const top = isNearTop 
+            ? hoveredInfo.rect.bottom + 8 
+            : hoveredInfo.rect.top - 8;
+          const left = Math.max(120, Math.min(window.innerWidth - 120, hoveredInfo.rect.left + hoveredInfo.rect.width / 2));
+          const transform = isNearTop 
+            ? "translate(-50%, 0)" 
+            : "translate(-50%, -100%)";
+
+          return (
+            <div 
+              className="fixed z-9999 pointer-events-none px-3.5 py-2.5 bg-popover text-popover-foreground border border-border/80 shadow-2xl rounded-2xl min-w-max text-xs transition-opacity duration-150 animate-in fade-in-0 zoom-in-95"
+              style={{
+                top: `${top}px`,
+                left: `${left}px`,
+                transform,
+              }}
+            >
+              <div className="font-bold text-[12px] pb-1 mb-1.5 border-b border-border/60 text-foreground">{hoveredInfo.dateString}</div>
+              <div className="text-[11px] text-muted-foreground flex flex-col gap-1 font-medium">
+                {hoveredInfo.hasActivity ? (
+                  <>
+                    {hoveredInfo.cardsReviewed > 0 && (
+                      <div className="text-foreground font-semibold flex items-center justify-between gap-3">
+                        <span>{t("stats.cardsReviewedStr") || "cards reviewed"}</span>
+                        <span className="text-primary font-bold">{hoveredInfo.cardsReviewed}</span>
+                      </div>
+                    )}
+                    {hoveredInfo.cardsAdded > 0 && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span>cards added</span>
+                        <span className="font-semibold text-foreground">{hoveredInfo.cardsAdded}</span>
+                      </div>
+                    )}
+                    {hoveredInfo.cardsUpdated > 0 && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span>cards updated</span>
+                        <span className="font-semibold text-foreground">{hoveredInfo.cardsUpdated}</span>
+                      </div>
+                    )}
+                    {hoveredInfo.cardsDeleted > 0 && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span>cards deleted</span>
+                        <span className="font-semibold text-foreground">{hoveredInfo.cardsDeleted}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div>{t("stats.noActivity") || "No activity"}</div>
+                )}
+              </div>
+            </div>
+          );
+        })(),
+        document.body
+      )}
     </Card>
   );
 };

@@ -89,27 +89,30 @@ export function GroupCard({ group }: { group: GroupResult }) {
   return (
     <div
       onClick={handleCardClick}
-      className={`relative flex gap-3 rounded-xl bg-transparent p-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
+      className={`group relative flex items-start gap-4 rounded-3xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 ${
         isCurrentUserMember ? "cursor-pointer" : ""
       }`}
     >
-      <div className="my-auto h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+      <div className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-2xl bg-muted/60 border border-border/50">
         {group.avatar ? (
           <img
             src={group.avatar}
             alt={group.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Users size={22} className="text-muted-foreground" />
+          <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+            <Users size={22} />
           </div>
         )}
       </div>
-      <div className="min-w-0 flex-1 pr-6 sm:pr-20">
+
+      <div className="min-w-0 flex-1 pr-6">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{group.name}</p>
-          <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-muted-foreground">
+          <p className="truncate text-sm sm:text-base font-extrabold text-foreground group-hover:text-primary transition-colors">
+            {group.name}
+          </p>
+          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
             {group.description || t("search.noGroupDescription")}
           </p>
         </div>
@@ -120,38 +123,38 @@ export function GroupCard({ group }: { group: GroupResult }) {
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+              className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-xl"
               aria-label={t("search.groupDetails")}
             >
               <Info className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuLabel>{t("search.groupDetails")}</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 shadow-lg">
+            <DropdownMenuLabel className="font-bold text-xs">{t("search.groupDetails")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <div className="space-y-3 p-2 text-sm">
+            <div className="space-y-3 p-2 text-xs">
               <div className="flex items-center gap-3">
                 <AvatarBubble user={group.owner} className="h-9 w-9" />
                 <div className="min-w-0">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <UserRound className="h-3 w-3" />
                     {t("search.owner")}
                   </div>
-                  <p className="truncate font-medium">
+                  <p className="truncate font-bold text-foreground">
                     {group.owner?.fullName ||
                       group.owner?.username ||
                       t("search.unknownOwner")}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <CalendarDays className="h-3.5 w-3.5" />
                 <span>{t("search.createdAt", { date: createdDate })}</span>
               </div>
               {group.languages && group.languages.length > 0 && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Languages className="h-3.5 w-3.5" />
-                  <span>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <Languages className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-medium">
                     {group.languages.map((lang) => {
                       try {
                         return new Intl.DisplayNames([i18n.language], { type: "language" }).of(lang);
@@ -166,40 +169,41 @@ export function GroupCard({ group }: { group: GroupResult }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="mt-2 flex items-center gap-2.5">
-          <div className="min-w-0">
-            <div className="flex items-center">
-              {visibleMembers.map((member) => (
-                <div key={member.id} className="-ml-2 first:ml-0">
-                  <AvatarBubble user={member} />
-                </div>
-              ))}
-              {remainingMembers > 0 && (
-                <div className="-ml-2 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                  +{remainingMembers}
-                </div>
-              )}
-            </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          {/* Member avatars */}
+          <div className="flex items-center">
+            {visibleMembers.map((member) => (
+              <div key={member.id} className="-ml-2 first:ml-0">
+                <AvatarBubble user={member} />
+              </div>
+            ))}
+            {remainingMembers > 0 && (
+              <div className="-ml-2 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-xs">
+                +{remainingMembers}
+              </div>
+            )}
           </div>
+
+          {!isCurrentUserMember && (
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 rounded-xl px-3.5 text-xs font-bold shadow-xs cursor-pointer active:scale-95"
+              disabled={joinMutation.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!currentUserId) {
+                  navigate(ROUTES.LOGIN.url);
+                  return;
+                }
+                joinMutation.mutate(group.id);
+              }}
+            >
+              {joinMutation.isPending ? t("search.joining") : t("search.join")}
+            </Button>
+          )}
         </div>
       </div>
-      {!isCurrentUserMember && (
-        <Button
-          type="button"
-          size="sm"
-          className="absolute bottom-3 right-3 h-8 shrink-0 px-3 text-[11px]"
-          disabled={joinMutation.isPending}
-          onClick={() => {
-            if (!currentUserId) {
-              navigate(ROUTES.LOGIN.url);
-              return;
-            }
-            joinMutation.mutate(group.id);
-          }}
-        >
-          {joinMutation.isPending ? t("search.joining") : t("search.join")}
-        </Button>
-      )}
     </div>
   );
 }

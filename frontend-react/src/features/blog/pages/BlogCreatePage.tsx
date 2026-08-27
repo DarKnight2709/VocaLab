@@ -140,150 +140,164 @@ StarterKit.configure({
 
   return (
     <div className="h-full overflow-y-scroll p-6 md:p-8">
-      <div className="w-full max-w-[1600px] mx-auto">
+      <div className="w-full max-w-4xl mx-auto space-y-6 pb-16">
         <Breadcrumb 
-        items={[
-          { label: t("common.blog"), href: ROUTES.BLOG.url },
-          { label: editId ? t("blog.editPost") : t("blog.createPost") }
-        ]} 
-      />
+          items={[
+            { label: t("common.blog"), href: ROUTES.BLOG.url },
+            { label: editId ? t("blog.editPost") : t("blog.createPost") }
+          ]} 
+        />
 
-      <h1 className="mb-6 text-2xl font-bold">
-        {editId ? t("blog.editPost") : t("blog.createPost")}
-      </h1>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Title */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">
-            {t("blog.titleLabel")} <span className="text-destructive">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={t("blog.titlePlaceholder")}
-            required
-            className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+              {editId ? t("blog.editPost") : t("blog.createPost")}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("blog.description", { defaultValue: "Share your language learning experience, tips, and insights." })}
+            </p>
+          </div>
         </div>
 
-        {/* Excerpt */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">{t("blog.excerptLabel")}</label>
-          <textarea
-            value={excerpt}
-            onChange={(e) => setExcerpt(e.target.value)}
-            placeholder={t("blog.excerptPlaceholder")}
-            rows={2}
-            className="w-full resize-none rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
-        </div>
-
-        {/* Cover image */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">{t("blog.coverImageLabel")}</label>
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-                <input
-                type="url"
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
-                placeholder={t("blog.coverImagePlaceholder")}
-                className="flex-1 rounded-xl border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-                <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadImage.isPending}
-                className="flex items-center gap-2 rounded-xl bg-muted/50 shadow-sm px-4 py-2.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-              >
-                <UploadCloud size={16} />
-                <span className="hidden sm:inline">{t("blog.uploadImage")}</span>
-              </button>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Metadata Card */}
+          <div className="rounded-3xl bg-card border border-border/80 p-6 md:p-8 shadow-xs space-y-5">
+            {/* Title */}
+            <div>
+              <label className="mb-2 block text-sm font-bold text-foreground">
+                {t("blog.titleLabel")} <span className="text-destructive">*</span>
+              </label>
               <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/*"
-                className="hidden"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t("blog.titlePlaceholder")}
+                required
+                className="w-full h-11 rounded-2xl border border-border/80 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 shadow-xs transition-all"
               />
             </div>
-            {uploadImage.isPending && (
-              <p className="text-xs text-muted-foreground animate-pulse">{t("blog.uploadingImage")}</p>
-            )}
-            {coverImage && (
-              <div className="mt-2 flex justify-center rounded-xl bg-muted/30 shadow-sm p-2">
-                <img
-                  src={coverImage}
-                  alt={t("blog.coverPreviewAlt")}
-                  className="max-h-40 w-auto rounded-lg object-contain"
-                />
+
+            {/* Excerpt */}
+            <div>
+              <label className="mb-2 block text-sm font-bold text-foreground">{t("blog.excerptLabel")}</label>
+              <textarea
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+                placeholder={t("blog.excerptPlaceholder")}
+                rows={2}
+                className="w-full resize-none rounded-2xl border border-border/80 bg-background p-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 shadow-xs transition-all"
+              />
+            </div>
+
+            {/* Cover image */}
+            <div>
+              <label className="mb-2 block text-sm font-bold text-foreground">{t("blog.coverImageLabel")}</label>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={coverImage}
+                    onChange={(e) => setCoverImage(e.target.value)}
+                    placeholder={t("blog.coverImagePlaceholder")}
+                    className="flex-1 h-11 rounded-2xl border border-border/80 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 shadow-xs transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadImage.isPending}
+                    className="flex items-center gap-2 rounded-2xl bg-muted/60 border border-border/80 shadow-xs px-4 h-11 text-sm font-semibold hover:bg-muted transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    <UploadCloud size={16} />
+                    <span className="hidden sm:inline">{t("blog.uploadImage")}</span>
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </div>
+
+                {uploadImage.isPending && (
+                  <p className="text-xs text-primary font-semibold animate-pulse">{t("blog.uploadingImage")}</p>
+                )}
+
+                {coverImage && (
+                  <div className="relative rounded-2xl overflow-hidden border border-border/80 shadow-xs bg-muted/30 p-2 max-h-56 flex justify-center">
+                    <img
+                      src={coverImage}
+                      alt={t("blog.coverPreviewAlt")}
+                      className="max-h-52 w-auto rounded-xl object-contain"
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Visibility */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">{t("blog.visibilityLabel")}</label>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setIsPublic(true)}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition-colors ${
-                isPublic
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "hover:bg-muted"
-              }`}
-            >
-              <Globe size={15} />
-              {t("blog.public")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsPublic(false)}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition-colors ${
-                !isPublic
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "hover:bg-muted"
-              }`}
-            >
-              <Lock size={15} />
-              {t("blog.private")}
-            </button>
+            {/* Visibility */}
+            <div>
+              <label className="mb-2 block text-sm font-bold text-foreground">{t("blog.visibilityLabel")}</label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(true)}
+                  className={`flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-bold transition-all cursor-pointer ${
+                    isPublic
+                      ? "border-primary/30 bg-primary/10 text-primary shadow-xs"
+                      : "border-border/80 hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <Globe size={16} />
+                  {t("blog.public")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(false)}
+                  className={`flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-bold transition-all cursor-pointer ${
+                    !isPublic
+                      ? "border-primary/30 bg-primary/10 text-primary shadow-xs"
+                      : "border-border/80 hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <Lock size={16} />
+                  {t("blog.private")}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Content editor */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">
-            {t("blog.contentLabel")} <span className="text-destructive">*</span>
-          </label>
-          <div className="overflow-hidden rounded-xl border focus-within:ring-2 focus-within:ring-primary/50">
+          {/* Content Editor Card */}
+          <div className="rounded-3xl bg-card border border-border/80 shadow-xs overflow-hidden">
+            <div className="p-4 border-b border-border/60 bg-muted/20">
+              <label className="block text-sm font-bold text-foreground">
+                {t("blog.contentLabel")} <span className="text-destructive">*</span>
+              </label>
+            </div>
             <EditorToolbar editor={editor} />
-            <EditorContent editor={editor} />
+            <div className="min-h-[360px] p-2 bg-background/50">
+              <EditorContent editor={editor} />
+            </div>
           </div>
-        </div>
 
-        {/* Submit */}
-        <div className="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-xl border px-6 py-2.5 text-sm hover:bg-muted"
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={createBlog.isPending || updateBlog.isPending || !title.trim()}
-            className="rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
-          >
-            {createBlog.isPending || updateBlog.isPending ? t("blog.saving") : (editId ? t("blog.saveChanges") : t("blog.publish"))}
-          </button>
-        </div>
-      </form>
+          {/* Submit Action Bar */}
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="rounded-2xl border border-border/80 px-6 h-11 text-sm font-semibold hover:bg-muted transition-all cursor-pointer"
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="submit"
+              disabled={createBlog.isPending || updateBlog.isPending || !title.trim()}
+              className="rounded-2xl bg-primary px-8 h-11 text-sm font-bold text-primary-foreground hover:bg-primary/90 shadow-xs hover:shadow-md active:scale-98 disabled:opacity-40 transition-all cursor-pointer"
+            >
+              {createBlog.isPending || updateBlog.isPending ? t("blog.saving") : (editId ? t("blog.saveChanges") : t("blog.publish"))}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

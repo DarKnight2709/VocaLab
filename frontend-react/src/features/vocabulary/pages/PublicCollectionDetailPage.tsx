@@ -143,8 +143,8 @@ export default function PublicCollectionDetailPage() {
                 ? {
                     color: entry.color || "inherit",
                     fontSize: entry.fontSize
-                      ? Number(entry.fontSize) + "px"
-                      : "inherit",
+                      ? Number(entry.fontSize) * 1.5 + "px"
+                      : undefined,
                     fontWeight: entry.fontSize ? "500" : "inherit",
                   }
                 : {}
@@ -321,7 +321,7 @@ export default function PublicCollectionDetailPage() {
                     <CardFace
                       card={card}
                       side="front"
-                      className="font-semibold"
+                      className="font-semibold text-lg md:text-xl"
                       useStyles={false}
                     />
                     <div
@@ -331,7 +331,7 @@ export default function PublicCollectionDetailPage() {
                     <CardFace
                       card={card}
                       side="back"
-                      className="text-muted-foreground"
+                      className="text-muted-foreground text-base md:text-lg"
                       useStyles={false}
                     />
                   </div>
@@ -357,11 +357,11 @@ export default function PublicCollectionDetailPage() {
                     >
                       {/* Front Face */}
                       <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden">
-                        <div className="text-center">
+                        <div className="text-center w-full max-w-4xl px-4">
                           <CardFace
                             card={cards[flashcardIdx]}
                             side="front"
-                            className="text-base font-medium"
+                            className="text-4xl md:text-6xl font-semibold leading-tight"
                           />
                         </div>
                         <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
@@ -371,11 +371,11 @@ export default function PublicCollectionDetailPage() {
 
                       {/* Back Face */}
                       <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
-                        <div className="text-center">
+                        <div className="text-center w-full max-w-4xl px-4">
                           <CardFace
                             card={cards[flashcardIdx]}
                             side="back"
-                            className="text-base font-medium"
+                            className="text-3xl md:text-5xl font-medium leading-tight text-muted-foreground"
                           />
                         </div>
                         <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">

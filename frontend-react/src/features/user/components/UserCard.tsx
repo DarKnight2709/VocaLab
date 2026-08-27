@@ -47,27 +47,27 @@ export function UserCard({ user }: UserCardProps) {
   return (
     <Link
       to={ROUTES.PROFILE.url.replace(":username", user.username)}
-      className="group relative flex items-center gap-3 rounded-3xl bg-transparent p-3 shadow-none backdrop-blur-0 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+      className="group relative flex items-center gap-3.5 rounded-3xl border border-border/80 bg-card p-3.5 sm:p-4 shadow-xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
     >
-      <div className="relative">
-        <Avatar className="h-12 w-12 ring-1 ring-border/70 ring-offset-0 transition-colors">
+      <div className="relative shrink-0">
+        <Avatar className="h-12 w-12 border-2 border-background shadow-xs ring-1 ring-border/60 transition-transform duration-300 group-hover:scale-105">
           <AvatarImage src={user.avatar || undefined} />
-          <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+          <AvatarFallback className="bg-muted text-foreground text-xs font-bold">
             {getInitials(displayName)}
           </AvatarFallback>
         </Avatar>
         {user.isFollowing && (
-          <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-[10px] text-white ring-2 ring-background shadow-sm dark:bg-zinc-100 dark:text-zinc-900">
+          <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground ring-2 ring-background shadow-xs">
             <Check className="h-3 w-3 stroke-[3px]" />
           </div>
         )}
       </div>
 
       <div className="min-w-0 flex-1">
-        <h4 className="truncate text-sm font-semibold text-foreground">
+        <h4 className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">
           {displayName}
         </h4>
-        <p className="truncate text-[11px] leading-4 text-muted-foreground/80 font-medium">
+        <p className="truncate text-[11px] leading-4 text-muted-foreground font-medium">
           @{user.username}
         </p>
       </div>
@@ -75,10 +75,10 @@ export function UserCard({ user }: UserCardProps) {
       {!isMe && user.isFollowing !== undefined && (user.canFollow || user.isFollowing) && (
         <Button
           size="sm"
-          variant="outline"
+          variant={user.isFollowing ? "outline" : "default"}
           onClick={handleFollowAction}
           disabled={followMutation.isPending || unfollowMutation.isPending}
-          className="ml-2 h-8 rounded-full border-border/60 bg-muted/70 px-4 text-[11px] font-medium text-foreground shadow-none transition-colors hover:bg-muted/90 active:scale-95 dark:bg-muted/20 dark:text-foreground dark:hover:bg-muted/30"
+          className="ml-2 h-8 rounded-xl px-3.5 text-xs font-bold shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
         >
           {user.isFollowing ? (
             t("profile.unfollow")

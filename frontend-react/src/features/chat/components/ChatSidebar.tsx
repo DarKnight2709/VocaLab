@@ -115,13 +115,13 @@ export function ChatSidebar({
           className={
             (embedded ? "w-full " : "w-full md:w-80 shrink-0 ") +
             ((selectedUser || selectedGroup) && !embedded ? "hidden md:flex " : "flex ") +
-            "border-r flex-col"
+            "border-r border-border/60 flex-col bg-card/30"
           }
         >
           {!hideSidebarSearch && (
-            <div className="px-4 border-b h-[76px] flex flex-col justify-center" ref={searchRef}>
+            <div className="px-4 border-b border-border/60 h-[72px] flex flex-col justify-center bg-card/40" ref={searchRef}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t("chat.searchPlaceholder")}
                   value={searchInput}
@@ -130,7 +130,7 @@ export function ChatSidebar({
                     setSearchInput(e.target.value);
                     setShowSuggestions(true);
                   }}
-                  className="pl-9 pr-9"
+                  className="pl-9 pr-9 h-10 rounded-2xl bg-muted/40 border-border/60 focus-visible:ring-primary/20 focus-visible:border-primary/50 text-sm"
                 />
                 {searchInput.length > 0 && (
                   <button
@@ -139,14 +139,14 @@ export function ChatSidebar({
                       setSearchInput("");
                       setShowSuggestions(true);
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
 
                 {showSuggestions && searchInput.length > 0 && (
-                  <div className="absolute top-full left-0 mt-2 w-full bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                  <div className="absolute top-full left-0 mt-2 w-full bg-popover text-popover-foreground border border-border/80 rounded-2xl shadow-xl z-50 overflow-hidden">
                     {debouncedSearch.length > 0 && isSearchingFriends && activeTab === "users" ? (
                       <div className="px-4 py-2 text-sm text-muted-foreground">
                         {t("chat.loading", "Loading...")}
@@ -156,11 +156,11 @@ export function ChatSidebar({
                         {t("chat.noResultsFound", "No results found.")}
                       </div>
                     ) : (
-                      <ul className="py-1 max-h-64 overflow-auto">
+                      <ul className="py-1.5 max-h-64 overflow-auto">
                         {suggestedUsers.map((u) => (
                           <li
                             key={`su-${u.id}`}
-                            className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors flex items-center gap-3"
+                            className="px-4 py-2 hover:bg-muted/80 cursor-pointer transition-colors flex items-center gap-3"
                             onClick={() => {
                               onUserClick({ ...u, fullName: u.fullName || undefined });
                               setSearchInput("");
@@ -171,13 +171,13 @@ export function ChatSidebar({
                               <AvatarImage src={u.avatar ?? undefined} />
                               <AvatarFallback>{getInitials(u.fullName || u.username || t("chat.user"))}</AvatarFallback>
                             </Avatar>
-                            <span className="truncate flex-1 font-medium">{u.fullName || u.username || t("chat.user")}</span>
+                            <span className="truncate flex-1 font-medium text-sm">{u.fullName || u.username || t("chat.user")}</span>
                           </li>
                         ))}
                         {suggestedGroups.map((g) => (
                           <li
                             key={`sg-${g.id}`}
-                            className="px-4 py-2 hover:bg-muted cursor-pointer transition-colors flex items-center gap-3"
+                            className="px-4 py-2 hover:bg-muted/80 cursor-pointer transition-colors flex items-center gap-3"
                             onClick={() => {
                               onGroupClick(g);
                               setSearchInput("");
@@ -188,7 +188,7 @@ export function ChatSidebar({
                               <AvatarImage src={g.avatar ?? undefined} />
                               <AvatarFallback>{getInitials(g.name || t("chat.group"))}</AvatarFallback>
                             </Avatar>
-                            <span className="truncate flex-1 font-medium">{g.name || t("chat.group")}</span>
+                            <span className="truncate flex-1 font-medium text-sm">{g.name || t("chat.group")}</span>
                           </li>
                         ))}
                         {activeTab === "users" && hasNextPage && (
@@ -209,13 +209,13 @@ export function ChatSidebar({
             onValueChange={(v) => onActiveTabChange(v as "users" | "groups")}
             className="flex-1 flex flex-col min-h-0"
           >
-            <div className="px-4 pt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="users" className="gap-2">
+            <div className="px-3 pt-3 pb-1">
+              <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/40 rounded-2xl border border-border/40">
+                <TabsTrigger value="users" className="gap-2 rounded-xl text-xs font-bold data-[state=active]:bg-card data-[state=active]:shadow-xs">
                   <UserRound className="h-4 w-4" />
                   {t("chat.users")}
                 </TabsTrigger>
-                <TabsTrigger value="groups" className="gap-2">
+                <TabsTrigger value="groups" className="gap-2 rounded-xl text-xs font-bold data-[state=active]:bg-card data-[state=active]:shadow-xs">
                   <UsersRound className="h-4 w-4" />
                   {t("chat.groups")}
                 </TabsTrigger>
@@ -224,14 +224,14 @@ export function ChatSidebar({
 
             <TabsContent
               value="users"
-              className="flex-1 overflow-auto overscroll-contain p-2 pb-12 m-0"
+              className="flex-1 overflow-auto overscroll-contain p-3 pb-12 m-0 custom-scrollbar"
             >
               {loadingUsers ? (
-                <div className="p-4 text-sm text-muted-foreground text-center">
+                <div className="p-4 text-sm text-muted-foreground text-center font-medium">
                   {t("chat.loading")}
                 </div>
               ) : filteredUsers.length === 0 ? (
-                <div className="p-4 text-sm text-muted-foreground text-center">
+                <div className="p-4 text-sm text-muted-foreground text-center font-medium">
                   {searchQuery
                     ? t("chat.noUsersFound")
                     : t("chat.noUsersYet")}
@@ -246,38 +246,38 @@ export function ChatSidebar({
                   return (
                     <button
                       key={u.id}
-                      className={`w-full text-left rounded-lg p-3 mb-2 transition-colors ${
+                      className={`w-full text-left rounded-2xl p-3 mb-1.5 transition-all ${
                         active
-                          ? "bg-primary/10 text-primary"
-                          : "hover:bg-muted"
+                          ? "bg-primary/10 text-primary border border-primary/25 shadow-xs font-semibold"
+                          : "hover:bg-muted/70 text-foreground border border-transparent"
                       }`}
                       onClick={() => onUserClick(u)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <Avatar className="h-10 w-10">
+                        <div className="relative shrink-0">
+                          <Avatar className="h-11 w-11 rounded-2xl border border-border/40">
                             <AvatarImage src={u.avatar ?? undefined} />
-                            <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                            <AvatarFallback className="rounded-2xl">{getInitials(name)}</AvatarFallback>
                           </Avatar>
                           {online && (
-                            <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
+                            <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-emerald-500 border-2 border-card rounded-full shadow-xs" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-1">
                             <div
-                              className={`truncate ${unread > 0 ? "font-bold" : "font-medium"}`}
+                              className={`truncate text-sm ${unread > 0 ? "font-bold text-foreground" : "font-medium"}`}
                             >
                               {name}
                             </div>
                             {unread > 0 && !active && (
-                              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 text-center">
+                              <span className="bg-primary text-primary-foreground text-[11px] font-extrabold rounded-full px-2 py-0.5 min-w-[20px] text-center shadow-xs">
                                 {unread}
                               </span>
                             )}
                           </div>
                           <div
-                            className={`text-xs truncate ${active ? "text-primary/80" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                            className={`text-xs truncate mt-0.5 ${active ? "text-primary/80" : unread > 0 ? "font-semibold text-foreground" : "text-muted-foreground"}`}
                           >
                             {u.lastMessage
                               ? `${u.lastMessage.isMine ? `${t("chat.you")}: ` : ""}${u.lastMessage.content?.slice(0, 30)}${u.lastMessage.content && u.lastMessage.content.length > 30 ? "..." : ""}`
@@ -293,26 +293,26 @@ export function ChatSidebar({
 
             <TabsContent
               value="groups"
-              className="flex-1 flex flex-col min-h-0 p-2 m-0"
+              className="flex-1 flex flex-col min-h-0 p-3 m-0"
             >
-              <div className="px-2 pt-2 pb-3 shrink-0">
+              <div className="pb-3 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className="w-full rounded-2xl font-bold h-10 border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-all justify-center"
                   onClick={onCreateGroupClick}
                 >
                   + {t("chat.createGroup")}
                 </Button>
               </div>
 
-              <div className="flex-1 overflow-auto overscroll-contain px-2 pb-12">
+              <div className="flex-1 overflow-auto overscroll-contain pb-12 custom-scrollbar">
                 {loadingGroups ? (
-                  <div className="p-4 text-sm text-muted-foreground text-center">
+                  <div className="p-4 text-sm text-muted-foreground text-center font-medium">
                     {t("chat.loading")}
                   </div>
                 ) : filteredGroups.length === 0 ? (
-                  <div className="p-4 text-sm text-muted-foreground text-center">
+                  <div className="p-4 text-sm text-muted-foreground text-center font-medium">
                     {searchQuery ? t("chat.noGroupsFound") : t("chat.noGroupsYet")}
                   </div>
                 ) : (
@@ -332,47 +332,47 @@ export function ChatSidebar({
                     return (
                       <button
                         key={g.id}
-                        className={`w-full text-left rounded-lg p-3 mb-2 transition-colors ${
+                        className={`w-full text-left rounded-2xl p-3 mb-1.5 transition-all ${
                           active
-                            ? "bg-primary/10 text-primary"
-                            : "hover:bg-muted"
+                            ? "bg-primary/10 text-primary border border-primary/25 shadow-xs font-semibold"
+                            : "hover:bg-muted/70 text-foreground border border-transparent"
                         }`}
                         onClick={() => onGroupClick(g)}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <Avatar className="h-10 w-10">
+                          <div className="relative shrink-0">
+                            <Avatar className="h-11 w-11 rounded-2xl border border-border/40">
                               <AvatarImage src={g.avatar ?? undefined} />
-                              <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                              <AvatarFallback className="rounded-2xl">{getInitials(name)}</AvatarFallback>
                             </Avatar>
                             {isGroupActive && (
-                              <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
+                              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-emerald-500 border-2 border-card rounded-full shadow-xs" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-1">
                               <div className="flex items-center gap-2 truncate">
                                 <span
-                                  className={`${unread > 0 ? "font-bold" : "font-medium"} truncate`}
+                                  className={`text-sm truncate ${unread > 0 ? "font-bold text-foreground" : "font-medium"}`}
                                 >
                                   {name}
                                 </span>
                               </div>
                               {unread > 0 && !active && (
-                                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 text-center">
+                                <span className="bg-primary text-primary-foreground text-[11px] font-extrabold rounded-full px-2 py-0.5 min-w-[20px] text-center shadow-xs">
                                   {unread}
                                 </span>
                               )}
                             </div>
                             <div
-                              className={`text-xs truncate ${active ? "text-primary/80" : unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                              className={`text-xs truncate mt-0.5 ${active ? "text-primary/80" : unread > 0 ? "font-semibold text-foreground" : "text-muted-foreground"}`}
                             >
                               {isGroupActive && !last?.content ? (
                                 <span
                                   className={
                                     active
-                                      ? "text-primary/80 font-medium"
-                                      : "text-green-600 font-medium"
+                                      ? "text-primary/80 font-semibold"
+                                      : "text-emerald-600 dark:text-emerald-400 font-semibold"
                                   }
                                 >
                                   {t("chat.online")}

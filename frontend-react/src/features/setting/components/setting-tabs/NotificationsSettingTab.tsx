@@ -90,35 +90,35 @@ export default function NotificationsSettingTab({
     descKey: string;
     settingKey: keyof typeof notificationStates;
   }) => (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 shadow-sm">
-      <div className="flex-1 pr-4">
-        <p className="font-medium">{t(titleKey)}</p>
-        <p className="text-sm text-muted-foreground">{t(descKey)}</p>
+    <div className="flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-border/70 bg-card hover:border-primary/30 transition-all shadow-xs gap-4">
+      <div className="space-y-0.5 flex-1 min-w-0">
+        <p className="text-sm font-bold text-foreground">{t(titleKey)}</p>
+        <p className="text-xs text-muted-foreground">{t(descKey)}</p>
       </div>
-      <div className="w-[180px]">
+      <div className="w-[150px] sm:w-[170px] shrink-0">
         <Select
           value={notificationStates[settingKey]}
           onValueChange={(val) => handleSettingChange(settingKey, val)}
         >
-          <SelectTrigger className="bg-background">
+          <SelectTrigger className="h-9 rounded-xl border-border/80 bg-background text-xs font-bold shadow-xs">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="EMAIL">
+          <SelectContent className="rounded-2xl border-border/80 shadow-md">
+            <SelectItem value="EMAIL" className="text-xs font-semibold rounded-xl">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-blue-500" />
+                <Mail className="h-3.5 w-3.5 text-blue-500" />
                 <span>{t("settings.notifications.options.email")}</span>
               </div>
             </SelectItem>
-            <SelectItem value="INBOX">
+            <SelectItem value="INBOX" className="text-xs font-semibold rounded-xl">
               <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-amber-500" />
+                <Bell className="h-3.5 w-3.5 text-amber-500" />
                 <span>{t("settings.notifications.options.inbox")}</span>
               </div>
             </SelectItem>
-            <SelectItem value="OFF">
+            <SelectItem value="OFF" className="text-xs font-semibold rounded-xl">
               <div className="flex items-center gap-2">
-                <BellOff className="h-4 w-4 text-muted-foreground" />
+                <BellOff className="h-3.5 w-3.5 text-muted-foreground" />
                 <span>{t("settings.notifications.options.off")}</span>
               </div>
             </SelectItem>
@@ -129,26 +129,30 @@ export default function NotificationsSettingTab({
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <Bell className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">
-            {t("settings.notificationsTitle")}
-          </h2>
+    <div className="space-y-8 animate-in fade-in duration-300">
+      <div className="space-y-6">
+        <div className="space-y-1 pb-2 border-b border-border/80">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Bell className="h-4 w-4" />
+            </div>
+            <h2 className="text-base font-extrabold text-foreground">
+              {t("settings.notificationsTitle")}
+            </h2>
+          </div>
+          <p className="text-xs text-muted-foreground ml-10.5">
+            {t("settings.notificationsDescription")}
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">
-          {t("settings.notificationsDescription")}
-        </p>
 
-        <div className="space-y-6 mt-4">
+        <div className="space-y-6">
           {/* Messages Section */}
-          <section className="space-y-4">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary/80" />
-              {t("settings.notifications.messages")}
+          <section className="space-y-3">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <MessageSquare className="h-3.5 w-3.5 text-primary" />
+              <span>{t("settings.notifications.messages")}</span>
             </h3>
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               <NotificationItem
                 titleKey="settings.notifications.chatMessages"
                 descKey="settings.notifications.chatMessagesDesc"
@@ -158,12 +162,12 @@ export default function NotificationsSettingTab({
           </section>
 
           {/* Activity Section */}
-          <section className="space-y-4">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary/80" />
-              {t("settings.notifications.activity")}
+          <section className="space-y-3">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <Activity className="h-3.5 w-3.5 text-primary" />
+              <span>{t("settings.notifications.activity")}</span>
             </h3>
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               <NotificationItem
                 titleKey="settings.notifications.comments"
                 descKey="settings.notifications.commentsDesc"

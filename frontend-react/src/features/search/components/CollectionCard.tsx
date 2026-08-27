@@ -115,16 +115,16 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
             );
           }
         }}
-        className="relative text-left w-full rounded-2xl bg-background/70 p-4 transition-colors cursor-pointer hover:bg-muted/40"
+        className="group relative text-left w-full rounded-3xl border border-border/80 bg-card p-5 transition-all duration-300 cursor-pointer shadow-xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5"
       >
         <div className="flex items-start justify-between gap-3 pr-8">
           <div className="min-w-0 w-full flex flex-col gap-2">
             {collection.user && (
-              <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
                 <div 
                   role="button"
                   tabIndex={0}
-                  className="flex items-center gap-1.5 cursor-pointer hover:underline"
+                  className="flex items-center gap-2 cursor-pointer hover:underline"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(ROUTES.PROFILE.url.replace(":username", collection.user.username));
@@ -137,7 +137,7 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
                     }
                   }}
                 >
-                  <div className="h-5 w-5 shrink-0 overflow-hidden rounded-full bg-muted ring-1 ring-border">
+                  <div className="h-6 w-6 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/60">
                     {collection.user.avatar ? (
                       <img
                         src={collection.user.avatar}
@@ -150,23 +150,27 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
                       </div>
                     )}
                   </div>
-                  <span className="truncate font-medium text-foreground">
+                  <span className="truncate font-bold text-foreground">
                     {collection.user.fullName}
                   </span>
                 </div>
-                <span aria-hidden>·</span>
-                <span className="shrink-0">
+                <span className="text-muted-foreground/60">•</span>
+                <span className="shrink-0 font-medium">
                   {formatTimeAgo(collection.createdAt, t)}
                 </span>
               </div>
             )}
             <div>
-              <div className="font-semibold truncate text-foreground">{collection.name}</div>
-              <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                {collection.description}
+              <div className="text-sm sm:text-base font-extrabold truncate text-foreground group-hover:text-primary transition-colors">
+                {collection.name}
               </div>
+              {collection.description && (
+                <div className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                  {collection.description}
+                </div>
+              )}
               {collection.originId && (
-                <div className="mt-1.5 text-xs text-muted-foreground flex items-center gap-1">
+                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
                   <span>{t("vocabulary.forkedFrom")} </span>
                   <button
                     type="button"
@@ -174,7 +178,7 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
                       e.stopPropagation();
                       navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", collection.originId!));
                     }}
-                    className="text-blue-500 hover:underline hover:text-blue-600 transition-colors"
+                    className="text-primary font-semibold hover:underline transition-colors"
                   >
                     {collection.origin
                       ? `${collection.origin.user.username}/${collection.origin.name}`
@@ -186,10 +190,10 @@ export function CollectionCard({ collection }: { collection: CollectionResult })
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-          <Layers className="h-4 w-4" />
-          <span>
-            {collection._count?.cards ?? 0} {t("vocabulary.cards")}
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/50 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-muted/60 text-[11px] font-semibold text-muted-foreground">
+            <Layers className="h-3.5 w-3.5 text-primary" />
+            <span className="text-foreground">{collection._count?.cards ?? 0}</span> {t("vocabulary.cards")}
           </span>
         </div>
 

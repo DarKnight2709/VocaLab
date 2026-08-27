@@ -91,7 +91,7 @@ export function ChatArea({
           <span className="text-xs text-muted-foreground">
             {!selectedGroup && typingUsersCount > 0
               ? t("chat.typing")
-              : groupTypingText}
+              : t("chat.userTyping", { user: groupTypingText.trim() || t("chat.someone", "Someone") })}
           </span>
         </div>
       )}

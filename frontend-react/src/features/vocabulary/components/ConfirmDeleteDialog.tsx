@@ -34,19 +34,20 @@ export default function ConfirmDeleteDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
+            <div className="p-2.5 rounded-2xl bg-destructive/10 text-destructive border border-destructive/20 flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-5 w-5" />
             </div>
-            <DialogTitle>{title || t("vocabulary.confirmDeleteObj.title")}</DialogTitle>
+            <DialogTitle className="text-lg font-bold">{title || t("vocabulary.confirmDeleteObj.title")}</DialogTitle>
           </div>
-          <DialogDescription className="pt-3">
+          <DialogDescription className="pt-2">
             {description || t("vocabulary.confirmDeleteObj.desc")}
           </DialogDescription>
         </DialogHeader>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-2 gap-2">
           <Button
             variant="outline"
+            className="rounded-xl font-semibold"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
@@ -54,6 +55,7 @@ export default function ConfirmDeleteDialog({
           </Button>
           <Button
             variant="destructive"
+            className="rounded-xl font-semibold shadow-xs"
             onClick={onConfirm}
             disabled={isLoading}
           >

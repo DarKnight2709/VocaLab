@@ -49,9 +49,13 @@ export default function ProfileActionButtons({
 
   if (isOwnProfile) {
     return (
-      <Button size="lg" onClick={onEditProfile}>
-        <Pencil className="mr-1.5 h-4 w-4" />
-        {t("profile.editProfile")}
+      <Button
+        size="default"
+        onClick={onEditProfile}
+        className="h-10 px-5 rounded-2xl font-bold text-xs gap-2 shadow-xs cursor-pointer active:scale-95 transition-all"
+      >
+        <Pencil className="h-4 w-4" />
+        <span>{t("profile.editProfile")}</span>
       </Button>
     );
   }
@@ -108,33 +112,33 @@ export default function ProfileActionButtons({
   if (!showFollowButton && !canChat) return null;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2.5">
       {canChat && (
         <Button
-          size="lg"
+          size="default"
           variant="outline"
           onClick={handleChatAction}
-          className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:bg-muted"
+          className="h-10 px-5 rounded-2xl border-border/80 font-bold text-xs gap-2 shadow-xs hover:bg-muted/80 cursor-pointer active:scale-95 transition-all"
         >
-          <MessageCircle className="h-5 w-5" />
-          {t("profile.message")}
+          <MessageCircle className="h-4 w-4 text-primary" />
+          <span>{t("profile.message")}</span>
         </Button>
       )}
       {showFollowButton && (
         <Button
-          size="lg"
-          variant={isFollowing ? "secondary" : "default"}
+          size="default"
+          variant={isFollowing ? "outline" : "default"}
           onClick={handleFollowAction}
           disabled={followMutation.isPending || unfollowMutation.isPending}
-          className="rounded-full px-6 font-bold transition-all active:scale-95 shadow-sm hover:shadow-md min-w-35"
+          className="h-10 px-5 rounded-2xl font-bold text-xs gap-2 shadow-xs cursor-pointer active:scale-95 transition-all min-w-[120px]"
         >
           {isFollowing ? (
-            t("profile.unfollow")
+            <span>{t("profile.unfollow")}</span>
           ) : (
-            <span className="flex items-center gap-1.5">
-              <UserPlus className="h-5 w-5" />
-              {t("profile.follow")}
-            </span>
+            <>
+              <UserPlus className="h-4 w-4" />
+              <span>{t("profile.follow")}</span>
+            </>
           )}
         </Button>
       )}

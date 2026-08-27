@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CircleHelp, Settings, User, Sun, Moon } from "lucide-react";
+import { CircleHelp, Settings, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,6 @@ import { getInitials } from "@/shared/lib/utils";
 import type { MeResponse } from "@/shared/validations/AuthSchema";
 import { AccountMenuProfileBlock } from "./AccountMenuProfileBlock";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useTheme } from "@/shared/components/ThemeProvider";
 
 interface AccountMenuProps {
   me: MeResponse | undefined | null;
@@ -34,7 +33,6 @@ export function AccountMenu({
   onSignOut,
 }: AccountMenuProps) {
   const { t } = useTranslation();
-  const { theme, setTheme } = useTheme();
   const displayName = useMemo(() => {
     return me?.fullName || me?.username || t("chat.user");
   }, [me, t]);
@@ -47,7 +45,7 @@ export function AccountMenu({
           className="shrink-0 transition-transform active:scale-95"
           aria-label={t("common.openAccountMenu")}
         >
-          <Avatar className="h-11 w-11 border-2 border-border/50">
+          <Avatar className="h-9.5 w-9.5 md:h-10 md:w-10 border border-border/80 shadow-2xs ring-2 ring-transparent hover:ring-primary/20 transition-all cursor-pointer">
             <AvatarImage src={me?.avatar || "image.png"} />
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {getInitials(displayName)}
@@ -70,20 +68,8 @@ export function AccountMenu({
           onClick={onViewProfile}
           className="px-4 py-3 text-base text-foreground"
         >
-          <User  className="h-5 w-5 text-muted-foreground" />
+          <User className="h-5 w-5 text-muted-foreground" />
           {t("common.viewProfile")}
-        </DropdownMenuItem>
-
-        <DropdownMenuItem
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="px-4 py-3 text-base text-foreground"
-        >
-          {theme === "dark" ? (
-            <Sun className="h-5 w-5 text-muted-foreground" />
-          ) : (
-            <Moon className="h-5 w-5 text-muted-foreground" />
-          )}
-          {theme === "dark" ? t("common.lightMode") || "Light mode" : t("common.darkMode") || "Dark mode"}
         </DropdownMenuItem>
 
         <DropdownMenuItem

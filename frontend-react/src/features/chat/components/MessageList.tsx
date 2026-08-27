@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router";
+import { X } from "lucide-react";
 import ROUTES from "@/shared/lib/routes";
 import { getInitials } from "../utils";
 import type { UserItem, ChatMessageItem } from "@/shared/validations/ChatSchema";
@@ -96,16 +98,20 @@ function MessageBubble({
       <div className={`flex flex-col ${isMine ? "items-end" : "items-start"} gap-1`}>
         {content && (
           <div
-            className={`rounded-2xl px-4 py-2 ${isMine ? "bg-primary/10 text-primary" : "bg-card border text-foreground"}`}
+            className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+              isMine 
+                ? "bg-primary text-primary-foreground rounded-tr-xs shadow-xs font-normal" 
+                : "bg-card border border-border/80 text-foreground rounded-tl-xs shadow-xs font-normal"
+            }`}
             style={{ wordBreak: "break-word" }}
           >
             {content}
           </div>
         )}
         {attachments?.map((attachment, index) => (
-          <div key={index} className="overflow-hidden rounded-2xl relative mt-0.5">
+          <div key={index} className="overflow-hidden rounded-2xl relative mt-0.5 shadow-xs border border-border/40">
             {attachment._uploading ? (
-              <div className={`flex items-center gap-2 text-xs opacity-70 px-4 py-2 rounded-2xl ${isMine ? "bg-primary/10 text-primary" : "bg-card border"}`}>
+              <div className={`flex items-center gap-2 text-xs font-medium opacity-80 px-4 py-2.5 rounded-2xl ${isMine ? "bg-primary/10 text-primary" : "bg-card border"}`}>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 <span>{t("chat.uploading", { name: attachment.name })}</span>
               </div>
@@ -113,19 +119,20 @@ function MessageBubble({
               <img
                 src={attachment.url}
                 onClick={() => attachment.url && onOpenImage(attachment.url)}
-                className="max-w-64 cursor-pointer object-cover transition-opacity hover:opacity-90 bg-muted"
+                className="max-w-72 max-h-72 rounded-2xl cursor-pointer object-cover transition-opacity hover:opacity-90 bg-muted"
                 alt=""
               />
             ) : attachment.type === "video" ? (
-              <video src={attachment.url} controls className="max-w-64 bg-black" />
+              <video src={attachment.url} controls className="max-w-72 rounded-2xl bg-black" />
             ) : (
               <a
                 href={attachment.url}
                 target="_blank"
                 rel="noreferrer"
-                className={`flex items-center gap-1 text-xs underline px-4 py-2 rounded-2xl ${isMine ? "bg-primary/10 text-primary" : "bg-card border"}`}
+                className={`flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-2xl hover:opacity-90 transition-opacity ${isMine ? "bg-primary/15 text-primary" : "bg-card border text-foreground"}`}
               >
-                {attachment.name || t("common.download")}
+                <span>📎</span>
+                <span className="underline underline-offset-2">{attachment.name || t("common.download")}</span>
               </a>
             )}
           </div>
@@ -133,12 +140,12 @@ function MessageBubble({
       </div>
 
       <div
-        className={`absolute top-1/2 -translate-y-1/2 rounded-md bg-background/95 px-2 py-0.5 text-[10px] text-muted-foreground shadow-sm border opacity-0 group-hover/message:opacity-100 max-w-55 whitespace-normal wrap-break-word transition-opacity z-10 pointer-events-none ${isMine ? "right-full mr-2 text-right" : "left-full ml-2 text-left"}`}
+        className={`absolute top-1/2 -translate-y-1/2 rounded-xl bg-popover text-popover-foreground px-2.5 py-1 text-[10px] shadow-lg border border-border/80 opacity-0 group-hover/message:opacity-100 max-w-55 whitespace-normal wrap-break-word transition-opacity z-20 pointer-events-none ${isMine ? "right-full mr-2 text-right" : "left-full ml-2 text-left"}`}
       >
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-0.5 font-medium">
           <span>{formatHoverDateTime(currentDate)}</span>
           {isMine && isSeen && isLastMineMessage && (
-            <span className="font-medium text-primary">{t("chat.seen")}</span>
+            <span className="font-bold text-primary">{t("chat.seen")}</span>
           )}
         </div>
       </div>
@@ -232,11 +239,11 @@ export function MessageList({
     return (
       <div
         key={message.id || `${senderId}-${message.createdAt}-${index}`}
-        className={isFirstInSequence ? "mt-4" : "mt-0.5"}
+        className={isFirstInSequence ? "mt-4" : "mt-1"}
       >
         {shouldShowTimeLabel && (
-          <div className="flex justify-center mb-3">
-            <span className="px-2 py-0.5 rounded-full bg-muted text-[11px] text-muted-foreground">
+          <div className="flex justify-center my-3">
+            <span className="px-3 py-1 rounded-full bg-muted/60 text-[11px] font-semibold text-muted-foreground border border-border/40 shadow-xs">
               {formatTimeLabel(currentDate)}
             </span>
           </div>
@@ -254,7 +261,7 @@ export function MessageList({
                   className="group/avatar relative block rounded-full"
                   aria-label={`Open ${isGroupChat ? senderName : selectedUser?.fullName || selectedUser?.username || "user"} profile`}
                 >
-                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold transition-opacity hover:opacity-80">
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold transition-opacity hover:opacity-80 border border-border/40">
                     {senderAvatar || selectedUser?.avatar ? (
                       <img
                         src={isGroupChat ? senderAvatar : selectedUser?.avatar}
@@ -265,7 +272,7 @@ export function MessageList({
                       getInitials(isGroupChat ? senderName : selectedUser?.fullName || selectedUser?.username || "User")
                     )}
                   </div>
-                  <div className="absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-[10px] text-white opacity-0 invisible shadow-lg transition-all group-hover/avatar:visible group-hover/avatar:opacity-100">
+                  <div className="absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-popover text-popover-foreground border border-border px-2.5 py-1 text-xs font-medium opacity-0 invisible shadow-xl transition-all group-hover/avatar:visible group-hover/avatar:opacity-100">
                     {isGroupChat ? senderName : selectedUser?.fullName || selectedUser?.username || "User"}
                   </div>
                 </Link>
@@ -277,7 +284,7 @@ export function MessageList({
 
           <div className={`flex max-w-[70%] flex-col gap-0.5 ${isMine ? "items-end" : "items-start"}`}>
             {!isMine && isFirstInSequence && (
-              <span className="mb-0.5 ml-1 select-none text-[10px] font-semibold tracking-wide text-primary/80">
+              <span className="mb-0.5 ml-1 select-none text-[11px] font-bold tracking-wide text-primary">
                 {isGroupChat ? senderName : selectedUser?.fullName || selectedUser?.username || "User"}
               </span>
             )}
@@ -302,36 +309,47 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 min-h-0 overflow-auto overscroll-contain p-4 flex flex-col"
+      className="flex-1 min-h-0 overflow-auto overscroll-contain p-5 flex flex-col custom-scrollbar"
     >
-      {lightboxUrl && (
+      {lightboxUrl && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 sm:p-8 animate-in fade-in duration-200"
           onClick={() => setLightboxUrl(null)}
           onKeyDown={(event) => event.key === "Escape" && setLightboxUrl(null)}
           tabIndex={-1}
         >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-lg"
+            title={t("common.close", { defaultValue: "Close" })}
+          >
+            <X className="h-5 w-5" />
+          </button>
+
           <img
             src={lightboxUrl}
-            className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+            className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl select-none border border-white/10"
             onClick={(event) => event.stopPropagation()}
-            alt=""
+            alt="Full Preview"
           />
-        </div>
+        </div>,
+        document.body
       )}
 
       {selectedGroup ? (
         loadingGroupMessages ? (
-          <div className="text-center text-muted-foreground">{t("chat.loading")}</div>
+          <div className="flex-1 flex items-center justify-center text-sm font-medium text-muted-foreground">{t("chat.loading")}</div>
         ) : groupMessages.length === 0 ? (
-          <div className="text-center text-muted-foreground">{t("chat.noMessages")}</div>
+          <div className="flex-1 flex items-center justify-center text-sm font-medium text-muted-foreground">{t("chat.noMessages")}</div>
         ) : (
           groupMessages.map((message, index) => renderMessageGroup(message, index, activeMessages, true))
         )
       ) : loadingMessages ? (
-        <div className="text-center text-muted-foreground">{t("chat.loading")}</div>
+        <div className="flex-1 flex items-center justify-center text-sm font-medium text-muted-foreground">{t("chat.loading")}</div>
       ) : messages.length === 0 ? (
-        <div className="text-center text-muted-foreground">{t("chat.noMessages")}</div>
+        <div className="flex-1 flex items-center justify-center text-sm font-medium text-muted-foreground">{t("chat.noMessages")}</div>
       ) : (
         messages.map((message, index) => renderMessageGroup(message, index, activeMessages, false))
       )}

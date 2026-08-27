@@ -141,12 +141,13 @@ export default function CreateCardTypeDialog({
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>{t("vocabulary.cardTypesObj.nameLabel")}</Label>
+              <Label>{t("vocabulary.cardTypesObj.nameLabel")} *</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("vocabulary.cardTypesObj.namePlaceholder")}
                 required
+                className="rounded-xl"
               />
             </div>
 
@@ -156,65 +157,73 @@ export default function CreateCardTypeDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t("vocabulary.cardTypesObj.descPlaceholder")}
+                className="rounded-xl"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <Label>{t("vocabulary.cardTypesObj.selectCreateFields", { count: fields.length })}</Label>
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="gap-1"
+                  className="gap-1.5 rounded-xl font-semibold text-xs"
                   onClick={() => setFieldSelectionOpen(true)}
                 >
-                  <Plus className="h-3 w-3" /> {t("vocabulary.cardTypesObj.selectFields")}
+                  <Plus className="h-3.5 w-3.5 text-primary" /> {t("vocabulary.cardTypesObj.selectFields")}
                 </Button>
               </div>
 
               {fields.length > 0 && (
                 <div className="space-y-2">
-                  <Label>{t("vocabulary.cardTypesObj.selectedFields")}</Label>
-                <div className="rounded-lg p-3 space-y-2 bg-card shadow-sm">
-                  {fields.map((field, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between gap-2 p-2 rounded border bg-background"
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{field.label}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => handleRemoveField(index)}
+                  <div className="rounded-2xl p-3 space-y-2 bg-muted/40 border border-border/70">
+                    {fields.map((field, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border/60 bg-card shadow-2xs"
                       >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-sm text-foreground truncate">{field.label}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            <span className={`px-2 py-0.5 rounded-md font-semibold text-[10px] ${
+                              field.side === "FRONT" 
+                                ? "bg-primary/10 text-primary" 
+                                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                            }`}>
+                              {field.side === "FRONT" ? t("vocabulary.fieldsObj.front") : t("vocabulary.fieldsObj.back")}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          onClick={() => handleRemoveField(index)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
+              className="rounded-xl font-semibold"
               onClick={() => handleDialogOpenChange(false)}
             >
               {t("common.cancel")}
             </Button>
             <Button
               type="button"
+              className="rounded-xl font-semibold shadow-xs"
               onClick={handleSubmit}
               disabled={!name.trim() || fields.length === 0 || isPending}
             >

@@ -163,6 +163,8 @@
     "chat": "Nhắn tin",
     "blog": "Blog",
     "video": "Video",
+    "learn": "Học tập",
+    "discover": "Khám phá",
     "view": "Xem",
     "manage": "Quản lý",
     "cancel": "Hủy",
@@ -199,7 +201,13 @@
     "synonyms": "Từ đồng nghĩa",
     "antonyms": "Từ trái nghĩa",
     "noData": "Không có dữ liệu",
-    "noDescription": "Không có mô tả"
+    "noDescription": "Không có mô tả",
+    "send": "Gửi",
+    "close": "Đóng",
+    "clear": "Xóa",
+    "actionFailed": "Thao tác thất bại",
+    "scrollLeft": "Cuộn sang trái",
+    "scrollRight": "Cuộn sang phải"
   },
   "auth": {
     "signIn": "Đăng nhập",
@@ -517,7 +525,10 @@
       "insertLink": "Chèn liên kết",
       "insertImage": "Chèn ảnh",
       "enterUrl": "Nhập URL:"
-    }
+    },
+    "readingTime": "{{count}} phút đọc",
+    "readMore": "Đọc tiếp",
+    "viewAuthorProfile": "Xem trang cá nhân của {{name}}"
   },
   "vocabulary": {
     "enterFocusMode": "Bật chế độ tập trung",
@@ -780,7 +791,14 @@
     "contentPlaceholder": "Bắt đầu viết nội dung bài viết của bạn...",
     "cardTypeLoadFailed": "Failed to load the card type",
     "back": "Back",
-    "coverPreviewAlt": "Cover image preview"
+    "coverPreviewAlt": "Cover image preview",
+    "cardTypeUpdated": "Cập nhật loại thẻ thành công",
+    "enterCollectionName": "VD: Japanese Core 2000",
+    "finish": "Hoàn thành",
+    "importing": "Đang nhập...",
+    "manageCardTypesDesc": "Tùy chỉnh cấu trúc ghi chú, trường và kiểu dáng cho thẻ ghi nhớ của bạn",
+    "needPracticeField": "Vui lòng chọn ít nhất 1 trường để luyện tập",
+    "uploadingImage": "Đang tải lên..."
   },
   "chat": {
     "title": "Trò chuyện",
@@ -934,7 +952,11 @@
     "backToList": "Back to list",
     "back": "Back",
     "viewProfileOf": "View profile of {{name}}",
-    "voiceCall": "Voice call"
+    "voiceCall": "Gọi thoại",
+    "added": "Đã thêm",
+    "attachFile": "Đính kèm tệp",
+    "userTyping": "{{user}} đang gõ...",
+    "someone": "Ai đó"
   },
   "grammar": {
     "title": "Ngữ pháp tiếng Anh",
@@ -968,12 +990,16 @@
     "deleteSuccess": "Đã xóa cấu trúc ngữ pháp",
     "deleteError": "Xóa thất bại",
     "deleteConfirmTitle": "Xóa cấu trúc ngữ pháp",
-    "deleteConfirmDesc": "Bạn có chắc chắn muốn xóa <strong>{{title}}</strong>? Hành động này không thể hoàn tác."
+    "deleteConfirmDesc": "Bạn có chắc chắn muốn xóa <strong>{{title}}</strong>? Hành động này không thể hoàn tác.",
+    "details": "Chi tiết cấu trúc",
+    "close": "Đóng",
+    "noResults": "Không tìm thấy cấu trúc ngữ pháp nào."
   },
   "search": {
     "title": "Tìm kiếm",
     "placeholder": "Tìm kiếm người dùng, nhóm, bài viết...",
     "enterKeyword": "Nhập từ khóa để tìm kiếm",
+    "filter": "Bộ lọc:",
     "noResults": "Không tìm thấy {{type}} cho \"{{query}}\"",
     "tabs": {
       "all": "Tất cả",
@@ -1069,7 +1095,28 @@
     "upvotePost": "<bold>{{sender}}</bold> đã thích bài viết của bạn",
     "upvoteComment": "<bold>{{sender}}</bold> đã thích bình luận của bạn",
     "follow": "<bold>{{sender}}</bold> đã bắt đầu theo dõi bạn",
-    "newPost": "<bold>{{sender}}</bold> đã đăng bài viết mới"
+    "newPost": "<bold>{{sender}}</bold> đã đăng bài viết mới",
+    "tabs": {
+      "all": "Tất cả",
+      "unread": "Chưa đọc",
+      "chat": "Tin nhắn & Nhóm",
+      "activity": "Tương tác & Blog",
+      "system": "Hệ thống"
+    },
+    "unreadBadge": "{{count}} chưa đọc",
+    "settings": "Cài đặt thông báo",
+    "noUnread": "Không có thông báo chưa đọc",
+    "noUnreadHint": "Bạn đã cập nhật và đọc tất cả các thông báo mới nhất.",
+    "prev": "Trước",
+    "next": "Tiếp",
+    "page": "Trang",
+    "defaultSender": "Người dùng",
+    "defaultGroup": "Nhóm học tập",
+    "systemNotice": "Thông báo từ hệ thống",
+    "justNow": "Vừa xong",
+    "minutesAgo": "{{count}} phút trước",
+    "hoursAgo": "{{count}} giờ trước",
+    "daysAgo": "{{count}} ngày trước"
   },
   "stats": {
     "title": "Thống kê học tập",
@@ -1111,7 +1158,11 @@
     "activityHeatMap": "Biểu đồ hoạt động",
     "noActivity": "Không có hoạt động",
     "weeksAgo_plural": "{{count}} weeks ago",
-    "weeksAhead_plural": "{{count}} weeks ahead"
+    "weeksAhead_plural": "{{count}} weeks ahead",
+    "cardsMastered": "Đã thành thạo",
+    "dayStreak": "Ngày liên tiếp",
+    "goal": "Mục tiêu",
+    "masteryProgress": "Tiến độ thành thạo"
   },
   "home": {
     "greeting": {
@@ -1221,6 +1272,26 @@
     "failedToExtract": "Không thể trích xuất phụ đề. Hãy đảm bảo video có phụ đề.",
     "copySentence": "Sao chép câu",
     "extractSuccess": "Trích xuất video thành công",
-    "extractFailed": "Không thể trích xuất video. Hãy đảm bảo video có phụ đề."
+    "extractFailed": "Không thể trích xuất video. Hãy đảm bảo video có phụ đề.",
+    "chapters": "Chương",
+    "featuredVideos": "Video nổi bật theo chủ đề",
+    "heroTitle": "Học từ vựng qua Video thông minh",
+    "heroSubtitle": "Dán liên kết video YouTube bất kỳ để khám phá phụ đề đồng bộ trực tiếp, nghe lặp lại từng câu và học từ vựng trong ngữ cảnh.",
+    "noChapters": "Video này không có danh sách chương.",
+    "readyToLearn": "{{count}} video sẵn sàng học",
+    "categoryAll": "Tất cả",
+    "categoryTalks": "Diễn thuyết & Truyền cảm hứng",
+    "categoryScience": "Khoa học & Đời sống",
+    "categoryLearning": "Luyện tiếng Anh & Giao tiếp",
+    "categoryBusiness": "Kinh doanh & Nghề nghiệp",
+    "categoryStory": "Truyện kể & TED-Ed",
+    "feature1Title": "Tra từ vựng 1 chạm",
+    "feature1Desc": "Nhấp trực tiếp vào bất kỳ từ nào trên phụ đề để mở popup từ điển, xem nghĩa tiếng Việt, phiên âm IPA và ví dụ cụ thể.",
+    "feature2Title": "Tự động đồng bộ giọng nói",
+    "feature2Desc": "Phụ đề tự động làm nổi bật và cuộn mượt mà theo đúng thời điểm người nói phát âm trong video YouTube.",
+    "feature3Title": "Nghe lặp lại từng câu",
+    "feature3Desc": "Nhấp vào từng dòng phụ đề để tua video ngay lập tức đến đoạn đó, giúp bạn luyện nghe và nhại giọng (shadowing) dễ dàng.",
+    "tryAnotherVideo": "Thử lại video khác",
+    "clickToLookup": "Nhấp để tra từ điển"
   }
 }

@@ -12,6 +12,8 @@ import {
   UploadCloud,
   Globe,
   Lock,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import { Switch } from "@/shared/components/ui/switch";
@@ -53,6 +55,15 @@ import { useTranslation } from "@/shared/hooks/useTranslation";
 export default function VocabularyPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    return (localStorage.getItem("vocab_view_mode") as "grid" | "list") || "grid";
+  });
+
+  const handleSetViewMode = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    localStorage.setItem("vocab_view_mode", mode);
+  };
 
   const [newColOpen, setNewColOpen] = useState(false);
   const [newColName, setNewColName] = useState("");
@@ -218,10 +229,10 @@ export default function VocabularyPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button
             onClick={() => setNewColOpen(true)}
-            className="gap-2"
+            className="gap-2 font-semibold shadow-xs"
             disabled={createColMutation.isPending}
           >
             <Plus className="h-4 w-4" /> {t("vocabulary.createCollection")}
@@ -230,15 +241,15 @@ export default function VocabularyPage() {
           <Button
             onClick={() => setImportOpen(true)}
             variant="outline"
-            className="gap-2"
+            className="gap-2 border-border/80 hover:bg-muted/80 font-medium"
           >
-            <Import className="h-4 w-4" /> {t("vocabulary.importData")}
+            <Import className="h-4 w-4 text-primary" /> {t("vocabulary.importData")}
           </Button>
 
           <Button
             onClick={() => setAnkiImportOpen(true)}
             variant="outline"
-            className="gap-2"
+            className="gap-2 border-border/80 hover:bg-muted/80 font-medium"
           >
             <UploadCloud className="h-4 w-4 text-primary" /> {t("vocabulary.importAnki", { defaultValue: "Import Anki (.apkg)" })}
           </Button>
@@ -246,10 +257,40 @@ export default function VocabularyPage() {
           <Button
             onClick={() => navigate("/vocabulary/card-types")}
             variant="outline"
-            className="gap-2"
+            className="gap-2 border-border/80 hover:bg-muted/80 font-medium"
           >
-            <Settings className="h-4 w-4" /> {t("vocabulary.manageCardTypes")}
+            <Settings className="h-4 w-4 text-emerald-500" /> {t("vocabulary.manageCardTypes")}
           </Button>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 p-1 bg-muted/60 rounded-xl border border-border/80 shrink-0">
+            <button
+              type="button"
+              onClick={() => handleSetViewMode("grid")}
+              className={`p-1.5 rounded-lg transition-colors ${
+                viewMode === "grid"
+                  ? "bg-card text-foreground shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Grid View"
+              aria-label="Grid View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetViewMode("list")}
+              className={`p-1.5 rounded-lg transition-colors ${
+                viewMode === "list"
+                  ? "bg-card text-foreground shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="List View"
+              aria-label="List View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -258,19 +299,18 @@ export default function VocabularyPage() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="h-36 rounded-2xl bg-muted animate-pulse"
+              className="h-40 rounded-3xl bg-muted/60 animate-pulse"
             />
           ))}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {colsData?.length === 0 && (
-            <div className="col-span-full text-center py-16 rounded-2xl bg-card shadow-sm text-muted-foreground">
-              <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>{t("vocabulary.noCollections")}</p>
-            </div>
-          )}
-
+      ) : colsData?.length === 0 ? (
+        <div className="text-center py-16 rounded-3xl bg-card shadow-xs text-muted-foreground border border-dashed border-border">
+          <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30 text-primary" />
+          <p>{t("vocabulary.noCollections")}</p>
+        </div>
+      ) : viewMode === "list" ? (
+        /* List / Row View */
+        <div className="flex flex-col gap-3">
           {colsData?.map((col) => (
             <div
               key={col.id}
@@ -283,105 +323,217 @@ export default function VocabularyPage() {
                   navigate(`/vocabulary/${col.id}`);
                 }
               }}
-              className="text-left w-full p-4 rounded-2xl bg-card shadow-sm hover:bg-muted/50 transition-colors cursor-pointer"
+              className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:px-6 rounded-2xl bg-card border border-border/80 shadow-xs hover:shadow-md hover:border-primary/50 transition-all duration-200 cursor-pointer"
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <div className="p-2.5 rounded-xl shrink-0 bg-primary/10 text-primary border border-primary/20">
+                  <BookMarked className="h-5 w-5" />
+                </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold truncate flex items-center gap-2">
-                    <BookMarked className="h-4 w-4 text-primary shrink-0" />
-                    <span className="truncate">{col.name}</span>
-                    <span className="font-normal text-sm text-muted-foreground shrink-0">
-                      ({col._count?.cards ?? 0} {t("vocabulary.cards")})
-                    </span>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                      {col.name}
+                    </h3>
                     {col.isPublic ? (
-                      <span title={t("vocabulary.public")}>
-                        <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full" title={t("vocabulary.public")}>
+                        <Globe className="h-3 w-3" />
+                        <span>{t("vocabulary.public") || "Public"}</span>
                       </span>
                     ) : (
-                      <span title={t("vocabulary.private")}>
-                        <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full" title={t("vocabulary.private")}>
+                        <Lock className="h-3 w-3" />
+                        <span>{t("vocabulary.private") || "Private"}</span>
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {col.description || (
-                      <span className="italic opacity-70">
-                        {t("common.noDescription")}
-                      </span>
-                    )}
-                  </div>
-                  {col.originId && (
-                    <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                      <span>{t("vocabulary.forkedFrom")} </span>
-                      <button 
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", col.originId!));
-                        }}
-                        className="text-blue-500 hover:underline hover:text-blue-600 transition-colors"
-                      >
-                        {col.origin ? `${col.origin.user.username}/${col.origin.name}` : t("vocabulary.originalCollection")}
-                      </button>
-                    </div>
+                  {col.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-xl">
+                      {col.description}
+                    </p>
                   )}
                 </div>
+              </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openRenameDialog(col);
-                      }}
-                      className="gap-2"
-                    >
-                      <Pencil className="h-4 w-4" /> {t("vocabulary.rename")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExportCollection(col);
-                      }}
-                      className="gap-2"
-                    >
-                      <Download className="h-4 w-4" />{" "}
-                      {t("vocabulary.exportCsv")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDeleteConfirm(col.id);
-                      }}
-                      className="gap-2 text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" /> {t("vocabulary.delete")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end">
+                <span className="font-semibold text-xs px-3 py-1 rounded-full bg-muted/70 text-muted-foreground">
+                  {col._count?.cards ?? 0} {t("vocabulary.cards")}
+                </span>
+
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openRenameDialog(col);
+                        }}
+                        className="gap-2"
+                      >
+                        <Pencil className="h-4 w-4 text-primary" /> {t("vocabulary.rename")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExportCollection(col);
+                        }}
+                        className="gap-2"
+                      >
+                        <Download className="h-4 w-4 text-emerald-500" />{" "}
+                        {t("vocabulary.exportCsv")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteConfirm(col.id);
+                        }}
+                        className="gap-2 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" /> {t("vocabulary.delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
           ))}
         </div>
+      ) : (
+        /* Grid View */
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4.5">
+          {colsData?.map((col) => {
+            return (
+              <div
+                key={col.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/vocabulary/${col.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/vocabulary/${col.id}`);
+                  }
+                }}
+                className="group relative text-left w-full p-5 rounded-3xl bg-card border border-border/80 shadow-xs hover:shadow-md hover:border-primary/50 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-lg truncate flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl shrink-0 bg-primary/10 text-primary border border-primary/20">
+                        <BookMarked className="h-4.5 w-4.5" />
+                      </div>
+                      <span className="truncate group-hover:text-primary transition-colors">{col.name}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2.5">
+                      <span className="font-semibold text-xs px-2.5 py-0.5 rounded-full bg-muted/70 text-muted-foreground">
+                        {col._count?.cards ?? 0} {t("vocabulary.cards")}
+                      </span>
+
+                      {col.isPublic ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full" title={t("vocabulary.public")}>
+                          <Globe className="h-3 w-3" />
+                          <span>{t("vocabulary.public") || "Public"}</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full" title={t("vocabulary.private")}>
+                          <Lock className="h-3 w-3" />
+                          <span>{t("vocabulary.private") || "Private"}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                      {col.description || (
+                        <span className="italic opacity-60">
+                          {t("common.noDescription")}
+                        </span>
+                      )}
+                    </div>
+
+                    {col.originId && (
+                      <div className="mt-2.5 text-xs text-muted-foreground flex items-center gap-1">
+                        <span>{t("vocabulary.forkedFrom")} </span>
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(ROUTES.COLLECTION_DETAIL.url.replace(":collectionId", col.originId!));
+                          }}
+                          className="text-primary hover:underline font-medium transition-colors"
+                        >
+                          {col.origin ? `${col.origin.user.username}/${col.origin.name}` : t("vocabulary.originalCollection")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openRenameDialog(col);
+                        }}
+                        className="gap-2"
+                      >
+                        <Pencil className="h-4 w-4 text-primary" /> {t("vocabulary.rename")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExportCollection(col);
+                        }}
+                        className="gap-2"
+                      >
+                        <Download className="h-4 w-4 text-emerald-500" />{" "}
+                        {t("vocabulary.exportCsv")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteConfirm(col.id);
+                        }}
+                        className="gap-2 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" /> {t("vocabulary.delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <Dialog open={newColOpen} onOpenChange={setNewColOpen}>
-        <DialogContent className="max-w-sm max-h-[90dvh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("vocabulary.newCollection")}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreateCollection} className="space-y-3">
+          <form onSubmit={handleCreateCollection} className="space-y-4">
             <div className="space-y-1.5">
               <Label>{t("vocabulary.collectionName")} *</Label>
               <Input
@@ -389,6 +541,7 @@ export default function VocabularyPage() {
                 onChange={(e) => setNewColName(e.target.value)}
                 placeholder={t("vocabulary.collectionNamePlaceholder")}
                 required
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
@@ -397,6 +550,7 @@ export default function VocabularyPage() {
                 value={newColDesc}
                 onChange={(e) => setNewColDesc(e.target.value)}
                 placeholder={t("vocabulary.descriptionPlaceholder")}
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
@@ -407,9 +561,9 @@ export default function VocabularyPage() {
                 maxDisplayed={3}
               />
             </div>
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-muted/40 border border-border/60">
               <div className="space-y-0.5">
-                <Label>{t("vocabulary.visibility")}</Label>
+                <Label className="font-semibold text-sm">{t("vocabulary.visibility")}</Label>
                 <div className="text-xs text-muted-foreground">
                   {newColIsPublic
                     ? t("vocabulary.publicDesc")
@@ -421,15 +575,20 @@ export default function VocabularyPage() {
                 onCheckedChange={setNewColIsPublic}
               />
             </div>
-            <DialogFooter>
+            <DialogFooter className="gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
+                className="rounded-xl font-semibold"
                 onClick={() => setNewColOpen(false)}
               >
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={createColMutation.isPending}>
+              <Button 
+                type="submit" 
+                disabled={createColMutation.isPending}
+                className="rounded-xl font-semibold shadow-xs"
+              >
                 {t("vocabulary.create")}
               </Button>
             </DialogFooter>
@@ -438,11 +597,11 @@ export default function VocabularyPage() {
       </Dialog>
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="max-w-sm max-h-[90dvh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("vocabulary.editCollection")}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleRenameCollection} className="space-y-3">
+          <form onSubmit={handleRenameCollection} className="space-y-4">
             <div className="space-y-1.5">
               <Label>{t("vocabulary.newName")} *</Label>
               <Input
@@ -450,6 +609,7 @@ export default function VocabularyPage() {
                 onChange={(e) => setRenameName(e.target.value)}
                 placeholder={t("vocabulary.collectionName")}
                 required
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
@@ -458,6 +618,7 @@ export default function VocabularyPage() {
                 value={renameDesc}
                 onChange={(e) => setRenameDesc(e.target.value)}
                 placeholder={t("vocabulary.descriptionPlaceholder")}
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
@@ -468,9 +629,9 @@ export default function VocabularyPage() {
                 maxDisplayed={3}
               />
             </div>
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-muted/40 border border-border/60">
               <div className="space-y-0.5">
-                <Label>{t("vocabulary.visibility")}</Label>
+                <Label className="font-semibold text-sm">{t("vocabulary.visibility")}</Label>
                 <div className="text-xs text-muted-foreground">
                   {renameIsPublic
                     ? t("vocabulary.publicDesc")
@@ -482,15 +643,20 @@ export default function VocabularyPage() {
                 onCheckedChange={setRenameIsPublic}
               />
             </div>
-            <DialogFooter>
+            <DialogFooter className="gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
+                className="rounded-xl font-semibold"
                 onClick={() => setRenameOpen(false)}
               >
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={updateColMutation.isPending}>
+              <Button 
+                type="submit" 
+                disabled={updateColMutation.isPending}
+                className="rounded-xl font-semibold shadow-xs"
+              >
                 {t("vocabulary.save")}
               </Button>
             </DialogFooter>

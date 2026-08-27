@@ -57,14 +57,14 @@ export function CommentItem({
     <>
       <div
         className="mt-4 flex gap-3"
-        style={{ marginLeft: Math.min(level * 16, 80) }}
+        style={{ marginLeft: Math.min(level * 20, 80) }}
       >
         <Link
           to={ROUTES.PROFILE.url.replace(
             ":username",
             comment.author.username,
           )}
-          className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted transition-opacity hover:opacity-80"
+          className="mt-0.5 h-9 w-9 shrink-0 overflow-hidden rounded-2xl bg-muted ring-2 ring-background border border-border/60 transition-opacity hover:opacity-80 shadow-xs"
           aria-label={t("chat.viewProfile").replace("{name}", comment.author.fullName)}
         >
           {comment.author.avatar ? (
@@ -80,10 +80,10 @@ export function CommentItem({
           )}
         </Link>
 
-        <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
+        <div className="flex-1 rounded-2xl bg-muted/30 border border-border/60 px-4 py-3 shadow-xs">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <span className="text-sm font-semibold">
+              <span className="text-sm font-bold text-foreground">
                 {comment.author.fullName}
               </span>
               <span className="ml-2 text-xs text-muted-foreground">{date}</span>
@@ -95,39 +95,39 @@ export function CommentItem({
             </div>
 
             {!comment.deletedAt && isOwner && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setEditSectionOpen(true)}
-                  className="text-muted-foreground transition-colors hover:text-green-500"
+                  className="p-1 rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
                   aria-label={t("blog.editComment")}
                 >
-                  <Pencil size={14} />
+                  <Pencil size={13} />
                 </button>
                 <button
                   type="button"
                   onClick={() => onDelete(comment.id)}
-                  className="text-muted-foreground transition-colors hover:text-destructive"
+                  className="p-1 rounded-lg text-muted-foreground transition-colors hover:text-destructive hover:bg-destructive/10"
                   aria-label={t("blog.deleteComment")}
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={13} />
                 </button>
               </div>
             )}
           </div>
 
           {comment.deletedAt ? (
-            <p className="mt-1 text-sm italic text-gray-400">
+            <p className="mt-1 text-sm italic text-muted-foreground">
               {t("blog.commentDeleted")}
             </p>
           ) : (
-            <p className="mt-1 text-sm">{comment.content}</p>
+            <p className="mt-1.5 text-sm text-foreground leading-relaxed">{comment.content}</p>
           )}
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             {!comment.deletedAt && (
               <>
-                <div className="flex items-center">
+                <div className="flex items-center rounded-xl border border-border/60 bg-muted/40 p-0.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -137,19 +137,19 @@ export function CommentItem({
                       }
                       onVote(comment.id, VoteType.UPVOTE);
                     }}
-                    className={`flex items-center rounded-l-md p-1.5 transition-colors ${
+                    className={`flex items-center rounded-lg p-1 transition-colors ${
                       isUpvoted
-                        ? "bg-green-50 text-green-600 dark:bg-green-950"
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold"
                         : "hover:bg-muted text-muted-foreground"
                     }`}
                     aria-label={t("blog.upvote")}
                   >
                     <ArrowBigUp
-                      size={16}
+                      size={15}
                       className={isUpvoted ? "fill-current" : ""}
                     />
                   </button>
-                  <span className="min-w-6 px-2 text-center text-xs font-semibold">
+                  <span className="min-w-5 px-1 text-center text-xs font-bold text-foreground">
                     {comment.voteScore ?? 0}
                   </span>
                   <button
@@ -161,15 +161,15 @@ export function CommentItem({
                       }
                       onVote(comment.id, VoteType.DOWNVOTE);
                     }}
-                    className={`flex items-center rounded-r-md p-1.5 transition-colors ${
+                    className={`flex items-center rounded-lg p-1 transition-colors ${
                       isDownvoted
-                        ? "bg-red-50 text-red-600 dark:bg-red-950"
+                        ? "bg-red-500/15 text-red-600 dark:text-red-400 font-bold"
                         : "hover:bg-muted text-muted-foreground"
                     }`}
                     aria-label={t("blog.downvote")}
                   >
                     <ArrowBigDown
-                      size={16}
+                      size={15}
                       className={isDownvoted ? "fill-current" : ""}
                     />
                   </button>
@@ -184,11 +184,12 @@ export function CommentItem({
                     }
                     setReplySectionOpen(true);
                   }}
-                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground font-medium border border-transparent hover:border-border/60"
                   aria-label={t("blog.reply")}
                   title={t("blog.reply")}
                 >
-                  <Reply size={16} />
+                  <Reply size={14} />
+                  <span>{t("blog.reply")}</span>
                 </button>
               </>
             )}
@@ -197,7 +198,7 @@ export function CommentItem({
               <button
                 type="button"
                 onClick={() => setShowReplies((current) => !current)}
-                className="hover:underline"
+                className="font-semibold text-primary hover:underline"
               >
                 {showReplies
                   ? t("blog.hideReplies")
@@ -207,7 +208,7 @@ export function CommentItem({
           </div>
 
           {showReplies && hasReplies && (
-            <div className="mt-2 border-l border-gray-200 pl-3">
+            <div className="mt-3 border-l-2 border-primary/20 pl-3">
               {comment.replies.map((child) => (
                 <CommentItem
                   key={child.id}

@@ -16,13 +16,13 @@ export default function PublicHeader({ toggleLeftSidebar }: PublicHeaderProps) {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm transition-colors">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md transition-colors border-b border-border/80 shadow-xs">
       <div className="h-16 md:h-20 px-3 md:px-6 flex items-center gap-2 md:gap-4">
-        <div className="flex items-center gap-1 md:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
           <button
             type="button"
             onClick={toggleLeftSidebar}
-            className="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+            className="inline-flex h-9.5 w-9.5 md:h-10 md:w-10 items-center justify-center rounded-xl hover:bg-muted/80 active:scale-95 transition-all text-foreground cursor-pointer"
             aria-label={t("common.toggleSidebar")}
           >
             <Menu className="h-5 w-5" />
@@ -44,26 +44,33 @@ export default function PublicHeader({ toggleLeftSidebar }: PublicHeaderProps) {
           <SearchBar />
         </div>
 
-        <div className="ml-auto flex items-center gap-1 md:gap-2 shrink-0">
+        <div className="ml-auto flex items-center gap-1.5 md:gap-2.5 shrink-0">
           <button
             type="button"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground"
+            className="inline-flex h-9.5 w-9.5 md:h-10 md:w-10 items-center justify-center rounded-xl hover:bg-muted/80 active:scale-95 transition-all text-foreground cursor-pointer"
             aria-label={t("common.toggleTheme")}
           >
             {theme === "dark" ? (
-              <Sun className="h-5 w-5 text-yellow-500" />
+              <Sun className="h-4.5 w-4.5 text-yellow-500" />
             ) : (
-              <Moon className="h-5 w-5 text-indigo-600" />
+              <Moon className="h-4.5 w-4.5 text-indigo-600" />
             )}
           </button>
 
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(ROUTES.LOGIN.url)}
+              className="hidden sm:inline-flex h-9.5 px-4 rounded-xl text-xs font-bold hover:bg-muted cursor-pointer"
+            >
+              {t("auth.signIn", "Đăng nhập")}
+            </Button>
             <Button
               onClick={() => navigate(ROUTES.LOGIN.url)}
-              className="font-medium rounded-full px-6"
+              className="h-9.5 px-4.5 rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
             >
-              {t("auth.getStarted", "Get started")}
+              {t("auth.getStarted", "Bắt đầu")}
             </Button>
           </div>
         </div>
