@@ -132,19 +132,53 @@ export default function PublicCollectionDetailPage() {
       .filter((item) => item.side === side)
       .sort((a, b) => a.order - b.order);
 
+    const totalLength = entries.reduce((sum, e) => sum + (e.value?.length || 0), 0);
+
+    const getDynamicFontSize = () => {
+      if (totalLength <= 20) {
+        return side === "front"
+          ? "text-3xl sm:text-4xl md:text-5xl font-bold leading-tight"
+          : "text-2xl sm:text-3xl md:text-4xl font-semibold text-muted-foreground leading-tight";
+      }
+      if (totalLength <= 60) {
+        return side === "front"
+          ? "text-2xl sm:text-3xl md:text-4xl font-semibold leading-snug"
+          : "text-xl sm:text-2xl md:text-3xl font-medium text-muted-foreground leading-snug";
+      }
+      if (totalLength <= 130) {
+        return side === "front"
+          ? "text-lg sm:text-xl md:text-2xl font-semibold leading-relaxed"
+          : "text-base sm:text-lg md:text-xl font-medium text-muted-foreground leading-relaxed";
+      }
+      return side === "front"
+        ? "text-base sm:text-lg md:text-xl font-medium leading-relaxed"
+        : "text-sm sm:text-base md:text-lg font-medium text-muted-foreground leading-relaxed";
+    };
+
+    const getSafeFontSize = (fontSize: number | null | undefined) => {
+      if (!fontSize) return undefined;
+      const base = Number(fontSize);
+      if (isNaN(base) || base <= 0) return undefined;
+      let scaled = base * 1.2;
+      if (totalLength > 150) scaled = Math.min(scaled, 18);
+      else if (totalLength > 80) scaled = Math.min(scaled, 22);
+      else if (totalLength > 40) scaled = Math.min(scaled, 28);
+      return `${Math.round(scaled)}px`;
+    };
+
+    const dynamicClass = className || getDynamicFontSize();
+
     return (
-      <div className={className}>
+      <div className={`w-full break-words ${dynamicClass}`}>
         {entries.map((entry, idx) => (
           <div
             key={idx}
-            className="whitespace-pre-line leading-snug"
+            className="whitespace-pre-line leading-snug my-1"
             style={
               useStyles
                 ? {
                     color: entry.color || "inherit",
-                    fontSize: entry.fontSize
-                      ? Number(entry.fontSize) * 1.5 + "px"
-                      : undefined,
+                    fontSize: getSafeFontSize(entry.fontSize),
                     fontWeight: entry.fontSize ? "500" : "inherit",
                   }
                 : {}
@@ -349,37 +383,47 @@ export default function PublicCollectionDetailPage() {
               <>
                 <div className="space-y-4">
                   <div
-                    className="relative h-64 perspective-[2000px] cursor-pointer group"
+                    className="relative w-full h-[380px] sm:h-[420px] perspective-[2000px] cursor-pointer group select-none"
                     onClick={() => setFlipped((f) => !f)}
                   >
                     <div
                       className={`relative w-full h-full duration-300 transform-3d transition-transform ${flipped ? "transform-[rotateY(180deg)]" : ""}`}
                     >
                       {/* Front Face */}
-                      <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden">
-                        <div className="text-center w-full max-w-4xl px-4">
-                          <CardFace
-                            card={cards[flashcardIdx]}
-                            side="front"
-                            className="text-4xl md:text-6xl font-semibold leading-tight"
-                          />
-                        </div>
-                        <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-muted text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                      <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card border border-border/80 shadow-xs flex flex-col overflow-hidden">
+                        <div className="absolute top-3.5 right-4 z-10 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] uppercase tracking-widest font-bold border border-primary/20 pointer-events-none select-none">
                           {t("vocabulary.frontFace")}
+                        </div>
+
+                        <div className="w-full h-full overflow-y-auto px-6 sm:px-10 pt-12 pb-12 flex flex-col items-center custom-scrollbar">
+                          <div className="my-auto text-center w-full max-w-2xl px-2">
+                            <CardFace
+                              card={cards[flashcardIdx]}
+                              side="front"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none">
+                          <div className="px-3 py-1 rounded-full bg-background/80 backdrop-blur-xs text-[11px] font-medium text-muted-foreground/80 border border-border/40 shadow-xs animate-pulse">
+                            {t("vocabulary.clickToFlip") || "Click card to flip"}
+                          </div>
                         </div>
                       </div>
 
                       {/* Back Face */}
-                      <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card shadow-sm flex items-center justify-center shadow-sm p-6 overflow-hidden border-primary/10">
-                        <div className="text-center w-full max-w-4xl px-4">
-                          <CardFace
-                            card={cards[flashcardIdx]}
-                            side="back"
-                            className="text-3xl md:text-5xl font-medium leading-tight text-muted-foreground"
-                          />
-                        </div>
-                        <div className="absolute top-3 right-4 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary uppercase tracking-widest font-bold">
+                      <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card border border-amber-500/30 shadow-xs flex flex-col overflow-hidden">
+                        <div className="absolute top-3.5 right-4 z-10 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] uppercase tracking-widest font-bold border border-amber-500/20 pointer-events-none select-none">
                           {t("vocabulary.backFace")}
+                        </div>
+
+                        <div className="w-full h-full overflow-y-auto px-6 sm:px-10 pt-12 pb-12 flex flex-col items-center custom-scrollbar">
+                          <div className="my-auto text-center w-full max-w-2xl px-2">
+                            <CardFace
+                              card={cards[flashcardIdx]}
+                              side="back"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>

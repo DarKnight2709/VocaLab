@@ -527,30 +527,39 @@ export default function VocabularyCollectionPage() {
           ) : (
             <div className={`${isFocusMode ? "max-w-none px-0 md:px-12" : "max-w-3xl"} w-full mx-auto space-y-6 pb-12`}>
               <div 
-                className={`relative w-full perspective-[2000px] cursor-pointer group ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px] stream-card"}`} 
+                className={`relative w-full perspective-[2000px] cursor-pointer group select-none ${isFocusMode ? "min-h-[65vh] h-[65vh]" : "min-h-[380px] h-[380px] sm:h-[420px] stream-card"}`} 
                 onClick={() => setFlipped((f) => !f)}
               >
-                <div className={`relative w-full h-full ${isFocusMode ? "min-h-[65vh]" : "min-h-[350px]"} transform-3d transition-transform ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
+                <div className={`relative w-full h-full transform-3d transition-transform duration-300 ${flipped ? 'transform-[rotateY(180deg)]' : ''}`}>
                   {/* Front Face */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card border border-border/80 shadow-xs flex items-center justify-center p-6 overflow-hidden">
-                    <div className="text-center w-full max-w-4xl px-4">
-                      <CardFace card={sessionCards[flashcardIdx]} side="front" className={`leading-tight font-semibold ${isFocusMode ? 'text-6xl md:text-8xl' : 'text-4xl md:text-6xl'}`} isFocusMode={isFocusMode} />
-                    </div>
-                    <div className="absolute bottom-4 text-xs font-medium text-muted-foreground/80 animate-pulse">
-                      {t("vocabulary.clickToFlip") || "Click card to flip"}
-                    </div>
-                    <div className="absolute top-3.5 right-4 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20 shadow-xs">
+                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-2xl bg-card border border-border/80 shadow-xs flex flex-col overflow-hidden">
+                    <div className="absolute top-3.5 right-4 z-10 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20 shadow-xs pointer-events-none select-none">
                       {t("vocabulary.frontFace")}
+                    </div>
+                    
+                    <div className="w-full h-full overflow-y-auto px-6 sm:px-10 pt-12 pb-12 flex flex-col items-center custom-scrollbar">
+                      <div className="my-auto text-center w-full max-w-2xl px-2">
+                        <CardFace card={sessionCards[flashcardIdx]} side="front" isFocusMode={isFocusMode} />
+                      </div>
+                    </div>
+
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none">
+                      <div className="px-3 py-1 rounded-full bg-background/80 backdrop-blur-xs text-[11px] font-medium text-muted-foreground/80 border border-border/40 shadow-xs animate-pulse">
+                        {t("vocabulary.clickToFlip") || "Click card to flip"}
+                      </div>
                     </div>
                   </div>
 
                   {/* Back Face */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card border border-amber-500/30 shadow-xs flex items-center justify-center p-6 overflow-hidden">
-                    <div className="text-center w-full max-w-4xl px-4">
-                      <CardFace card={sessionCards[flashcardIdx]} side="back" className={`leading-tight font-medium text-muted-foreground ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`} isFocusMode={isFocusMode} />
-                    </div>
-                    <div className="absolute top-3.5 right-4 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wider border border-amber-500/20 shadow-xs">
+                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] rounded-2xl bg-card border border-amber-500/30 shadow-xs flex flex-col overflow-hidden">
+                    <div className="absolute top-3.5 right-4 z-10 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wider border border-amber-500/20 shadow-xs pointer-events-none select-none">
                       {t("vocabulary.backFace")}
+                    </div>
+                    
+                    <div className="w-full h-full overflow-y-auto px-6 sm:px-10 pt-12 pb-12 flex flex-col items-center custom-scrollbar">
+                      <div className="my-auto text-center w-full max-w-2xl px-2">
+                        <CardFace card={sessionCards[flashcardIdx]} side="back" isFocusMode={isFocusMode} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -645,6 +654,72 @@ export default function VocabularyCollectionPage() {
   );
 }
 
+function getCardDynamicFontSize(
+  totalLength: number,
+  side: "front" | "back",
+  isFocusMode = false
+): string {
+  if (totalLength <= 20) {
+    if (side === "front") {
+      return isFocusMode
+        ? "text-4xl sm:text-5xl md:text-6xl font-bold leading-tight"
+        : "text-3xl sm:text-4xl md:text-5xl font-bold leading-tight";
+    }
+    return isFocusMode
+      ? "text-3xl sm:text-4xl md:text-5xl font-semibold text-muted-foreground leading-tight"
+      : "text-2xl sm:text-3xl md:text-4xl font-semibold text-muted-foreground leading-tight";
+  }
+  if (totalLength <= 60) {
+    if (side === "front") {
+      return isFocusMode
+        ? "text-3xl sm:text-4xl md:text-5xl font-semibold leading-snug"
+        : "text-2xl sm:text-3xl md:text-4xl font-semibold leading-snug";
+    }
+    return isFocusMode
+      ? "text-2xl sm:text-3xl md:text-4xl font-medium text-muted-foreground leading-snug"
+      : "text-xl sm:text-2xl md:text-3xl font-medium text-muted-foreground leading-snug";
+  }
+  if (totalLength <= 130) {
+    if (side === "front") {
+      return isFocusMode
+        ? "text-2xl sm:text-3xl md:text-4xl font-semibold leading-relaxed"
+        : "text-lg sm:text-xl md:text-2xl font-semibold leading-relaxed";
+    }
+    return isFocusMode
+      ? "text-xl sm:text-2xl md:text-3xl font-medium text-muted-foreground leading-relaxed"
+      : "text-base sm:text-lg md:text-xl font-medium text-muted-foreground leading-relaxed";
+  }
+  // Very long text (> 130 characters)
+  if (side === "front") {
+    return isFocusMode
+      ? "text-lg sm:text-xl md:text-2xl font-medium leading-relaxed"
+      : "text-base sm:text-lg md:text-xl font-medium leading-relaxed";
+  }
+  return isFocusMode
+    ? "text-base sm:text-lg md:text-xl font-medium text-muted-foreground leading-relaxed"
+    : "text-sm sm:text-base md:text-lg font-medium text-muted-foreground leading-relaxed";
+}
+
+function getSafeFieldFontSize(
+  fontSize: number | null | undefined,
+  totalLength: number,
+  isFocusMode: boolean
+): string | undefined {
+  if (!fontSize) return undefined;
+  const base = Number(fontSize);
+  if (isNaN(base) || base <= 0) return undefined;
+
+  let scaled = isFocusMode ? base * 1.5 : base * 1.2;
+  if (totalLength > 150) {
+    scaled = Math.min(scaled, isFocusMode ? 22 : 18);
+  } else if (totalLength > 80) {
+    scaled = Math.min(scaled, isFocusMode ? 28 : 22);
+  } else if (totalLength > 40) {
+    scaled = Math.min(scaled, isFocusMode ? 36 : 28);
+  }
+  return `${Math.round(scaled)}px`;
+}
+
 function CardFace({
   card,
   side,
@@ -678,21 +753,20 @@ function CardFace({
     .filter((item) => item.side === side)
     .sort((a, b) => a.order - b.order);
 
+  const totalLength = entries.reduce((sum, e) => sum + (e.value?.length || 0), 0);
+  const dynamicClass = className || getCardDynamicFontSize(totalLength, side, isFocusMode);
+
   return (
-    <div className={className}>
+    <div className={`w-full break-words ${dynamicClass}`}>
       {entries.map((entry, idx) => (
         <div
           key={idx}
-          className="whitespace-pre-line leading-snug"
+          className="whitespace-pre-line leading-snug my-1"
           style={
             useStyles
               ? {
                   color: entry.color || "inherit",
-                  fontSize: entry.fontSize
-                    ? isFocusMode
-                      ? Number(entry.fontSize) * 2 + "px"
-                      : Number(entry.fontSize) * 1.5 + "px"
-                    : undefined,
+                  fontSize: getSafeFieldFontSize(entry.fontSize, totalLength, isFocusMode),
                   fontWeight: entry.fontSize ? "500" : "inherit",
                 }
               : {}

@@ -107,11 +107,28 @@ export default function PracticeCard({
 
               {isShow && (
                 <div
-                  className={`whitespace-pre-line leading-snug font-semibold ${isFocusMode ? 'text-5xl md:text-7xl' : 'text-3xl md:text-5xl'}`}
+                  className={`whitespace-pre-line break-words leading-snug font-semibold ${
+                    (correctValue?.length || 0) <= 25
+                      ? (isFocusMode ? 'text-4xl md:text-6xl' : 'text-2xl md:text-4xl')
+                      : (correctValue?.length || 0) <= 75
+                      ? (isFocusMode ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl')
+                      : (correctValue?.length || 0) <= 150
+                      ? (isFocusMode ? 'text-2xl md:text-3xl' : 'text-lg md:text-xl')
+                      : (isFocusMode ? 'text-xl md:text-2xl' : 'text-base md:text-lg')
+                  }`}
                   style={{
                     color: field.color || "inherit",
                     fontSize: field.fontSize 
-                      ? (isFocusMode ? (Number(field.fontSize) * 2) + "px" : `${Number(field.fontSize) * 1.5}px`) 
+                      ? (() => {
+                          const base = Number(field.fontSize);
+                          if (isNaN(base) || base <= 0) return undefined;
+                          const len = correctValue?.length || 0;
+                          let scaled = isFocusMode ? base * 1.5 : base * 1.2;
+                          if (len > 150) scaled = Math.min(scaled, isFocusMode ? 22 : 18);
+                          else if (len > 80) scaled = Math.min(scaled, isFocusMode ? 28 : 22);
+                          else if (len > 40) scaled = Math.min(scaled, isFocusMode ? 36 : 28);
+                          return `${Math.round(scaled)}px`;
+                        })()
                       : undefined,
                   }}
                 >
