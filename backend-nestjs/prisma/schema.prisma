@@ -139,7 +139,6 @@ model Follow {
   following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
-  @@index([followerId])
   @@index([followingId])
   @@map("follows")
 }
@@ -153,7 +152,6 @@ model Block {
   blockedUser  User @relation("UserBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
 
   @@id([blockingId, blockedId])
-  @@index([blockingId])
   @@index([blockedId])
   @@map("blocks")
 }
@@ -187,6 +185,8 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([familyId])
   @@index([expiresAt])
   @@map("refresh_tokens")
 }
@@ -216,11 +216,9 @@ model Message {
 
   seenBy MessageSeen[]
 
-  @@index([senderId])
-  @@index([receiverId])
-  @@index([groupId])
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, senderId, createdAt])
   @@index([replyTo])
-  @@index([createdAt])
   @@index([groupId, createdAt])
   @@index([receiverId, createdAt])
   @@map("messages")
@@ -275,7 +273,6 @@ model GroupMember {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, userId])
-  @@index([groupId])
   @@index([userId])
   @@map("group_members")
 }
@@ -302,7 +299,6 @@ model GroupRolePermission {
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, role, permissionId])
-  @@index([groupId])
   @@index([permissionId])
   @@map("group_role_permissions")
 }
@@ -348,7 +344,7 @@ model Comment {
   parentComment Comment?      @relation("CommentReplies", fields: [parentCommentId], references: [id])
   votes         CommentVote[]
 
-  @@index([blogId])
+  @@index([blogId, createdAt])
   @@index([authorId])
   @@index([parentCommentId])
   @@map("comments")
@@ -364,6 +360,7 @@ model BlogVote {
   blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
 
   @@id([userId, blogId])
+  @@index([blogId])
   @@map("blog_votes")
 }
 
@@ -377,6 +374,7 @@ model CommentVote {
   comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@id([userId, commentId])
+  @@index([commentId])
   @@map("comment_votes")
 }
 
@@ -397,6 +395,7 @@ model GrammarStructure {
 
   author User? @relation("GrammarAuthor", fields: [authorId], references: [id], onDelete: Cascade)
 
+  @@index([authorId])
   @@index([category])
   @@index([level])
   @@map("grammar_structures")
@@ -423,6 +422,7 @@ model CardCollection {
   forks         CardCollection[]          @relation("CollectionLineage")
 
   @@index([userId])
+  @@index([originId])
   @@map("card_collections")
 }
 
@@ -439,7 +439,6 @@ model CardType {
   cards  Card[]
 
   @@unique([userId, name])
-  @@index([userId])
   @@map("card_type")
 }
 
@@ -461,10 +460,7 @@ model CardField {
   values   CardFieldValue[]
 
   @@unique([cardTypeId, key])
-  @@index([cardTypeId])
-  @@index([cardTypeId, order])
   @@index([cardTypeId, side, order])
-  @@index([deletedAt])
   @@map("card_field")
 }
 
@@ -491,6 +487,7 @@ model Card {
   @@index([cardTypeId])
   @@index([cardCollectionId, createdAt])
   @@index([cardCollectionId, position])
+  @@index([cardCollectionId, nextReviewDate])
   @@map("card")
 }
 
@@ -509,9 +506,7 @@ model CardFieldValue {
   field CardField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   @@unique([cardId, fieldId])
-  @@index([cardId])
   @@index([fieldId])
-  @@index([cardId, fieldId])
   @@map("card_field_value")
 }
 
@@ -557,7 +552,6 @@ model LearningSetting {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
   @@map("learning_settings")
 }
 
@@ -577,7 +571,6 @@ model DailyProgress {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
-  @@index([userId])
   @@index([date])
   @@map("daily_progress")
 }
@@ -599,7 +592,6 @@ model CollectionDailyProgress {
   user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([collectionId, date])
-  @@index([collectionId])
   @@index([userId])
   @@index([date])
   @@map("collection_daily_progress")
@@ -622,9 +614,9 @@ model Notification {
   group     Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
   sender    User?  @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
 
-  @@index([recipientId])
+  @@index([groupId])
   @@index([recipientId, isRead])
-  @@index([createdAt(sort: Desc)])
+  @@index([recipientId, createdAt(sort: Desc)])
   @@map("notifications")
 }
 
@@ -666,8 +658,7 @@ model Reminder {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@index([isEnabled])
+  @@index([userId, isEnabled])
   @@map("reminders")
 }
 
@@ -705,5 +696,6 @@ model Video {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("videos")
 }
