@@ -24,6 +24,8 @@ interface FieldConfig {
   value: string;
 }
 
+const RECENT_CARD_TYPE_KEY = "recent_card_type_id";
+
 export default function VocabularyAddCardPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -33,7 +35,9 @@ export default function VocabularyAddCardPage() {
   const { data: colData, isLoading: isColLoading } = useCollectionDetailQuery(collectionId || null);
   const createCardMutation = useCreateCardMutation(collectionId || "");
 
-  const [selectedTypeId, setSelectedTypeId] = useState("");
+  const [selectedTypeId, setSelectedTypeId] = useState<string>(() => {
+    return localStorage.getItem(RECENT_CARD_TYPE_KEY) || "";
+  });
   const [fieldConfigs, setFieldConfigs] = useState<Record<string, FieldConfig>>(
     {},
   );
@@ -46,10 +50,22 @@ export default function VocabularyAddCardPage() {
   );
 
   useEffect(() => {
-    if (!selectedTypeId && cardTypes.length > 0) {
-      setSelectedTypeId(cardTypes[0].id);
+    if (cardTypes.length === 0) return;
+
+    const currentIsValid = cardTypes.some((type) => type.id === selectedTypeId);
+    if (!selectedTypeId || !currentIsValid) {
+      const savedTypeId = localStorage.getItem(RECENT_CARD_TYPE_KEY);
+      const savedIsValid = cardTypes.some((type) => type.id === savedTypeId);
+      const targetId = savedIsValid && savedTypeId ? savedTypeId : cardTypes[0].id;
+      setSelectedTypeId(targetId);
+      localStorage.setItem(RECENT_CARD_TYPE_KEY, targetId);
     }
   }, [cardTypes, selectedTypeId]);
+
+  const handleCardTypeChange = (typeId: string) => {
+    setSelectedTypeId(typeId);
+    localStorage.setItem(RECENT_CARD_TYPE_KEY, typeId);
+  };
 
   useEffect(() => {
     if (!selectedType) {
@@ -108,13 +124,22 @@ export default function VocabularyAddCardPage() {
       }))
       .filter((item) => item.value.length > 0);
 
-    await createCardMutation.mutateAsync({
-      cardTypeId: selectedType.id,
-      cardCollectionId: collectionId,
-      values,
-    });
+    try {
+      await createCardMutation.mutateAsync({
+        cardTypeId: selectedType.id,
+        cardCollectionId: collectionId,
+        values,
+      });
 
-    navigate(`/vocabulary/${collectionId}`);
+      // Clear the input fields so user can immediately add another card
+      const clearedConfig: Record<string, FieldConfig> = {};
+      selectedType.fields.forEach((field) => {
+        clearedConfig[field.id] = { value: "" };
+      });
+      setFieldConfigs(clearedConfig);
+    } catch {
+      // Error is handled by mutation onError
+    }
   }
 
   return (
@@ -153,7 +178,7 @@ export default function VocabularyAddCardPage() {
               </div>
               <Select
                 value={selectedTypeId}
-                onValueChange={setSelectedTypeId}
+                onValueChange={handleCardTypeChange}
               >
                 <SelectTrigger>
                   <SelectValue

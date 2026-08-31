@@ -43,6 +43,8 @@ interface ImportVocabularyDialogProps {
   defaultCollectionId?: string;
 }
 
+const RECENT_CARD_TYPE_KEY = "recent_card_type_id";
+
 export default function ImportVocabularyDialog({
   open,
   onOpenChange,
@@ -66,7 +68,9 @@ export default function ImportVocabularyDialog({
       default: return ",";
     }
   }, [delimiterType, customDelimiter]);
-  const [cardTypeId, setCardTypeId] = useState("");
+  const [cardTypeId, setCardTypeId] = useState<string>(() => {
+    return localStorage.getItem(RECENT_CARD_TYPE_KEY) || "";
+  });
   const [collectionId, setCollectionId] = useState(defaultCollectionId || "");
   const [duplicatePolicy, setDuplicatePolicy] = useState<DuplicatePolicy>(DuplicatePolicy.SKIP);
   const [importResult, setImportResult] = useState<{
@@ -82,10 +86,17 @@ export default function ImportVocabularyDialog({
   const { data: collectionsData } = useCollectionsQuery(open);
   const importMutation = useImportVocabularyMutation();
 
-  // Set default card type if not set yet
+  // Set default card type if not set yet or invalid
   useEffect(() => {
-    if (!cardTypeId && cardTypesData?.cardTypes?.length) {
-      setCardTypeId(cardTypesData.cardTypes[0].id);
+    if (cardTypesData?.cardTypes?.length) {
+      const currentIsValid = cardTypesData.cardTypes.some((type) => type.id === cardTypeId);
+      if (!cardTypeId || !currentIsValid) {
+        const savedTypeId = localStorage.getItem(RECENT_CARD_TYPE_KEY);
+        const savedIsValid = cardTypesData.cardTypes.some((type) => type.id === savedTypeId);
+        const targetId = savedIsValid && savedTypeId ? savedTypeId : cardTypesData.cardTypes[0].id;
+        setCardTypeId(targetId);
+        localStorage.setItem(RECENT_CARD_TYPE_KEY, targetId);
+      }
     }
   }, [cardTypesData, cardTypeId]);
 
@@ -357,7 +368,13 @@ export default function ImportVocabularyDialog({
 
             <div className="space-y-2">
               <Label>{t("vocabulary.import.cardType")}</Label>
-              <Select value={cardTypeId} onValueChange={setCardTypeId}>
+              <Select
+                value={cardTypeId}
+                onValueChange={(val) => {
+                  setCardTypeId(val);
+                  localStorage.setItem(RECENT_CARD_TYPE_KEY, val);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={t("vocabulary.import.selectCardType")} />
                 </SelectTrigger>
