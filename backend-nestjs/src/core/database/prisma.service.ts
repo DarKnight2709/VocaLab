@@ -14,7 +14,22 @@ export class PrismaService extends PrismaClient {
     // 3. Pass the adapter to the parent PrismaClient
     super({
       adapter,
-      log: ['info', 'error', 'warn'],
+      log: [
+        { emit: 'event', level: 'query' },
+        { emit: 'stdout', level: 'info' },
+        { emit: 'stdout', level: 'warn' },
+        { emit: 'stdout', level: 'error' },
+      ],
+    });
+
+    // 4. Log any query that exceeds 100ms on the base PrismaClient
+    (this as any).$on('query', (e: any) => {
+      if (e.duration >= 100) {
+        Logger.warn(
+          `⚠️ SLOW QUERY (${e.duration}ms): ${e.query} -- params: ${e.params}`,
+          'PrismaService',
+        );
+      }
     });
 
     let extendedClient: any;
