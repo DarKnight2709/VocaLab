@@ -7,7 +7,10 @@ import { SettingKey } from '@/common/enums/setting-key.enum';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EmailJobNames } from '@/common/enums/email-job-names.enum';
-import { NotificationDto, NotificationResponseDto } from '../dto/notifications-response.dto';
+import {
+  NotificationDto,
+  NotificationResponseDto,
+} from '../dto/notifications-response.dto';
 import { GroupChatService } from '@/modules/group-chat/group-chat.service';
 import { NotificationsGateway } from '../notifications.gateway';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
@@ -121,6 +124,151 @@ export class NotificationsService {
       });
     } else if (channel === NotificationChannel.EMAIL && recipient.email) {
       await this.handleEmailNotification(recipient.email, params);
+    }
+  }
+
+  async notifyBulkActivity(params: {
+    recipientIds: string[];
+    senderId: string;
+    type: NotificationType;
+    content: string;
+    metadata?: any;
+    settingKey: SettingKey;
+  }) {
+    const { recipientIds, senderId, type, content, metadata, settingKey } =
+      params;
+    const targetRecipientIds = recipientIds.filter((id) => id !== senderId);
+    if (!targetRecipientIds.length) return;
+
+    // 1. Fetch settings for all recipients in 1 single query
+    const recipients = await this.prisma.user.findMany({
+      where: { id: { in: targetRecipientIds } },
+      select: {
+        id: true,
+        email: true,
+        notificationSettings: true,
+      },
+    });
+
+    const inboxRecipientIds: string[] = [];
+    const emailRecipients: Array<{ email: string; id: string }> = [];
+
+    for (const recipient of recipients) {
+      const channel =
+        recipient.notificationSettings?.[settingKey] ??
+        NotificationChannel.INBOX;
+
+      if (channel === NotificationChannel.OFF) continue;
+
+      if (channel === NotificationChannel.INBOX) {
+        inboxRecipientIds.push(recipient.id);
+      } else if (channel === NotificationChannel.EMAIL && recipient.email) {
+        emailRecipients.push({ email: recipient.email, id: recipient.id });
+      }
+    }
+
+    // 2. Batch insert inbox notifications in 1 single query
+    if (inboxRecipientIds.length > 0) {
+      const notifications = await this.prisma.notification.createManyAndReturn({
+        data: inboxRecipientIds.map((recipientId) => ({
+          recipientId,
+          senderId,
+          type,
+          content,
+          metadata,
+        })),
+        select: {
+          id: true,
+          recipientId: true,
+          groupId: true,
+          senderId: true,
+          type: true,
+          content: true,
+          metadata: true,
+          isRead: true,
+          createdAt: true,
+          sender: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+            },
+          },
+          recipient: {
+            select: {
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Emit complete NotificationDto via WebSocket (matching createNotification shape)
+      for (const notif of notifications) {
+        if (notif.recipientId) {
+          const notificationDto = {
+            id: notif.id,
+            recipientId: notif.recipientId,
+            groupId: null,
+            groupName: null,
+            senderId: notif.senderId,
+            type: notif.type,
+            content: notif.content,
+            metadata: notif.metadata,
+            isRead: notif.isRead,
+            createdAt: notif.createdAt,
+            sender: notif.sender,
+            recipient: notif.recipient,
+          };
+
+          this.notificationsGateway.sendNotificationToUser(
+            notif.recipientId,
+            notificationDto as any,
+          );
+        }
+      }
+    }
+
+    // 3. Batch enqueue emails in 1 Redis operation (only queries sender if emails exist)
+    if (emailRecipients.length > 0) {
+      const [sender, blogContext] = await Promise.all([
+        this.prisma.user.findUnique({
+          where: { id: senderId },
+          select: { fullName: true, username: true },
+        }),
+        (type === NotificationType.COMMENT ||
+          type === NotificationType.UPVOTE ||
+          type === NotificationType.NEW_BLOG_POST) &&
+        metadata?.blogId
+          ? this.prisma.blog.findUnique({
+              where: { id: metadata.blogId },
+              select: { title: true },
+            })
+          : null,
+      ]);
+
+      const senderName = sender?.fullName || sender?.username;
+      const { activityType, jobName } = this.getEmailDetails(type, metadata);
+
+      await this.emailQueue.addBulk(
+        emailRecipients.map((rec) => ({
+          name: jobName,
+          data: {
+            recipientEmail: rec.email,
+            senderName,
+            senderUsername: sender?.username,
+            activityType,
+            content,
+            postTitle: blogContext?.title,
+            blogId: metadata?.blogId,
+          },
+          opts: {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 1000 },
+            removeOnComplete: true,
+          },
+        })),
+      );
     }
   }
 
@@ -323,9 +471,7 @@ export class NotificationsService {
     if (type === NotificationType.UPVOTE) {
       const isCommentVote = !!metadata?.commentId;
       return {
-        activityType: isCommentVote
-          ? 'liked your comment'
-          : 'liked your post',
+        activityType: isCommentVote ? 'liked your comment' : 'liked your post',
         jobName: isCommentVote
           ? EmailJobNames.UPVOTE_ON_COMMENT_EMAIL
           : EmailJobNames.UPVOTE_ON_POST_EMAIL,

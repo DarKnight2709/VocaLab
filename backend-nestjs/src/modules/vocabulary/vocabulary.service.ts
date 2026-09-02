@@ -10,6 +10,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { getLocalDateStr } from '@/common/utils/convertTime';
+import { randomUUID } from 'crypto';
 
 import { PrismaService } from '../../core/database/prisma.service';
 import {
@@ -584,8 +585,19 @@ export class VocabularyService {
           cardFieldsByTypeId.get(field.cardTypeId)!.push(field);
         }
 
-        const creationPromises: any[] = [];
         const updatePromises: any[] = [];
+        const newCardsToCreate: Array<{
+          id: string;
+          cardTypeId: string;
+          cardCollectionId: string;
+          position?: number | null;
+          values: Array<{ fieldId: string; value: string }>;
+        }> = [];
+        const newFieldValuesToCreate: Array<{
+          cardId: string;
+          fieldId: string;
+          value: string;
+        }> = [];
 
         const cardsWithOrigType = originalCollection.cards.filter(
           (c) => c.cardTypeId === origType.id,
@@ -643,15 +655,11 @@ export class VocabularyService {
                     const origValue = origCard.values.find(
                       (v) => v.field.key === cardField.key,
                     );
-                    creationPromises.push(
-                      tx.cardFieldValue.create({
-                        data: {
-                          cardId: existingCard.id,
-                          fieldId: cardField.id,
-                          value: origValue?.value || '',
-                        },
-                      }),
-                    );
+                    newFieldValuesToCreate.push({
+                      cardId: existingCard.id,
+                      fieldId: cardField.id,
+                      value: origValue?.value || '',
+                    });
                     updated++;
                   }
                 }
@@ -689,15 +697,11 @@ export class VocabularyService {
                     const origValue = origCard.values.find(
                       (v) => v.field.key === cardField.key,
                     );
-                    creationPromises.push(
-                      tx.cardFieldValue.create({
-                        data: {
-                          cardId: existingCard.id,
-                          fieldId: cardField.id,
-                          value: origValue?.value || '',
-                        },
-                      }),
-                    );
+                    newFieldValuesToCreate.push({
+                      cardId: existingCard.id,
+                      fieldId: cardField.id,
+                      value: origValue?.value || '',
+                    });
                     updated++;
                   }
                 }
@@ -713,30 +717,72 @@ export class VocabularyService {
             const targetTypeId = typeIdMap.get(origCard.cardTypeId)!;
             const cardFields = cardFieldsByTypeId.get(targetTypeId) || [];
 
-            creationPromises.push(
-              tx.card.create({
-                data: {
-                  cardTypeId: targetTypeId,
-                  cardCollectionId: newCollection.id,
-                  position: origCard.position,
-                  values: {
-                    create: cardFields.map((cardField) => {
-                      const fieldValue = origCard.values.find(
-                        (v) => cardField.key === v.field.key,
-                      );
-                      return {
-                        fieldId: cardField.id,
-                        value: fieldValue?.value || '',
-                      };
-                    }),
-                  },
-                },
+            newCardsToCreate.push({
+              id: randomUUID(),
+              cardTypeId: targetTypeId,
+              cardCollectionId: newCollection.id,
+              position: origCard.position,
+              values: cardFields.map((cardField) => {
+                const fieldValue = origCard.values.find(
+                  (v) => cardField.key === v.field.key,
+                );
+                return {
+                  fieldId: cardField.id,
+                  value: fieldValue?.value || '',
+                };
               }),
-            );
+            });
             createdCards.push(cardFullText || `card-${origCard.position}`);
           }
         }
-        await Promise.all([...creationPromises, ...updatePromises]);
+
+        // Batch insert new cards and their field values
+        if (newCardsToCreate.length > 0) {
+          const BATCH_SIZE = 1000;
+          for (let i = 0; i < newCardsToCreate.length; i += BATCH_SIZE) {
+            await tx.card.createMany({
+              data: newCardsToCreate.slice(i, i + BATCH_SIZE).map((c) => ({
+                id: c.id,
+                cardTypeId: c.cardTypeId,
+                cardCollectionId: c.cardCollectionId,
+                position: c.position,
+              })),
+            });
+          }
+
+          const allCardValues = newCardsToCreate.flatMap((c) =>
+            c.values.map((v) => ({
+              cardId: c.id,
+              fieldId: v.fieldId,
+              value: v.value,
+            })),
+          );
+
+          const VALUE_BATCH_SIZE = 2500;
+          for (let i = 0; i < allCardValues.length; i += VALUE_BATCH_SIZE) {
+            await tx.cardFieldValue.createMany({
+              data: allCardValues.slice(i, i + VALUE_BATCH_SIZE),
+            });
+          }
+        }
+
+        // Batch insert new field values on merged existing cards
+        if (newFieldValuesToCreate.length > 0) {
+          const VALUE_BATCH_SIZE = 2500;
+          for (let i = 0; i < newFieldValuesToCreate.length; i += VALUE_BATCH_SIZE) {
+            await tx.cardFieldValue.createMany({
+              data: newFieldValuesToCreate.slice(i, i + VALUE_BATCH_SIZE),
+            });
+          }
+        }
+
+        // Chunk update promises to avoid socket/pool flooding
+        if (updatePromises.length > 0) {
+          const CHUNK_SIZE = 50;
+          for (let i = 0; i < updatePromises.length; i += CHUNK_SIZE) {
+            await Promise.all(updatePromises.slice(i, i + CHUNK_SIZE));
+          }
+        }
       }
       return {
         id: newCollection.id,
@@ -1141,117 +1187,215 @@ export class VocabularyService {
     const rows = this.parseRawTextWithDelimiter(dto.rawText, dto.delimiter);
 
     // transaction
-    const result = await this.prisma.$transaction(async (tx) => {
-      let skipped = 0;
-      let imported = 0;
-      let updated = 0;
-      let errors = 0;
-      const importedCards: string[] = [];
-      const skippedCards: string[] = [];
-      const updatedCards: string[] = [];
-      const errorLines: string[] = [];
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        let skipped = 0;
+        let imported = 0;
+        let updated = 0;
+        let errors = 0;
+        const importedCards: string[] = [];
+        const skippedCards: string[] = [];
+        const updatedCards: string[] = [];
+        const errorLines: string[] = [];
 
-      const cardFields = await tx.cardField.findMany({
-        where: { cardTypeId: dto.cardTypeId },
-        orderBy: { order: 'asc' },
-      });
+        const cardFields = await tx.cardField.findMany({
+          where: { cardTypeId: dto.cardTypeId },
+          orderBy: { order: 'asc' },
+        });
 
-      if (cardFields.length === 0) {
-        throw new BadRequestException(ErrorCode.CARD_TYPE_FIELDS_UNDEFINED);
-      }
+        if (cardFields.length === 0) {
+          throw new BadRequestException(ErrorCode.CARD_TYPE_FIELDS_UNDEFINED);
+        }
 
-      for (const row of rows) {
-        try {
-          // Bỏ qua nếu dòng trống hoặc không có thông tin nhận dạng
-          if (row.length === 0 || !row[0]?.trim()) {
-            skipped++;
-            continue;
-          }
+        // 1. Pre-fetch all existing duplicate candidates in 1 single query
+        const primaryFieldId = cardFields[0].id;
+        const firstValues = Array.from(
+          new Set(
+            rows
+              .filter((row) => row.length > 0 && row[0]?.trim())
+              .map((row) => row[0].trim()),
+          ),
+        );
 
-          // Kiểm tra trùng lặp (dựa trên trường đầu tiên)
+        const existingCardMap = new Map<string, string[]>();
+        if (
+          firstValues.length > 0 &&
+          dto.duplicatePolicy !== DuplicatePolicy.DUPLICATE
+        ) {
           const existingCards = await tx.card.findMany({
             where: {
               cardCollectionId: collectionId,
               cardTypeId: dto.cardTypeId,
               values: {
                 some: {
-                  fieldId: cardFields[0].id,
-                  value: row[0].trim(),
+                  fieldId: primaryFieldId,
+                  value: { in: firstValues },
                 },
               },
             },
-            select: { id: true },
+            select: {
+              id: true,
+              values: {
+                where: { fieldId: primaryFieldId },
+                select: { value: true },
+              },
+            },
           });
 
-          // Xử lý SKIP
-          if (
-            existingCards.length > 0 &&
-            dto.duplicatePolicy === DuplicatePolicy.SKIP
-          ) {
-            skipped++;
-            skippedCards.push(row.join(dto.delimiter));
-            continue;
-          }
-
-          const cleanedValues = cardFields.map((field, index) => ({
-            fieldId: field.id,
-            value: row[index] || '', // Tránh lỗi undefined nếu dòng thiếu cột
-          }));
-
-          // Xử lý UPDATE
-          if (
-            existingCards.length > 0 &&
-            dto.duplicatePolicy === DuplicatePolicy.UPDATE
-          ) {
-            for (const match of existingCards) {
-              // Cập nhật song song các trường của một Thẻ
-              await Promise.all(
-                cleanedValues.map((val) =>
-                  tx.cardFieldValue.update({
-                    where: {
-                      cardId_fieldId: {
-                        cardId: match.id,
-                        fieldId: val.fieldId,
-                      },
-                    },
-                    data: { value: val.value },
-                  }),
-                ),
-              );
+          for (const card of existingCards) {
+            for (const val of card.values) {
+              const ids = existingCardMap.get(val.value) || [];
+              ids.push(card.id);
+              existingCardMap.set(val.value, ids);
             }
-            updated++;
-            updatedCards.push(row.join(dto.delimiter));
-          } else {
-            // Tạo mới (cho cả NEW và DUPLICATE)
-            await tx.card.create({
-              data: {
-                cardCollectionId: collectionId,
-                cardTypeId: dto.cardTypeId,
-                values: {
-                  create: cleanedValues,
-                },
-              },
-            });
-            imported++;
-            importedCards.push(row.join(dto.delimiter));
           }
-        } catch (e) {
-          this.logger.error(`Import line error: ${e instanceof Error ? e.message : e}`);
-          errors++;
-          errorLines.push(row.join(dto.delimiter));
         }
-      }
 
-      return {
-        imported: { count: imported, cards: importedCards },
-        skipped: { count: skipped, cards: skippedCards },
-        updated: { count: updated, cards: updatedCards },
-        errors: { count: errors, lines: errorLines },
-      };
-    }, {
-      maxWait: 50000, // Max time the transaction will wait to acquire a lock
-      timeout: 100000 // Total time allowed for transaction execution (10 seconds)
-    });
+        // 2. Classify rows in-memory
+        const rowsToCreate: Array<{
+          row: string[];
+          cleanedValues: Array<{ fieldId: string; value: string }>;
+        }> = [];
+        const updatesToPerform: Array<{
+          cardId: string;
+          fieldId: string;
+          value: string;
+        }> = [];
+        const inBatchSeenValues = new Set<string>();
+
+        for (const row of rows) {
+          try {
+            if (row.length === 0 || !row[0]?.trim()) {
+              skipped++;
+              continue;
+            }
+
+            const firstVal = row[0].trim();
+            const existingMatches = existingCardMap.get(firstVal) || [];
+            const isDuplicate =
+              existingMatches.length > 0 ||
+              (dto.duplicatePolicy === DuplicatePolicy.SKIP &&
+                inBatchSeenValues.has(firstVal));
+
+            if (isDuplicate && dto.duplicatePolicy === DuplicatePolicy.SKIP) {
+              skipped++;
+              skippedCards.push(row.join(dto.delimiter));
+              continue;
+            }
+
+            const cleanedValues = cardFields.map((field, index) => ({
+              fieldId: field.id,
+              value: row[index] || '',
+            }));
+
+            if (
+              existingMatches.length > 0 &&
+              dto.duplicatePolicy === DuplicatePolicy.UPDATE
+            ) {
+              for (const matchId of existingMatches) {
+                for (const val of cleanedValues) {
+                  updatesToPerform.push({
+                    cardId: matchId,
+                    fieldId: val.fieldId,
+                    value: val.value,
+                  });
+                }
+              }
+              updated++;
+              updatedCards.push(row.join(dto.delimiter));
+            } else {
+              rowsToCreate.push({ row, cleanedValues });
+              imported++;
+              importedCards.push(row.join(dto.delimiter));
+              inBatchSeenValues.add(firstVal);
+            }
+          } catch (e) {
+            this.logger.error(
+              `Import line error: ${e instanceof Error ? e.message : e}`,
+            );
+            errors++;
+            errorLines.push(row.join(dto.delimiter));
+          }
+        }
+
+        // 3. Batch insert new cards and their field values
+        if (rowsToCreate.length > 0) {
+          const newCardsData: Array<{
+            id: string;
+            cardCollectionId: string;
+            cardTypeId: string;
+          }> = [];
+          const newValuesData: Array<{
+            cardId: string;
+            fieldId: string;
+            value: string;
+          }> = [];
+
+          for (const item of rowsToCreate) {
+            const cardId = randomUUID();
+            newCardsData.push({
+              id: cardId,
+              cardCollectionId: collectionId,
+              cardTypeId: dto.cardTypeId,
+            });
+
+            for (const val of item.cleanedValues) {
+              newValuesData.push({
+                cardId,
+                fieldId: val.fieldId,
+                value: val.value,
+              });
+            }
+          }
+
+          const BATCH_SIZE = 1000;
+          for (let i = 0; i < newCardsData.length; i += BATCH_SIZE) {
+            await tx.card.createMany({
+              data: newCardsData.slice(i, i + BATCH_SIZE),
+            });
+          }
+
+          const VALUE_BATCH_SIZE = 2500;
+          for (let i = 0; i < newValuesData.length; i += VALUE_BATCH_SIZE) {
+            await tx.cardFieldValue.createMany({
+              data: newValuesData.slice(i, i + VALUE_BATCH_SIZE),
+            });
+          }
+        }
+
+        // 4. Batch update existing card fields if UPDATE policy was requested
+        if (updatesToPerform.length > 0) {
+          const CHUNK_SIZE = 50;
+          for (let i = 0; i < updatesToPerform.length; i += CHUNK_SIZE) {
+            const chunk = updatesToPerform.slice(i, i + CHUNK_SIZE);
+            await Promise.all(
+              chunk.map((item) =>
+                tx.cardFieldValue.update({
+                  where: {
+                    cardId_fieldId: {
+                      cardId: item.cardId,
+                      fieldId: item.fieldId,
+                    },
+                  },
+                  data: { value: item.value },
+                }),
+              ),
+            );
+          }
+        }
+
+        return {
+          imported: { count: imported, cards: importedCards },
+          skipped: { count: skipped, cards: skippedCards },
+          updated: { count: updated, cards: updatedCards },
+          errors: { count: errors, lines: errorLines },
+        };
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
+      },
+    );
 
     return result;
   }

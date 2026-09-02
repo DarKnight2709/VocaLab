@@ -58,16 +58,32 @@ export class ProgressService {
     const monday = new Date(now);
     monday.setDate(now.getDate() - dayOfWeek + weekOffset * 7);
 
+    // Pre-calculate the 7 dates of the target week
+    const weekDays: Array<{ dateStr: string; dayName: string }> = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      const dateStr = getLocalDateStr(d);
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      
-      const p = await this.prisma.dailyProgress.findUnique({
-        where: { userId_date: { userId, date: dateStr }}
+      weekDays.push({
+        dateStr: getLocalDateStr(d),
+        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
       });
-      const m = p ? Math.floor(p.secondsStudied / 60) : 0;
+    }
+
+    // Batch fetch all 7 days in 1 single query
+    const weekProgressRecords = await this.prisma.dailyProgress.findMany({
+      where: {
+        userId,
+        date: { in: weekDays.map((w) => w.dateStr) },
+      },
+    });
+
+    const progressByDate = new Map<string, number>(
+      weekProgressRecords.map((p) => [p.date, p.secondsStudied]),
+    );
+
+    for (const { dateStr, dayName } of weekDays) {
+      const seconds = progressByDate.get(dateStr) || 0;
+      const m = Math.floor(seconds / 60);
       weeklyActivity.push({ date: dayName, minutes: m });
       weekTotalMinutes += m;
     }

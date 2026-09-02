@@ -114,68 +114,63 @@ export class GroupChatGateway {
           (member) => member.userId !== user.id,
         );
 
-        // 2. Map members to an array of promises for concurrent execution
-        const notificationPromises = activeMembers.map(async (member) => {
-          try {
-            const channel =
-              member.user.notificationSettings?.chatMessages ||
-              NotificationChannel.INBOX;
+        const inboxMembers = activeMembers.filter(
+          (m) =>
+            (m.user.notificationSettings?.chatMessages ??
+              NotificationChannel.INBOX) === NotificationChannel.INBOX,
+        );
 
-            // CHANNEL: INBOX
-            if (channel === NotificationChannel.INBOX) {
-              const notificationMetadata = {
-                replyTo: savedMessage.replyTo,
-                attachmentsCount: attachments?.length || 0,
-              };
+        const emailMembers = activeMembers.filter(
+          (m) =>
+            m.user.notificationSettings?.chatMessages ===
+              NotificationChannel.EMAIL && !!m.user.email,
+        );
 
-              const memberNotification =
-                await this.notificationsService.createNotification({
-                  type: NotificationType.CHAT_GROUP,
-                  senderId: user.id,
-                  recipientId: member.userId,
-                  groupId,
-                  content: savedMessage.content || undefined,
-                  metadata: notificationMetadata,
-                });
+        // 2. Create 1 single group notification in the database (replaces N duplicate rows)
+        if (inboxMembers.length > 0) {
+          const notificationMetadata = {
+            replyTo: savedMessage.replyTo,
+            attachmentsCount: attachments?.length || 0,
+          };
 
-              this.notificationsGateway.sendNotificationToUser(
-                member.userId,
-                memberNotification,
-              );
-            }
+          const groupNotification =
+            await this.notificationsService.createNotification({
+              type: NotificationType.CHAT_GROUP,
+              senderId: user.id,
+              groupId,
+              content: savedMessage.content || undefined,
+              metadata: notificationMetadata,
+            });
 
-            // CHANNEL: EMAIL
-            else if (
-              channel === NotificationChannel.EMAIL &&
-              member.user.email
-            ) {
-              await this.emailQueue.add(
-                EmailJobNames.SEND_GROUP_MESSAGE_EMAIL,
-                {
-                  recipientEmail: member.user.email,
-                  senderName: user.fullName || user.username,
-                  groupName: groupData.name,
-                  content: content || '',
-                  attachments: attachments || [],
-                },
-                {
-                  attempts: 3,
-                  backoff: { type: 'exponential', delay: 1000 },
-                  removeOnComplete: true,
-                },
-              );
-            }
-          } catch (error) {
-            // 3. Catch errors per-user so one failure doesn't break the whole loop
-            this.logger.error(
-              `Failed to notify user ${member.userId} in group ${groupId}`,
-              error,
+          // Deliver real-time WebSocket notification to all inbox members
+          for (const member of inboxMembers) {
+            this.notificationsGateway.sendNotificationToUser(
+              member.userId,
+              groupNotification,
             );
           }
-        });
+        }
 
-        // 4. Run all notifications in parallel
-        await Promise.all(notificationPromises);
+        // 3. Batch enqueue emails in 1 Redis operation
+        if (emailMembers.length > 0) {
+          await this.emailQueue.addBulk(
+            emailMembers.map((member) => ({
+              name: EmailJobNames.SEND_GROUP_MESSAGE_EMAIL,
+              data: {
+                recipientEmail: member.user.email!,
+                senderName: user.fullName || user.username,
+                groupName: groupData.name,
+                content: content || '',
+                attachments: attachments || [],
+              },
+              opts: {
+                attempts: 3,
+                backoff: { type: 'exponential', delay: 1000 },
+                removeOnComplete: true,
+              },
+            })),
+          );
+        }
       }
 
       return { success: true };

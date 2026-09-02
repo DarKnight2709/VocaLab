@@ -194,33 +194,55 @@ export class MessagesService {
 
   async getGroups(userId: string): Promise<GroupsResponseDto[]> {
     const groups = await this.groupChatService.findUserGroups(userId);
-    const transformedGroups = await Promise.all(
-      groups.map(async (group) => {
-        const [lastMessage, unreadCount] = await Promise.all([
-          this.findLastGroupMessage(group.id),
-          this.countUnreadGroupMessages(group.id, userId),
-        ]);
+    if (!groups.length) return [];
 
-        return {
-          id: group.id,
-          name: group.name,
-          avatar: group.avatar,
-          description: group.description,
-          isPublic: group.isPublic,
-          unreadCount,
-          lastMessage: lastMessage
-            ? {
-                content: lastMessage.content,
-                createdAt: lastMessage.createdAt,
-                senderName: lastMessage.sender?.fullName,
-                isMine: lastMessage.senderId === userId,
-              }
-            : null,
-          members: group.members?.map((m) => m.userId) || [],
-          updatedAt: group.updatedAt,
-        };
-      }),
-    );
+    const groupIds = groups.map((g) => g.id);
+
+    // Batch fetch unread counts for all groups in 1 single query
+    const unreadCounts = await this.prisma.message.groupBy({
+      by: ['groupId'],
+      where: {
+        groupId: { in: groupIds },
+        senderId: { not: userId },
+        seenBy: {
+          none: { userId },
+        },
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    const unreadCountMap = new Map<string, number>();
+    for (const item of unreadCounts) {
+      if (item.groupId) {
+        unreadCountMap.set(item.groupId, item._count.id);
+      }
+    }
+
+    const transformedGroups: GroupsResponseDto[] = groups.map((group) => {
+      const lastMessage = group.messages?.[0] || null;
+      const unreadCount = unreadCountMap.get(group.id) || 0;
+
+      return {
+        id: group.id,
+        name: group.name,
+        avatar: group.avatar,
+        description: group.description,
+        isPublic: group.isPublic,
+        unreadCount,
+        lastMessage: lastMessage
+          ? {
+              content: lastMessage.content,
+              createdAt: lastMessage.createdAt,
+              senderName: lastMessage.sender?.fullName,
+              isMine: lastMessage.senderId === userId,
+            }
+          : null,
+        members: group.members?.map((m) => m.userId) || [],
+        updatedAt: group.updatedAt,
+      };
+    });
 
     return transformedGroups.sort(
       (a, b) =>
@@ -391,22 +413,19 @@ export class MessagesService {
       select: { id: true },
     });
 
-    const results = await Promise.all(
-      messages.map((msg) =>
-        this.prisma.message.update({
-          where: { id: msg.id },
-          data: {
-            seenBy: {
-              create: {
-                userId: receiverId,
-              },
-            },
-          },
-        }),
-      ),
-    );
+    if (messages.length === 0) {
+      return { count: 0 };
+    }
 
-    return { count: results.length };
+    const { count } = await this.prisma.messageSeen.createMany({
+      data: messages.map((msg) => ({
+        messageId: msg.id,
+        userId: receiverId,
+      })),
+      skipDuplicates: true,
+    });
+
+    return { count };
   }
 
   async markGroupAsSeen(groupId: string, userId: string) {
@@ -415,104 +434,25 @@ export class MessagesService {
         groupId,
         senderId: { not: userId },
         seenBy: {
-          none: { userId: userId },
+          none: { userId },
         },
       },
       select: { id: true },
     });
 
-    const results = await Promise.all(
-      messages.map((msg) =>
-        this.prisma.message.update({
-          where: { id: msg.id },
-          data: {
-            seenBy: {
-              create: {
-                userId: userId,
-              },
-            },
-          },
-        }),
-      ),
-    );
+    if (messages.length === 0) {
+      return { count: 0 };
+    }
 
-    return { count: results.length };
-  }
-
-  // --- Group-Chat Support Methods ---
-  async findLastGroupMessage(
-    groupId: string,
-  ): Promise<MessageWithDetails | null> {
-    const message = await this.prisma.message.findFirst({
-      where: { groupId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            username: true,
-            fullName: true,
-            avatar: true,
-          },
-        },
-        receiver: {
-          select: {
-            id: true,
-            username: true,
-            fullName: true,
-            avatar: true,
-          },
-        },
-        seenBy: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                fullName: true,
-                avatar: true,
-              },
-            },
-          },
-        },
-      },
+    const { count } = await this.prisma.messageSeen.createMany({
+      data: messages.map((msg) => ({
+        messageId: msg.id,
+        userId,
+      })),
+      skipDuplicates: true,
     });
 
-    if (!message) return null;
-
-    return {
-      id: message.id,
-      type: message.type,
-      senderId: message.senderId,
-      receiverId: message.receiverId ?? null,
-      groupId: message.groupId ?? null,
-      content: message.content ?? null,
-      replyTo: message.replyTo ?? null,
-      attachments:
-        (message.attachments as unknown as MessageAttachment[]) ?? null,
-      status: message.status ?? null,
-      createdAt: message.createdAt,
-      sender: { ...message.sender, canChat: null },
-      receiver: message.receiver
-        ? { ...message.receiver, canChat: null }
-        : null,
-      seenBy: message.seenBy.map((m) => ({ ...m.user, canChat: null })),
-    };
-  }
-
-  async countUnreadGroupMessages(
-    groupId: string,
-    userId: string,
-  ): Promise<number> {
-    return this.prisma.message.count({
-      where: {
-        groupId,
-        senderId: { not: userId },
-        seenBy: {
-          none: { userId },
-        },
-      },
-    });
+    return { count };
   }
 
   async findGroupMessages(groupId: string): Promise<MessageWithDetails[]> {

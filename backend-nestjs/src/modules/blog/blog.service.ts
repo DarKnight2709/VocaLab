@@ -259,11 +259,9 @@ export class BlogService {
         select: { followerId: true },
       });
 
-      // Send notifications to all followers
-      // Note: In a production app with many followers, this should be handled by a background worker/queue
-      for (const follow of followers) {
-        this.notificationsService.notifyActivity({
-          recipientId: follow.followerId,
+      if (followers.length > 0) {
+        await this.notificationsService.notifyBulkActivity({
+          recipientIds: followers.map((f) => f.followerId),
           senderId: userId,
           type: NotificationType.NEW_BLOG_POST,
           content: blog.excerpt || blog.title,

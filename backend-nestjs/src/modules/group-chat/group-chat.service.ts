@@ -631,12 +631,12 @@ export class GroupChatService {
       throw new BadRequestException(ErrorCode.SOME_MEMBERS_NOT_FOUND);
     }
 
+    const currentMemberIdSet = new Set(group.members?.map((m) => m.userId) || []);
     const newMembers: string[] = [];
     const existingMembers: string[] = [];
 
     for (const mId of addMemberDto.memberIds) {
-      const alreadyMember = await this.isMember(groupId, mId);
-      if (alreadyMember) {
+      if (currentMemberIdSet.has(mId)) {
         existingMembers.push(mId);
       } else {
         newMembers.push(mId);
